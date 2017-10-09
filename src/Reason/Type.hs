@@ -57,20 +57,13 @@ data ReasonValue
   deriving (Show, Eq)
 
 ------------------------------------------------------------
-------------------------------------------------------------
 class ReasonType a where
   toReasonType :: a -> ReasonDatatype
   toReasonType = genericToReasonDatatype . from
   default toReasonType :: (Generic a, GenericReasonDatatype (Rep a)) =>
     a -> ReasonDatatype
-{-
-class ReasonType a where
-  toReasonType :: a -> ReasonDatatype
-  toReasonType = genericToReasonDatatype . from
-  default toElmType :: (Generic a, GenericReasonDatatype (Rep a)) =>
-  a -> ReasonDatatype
--}
 
+------------------------------------------------------------
 class GenericReasonDatatype f where
   genericToReasonDatatype :: f a -> ReasonDatatype
 
@@ -121,8 +114,7 @@ instance (GenericReasonValue f, GenericReasonValue g) =>
 instance GenericReasonValue U1 where
   genericToReasonValue _ = ReasonEmpty
 
-instance ReasonType a =>
-         GenericReasonValue (Rec0 a) where
+instance ReasonType a => GenericReasonValue (Rec0 a) where
   genericToReasonValue _ =
     case toReasonType (Proxy :: Proxy a) of
       ReasonPrimitive primitive -> ReasonPrimitiveRef primitive
@@ -224,3 +216,11 @@ instance ReasonType Char where
 
 instance ReasonType Bool where
   toReasonType _ = ReasonPrimitive RBool
+
+-- | Whether a set of constructors is an enumeration, i.e. whether they lack
+--   values. data A = A | B | C would be simple data A = A Int | B | C would not
+--   be simple.
+isEnumeration :: ReasonConstructor -> Bool
+isEnumeration (NamedConstructor _ ReasonEmpty) = True
+isEnumeration (MultipleConstructors cs) = all isEnumeration cs
+isEnumeration _ = False

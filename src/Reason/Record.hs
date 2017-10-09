@@ -17,6 +17,9 @@ import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
 class HasType a where
   render :: a -> Reader Options Doc
 
+class HasRecordType a where
+  renderRecord :: a -> Reader Options Doc
+
 class HasTypeRef a where
   renderRef :: a -> Reader Options Doc
 
@@ -28,7 +31,8 @@ instance HasType ReasonDatatype where
   render d@(ReasonDatatype _ constructor) = do
     name <- renderRef d
     ctor <- render constructor
-    return . nest 2 $ "type" <+> name <$$> "=" <+> ctor
+    return . nest 2 $ "type" <+> name <+> "=" <$$> "|" <+> ctor <+> ";"
+--    return . nest 2 $ "type" <+> name <$$> "=" <+> ctor
   render (ReasonPrimitive primitive) = renderRef primitive
 
 instance HasTypeRef ReasonDatatype where
@@ -37,7 +41,7 @@ instance HasTypeRef ReasonDatatype where
 
 instance HasType ReasonConstructor where
   render (RecordConstructor _ value) = do
-    dv <- render value
+    dv <- renderRecord value
     return $ "{" <+> dv <$$> "};"
   render (NamedConstructor constructorName value) = do
     dv <- render value
@@ -47,17 +51,28 @@ instance HasType ReasonConstructor where
 
 instance HasType ReasonValue where
   render (ReasonRef name) = pure (stext name)
-  render (ReasonPrimitiveRef primitive) = renderRef primitive
+  -- render (ReasonPrimitiveRef primitive) = renderRef primitive
+  render (ReasonPrimitiveRef primitive) = reasonRefParens primitive <$> renderRef primitive
   render ReasonEmpty = pure (text "")
   render (Values x y) = do
     dx <- render x
     dy <- render y
-    return $ dx <$$> comma <+> dy
+    -- return $ dx <$$> comma <+> dy
+    return $ dx <+> dy
     -- return $ dx <+> dy
   render (ReasonField name value) = do
     fieldModifier <- asks fieldLabelModifier
-    dv <- render value
+    -- dv <- render value
+    dv <- renderRecord value
     return $ stext (fieldModifier name) <+> ":" <+> dv
+
+instance HasRecordType ReasonValue where
+  renderRecord (ReasonPrimitiveRef primitive) = renderRef primitive
+  renderRecord (Values x y) = do
+    dx <- renderRecord x
+    dy <- renderRecord y
+    return $ dx <$$> comma <+> dy
+  renderRecord value = render value
 
 instance HasTypeRef ReasonPrimitive where
   renderRef (RList (ReasonPrimitive RChar)) = renderRef RString
@@ -122,3 +137,11 @@ toReasonTypeSourceWith options x =
 
 toReasonTypeSource :: ReasonType a => a -> T.Text
 toReasonTypeSource = toReasonTypeSourceWith defaultOptions
+
+-- | Puts parentheses around the doc of an elm ref if it contains spaces.
+reasonRefParens :: ReasonPrimitive -> Doc -> Doc
+reasonRefParens (RList (ReasonPrimitive RChar)) = id
+reasonRefParens (RList _) = parens
+reasonRefParens (RMaybe _) = parens
+reasonRefParens (RDict _ _) = parens
+reasonRefParens _ = id

@@ -25,6 +25,12 @@ mintercalate _ [] = mempty
 mintercalate _ [x] = x
 mintercalate separator (x:xs) = x <> separator <> mintercalate separator xs
 
+mconcatWith :: Monoid m => m -> m -> [m] -> m
+mconcatWith _   _   []     = mempty
+mconcatWith pre suf [x]    = pre <> x <> suf
+mconcatWith pre suf (x:xs) = pre <> x <> suf <> mconcatWith pre suf xs
+
+
 mintercalatefinish :: Monoid m => m -> m -> [m] -> m
 mintercalatefinish _ _ [] = mempty
 mintercalatefinish _ f [x] = x <> f

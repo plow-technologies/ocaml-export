@@ -13,13 +13,22 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Reason.Type
+  exposed-modules:     Reason.Common
+                       Reason.Export
+                       Reason.Record
+                       Reason.Type
   build-depends:       base >= 4.7 && < 5
+                     , bytestring
                      , containers
+                     , directory
+                     , formatting
+                     , mtl
                      , text
                      , time
+                     , wl-pprint-text
   default-language:    Haskell2010
-
+  ghc-options: -Wall
+  
 executable reason-export
   hs-source-dirs:      app
   main-is:             Main.hs

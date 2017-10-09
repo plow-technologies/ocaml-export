@@ -169,6 +169,33 @@ instance (ReasonType a, ReasonType b) => ReasonType (a, b) where
     ReasonPrimitive $
     RTuple2 (toReasonType (Proxy :: Proxy a)) (toReasonType (Proxy :: Proxy b))
 
+instance (ReasonType a, ReasonType b, ReasonType c) => ReasonType (a, b, c) where
+  toReasonType _ =
+    ReasonPrimitive $
+    RTuple3 (toReasonType (Proxy :: Proxy a)) (toReasonType (Proxy :: Proxy b))
+            (toReasonType (Proxy :: Proxy c))
+
+instance (ReasonType a, ReasonType b, ReasonType c, ReasonType d) => ReasonType (a, b, c, d) where
+  toReasonType _ =
+    ReasonPrimitive $
+    RTuple4 (toReasonType (Proxy :: Proxy a)) (toReasonType (Proxy :: Proxy b))
+            (toReasonType (Proxy :: Proxy c)) (toReasonType (Proxy :: Proxy d))
+
+instance (ReasonType a, ReasonType b, ReasonType c, ReasonType d, ReasonType e) => ReasonType (a, b, c, d, e) where
+  toReasonType _ =
+    ReasonPrimitive $
+    RTuple5 (toReasonType (Proxy :: Proxy a)) (toReasonType (Proxy :: Proxy b))
+            (toReasonType (Proxy :: Proxy c)) (toReasonType (Proxy :: Proxy d))
+            (toReasonType (Proxy :: Proxy e))
+
+instance (ReasonType a, ReasonType b, ReasonType c, ReasonType d, ReasonType e, ReasonType f) => ReasonType (a, b, c, d, e, f) where
+  toReasonType _ =
+    ReasonPrimitive $
+    RTuple6 (toReasonType (Proxy :: Proxy a)) (toReasonType (Proxy :: Proxy b))
+            (toReasonType (Proxy :: Proxy c)) (toReasonType (Proxy :: Proxy d))
+            (toReasonType (Proxy :: Proxy e)) (toReasonType (Proxy :: Proxy f))
+
+
 instance (ReasonType a) =>
          ReasonType (Proxy a) where
   toReasonType _ = toReasonType (undefined :: a)

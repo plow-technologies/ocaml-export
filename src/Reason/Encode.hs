@@ -111,13 +111,6 @@ renderEnumeration c = render c
 
 
 instance HasEncoder ReasonValue where
-  render (ReasonField name (ReasonPrimitiveRef (RMaybe datatype))) = do
-    fieldModifier <- asks fieldLabelModifier
-    -- valueBody <- render value
-    dd <- renderRef datatype
-    return . spaceparens $
-      dquotes (stext (fieldModifier name)) <> comma <+>
-      ("Option.default Json.Encode.null (Option.map" <+> dd <+> "x." <> stext name <+> ")")
   render (ReasonField name value) = do
     fieldModifier <- asks fieldLabelModifier
     valueBody <- render value
@@ -146,7 +139,7 @@ instance HasEncoderRef ReasonPrimitive where
     return . parens $ "Json.Encode.list << List.map" <+> dd
   renderRef (RMaybe datatype) = do
     dd <- renderRef datatype
-    return $ "Option.default Json.Encode.null (Option.map" <+> dd
+    return . parens $ "fun xx => Option.default Json.Encode.null (Option.map" <+> dd <> ")"
   renderRef (RTuple2 x y) = do
     dx <- renderRef x
     dy <- renderRef y

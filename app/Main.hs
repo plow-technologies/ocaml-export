@@ -122,7 +122,7 @@ let encodePerson (x : person) :json => {
 let encodePerson (x : person) => 
   Json.Encode.object_
     [ ("id", Json.Encode.int x.id)
-    , ("name", Option.default Json.Encode.null (Option.map Json.Encode.string x.name))
+    , ("name", (fun xx => Option.default Json.Encode.null (Option.map Json.Encode.string xx)) x.name)
     ];
 
 :set -XDeriveGeneric

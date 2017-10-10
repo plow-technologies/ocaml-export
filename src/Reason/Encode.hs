@@ -139,11 +139,37 @@ instance HasEncoderRef ReasonPrimitive where
     return . parens $ "Json.Encode.list << List.map" <+> dd
   renderRef (RMaybe datatype) = do
     dd <- renderRef datatype
-    return . parens $ "fun xx => Option.default Json.Encode.null (Option.map" <+> dd <> ")"
-  renderRef (RTuple2 x y) = do
-    dx <- renderRef x
-    dy <- renderRef y
-    return . parens $ "Js.Encode.array [|" <+> dx <+> "," <+> dy <+> "|]"
+    return . parens $ "fun a => Option.default Json.Encode.null (Option.map" <+> dd <+> "a)"
+  renderRef (RTuple2 a b) = do
+    da <- renderRef a
+    db <- renderRef b
+    return . parens $ "fun (a,b) => Json.Encode.array [|" <+> da <+> "a ," <+> db <+> "b" <+> " |]"
+  renderRef (RTuple3 a b c) = do
+    da <- renderRef a
+    db <- renderRef b
+    dc <- renderRef c
+    return . parens $ "fun (a,b,c) => Json.Encode.array [|" <+> da <+> "a ," <+> db <+> "b" <+> dc <+> "c" <+> "|]"
+  renderRef (RTuple4 a b c d) = do
+    da <- renderRef a
+    db <- renderRef b
+    dc <- renderRef c
+    dd <- renderRef d
+    return . parens $ "fun (a,b,c,d) => Json.Encode.array [|" <+> da <+> "a ," <+> db <+> "b" <+> dc <+> "c" <+> dd <+> "d" <+> "|]"
+  renderRef (RTuple5 a b c d e) = do
+    da <- renderRef a
+    db <- renderRef b
+    dc <- renderRef c
+    dd <- renderRef d
+    de <- renderRef e
+    return . parens $ "fun (a,b,c,d,e) => Json.Encode.array [|" <+> da <+> "a ," <+> db <+> "b" <+> dc <+> "c" <+> dd <+> "d" <+> de <+> "e" <+> "|]"
+  renderRef (RTuple6 a b c d e f) = do
+    da <- renderRef a
+    db <- renderRef b
+    dc <- renderRef c
+    dd <- renderRef d
+    de <- renderRef e
+    df <- renderRef f
+    return . parens $ "fun (a,b,c,d,e,f) => Json.Encode.array [|" <+> da <+> "a ," <+> db <+> "b" <+> dc <+> "c" <+> dd <+> "d" <+> de <+> "e" <+> df <+> "f" <+> "|]"
   renderRef (RDict k v) = do
     dk <- renderRef k
     dv <- renderRef v

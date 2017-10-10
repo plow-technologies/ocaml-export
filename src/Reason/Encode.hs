@@ -25,8 +25,8 @@ instance HasEncoder ReasonDatatype where
     fnName <- renderRef d
     ctor <- render constructor
     return $
-      ("let" <+> fnName <+> "(x :" <+> stext (textLowercaseFirst name) <> ") :json =>" <+> "{") <$$>
-      (indent 4 ctor) <$$> "};"
+      ("let" <+> fnName <+> "(x :" <+> stext (textLowercaseFirst name) <> ") =>") <$$>
+      (indent 2 ctor) <> ";"
   render (ReasonPrimitive primitive) = renderRef primitive
 
 instance HasEncoderRef ReasonDatatype where

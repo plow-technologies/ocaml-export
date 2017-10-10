@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Main where
 
@@ -64,13 +65,35 @@ data EndsInDouble
   | DD String String
   deriving (Show, Eq, Generic, ReasonType)
 
+{-
 data Shape
   = Circle Float Float Float
   | Rectangle Float Float Float Float   
   deriving (Show, Eq, Generic, ReasonType)
-
+-}
 data SingletonWithSingle = SingletonWithSingle Double
   deriving (Show, Eq, Generic, ReasonType)
+
+data Point =
+  Point
+    { x :: Int
+    , y :: Int
+    } deriving (Show, Eq, Generic, ReasonType)
+
+data Rectangle =
+  Rectangle
+    { leftPoint :: Point
+    , rightPoinit :: Point
+    } deriving (Show, Eq, Generic, ReasonType)
+
+
+spec :: Spec
+spec =
+  Spec
+    ["Types"]
+    [ toReasonTypeSource (Proxy :: Proxy Person)
+    , toReasonEncoderSource (Proxy :: Proxy Person)
+    ]
 
 main :: IO ()
 main = do
@@ -85,11 +108,15 @@ main = do
   print $ toReasonTypeSource (Proxy :: Proxy Five)
   print $ toReasonTypeSource (Proxy :: Proxy EndsInSingle)
   print $ toReasonTypeSource (Proxy :: Proxy EndsInDouble)
-  print $ toReasonTypeSource (Proxy :: Proxy Shape)
+--  print $ toReasonTypeSource (Proxy :: Proxy Shape)
   print $ toReasonTypeSource (Proxy :: Proxy SingletonWithSingle)
 
   print $ toReasonEncoderSource (Proxy :: Proxy Person)
   print $ toReasonEncoderSource (Proxy :: Proxy RecWithTuple2)
+
+  print $ toReasonEncoderSource (Proxy :: Proxy Rectangle)
+
+  specsToDir [spec] "./"
   return ()
 
 {-

@@ -17,12 +17,12 @@ makePath :: [Text] -> Text
 makePath = T.intercalate "/"
 
 data Spec = Spec
-  { namespace    :: [Text]
+  { sPath        :: [Text]
   , declarations :: [Text]
   }
 
 pathForSpec :: FilePath -> Spec -> [Text]
-pathForSpec rootDir spec = T.pack rootDir : namespace spec
+pathForSpec rootDir spec = T.pack rootDir : sPath spec
 
 ensureDirectory :: FilePath -> Spec -> IO ()
 ensureDirectory rootDir spec =
@@ -33,12 +33,10 @@ specToFile :: FilePath -> Spec -> IO ()
 specToFile rootDir spec =
   let path = pathForSpec rootDir spec
       file = makePath path <> ".re"
-      namespaceText = T.intercalate "." (namespace spec)
       body =
         T.intercalate
           "\n\n"
-          (sformat ("module " % F.stext % " exposing (..)") namespaceText :
-           declarations spec)
+          (declarations spec)
   in do fprint ("Writing: " % F.stext % "\n") file
         T.writeFile (T.unpack file) body
 

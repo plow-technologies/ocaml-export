@@ -32,7 +32,6 @@ instance HasType ReasonDatatype where
     name <- renderRef d
     ctor <- render constructor
     return . nest 2 $ "type" <+> name <+> "=" <$$> "|" <+> ctor <+> ";"
---    return . nest 2 $ "type" <+> name <$$> "=" <+> ctor
   render (ReasonPrimitive primitive) = renderRef primitive
 
 instance HasTypeRef ReasonDatatype where
@@ -51,18 +50,14 @@ instance HasType ReasonConstructor where
 
 instance HasType ReasonValue where
   render (ReasonRef name) = pure (stext name)
-  -- render (ReasonPrimitiveRef primitive) = renderRef primitive
   render (ReasonPrimitiveRef primitive) = reasonRefParens primitive <$> renderRef primitive
   render ReasonEmpty = pure (text "")
   render (Values x y) = do
     dx <- render x
     dy <- render y
-    -- return $ dx <$$> comma <+> dy
     return $ dx <+> dy
-    -- return $ dx <+> dy
   render (ReasonField name value) = do
     fieldModifier <- asks fieldLabelModifier
-    -- dv <- render value
     dv <- renderRecord value
     return $ stext (fieldModifier name) <+> ":" <+> dv
 
@@ -123,7 +118,7 @@ instance HasTypeRef ReasonPrimitive where
   renderRef RString = pure "string"
   renderRef RUnit   = pure "unit"
   renderRef RFloat  = pure "Js.Float"
-
+--  'a Js.Dict.t
 toReasonTypeRefWith :: ReasonType a => Options -> a -> T.Text
 toReasonTypeRefWith options x =
   pprinter $ runReader (renderRef (toReasonType x)) options

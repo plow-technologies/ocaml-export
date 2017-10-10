@@ -36,3 +36,40 @@ let encodeRect (x: rect) =>
     , ("plot", (fun a => Json.Encode.boolean (Js.Boolean.to_js_boolean a)) x.plot)
     ];
 
+type point =
+  { x: int
+  , y: int
+  };
+
+let encodePoint (x: point) => 
+  Json.Encode.object_
+    [ ("x", Json.Encode.int x.x)
+    , ("y", Json.Encode.int x.y)
+    ];
+
+type thing =
+  { x: Js_dict.t Js_json.t
+  , y: Js_dict.t int
+  };
+
+type thing2 =
+  { x: Js_dict.t int };
+
+let json : Js_dict.t Js_json.t = Js_dict.empty();
+Js_dict.set json "firstName" (Js_json.string "hi");
+
+let json2 : Js_dict.t string = Js_dict.empty();
+Js_dict.set json2 "firstName" "hi";
+Js_dict.set json2 "lastName" "bye";
+/* 
+doesn't work, must be a string
+Js_dict.set json2 1 "bye";
+*/
+
+/*
+let json : Js_dict.t string = Js_dict.empty();
+Js_dict.set json "firstName" (Js_json.string "hi");
+*/
+/*
+let z : thing2 = {x: {"hi" : 1}}
+*/

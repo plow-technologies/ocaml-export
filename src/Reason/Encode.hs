@@ -129,14 +129,14 @@ instance HasEncoderRef ReasonPrimitive where
   renderRef RDate   = pure $ parens "Json.Encode.string << toString"
   renderRef RUnit   = pure "Json.Encode.null"
   renderRef RInt    = pure "Json.Encode.int"
-  renderRef RChar   = pure "Json.Encode.char"
+  renderRef RChar   = pure "Json.Encode.string"
   renderRef RBool   = pure "Json.Encode.boolean"
   renderRef RFloat  = pure "Json.Encode.float"
   renderRef RString = pure "Json.Encode.string"
   renderRef (RList (ReasonPrimitive RChar)) = pure "Json.Encode.string"
   renderRef (RList datatype) = do
     dd <- renderRef datatype
-    return . parens $ "Json.Encode.list << List.map" <+> dd
+    return . parens $ "Json.Encode.list" <+> dd
   renderRef (RMaybe datatype) = do
     dd <- renderRef datatype
     return . parens $ "fun a => Option.default Json.Encode.null (Option.map" <+> dd <+> "a)"

@@ -93,6 +93,8 @@ spec =
     ["Types"]
     [ toReasonTypeSource (Proxy :: Proxy Person)
     , toReasonEncoderSource (Proxy :: Proxy Person)
+    , toReasonTypeSource (Proxy :: Proxy Company)
+    , toReasonEncoderSource (Proxy :: Proxy Company)
     ]
 
 main :: IO ()

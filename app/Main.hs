@@ -87,6 +87,8 @@ main = do
   print $ toReasonTypeSource (Proxy :: Proxy EndsInDouble)
   print $ toReasonTypeSource (Proxy :: Proxy Shape)
   print $ toReasonTypeSource (Proxy :: Proxy SingletonWithSingle)
+
+  print $ toReasonEncoderSource (Proxy :: Proxy Person)
   return ()
 
 {-
@@ -99,4 +101,37 @@ type person = {
   id: int,
   name: option (string)
 };
+
+
+let encodeJson.Decode.{
+      start:     json |> field "start" point,
+      end_:      json |> field "end" point,
+      thickness: json |> optional (field "thickness" int)
+    };
+
+let encodePerson (x : person) :json => {
+  Json.Encode.(
+    object_
+      [ ("id", Json.Encode.int x)
+      , ("name",Json.Encode.string x)
+      ]
+  );
+};
+
+
+let encodePerson (x : person) => 
+  Json.Encode.object_
+    [ ("id", Json.Encode.int x.id)
+    , ("name", Option.default Json.Encode.null (Option.map Json.Encode.string x.name))
+    ];
+
+:set -XDeriveGeneric
+import GHC.Generics
+import Data.Aeson
+data Person = Person
+  { id :: Int
+  , name :: Maybe String
+  } deriving (Show, Eq, Generic)
+instance ToJSON Person
+instance FromJSON Person
 -}

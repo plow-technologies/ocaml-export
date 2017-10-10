@@ -25,8 +25,8 @@ instance HasEncoder ReasonDatatype where
     fnName <- renderRef d
     ctor <- render constructor
     return $
-      (fnName <+> ":" <+> stext name <+> "->" <+> "Json.Encode.Value") <$$>
-      (fnName <+> "x =" <$$> indent 4 ctor)
+      ("let" <+> fnName <+> "(x :" <+> stext (textLowercaseFirst name) <> ") :json =>" <+> "{") <$$>
+      (indent 4 ctor) <$$> "};"
   render (ReasonPrimitive primitive) = renderRef primitive
 
 instance HasEncoderRef ReasonDatatype where
@@ -45,8 +45,8 @@ instance HasEncoder ReasonConstructor where
     (dv, _) <- renderVariable ps value
 
     let cs = stext name <+> foldl1 (<+>) ps <+> "->"
-    return . nest 4 $ "case x of" <$$>
-      (nest 4 $ cs <$$> nest 4 ("Json.Encode.list" <$$> "[" <+> dv <$$> "]"))
+    return . nest 2 $ "case x of" <$$>
+      (nest 2 $ cs <$$> nest 2 ("Json.Encode.list" <$$> "[" <+> dv <$$> "]"))
 
   -- Single constructor, one value: skip constructor and render just the value
   render (NamedConstructor _name val) =
@@ -54,17 +54,17 @@ instance HasEncoder ReasonConstructor where
   
   render (RecordConstructor _ value) = do
     dv <- render value
-    return . nest 4 $ "Json.Encode.object" <$$> "[" <+> dv <$$> "]"
+    return . nest 2 $ "Json.Encode.object_" <$$> "[" <+> dv <$$> "]"
 
   render mc@(MultipleConstructors constrs) = do
     let rndr = if isEnumeration mc then renderEnumeration else renderSum
     dc <- mapM rndr constrs
-    return . nest 4 $ "case x of" <$$> foldl1 (<$+$>) dc
+    return . nest 2 $ "case x of" <$$> foldl1 (<$+$>) dc
 
 jsonEncodeObject :: Doc -> Doc -> Doc -> Doc
 jsonEncodeObject constructor tag contents =
-  nest 4 $ constructor <$$>
-    nest 4 ("Json.Encode.object" <$$> "[" <+> tag <$$>
+  nest 2 $ constructor <$$>
+    nest 2 ("Json.Encode.object" <$$> "[" <+> tag <$$>
       contents <$$>
     "]")
 
@@ -102,7 +102,7 @@ renderSum (MultipleConstructors constrs) = do
 
 renderEnumeration :: ReasonConstructor -> Reader Options Doc
 renderEnumeration (NamedConstructor name _) =
-  return . nest 4 $ stext name <+> "->" <$$>
+  return . nest 2 $ stext name <+> "->" <$$>
       "Json.Encode.string" <+> dquotes (stext name)
 renderEnumeration (MultipleConstructors constrs) = do
   dc <- mapM renderEnumeration constrs
@@ -111,6 +111,13 @@ renderEnumeration c = render c
 
 
 instance HasEncoder ReasonValue where
+  render (ReasonField name (ReasonPrimitiveRef (RMaybe datatype))) = do
+    fieldModifier <- asks fieldLabelModifier
+    -- valueBody <- render value
+    dd <- renderRef datatype
+    return . spaceparens $
+      dquotes (stext (fieldModifier name)) <> comma <+>
+      ("Option.default Json.Encode.null (Option.map" <+> dd <+> "x." <> stext name <+> ")")
   render (ReasonField name value) = do
     fieldModifier <- asks fieldLabelModifier
     valueBody <- render value
@@ -139,7 +146,7 @@ instance HasEncoderRef ReasonPrimitive where
     return . parens $ "Json.Encode.list << List.map" <+> dd
   renderRef (RMaybe datatype) = do
     dd <- renderRef datatype
-    return . parens $ "Maybe.withDefault Json.Encode.null << Maybe.map" <+> dd
+    return $ "Option.default Json.Encode.null (Option.map" <+> dd
   renderRef (RTuple2 x y) = do
     dx <- renderRef x
     dy <- renderRef y

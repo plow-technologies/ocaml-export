@@ -17,6 +17,7 @@ library
                        Reason.Decode
                        Reason.Encode
                        Reason.Export
+                       Reason.File
                        Reason.Record
                        Reason.Type
   build-depends:       base >= 4.7 && < 5

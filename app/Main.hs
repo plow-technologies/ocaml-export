@@ -89,6 +89,7 @@ main = do
   print $ toReasonTypeSource (Proxy :: Proxy SingletonWithSingle)
 
   print $ toReasonEncoderSource (Proxy :: Proxy Person)
+  print $ toReasonEncoderSource (Proxy :: Proxy RecWithTuple2)
   return ()
 
 {-

@@ -1,0 +1,22 @@
+{
+  "name": "playground",
+  "private": true,
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "bsb -make-world",
+    "start": "bsb -make-world -w",
+    "clean": "bsb -clean-world"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "bs-json": "^0.2.3"
+  },
+  "devDependencies": {
+    "bs-platform": "^1.9.2",
+    "concurrently": "^3.5.0"
+  }
+}

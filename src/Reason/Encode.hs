@@ -126,12 +126,12 @@ instance HasEncoder ReasonValue where
   render _ = error "HasEncoderRef ReasonValue: should not happen"
 
 instance HasEncoderRef ReasonPrimitive where
-  renderRef RDate = pure $ parens "Json.Encode.string << toString"
-  renderRef RUnit = pure "Json.Encode.null"
-  renderRef RInt = pure "Json.Encode.int"
-  renderRef RChar = pure "Json.Encode.char"
-  renderRef RBool = pure "Json.Encode.bool"
-  renderRef RFloat = pure "Json.Encode.float"
+  renderRef RDate   = pure $ parens "Json.Encode.string << toString"
+  renderRef RUnit   = pure "Json.Encode.null"
+  renderRef RInt    = pure "Json.Encode.int"
+  renderRef RChar   = pure "Json.Encode.char"
+  renderRef RBool   = pure "Json.Encode.boolean"
+  renderRef RFloat  = pure "Json.Encode.float"
   renderRef RString = pure "Json.Encode.string"
   renderRef (RList (ReasonPrimitive RChar)) = pure "Json.Encode.string"
   renderRef (RList datatype) = do
@@ -143,11 +143,11 @@ instance HasEncoderRef ReasonPrimitive where
   renderRef (RTuple2 x y) = do
     dx <- renderRef x
     dy <- renderRef y
-    return . parens $ "tuple2" <+> dx <+> dy
+    return . parens $ "Js.Encode.array [|" <+> dx <+> "," <+> dy <+> "|]"
   renderRef (RDict k v) = do
     dk <- renderRef k
     dv <- renderRef v
-    return . parens $ "dict" <+> dk <+> dv
+    return . parens $ "Js.Encode.dict" <+> dk <+> dv
 
 toReasonEncoderRefWith :: ReasonType a => Options -> a -> T.Text
 toReasonEncoderRefWith options x =

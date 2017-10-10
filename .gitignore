@@ -1,1 +1,4 @@
 .stack-work
+playground/lib
+playground/node_modules
+.merlin

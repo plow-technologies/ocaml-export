@@ -32,7 +32,7 @@ ensureDirectory rootDir spec =
 specToFile :: FilePath -> Spec -> IO ()
 specToFile rootDir spec =
   let path = pathForSpec rootDir spec
-      file = makePath path <> ".re"
+      file = makePath path <> ".ml"
       body =
         T.intercalate
           "\n\n"

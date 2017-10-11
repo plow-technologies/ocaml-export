@@ -31,7 +31,7 @@ instance HasType ReasonDatatype where
   render d@(ReasonDatatype _ constructor) = do
     name <- renderRef d
     ctor <- render constructor
-    return . nest 2 $ "type" <+> name <+> "=" <$$> "|" <+> ctor <+> ";"
+    return . nest 2 $ "type" <+> name <+> "=" <$$> "|" <+> ctor
   render (ReasonPrimitive primitive) = renderRef primitive
 
 instance HasTypeRef ReasonDatatype where
@@ -41,10 +41,13 @@ instance HasTypeRef ReasonDatatype where
 instance HasType ReasonConstructor where
   render (RecordConstructor _ value) = do
     dv <- renderRecord value
-    return $ "{" <+> dv <$$> "};"
+    return $ "{" <+> dv <$$> "}"
+  render (NamedConstructor constructorName (ReasonEmpty)) = do
+    dv <- render ReasonEmpty
+    return $ stext constructorName <+> dv
   render (NamedConstructor constructorName value) = do
     dv <- render value
-    return $ stext constructorName <+> dv
+    return $ stext constructorName <+> "of" <+> dv
   render (MultipleConstructors constructors) = do
     mintercalate (line <> "|" <> space) <$> sequence (render <$> constructors)
 
@@ -55,7 +58,7 @@ instance HasType ReasonValue where
   render (Values x y) = do
     dx <- render x
     dy <- render y
-    return $ dx <+> dy
+    return $ dx <+> "*" <+> dy
   render (ReasonField name value) = do
     fieldModifier <- asks fieldLabelModifier
     dv <- renderRecord value
@@ -66,47 +69,47 @@ instance HasRecordType ReasonValue where
   renderRecord (Values x y) = do
     dx <- renderRecord x
     dy <- renderRecord y
-    return $ dx <$$> comma <+> dy
+    return $ dx <$$> ";" <+> dy
   renderRecord value = render value
 
 instance HasTypeRef ReasonPrimitive where
   renderRef (RList (ReasonPrimitive RChar)) = renderRef RString
   renderRef (RList datatype) = do
     dt <- renderRef datatype
-    return $ "list" <+> parens dt
-  renderRef (RTuple2 x y) = do
-    dx <- renderRef x
-    dy <- renderRef y
-    return . parens $ dx <> comma <+> dy
-  renderRef (RTuple3 x y z) = do
-    dx <- renderRef x
-    dy <- renderRef y
-    dz <- renderRef z
-    return . parens $ dx <> comma <+> dy <+> comma <+> dz
-  renderRef (RTuple4 x y z a) = do
-    dx <- renderRef x
-    dy <- renderRef y
-    dz <- renderRef z
-    da <- renderRef a
-    return . parens $ dx <> comma <+> dy <+> comma <+> dz  <+> comma <+> da
-  renderRef (RTuple5 x y z a b) = do
-    dx <- renderRef x
-    dy <- renderRef y
-    dz <- renderRef z
+    return $ parens dt <+> "list"
+  renderRef (RTuple2 a b) = do
     da <- renderRef a
     db <- renderRef b
-    return . parens $ dx <> comma <+> dy <+> comma <+> dz <+> comma <+> da <+> comma <+> db
-  renderRef (RTuple6 x y z a b c) = do
-    dx <- renderRef x
-    dy <- renderRef y
-    dz <- renderRef z
+    return . parens $ da <+> "*" <+> db
+  renderRef (RTuple3 a b c) = do
     da <- renderRef a
     db <- renderRef b
     dc <- renderRef c
-    return . parens $ dx <> comma <+> dy <+> comma <+> dz <+> comma <+> da <+> comma <+> db <+> comma <+> dc
+    return . parens $ da <+> "*" <+> db <+> "*" <+> dc
+  renderRef (RTuple4 a b c d) = do
+    da <- renderRef a
+    db <- renderRef b
+    dc <- renderRef c
+    dd <- renderRef d
+    return . parens $ da <+> "*" <+> db <+> "*" <+> dc <+> "*" <+> dd
+  renderRef (RTuple5 a b c d e) = do
+    da <- renderRef a
+    db <- renderRef b
+    dc <- renderRef c
+    dd <- renderRef d
+    de <- renderRef e
+    return . parens $ da <+> "*" <+> db <+> "*" <+> dc <+> "*" <+> dd <+> "*" <+> de
+  renderRef (RTuple6 a b c d e f) = do
+    da <- renderRef a
+    db <- renderRef b
+    dc <- renderRef c
+    dd <- renderRef d
+    de <- renderRef e
+    df <- renderRef f
+    return . parens $ da <+> "*" <+> db <+> "*" <+> dc <+> "*" <+> dd <+> "*" <+> de <+> "*" <+> df
   renderRef (RMaybe datatype) = do
     dt <- renderRef datatype
-    return $ "option" <+> parens dt
+    return $ parens dt <+> "option"
   renderRef (RDict k v) = do
     dk <- renderRef k
     dv <- renderRef v

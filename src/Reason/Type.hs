@@ -43,7 +43,7 @@ data ReasonPrimitive
   deriving (Show, Eq)
 
 data ReasonConstructor
-  = NamedConstructor Text ReasonValue -- , no named constructs 
+  = NamedConstructor Text ReasonValue
   | RecordConstructor Text ReasonValue
   | MultipleConstructors [ReasonConstructor]
   deriving (Show, Eq)

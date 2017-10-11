@@ -14,6 +14,11 @@ data Person = Person
   , name :: Maybe String
   } deriving (Show, Eq, Generic, OC.ReasonType)
 
+data Company = Company
+  { address   :: String
+  , employees :: [Person]
+  } deriving (Show, Eq, Generic, OC.ReasonType)
+
 personSpec :: OC.Spec
 personSpec =
   OC.Spec
@@ -22,16 +27,29 @@ personSpec =
     , OC.toReasonEncoderSource (Proxy :: Proxy Person)
     ]
 
+companySpec :: OC.Spec
+companySpec =
+  OC.Spec
+    ["Company"]
+    [ OC.toReasonTypeSource (Proxy :: Proxy Person)
+    , OC.toReasonEncoderSource (Proxy :: Proxy Person)
+    , OC.toReasonTypeSource (Proxy :: Proxy Company)
+    , OC.toReasonEncoderSource (Proxy :: Proxy Company)
+    ]
 
 spec :: Spec
 spec =
-  describe "toReasonTypeSource" $
+  describe "toReasonTypeSource" $ do
     it "" $ do
       OC.specsToDir [personSpec] "./test/temp/product"
       handWritten <- T.readFile "test/golden/product/Person.ml"
       automated   <- T.readFile "test/temp/product/Person.ml"
       automated `shouldBe` handWritten
-      -- d `shouldBe` (OC.toReasonTypeSource (Proxy :: Proxy Person) <> "\n\n" <> OC.toReasonEncoderSource (Proxy :: Proxy Person) <> "\n")
+    it "" $ do
+      OC.specsToDir [companySpec] "./test/temp/product"
+      handWritten <- T.readFile "test/golden/product/Company.ml"
+      automated   <- T.readFile "test/temp/product/Company.ml"
+      automated `shouldBe` handWritten
       
 
 main :: IO ()

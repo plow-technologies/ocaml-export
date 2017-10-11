@@ -36,7 +36,7 @@ specToFile rootDir spec =
       body =
         T.intercalate
           "\n\n"
-          (declarations spec)
+          (declarations spec) <> "\n"
   in do fprint ("Writing: " % F.stext % "\n") file
         T.writeFile (T.unpack file) body
 

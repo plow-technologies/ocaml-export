@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Reason.File
+module OCaml.File
   ( Spec(..)
   , specsToDir
   ) where

@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Reason.Record
+module OCaml.Record
   ( toReasonTypeRef
   , toReasonTypeRefWith
   , toReasonTypeSource
@@ -10,8 +10,8 @@ module Reason.Record
 import           Control.Monad.Reader
 import           Data.Monoid
 import qualified Data.Text as T
-import           Reason.Common
-import           Reason.Type
+import           OCaml.Common
+import           OCaml.Type
 import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
 
 class HasType a where

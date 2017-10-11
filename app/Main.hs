@@ -6,7 +6,7 @@ module Main where
 
 import Data.Proxy
 import GHC.Generics
-import Reason.Export
+import OCaml.Export
 
 data Person = Person
   { id :: Int

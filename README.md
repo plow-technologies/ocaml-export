@@ -1,3 +1,5 @@
-# reason-export
+# ocaml-export
 
-Deprecated. Exporing to Bucklescript instead.
+Export Haskell types to OCaml. 
+
+Export aeson serializations to OCaml BuckleScript.

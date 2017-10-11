@@ -1,6 +1,6 @@
-name:                reason-export
+name:                ocaml-export
 version:             0.1.0.0
-homepage:            https://github.com/plow-technologies/reason-export#readme
+homepage:            https://github.com/plow-technologies/ocaml-export#readme
 license:             BSD3
 license-file:        LICENSE
 author:              James M.C. Haver II
@@ -13,13 +13,14 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Reason.Common
-                       Reason.Decode
-                       Reason.Encode
-                       Reason.Export
-                       Reason.File
-                       Reason.Record
-                       Reason.Type
+  exposed-modules:     OCaml.Common
+                       OCaml.Export
+                       OCaml.File
+                       OCaml.Record
+                       OCaml.Type
+                       OCaml.BuckleScript.Decode
+                       OCaml.BuckleScript.Encode
+                       
   build-depends:       base >= 4.7 && < 5
                      , bytestring
                      , containers
@@ -32,23 +33,23 @@ library
   default-language:    Haskell2010
   ghc-options: -Wall
   
-executable reason-export
+executable ocaml-export
   hs-source-dirs:      app
   main-is:             Main.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
-                     , reason-export
+                     , ocaml-export
   default-language:    Haskell2010
 
-test-suite reason-export-test
+test-suite test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
   main-is:             Spec.hs
   build-depends:       base
-                     , reason-export
+                     , ocaml-export
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
 
 source-repository head
   type:     git
-  location: https://github.com/plow-technologies/reason-export
+  location: https://github.com/plow-technologies/ocaml-export

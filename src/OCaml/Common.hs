@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Reason.Common where
+module OCaml.Common where
 
 import           Data.Char (toLower)
 import           Data.Monoid

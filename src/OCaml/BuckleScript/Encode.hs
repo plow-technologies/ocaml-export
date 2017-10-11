@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Reason.Encode 
+module OCaml.BuckleScript.Encode 
   ( toReasonEncoderRef
   , toReasonEncoderRefWith
   , toReasonEncoderSource
@@ -10,8 +10,8 @@ module Reason.Encode
 import           Control.Monad.Reader
 import           Data.Monoid
 import qualified Data.Text as T
-import           Reason.Common
-import           Reason.Type
+import           OCaml.Common
+import           OCaml.Type
 import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
 
 class HasEncoder a where

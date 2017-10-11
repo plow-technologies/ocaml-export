@@ -4,7 +4,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeOperators #-}
 
-module Reason.Decode
+module OCaml.BuckleScript.Decode
   ( toReasonDecoderRef
   , toReasonDecoderRefWith
   , toReasonDecoderSource
@@ -14,8 +14,8 @@ module Reason.Decode
 import           Control.Monad.Reader
 import           Data.Monoid
 import qualified Data.Text as T
-import           Reason.Common
-import           Reason.Type
+import           OCaml.Common
+import           OCaml.Type
 import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
 
 class HasDecoder a where

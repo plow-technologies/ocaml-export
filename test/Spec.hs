@@ -47,6 +47,8 @@ data SumVariant
   = HasNothing
   | HasSingleInt Int
   | HasSingleTuple (Int,Int)
+  | HasMultipleInts Int Int
+  | HasMultipleTuples (Int,Int) (Int,Int)
   deriving (Show,Eq,Generic, OC.ReasonType)  
   
 

@@ -86,15 +86,40 @@ let encodeNameOrIdNumber (x : nameOrIdNumber) =
        ; ( "contents", Json.Encode.int a )
        ]
 
+type sumVariant =
+  | HasNothing
+  | HasSingleInt of int
+  | HasSingleTuple of (int * int)
+  | HasMultipleInts of int * int
+  | HasMultipleTuples of (int * int) * (int * int)
 
-    (*  | Name (a) ->
-     (Json.Encode.object_
-       [ ( "tag", Json.Encode.string "Name" )
-       , ( "contents", Json.Encode.string a )
-       ])
-  | IdNumber (a) ->
-     (Json.Encode.object_
-       [ ( "tag", Json.Encode.string "IdNumber" )
-       , ( "contents", Json.Encode.int a )
-     ]) *)
-         
+let encodeSumVariant (x : sumVariant) =
+  match x with
+  | HasNothing ->
+     Json.Encode.object_
+       [ ( "tag", Json.Encode.string "HasNothing" )
+       ]
+  | HasSingleInt (y0) ->
+     Json.Encode.object_
+       [ ( "tag", Json.Encode.string "HasSingleInt" )
+       ; ( "contents", Json.Encode.int y0 )
+       ]
+  | HasSingleTuple (y0) ->
+     Json.Encode.object_
+       [ ( "tag", Json.Encode.string "HasSingleTuple" )
+       ; ( "contents", (fun (a,b) -> Json.Encode.array [| Json.Encode.int a ; Json.Encode.int b  |]) y0 )
+       ]
+  | HasMultipleInts (y0,y1) ->
+     Json.Encode.object_
+       [ ( "tag", Json.Encode.string "HasMultipleInts" )
+       ; ( "contents", Json.Encode.array [|Json.Encode.int y0 ; Json.Encode.int y1  |] )
+       ]
+  | HasMultipleTuples (y0,y1) ->
+     Json.Encode.object_
+       [ ("tag", Json.Encode.string "HasMultipleInts")
+       ; ( "contents", Json.Encode.array [| (fun (a,b) -> Json.Encode.array [| Json.Encode.int a ; Json.Encode.int b  |]) y0 ; (fun (a,b) -> Json.Encode.array [| Json.Encode.int a ; Json.Encode.int b  |]) y1 |] )
+       ]
+
+let x = Json.Encode.array [| Json.Encode.int 1 ; Json.Encode.string "asdf" |]
+let y = [1 ; 2 ]
+let z = [ Json.Encode.int 1 ; Json.Encode.int 2 ; Json.Encode.string "asdf" ]

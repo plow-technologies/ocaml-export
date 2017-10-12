@@ -8,6 +8,7 @@ module OCaml.BuckleScript.Encode
   ) where
 
 import           Control.Monad.Reader
+import qualified Data.List as L
 import           Data.Monoid
 import qualified Data.Text as T
 import           OCaml.Common
@@ -61,43 +62,40 @@ instance HasEncoder ReasonConstructor where
     dc <- mapM rndr constrs
     return $ "match x with" <$$> foldl1 (<$$>) dc
 
-jsonEncodeObject :: Doc -> Doc -> Doc -> Doc
-jsonEncodeObject constructor tag contents =
-  constructor <$$>
-    nest 5 ("   Json.Encode.object_" <$$> ("[" <+> tag <$$>
-      contents <$$>
-    "]"))
+jsonEncodeObject :: Doc -> Doc -> Maybe Doc -> Doc
+jsonEncodeObject constructor tag mContents =
+  case mContents of
+    Nothing -> constructor <$$> nest 5 ("   Json.Encode.object_" <$$> ("[" <+> tag <$$> "]"))
+    Just contents -> constructor <$$> nest 5 ("   Json.Encode.object_" <$$> ("[" <+> tag <$$> contents <$$> "]"))
 
 renderSum :: ReasonConstructor -> Reader Options Doc
-renderSum c@(NamedConstructor name ReasonEmpty) = do
-  dc <- render c
+renderSum (NamedConstructor name ReasonEmpty) = do
   let cs = "|" <+> stext name <+> "->"
-  let tag = "  " <+> pair (dquotes "tag") ("Json.Encode.string" <+> dquotes (stext name))
-  let ct = "  ;" <+> pair (dquotes "contents") dc
-
-  return $ jsonEncodeObject cs tag ct
+  let tag = pair (dquotes "tag") ("Json.Encode.string" <+> dquotes (stext name))
+  return $ jsonEncodeObject cs tag Nothing
 
 renderSum (NamedConstructor name value) = do
   let ps = constructorParameters 0 value
 
   (dc, _) <- renderVariable ps value
-  let dc' = if length ps > 1 then "Json.Encode.list" <+> squarebracks dc else dc
-  let cs = "|" <+> stext name <+> foldl1 (<+>) ps <+> "->"
-  let tag = pair (dquotes "tag") ("Json.Encode.string" <+> dquotes (stext name))
-  let ct = ";" <+> pair (dquotes "contents") dc'
+  let dc' = if length ps > 1 then "Json.Encode.array" <+> arraybrackets dc else dc
+      ps' = if length ps > 1 then ["("] <> (L.intersperse "," ps) <> [")"] else (L.intersperse "," ps)
+      cs  = "|" <+> stext name <+> foldl1 (<>) ps' <+> "->"
+      tag = pair (dquotes "tag") ("Json.Encode.string" <+> dquotes (stext name))
+      ct  = ";" <+> pair (dquotes "contents") dc'
 
-  return $ jsonEncodeObject cs tag ct
+  return $ jsonEncodeObject cs tag (Just ct)
 
 renderSum (RecordConstructor name value) = do
   dv <- render value
   let cs = "|" <+> stext name <+> "->"
   let tag = pair (dquotes "tag") (dquotes $ stext name)
   let ct = comma <+> dv
-  return $ jsonEncodeObject cs tag ct
+  return $ jsonEncodeObject cs tag (Just ct)
 
 renderSum (MultipleConstructors constrs) = do
   dc <- mapM renderSum constrs
-  return $ foldl1 (<$+$>) dc
+  return $ foldl1 (<$$>) dc
 
 
 renderEnumeration :: ReasonConstructor -> Reader Options Doc
@@ -143,25 +141,25 @@ instance HasEncoderRef ReasonPrimitive where
   renderRef (RTuple2 a b) = do
     da <- renderRef a
     db <- renderRef b
-    return . parens $ "fun (a,b) -> Json.Encode.array [|" <+> da <+> "a ," <+> db <+> "b" <+> " |]"
+    return . parens $ "fun (a,b) -> Json.Encode.array [|" <+> da <+> "a ;" <+> db <+> "b" <+> " |]"
   renderRef (RTuple3 a b c) = do
     da <- renderRef a
     db <- renderRef b
     dc <- renderRef c
-    return . parens $ "fun (a,b,c) -> Json.Encode.array [|" <+> da <+> "a ," <+> db <+> "b" <+> dc <+> "c" <+> "|]"
+    return . parens $ "fun (a,b,c) -> Json.Encode.array [|" <+> da <+> "a ;" <+> db <+> "b ;" <+> dc <+> "c" <+> "|]"
   renderRef (RTuple4 a b c d) = do
     da <- renderRef a
     db <- renderRef b
     dc <- renderRef c
     dd <- renderRef d
-    return . parens $ "fun (a,b,c,d) -> Json.Encode.array [|" <+> da <+> "a ," <+> db <+> "b" <+> dc <+> "c" <+> dd <+> "d" <+> "|]"
+    return . parens $ "fun (a,b,c,d) -> Json.Encode.array [|" <+> da <+> "a ;" <+> db <+> "b ;" <+> dc <+> "c ;" <+> dd <+> "d" <+> "|]"
   renderRef (RTuple5 a b c d e) = do
     da <- renderRef a
     db <- renderRef b
     dc <- renderRef c
     dd <- renderRef d
     de <- renderRef e
-    return . parens $ "fun (a,b,c,d,e) -> Json.Encode.array [|" <+> da <+> "a ," <+> db <+> "b" <+> dc <+> "c" <+> dd <+> "d" <+> de <+> "e" <+> "|]"
+    return . parens $ "fun (a,b,c,d,e) -> Json.Encode.array [|" <+> da <+> "a ;" <+> db <+> "b ;" <+> dc <+> "c ;" <+> dd <+> "d ;" <+> de <+> "e" <+> "|]"
   renderRef (RTuple6 a b c d e f) = do
     da <- renderRef a
     db <- renderRef b
@@ -169,7 +167,7 @@ instance HasEncoderRef ReasonPrimitive where
     dd <- renderRef d
     de <- renderRef e
     df <- renderRef f
-    return . parens $ "fun (a,b,c,d,e,f) -> Json.Encode.array [|" <+> da <+> "a ," <+> db <+> "b" <+> dc <+> "c" <+> dd <+> "d" <+> de <+> "e" <+> df <+> "f" <+> "|]"
+    return . parens $ "fun (a,b,c,d,e,f) -> Json.Encode.array [|" <+> da <+> "a ;" <+> db <+> "b ;" <+> dc <+> "c ;" <+> dd <+> "d ;" <+> de <+> "e ;" <+> df <+> "f" <+> "|]"
   renderRef (RDict k v) = do
     dk <- renderRef k
     dv <- renderRef v
@@ -215,7 +213,7 @@ renderVariable (d : ds) (ReasonPrimitiveRef ref) = do
 renderVariable ds (Values l r) = do
   (left, dsl) <- renderVariable ds l
   (right, dsr) <- renderVariable dsl r
-  return (left <> comma <+> right, dsr)
+  return (left <+> ";" <+> right, dsr)
 renderVariable ds f@(ReasonField _ _) = do
   f' <- render f
   return (f', ds)

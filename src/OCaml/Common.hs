@@ -60,6 +60,9 @@ l <$+$> r = l <> emptyline <$$> r
 squarebracks :: Doc -> Doc
 squarebracks doc = "[" <+> doc <+> "]"
 
+arraybrackets :: Doc -> Doc
+arraybrackets doc = "[|" <+> doc <+> "|]"
+
 pair :: Doc -> Doc -> Doc
 pair l r = spaceparens $ l <> comma <+> r
 

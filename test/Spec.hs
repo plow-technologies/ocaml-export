@@ -20,6 +20,11 @@ single sum no parameter : top level string
 multiple sum, no parameter : top level string
 single sum, one or more parameters : top level array
 one or more sums, one or more parameters: tag string, contents top level or array
+
+when the sum type has no parameters, it is always top level
+data OnOrOff = On | Off
+when there is at least one parameter it uses the tag system
+data OnOrOff = On Int | Off
 -}
 
 data Person = Person
@@ -37,6 +42,13 @@ data OnOrOff = On | Off
 
 data NameOrIdNumber = Name String | IdNumber Int
   deriving (Show,Eq,Generic, OC.ReasonType)
+
+data SumVariant
+  = HasNothing
+  | HasSingleInt Int
+  | HasSingleTuple (Int,Int)
+  deriving (Show,Eq,Generic, OC.ReasonType)  
+  
 
 personSpec :: OC.Spec
 personSpec =
@@ -70,8 +82,15 @@ nameOrIdNumberSpec =
     ["NameOrIdNumber"]
     [ OC.toReasonTypeSource (Proxy :: Proxy NameOrIdNumber)
     , OC.toReasonEncoderSource (Proxy :: Proxy NameOrIdNumber)
-    ]    
+    ]
 
+sumVariantSpec :: OC.Spec
+sumVariantSpec =
+  OC.Spec
+    ["SumVariant"]
+    [ OC.toReasonTypeSource (Proxy :: Proxy SumVariant)
+    , OC.toReasonEncoderSource (Proxy :: Proxy SumVariant)
+    ]
 
 spec :: Spec
 spec =
@@ -96,7 +115,11 @@ spec =
       handWritten <- T.readFile "test/golden/sum/NameOrIdNumber.ml"
       automated   <- T.readFile "test/temp/sum/NameOrIdNumber.ml"
       automated `shouldBe` handWritten      
-
+    it "" $ do
+      OC.specsToDir [sumVariantSpec] "./test/temp/sum"
+      handWritten <- T.readFile "test/golden/sum/SumVariant.ml"
+      automated   <- T.readFile "test/temp/sum/SumVariant.ml"
+      automated `shouldBe` handWritten      
 
 
 main :: IO ()

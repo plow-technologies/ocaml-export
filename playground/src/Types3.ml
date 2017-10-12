@@ -165,3 +165,25 @@ let encodeCard (x : card) =
     [ ( "suit", encodeSuit x.suit )
     ; ( "value", Json.Encode.int x.value )
     ]
+
+(*work around for the fact that ocaml does not support sum of product that has named accessors *)
+  
+type coo =
+  | CooX of card
+  | CooY of int 
+
+let encodeCoo (x : coo) =
+  match x with
+  | CooX y0 ->
+     (match (Js.Json.decodeObject (encodeCard y0)) with
+      | Some dict ->
+         Js.Dict.set dict "tag" (Js.Json.string "CooX");
+         Js.Json.object_ dict;
+      | None ->
+         Json.Encode.object_ []
+     )
+  | CooY y0 ->
+     Json.Encode.object_
+       [ ( "tag", Json.Encode.string "CooY" )
+       ; ( "contents", Json.Encode.int y0 )
+       ]

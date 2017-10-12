@@ -3,5 +3,6 @@ playground/lib
 playground/node_modules
 .merlin
 \#*#
+.#*
 *.log
 test/temp

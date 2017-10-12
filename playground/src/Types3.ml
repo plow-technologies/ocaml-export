@@ -57,3 +57,44 @@ let encodeCompany (x : company) =
     ; ( "employees", (Json.Encode.list encodePerson) x.employees )
     ]
          
+type onOrOff =
+  | On
+  | Off
+
+let encodeOnOrOff (x : onOrOff) =
+  match x with
+  | On ->
+     Json.Encode.string "On"
+  | Off ->
+     Json.Encode.string "Off"
+
+
+type nameOrIdNumber =
+  | Name of string
+  | IdNumber of int
+
+let encodeNameOrIdNumber (x : nameOrIdNumber) =
+  match x with
+  | Name a ->
+     Json.Encode.object_
+       [ ("tag", Json.Encode.string "Name")
+       ; ( "contents", Json.Encode.string a )
+       ]
+  | IdNumber a ->
+     Json.Encode.object_
+       [ ("tag", Json.Encode.string "Name")
+       ; ( "contents", Json.Encode.int a )
+       ]
+
+
+    (*  | Name (a) ->
+     (Json.Encode.object_
+       [ ( "tag", Json.Encode.string "Name" )
+       , ( "contents", Json.Encode.string a )
+       ])
+  | IdNumber (a) ->
+     (Json.Encode.object_
+       [ ( "tag", Json.Encode.string "IdNumber" )
+       , ( "contents", Json.Encode.int a )
+     ]) *)
+         

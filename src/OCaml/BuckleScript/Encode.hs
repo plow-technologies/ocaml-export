@@ -45,7 +45,7 @@ instance HasEncoder ReasonConstructor where
     (dv, _) <- renderVariable ps value
 
     let cs = stext name <+> foldl1 (<+>) ps <+> "->"
-    return . nest 2 $ "case x of" <$$>
+    return . nest 2 $ "match x with" <$$>
       (nest 2 $ cs <$$> nest 2 ("Json.Encode.list" <$$> "[" <+> dv <$$> "]"))
 
   -- Single constructor, one value: skip constructor and render just the value
@@ -59,21 +59,21 @@ instance HasEncoder ReasonConstructor where
   render mc@(MultipleConstructors constrs) = do
     let rndr = if isEnumeration mc then renderEnumeration else renderSum
     dc <- mapM rndr constrs
-    return . nest 2 $ "case x of" <$$> foldl1 (<$+$>) dc
+    return $ "match x with" <$$> foldl1 (<$$>) dc
 
 jsonEncodeObject :: Doc -> Doc -> Doc -> Doc
 jsonEncodeObject constructor tag contents =
-  nest 2 $ constructor <$$>
-    nest 2 ("Json.Encode.object" <$$> "[" <+> tag <$$>
+  constructor <$$>
+    nest 5 ("   Json.Encode.object_" <$$> ("[" <+> tag <$$>
       contents <$$>
-    "]")
+    "]"))
 
 renderSum :: ReasonConstructor -> Reader Options Doc
 renderSum c@(NamedConstructor name ReasonEmpty) = do
   dc <- render c
-  let cs = stext name <+> "->"
-  let tag = pair (dquotes "tag") ("Json.Encode.string" <+> dquotes (stext name))
-  let ct = comma <+> pair (dquotes "contents") dc
+  let cs = "|" <+> stext name <+> "->"
+  let tag = "  " <+> pair (dquotes "tag") ("Json.Encode.string" <+> dquotes (stext name))
+  let ct = "  ;" <+> pair (dquotes "contents") dc
 
   return $ jsonEncodeObject cs tag ct
 
@@ -82,15 +82,15 @@ renderSum (NamedConstructor name value) = do
 
   (dc, _) <- renderVariable ps value
   let dc' = if length ps > 1 then "Json.Encode.list" <+> squarebracks dc else dc
-  let cs = stext name <+> foldl1 (<+>) ps <+> "->"
+  let cs = "|" <+> stext name <+> foldl1 (<+>) ps <+> "->"
   let tag = pair (dquotes "tag") ("Json.Encode.string" <+> dquotes (stext name))
-  let ct = comma <+> pair (dquotes "contents") dc'
+  let ct = ";" <+> pair (dquotes "contents") dc'
 
   return $ jsonEncodeObject cs tag ct
 
 renderSum (RecordConstructor name value) = do
   dv <- render value
-  let cs = stext name <+> "->"
+  let cs = "|" <+> stext name <+> "->"
   let tag = pair (dquotes "tag") (dquotes $ stext name)
   let ct = comma <+> dv
   return $ jsonEncodeObject cs tag ct
@@ -102,11 +102,11 @@ renderSum (MultipleConstructors constrs) = do
 
 renderEnumeration :: ReasonConstructor -> Reader Options Doc
 renderEnumeration (NamedConstructor name _) =
-  return . nest 2 $ stext name <+> "->" <$$>
-      "Json.Encode.string" <+> dquotes (stext name)
+  return $ "|" <+> stext name <+> "->" <$$>
+      "   Json.Encode.string" <+> dquotes (stext name)
 renderEnumeration (MultipleConstructors constrs) = do
   dc <- mapM renderEnumeration constrs
-  return $ foldl1 (<$+$>) dc
+  return $ foldl1 (<$$>) dc
 renderEnumeration c = render c
 
 

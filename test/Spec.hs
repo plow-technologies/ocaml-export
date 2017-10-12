@@ -35,6 +35,9 @@ data Company = Company
 data OnOrOff = On | Off
   deriving (Show,Eq,Generic, OC.ReasonType)
 
+data NameOrIdNumber = Name String | IdNumber Int
+  deriving (Show,Eq,Generic, OC.ReasonType)
+
 personSpec :: OC.Spec
 personSpec =
   OC.Spec
@@ -61,6 +64,15 @@ onOrOffSpec =
     , OC.toReasonEncoderSource (Proxy :: Proxy OnOrOff)
     ]    
 
+nameOrIdNumberSpec :: OC.Spec
+nameOrIdNumberSpec =
+  OC.Spec
+    ["NameOrIdNumber"]
+    [ OC.toReasonTypeSource (Proxy :: Proxy NameOrIdNumber)
+    , OC.toReasonEncoderSource (Proxy :: Proxy NameOrIdNumber)
+    ]    
+
+
 spec :: Spec
 spec =
   describe "toReasonTypeSource" $ do
@@ -79,6 +91,13 @@ spec =
       handWritten <- T.readFile "test/golden/sum/OnOrOff.ml"
       automated   <- T.readFile "test/temp/sum/OnOrOff.ml"
       automated `shouldBe` handWritten      
+    it "" $ do
+      OC.specsToDir [nameOrIdNumberSpec] "./test/temp/sum"
+      handWritten <- T.readFile "test/golden/sum/NameOrIdNumber.ml"
+      automated   <- T.readFile "test/temp/sum/NameOrIdNumber.ml"
+      automated `shouldBe` handWritten      
+
+
 
 main :: IO ()
 main = hspec spec

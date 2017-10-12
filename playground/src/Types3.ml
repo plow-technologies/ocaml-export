@@ -123,3 +123,17 @@ let encodeSumVariant (x : sumVariant) =
 let x = Json.Encode.array [| Json.Encode.int 1 ; Json.Encode.string "asdf" |]
 let y = [1 ; 2 ]
 let z = [ Json.Encode.int 1 ; Json.Encode.int 2 ; Json.Encode.string "asdf" ]
+
+type tuple =
+  int * int
+
+let encodeTuple (x : tuple) =
+  (fun (a,b) -> Json.Encode.array [| Json.Encode.int a ; Json.Encode.int b |]) x
+
+type withTuple =
+  | WithTuple of (int * int)
+
+let encodeWithTuple (x : withTuple) =
+  match x with
+  | WithTuple y0 ->
+     (fun (a,b) -> Json.Encode.array [| Json.Encode.int a ; Json.Encode.int b  |]) y0

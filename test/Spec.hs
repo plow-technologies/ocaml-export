@@ -50,7 +50,12 @@ data SumVariant
   | HasMultipleInts Int Int
   | HasMultipleTuples (Int,Int) (Int,Int)
   deriving (Show,Eq,Generic, OC.ReasonType)  
-  
+
+type Tuple
+  = (Int,Int)
+
+data WithTuple = WithTuple Tuple
+  deriving (Show,Eq,Generic, OC.ReasonType)  
 
 personSpec :: OC.Spec
 personSpec =
@@ -94,6 +99,23 @@ sumVariantSpec =
     , OC.toReasonEncoderSource (Proxy :: Proxy SumVariant)
     ]
 
+tupleSpec :: OC.Spec
+tupleSpec =
+  OC.Spec
+    ["Tuple"]
+    [ OC.toReasonTypeSource (Proxy :: Proxy Tuple)
+    , OC.toReasonEncoderSource (Proxy :: Proxy Tuple)
+    ]
+
+withTupleSpec :: OC.Spec
+withTupleSpec =
+  OC.Spec
+    ["WithTuple"]
+    [ OC.toReasonTypeSource (Proxy :: Proxy WithTuple)
+    , OC.toReasonEncoderSource (Proxy :: Proxy WithTuple)
+    ]
+
+
 spec :: Spec
 spec =
   describe "toReasonTypeSource" $ do
@@ -111,18 +133,22 @@ spec =
       OC.specsToDir [onOrOffSpec] "./test/temp/sum"
       handWritten <- T.readFile "test/golden/sum/OnOrOff.ml"
       automated   <- T.readFile "test/temp/sum/OnOrOff.ml"
-      automated `shouldBe` handWritten      
+      automated `shouldBe` handWritten
     it "" $ do
       OC.specsToDir [nameOrIdNumberSpec] "./test/temp/sum"
       handWritten <- T.readFile "test/golden/sum/NameOrIdNumber.ml"
       automated   <- T.readFile "test/temp/sum/NameOrIdNumber.ml"
-      automated `shouldBe` handWritten      
+      automated `shouldBe` handWritten
     it "" $ do
       OC.specsToDir [sumVariantSpec] "./test/temp/sum"
       handWritten <- T.readFile "test/golden/sum/SumVariant.ml"
       automated   <- T.readFile "test/temp/sum/SumVariant.ml"
-      automated `shouldBe` handWritten      
-
-
+      automated `shouldBe` handWritten
+    it "" $ do
+      OC.specsToDir [withTupleSpec] "./test/temp/sum"
+      handWritten <- T.readFile "test/golden/sum/WithTuple.ml"
+      automated   <- T.readFile "test/temp/sum/WithTuple.ml"
+      automated `shouldBe` handWritten
+      
 main :: IO ()
 main = hspec spec

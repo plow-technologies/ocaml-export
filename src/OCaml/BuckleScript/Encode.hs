@@ -40,18 +40,15 @@ instance HasEncoder ReasonConstructor where
     return $ "Json.Encode.list []"
 
   -- Single constructor, multiple values: create array with values
-  render (NamedConstructor name value@(Values _ _)) = do
+  render c@(NamedConstructor name value) = do
     let ps = constructorParameters 0 value
 
-    (dv, _) <- renderVariable ps value
+    (dc, _) <- renderVariable ps value
+    let dc' = if length ps > 1 then "Json.Encode.array" <+> arraybrackets dc else dc
+        ps' = if length ps > 1 then ["("] <> (L.intersperse "," ps) <> [")"] else (L.intersperse "," ps)
 
-    let cs = stext name <+> foldl1 (<+>) ps <+> "->"
-    return . nest 2 $ "match x with" <$$>
-      (nest 2 $ cs <$$> nest 2 ("Json.Encode.list" <$$> "[" <+> dv <$$> "]"))
-
-  -- Single constructor, one value: skip constructor and render just the value
-  render (NamedConstructor _name val) =
-    render val
+    return $ "match x with" <$$>
+      "|" <+> stext name <+> foldl1 (<>) ps' <+> "->" <$$> "   " <> dc'
   
   render (RecordConstructor _ value) = do
     dv <- render value
@@ -67,7 +64,7 @@ jsonEncodeObject constructor tag mContents =
   case mContents of
     Nothing -> constructor <$$> nest 5 ("   Json.Encode.object_" <$$> ("[" <+> tag <$$> "]"))
     Just contents -> constructor <$$> nest 5 ("   Json.Encode.object_" <$$> ("[" <+> tag <$$> contents <$$> "]"))
-
+  
 renderSum :: ReasonConstructor -> Reader Options Doc
 renderSum (NamedConstructor name ReasonEmpty) = do
   let cs = "|" <+> stext name <+> "->"

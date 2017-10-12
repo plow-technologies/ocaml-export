@@ -57,6 +57,19 @@ type Tuple
 data WithTuple = WithTuple Tuple
   deriving (Show,Eq,Generic, OC.ReasonType)  
 
+data Suit
+  = Clubs
+  | Diamonds
+  | Hearts
+  | Spades
+  deriving (Eq,Show,Generic,OC.ReasonType)
+
+data Card =
+  Card
+    { cardSuit  :: Suit
+    , cardValue :: Int
+    } deriving (Eq,Show,Generic,OC.ReasonType)
+
 personSpec :: OC.Spec
 personSpec =
   OC.Spec
@@ -115,6 +128,16 @@ withTupleSpec =
     , OC.toReasonEncoderSource (Proxy :: Proxy WithTuple)
     ]
 
+cardSpec :: OC.Spec
+cardSpec =
+  OC.Spec
+    ["Card"]
+    [ OC.toReasonTypeSource (Proxy :: Proxy Suit)
+    , OC.toReasonEncoderSource (Proxy :: Proxy Suit)
+    , OC.toReasonTypeSource (Proxy :: Proxy Card)
+    , OC.toReasonEncoderSource (Proxy :: Proxy Card)
+    ]
+
 
 spec :: Spec
 spec =
@@ -148,6 +171,11 @@ spec =
       OC.specsToDir [withTupleSpec] "./test/temp/sum"
       handWritten <- T.readFile "test/golden/sum/WithTuple.ml"
       automated   <- T.readFile "test/temp/sum/WithTuple.ml"
+      automated `shouldBe` handWritten
+    it "" $ do
+      OC.specsToDir [cardSpec] "./test/temp/product"
+      handWritten <- T.readFile "test/golden/product/Card.ml"
+      automated   <- T.readFile "test/temp/product/Card.ml"
       automated `shouldBe` handWritten
       
 main :: IO ()

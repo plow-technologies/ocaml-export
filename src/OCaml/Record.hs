@@ -52,7 +52,7 @@ instance HasType ReasonConstructor where
     mintercalate (line <> "|" <> space) <$> sequence (render <$> constructors)
 
 instance HasType ReasonValue where
-  render (ReasonRef name) = pure (stext name)
+  render (ReasonRef name) = pure (stext $ textLowercaseFirst name)
   render (ReasonPrimitiveRef primitive) = reasonRefParens primitive <$> renderRef primitive
   render ReasonEmpty = pure (text "")
   render (Values x y) = do

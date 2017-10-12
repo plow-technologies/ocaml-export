@@ -137,3 +137,31 @@ let encodeWithTuple (x : withTuple) =
   match x with
   | WithTuple y0 ->
      (fun (a,b) -> Json.Encode.array [| Json.Encode.int a ; Json.Encode.int b  |]) y0
+
+type suit =
+  | Clubs
+  | Diamonds
+  | Hearts
+  | Spades
+
+let encodeSuit (x : suit) =
+  match x with
+  | Clubs ->
+     Json.Encode.string "Clubs"
+  | Diamonds ->
+     Json.Encode.string "Diamonds"
+  | Hearts ->
+     Json.Encode.string "Hearts"
+  | Spades ->
+     Json.Encode.string "Spades"
+  
+type card =
+  { suit  : suit
+  ; value : int
+  }
+
+let encodeCard (x : card) =
+  Json.Encode.object_
+    [ ( "suit", encodeSuit x.suit )
+    ; ( "value", Json.Encode.int x.value )
+    ]

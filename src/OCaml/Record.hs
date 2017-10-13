@@ -8,7 +8,9 @@ module OCaml.Record
   ) where
 
 import           Control.Monad.Reader
+import           Data.Maybe (catMaybes)
 import           Data.Monoid
+import           Data.Text (Text)
 import qualified Data.Text as T
 import           OCaml.Common
 import           OCaml.Type
@@ -22,12 +24,56 @@ class HasRecordType a where
 
 class HasTypeRef a where
   renderRef :: a -> Reader Options Doc
+{-
+makeAuxTypeDef :: [Doc] -> Text -> ReasonConstructor -> Reader Options Doc
+makeAuxTypeDef (d:ds) typeName c@(RecordConstructor rName _rValue) = do
+  let newName = (stext $ textLowercaseFirst typeName) <> (stext rName)
+  ctor <- render c
+  return . nest 2 $ "type" <+> newName <+> "=" <$$> ctor
+makeAuxTypeDef ds _ _ = return ""
+-}
+-- | For Haskell Sum of Records, create OCaml record types of each RecordConstructorn
+makeAuxTypeDef :: Text -> ReasonConstructor -> Reader Options (Maybe (Doc,(Text,ReasonConstructor)))
+makeAuxTypeDef typeName c@(RecordConstructor rName _rValue) = do
+  let newName = (stext $ textLowercaseFirst typeName) <> (stext rName)
+  ctor <- render c
+  return $ Just ((nest 2 $ "type" <+> newName <+> "=" <$$> ctor), (rName, RecordConstructor (typeName <> rName) _rValue))
+makeAuxTypeDef _ _ = return Nothing
+
+-- | A Haskell Sum of Records needs to be transformed into OCaml record types
+--   and a sum type. Replace RecordConstructor with NamedConstructor.
+replaceRecordConstructors :: [(Text,ReasonConstructor)] -> ReasonConstructor -> ReasonConstructor
+replaceRecordConstructors newConstructors rc@(RecordConstructor oldName _)  = 
+  case length mrc > 0 of
+    False -> rc
+    True  -> head mrc
+  where
+    rplc (oldName', rc@(RecordConstructor newName _rValue)) =
+      if oldName == oldName' then (Just $ NamedConstructor oldName' (ReasonRef newName)) else Nothing
+    rplc _ = Nothing
+    mrc = catMaybes $ rplc <$> newConstructors
+replaceRecordConstructors _ rc = rc
 
 instance HasType ReasonDatatype where
   render d@(ReasonDatatype _ constructor@(RecordConstructor _ _)) = do
     name <- renderRef d
     ctor <- render constructor
     return . nest 2 $ "type" <+> name <+> "=" <$$> ctor
+  render d@(ReasonDatatype typeName cs@(MultipleConstructors css)) = do
+    if isSumWithRecords cs
+      then do
+        -- for each constructor, if it is a record constructor
+        -- make a special new one, other wise do normal things
+        vs' <- catMaybes <$> sequence (makeAuxTypeDef typeName <$> css)
+        let vs = msuffix (line <> line) (fst <$> vs')
+        let cs' = replaceRecordConstructors (snd <$> vs') <$> css 
+        name <- renderRef d
+        ctor <- render (MultipleConstructors cs')
+        return $ vs <> (nest 2 $ "type" <+> name <+> "=" <$$> "|" <+> ctor)
+      else do
+        name <- renderRef d
+        ctor <- render cs
+        return . nest 2 $ "type" <+> name <+> "=" <$$> "|" <+> ctor
   render d@(ReasonDatatype _ constructor) = do
     name <- renderRef d
     ctor <- render constructor

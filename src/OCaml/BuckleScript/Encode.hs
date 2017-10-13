@@ -9,7 +9,9 @@ module OCaml.BuckleScript.Encode
 
 import           Control.Monad.Reader
 import qualified Data.List as L
+import           Data.Maybe (catMaybes)
 import           Data.Monoid
+import           Data.Text (Text)
 import qualified Data.Text as T
 import           OCaml.Common
 import           OCaml.Type
@@ -22,14 +24,34 @@ class HasEncoderRef a where
   renderRef :: a -> Reader Options Doc
 
 instance HasEncoder ReasonDatatype where
+  -- handle case where SumWithRecords exists
+  render d@(ReasonDatatype typeName mc@(MultipleConstructors constrs)) = do
+    fnName <- renderRef d
+      
+    if isSumWithRecords mc
+      then do
+        docs <- catMaybes <$> sequence (renderSumRecord typeName <$> constrs)
+        let vs = msuffix (line <> line) docs
+        dc <- mapM renderSum constrs
+        return $ vs <$$>
+          ("let" <+> fnName <+> "(x :" <+> stext (textLowercaseFirst typeName) <> ") =") <$$>
+          (indent 2 ("match x with" <$$> foldl1 (<$$>) dc))
+      else do
+        let rndr = if isEnumeration mc then renderEnumeration else renderSum
+        dc <- mapM rndr constrs
+        return $
+          ("let" <+> fnName <+> "(x :" <+> stext (textLowercaseFirst typeName) <> ") =") <$$>
+          (indent 2 ("match x with" <$$> foldl1 (<$$>) dc))
+
   render d@(ReasonDatatype name constructor) = do
     fnName <- renderRef d
     ctor <- render constructor
     return $
       ("let" <+> fnName <+> "(x :" <+> stext (textLowercaseFirst name) <> ") =") <$$>
       (indent 2 ctor)
-  render (ReasonPrimitive primitive) = renderRef primitive
 
+  render (ReasonPrimitive primitive) = renderRef primitive
+    
 instance HasEncoderRef ReasonDatatype where
   renderRef (ReasonDatatype name _) = pure $ "encode" <> stext name
   renderRef (ReasonPrimitive primitive) = renderRef primitive
@@ -59,6 +81,14 @@ instance HasEncoder ReasonConstructor where
     let rndr = if isEnumeration mc then renderEnumeration else renderSum
     dc <- mapM rndr constrs
     return $ extra <> "match x with" <$$> foldl1 (<$$>) dc
+
+renderSumRecord :: Text -> ReasonConstructor -> Reader Options (Maybe Doc)
+renderSumRecord typeName c@(RecordConstructor name value) = do
+  s <- render (RecordConstructor (typeName <> name) value)
+  return $ Just $ "let encode" <> (stext newName) <> " (x : " <> (stext $ textLowercaseFirst newName) <> ") =" <$$> (indent 2 s)
+  where
+    newName = typeName <> name
+renderSumRecord _ _ = return Nothing
 
 jsonEncodeObject :: Doc -> Doc -> Maybe Doc -> Doc
 jsonEncodeObject constructor tag mContents =

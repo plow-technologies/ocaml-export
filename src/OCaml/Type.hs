@@ -19,209 +19,209 @@ import           GHC.Generics
 import           Prelude
 
 
-data ReasonDatatype
-  = ReasonDatatype Text ReasonConstructor
-  | ReasonPrimitive ReasonPrimitive
+data OCamlDatatype
+  = OCamlDatatype Text OCamlConstructor
+  | OCamlPrimitive OCamlPrimitive
   deriving (Show, Eq)
 
-data ReasonPrimitive
-  = RInt -- int (Int32 or JS.Int)
-  | RBool -- bool
-  | RChar -- char, Char doesn't support Unicode or UTF-8, better to use string
-  | RDate -- Js.Date
-  | RFloat -- Js.Float
-  | RString -- string
-  | RUnit -- ()
-  | RList ReasonDatatype -- list
-  | RMaybe ReasonDatatype -- option (None,Some)
-  | RDict ReasonPrimitive ReasonDatatype
-  | RTuple2 ReasonDatatype ReasonDatatype -- (,)
-  | RTuple3 ReasonDatatype ReasonDatatype ReasonDatatype -- (,,)
-  | RTuple4 ReasonDatatype ReasonDatatype ReasonDatatype ReasonDatatype -- (,,,)
-  | RTuple5 ReasonDatatype ReasonDatatype ReasonDatatype ReasonDatatype ReasonDatatype -- (,,,,)
-  | RTuple6 ReasonDatatype ReasonDatatype ReasonDatatype ReasonDatatype ReasonDatatype ReasonDatatype -- (,,,,,)
+data OCamlPrimitive
+  = OInt -- int (Int32 or JS.Int)
+  | OBool -- bool
+  | OChar -- char, Char doesn't support Unicode or UTF-8, better to use string
+  | ODate -- Js.Date
+  | OFloat -- Js.Float
+  | OString -- string
+  | OUnit -- ()
+  | OList OCamlDatatype -- list
+  | OOption OCamlDatatype -- option (None,Some)
+  | ODict OCamlPrimitive OCamlDatatype
+  | OTuple2 OCamlDatatype OCamlDatatype -- (,)
+  | OTuple3 OCamlDatatype OCamlDatatype OCamlDatatype -- (,,)
+  | OTuple4 OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype -- (,,,)
+  | OTuple5 OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype -- (,,,,)
+  | OTuple6 OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype -- (,,,,,)
   deriving (Show, Eq)
 
-data ReasonConstructor
-  = NamedConstructor Text ReasonValue
-  | RecordConstructor Text ReasonValue
-  | MultipleConstructors [ReasonConstructor]
+data OCamlConstructor
+  = NamedConstructor Text OCamlValue
+  | RecordConstructor Text OCamlValue
+  | MultipleConstructors [OCamlConstructor]
   deriving (Show, Eq)
 
-data ReasonValue
-  = ReasonRef Text
-  | ReasonEmpty
-  | ReasonPrimitiveRef ReasonPrimitive
-  | Values ReasonValue ReasonValue
-  | ReasonField Text ReasonValue
+data OCamlValue
+  = OCamlRef Text
+  | OCamlEmpty
+  | OCamlPrimitiveRef OCamlPrimitive
+  | Values OCamlValue OCamlValue
+  | OCamlField Text OCamlValue
   deriving (Show, Eq)
 
 ------------------------------------------------------------
-class ReasonType a where
-  toReasonType :: a -> ReasonDatatype
-  toReasonType = genericToReasonDatatype . from
-  default toReasonType :: (Generic a, GenericReasonDatatype (Rep a)) =>
-    a -> ReasonDatatype
+class OCamlType a where
+  toOCamlType :: a -> OCamlDatatype
+  toOCamlType = genericToOCamlDatatype . from
+  default toOCamlType :: (Generic a, GenericOCamlDatatype (Rep a)) =>
+    a -> OCamlDatatype
 
 ------------------------------------------------------------
-class GenericReasonDatatype f where
-  genericToReasonDatatype :: f a -> ReasonDatatype
+class GenericOCamlDatatype f where
+  genericToOCamlDatatype :: f a -> OCamlDatatype
 
-instance (Datatype d, GenericReasonConstructor f) => GenericReasonDatatype (D1 d f) where
-  genericToReasonDatatype datatype =
-    ReasonDatatype
+instance (Datatype d, GenericOCamlConstructor f) => GenericOCamlDatatype (D1 d f) where
+  genericToOCamlDatatype datatype =
+    OCamlDatatype
       (T.pack (datatypeName datatype))
-      (genericToReasonConstructor (unM1 datatype))
+      (genericToOCamlConstructor (unM1 datatype))
 
 -- ------------------------------------------------------------
-class GenericReasonConstructor f where
-  genericToReasonConstructor :: f a -> ReasonConstructor
+class GenericOCamlConstructor f where
+  genericToOCamlConstructor :: f a -> OCamlConstructor
 
-instance (Constructor c, GenericReasonValue f) => GenericReasonConstructor (C1 c f) where
-  genericToReasonConstructor constructor =
+instance (Constructor c, GenericOCamlValue f) => GenericOCamlConstructor (C1 c f) where
+  genericToOCamlConstructor constructor =
     if conIsRecord constructor
-      then RecordConstructor name (genericToReasonValue (unM1 constructor))
-      else NamedConstructor name (genericToReasonValue (unM1 constructor))
+      then RecordConstructor name (genericToOCamlValue (unM1 constructor))
+      else NamedConstructor name (genericToOCamlValue (unM1 constructor))
     where
       name = T.pack $ conName constructor
 
-instance (GenericReasonConstructor f, GenericReasonConstructor g) =>
-         GenericReasonConstructor (f :+: g) where
-  genericToReasonConstructor _ =
+instance (GenericOCamlConstructor f, GenericOCamlConstructor g) =>
+         GenericOCamlConstructor (f :+: g) where
+  genericToOCamlConstructor _ =
     MultipleConstructors
-      [ genericToReasonConstructor (undefined :: f p)
-      , genericToReasonConstructor (undefined :: g p)
+      [ genericToOCamlConstructor (undefined :: f p)
+      , genericToOCamlConstructor (undefined :: g p)
       ]
 
 ------------------------------------------------------------
-class GenericReasonValue f where
-  genericToReasonValue :: f a -> ReasonValue
+class GenericOCamlValue f where
+  genericToOCamlValue :: f a -> OCamlValue
 
-instance (Selector s, GenericReasonValue a) =>
-         GenericReasonValue (S1 s a) where
-  genericToReasonValue selector =
+instance (Selector s, GenericOCamlValue a) =>
+         GenericOCamlValue (S1 s a) where
+  genericToOCamlValue selector =
     case selName selector of
-      ""   -> genericToReasonValue (undefined :: a p)
-      name -> ReasonField (T.pack name) (genericToReasonValue (undefined :: a p))
+      ""   -> genericToOCamlValue (undefined :: a p)
+      name -> OCamlField (T.pack name) (genericToOCamlValue (undefined :: a p))
 
-instance (GenericReasonValue f, GenericReasonValue g) =>
-         GenericReasonValue (f :*: g) where
-  genericToReasonValue _ =
+instance (GenericOCamlValue f, GenericOCamlValue g) =>
+         GenericOCamlValue (f :*: g) where
+  genericToOCamlValue _ =
     Values
-      (genericToReasonValue (undefined :: f p))
-      (genericToReasonValue (undefined :: g p))
+      (genericToOCamlValue (undefined :: f p))
+      (genericToOCamlValue (undefined :: g p))
 
-instance GenericReasonValue U1 where
-  genericToReasonValue _ = ReasonEmpty
+instance GenericOCamlValue U1 where
+  genericToOCamlValue _ = OCamlEmpty
 
-instance ReasonType a => GenericReasonValue (Rec0 a) where
-  genericToReasonValue _ =
-    case toReasonType (Proxy :: Proxy a) of
-      ReasonPrimitive primitive -> ReasonPrimitiveRef primitive
-      ReasonDatatype name _     -> ReasonRef name
+instance OCamlType a => GenericOCamlValue (Rec0 a) where
+  genericToOCamlValue _ =
+    case toOCamlType (Proxy :: Proxy a) of
+      OCamlPrimitive primitive -> OCamlPrimitiveRef primitive
+      OCamlDatatype name _     -> OCamlRef name
 
-instance ReasonType a => ReasonType [a] where
-  toReasonType _ = ReasonPrimitive (RList (toReasonType (Proxy :: Proxy a)))
+instance OCamlType a => OCamlType [a] where
+  toOCamlType _ = OCamlPrimitive (OList (toOCamlType (Proxy :: Proxy a)))
 
-instance ReasonType a => ReasonType (Maybe a) where
-  toReasonType _ = ReasonPrimitive (RMaybe (toReasonType (Proxy :: Proxy a)))
+instance OCamlType a => OCamlType (Maybe a) where
+  toOCamlType _ = OCamlPrimitive (OOption (toOCamlType (Proxy :: Proxy a)))
 
-instance ReasonType () where
-  toReasonType _ = ReasonPrimitive RUnit
+instance OCamlType () where
+  toOCamlType _ = OCamlPrimitive OUnit
 
-instance ReasonType Text where
-  toReasonType _ = ReasonPrimitive RString
+instance OCamlType Text where
+  toOCamlType _ = OCamlPrimitive OString
 
-instance ReasonType Day where
-  toReasonType _ = ReasonPrimitive RDate
+instance OCamlType Day where
+  toOCamlType _ = OCamlPrimitive ODate
 
-instance ReasonType UTCTime where
-  toReasonType _ = ReasonPrimitive RDate
+instance OCamlType UTCTime where
+  toOCamlType _ = OCamlPrimitive ODate
 
-instance ReasonType Float where
-  toReasonType _ = ReasonPrimitive RFloat
+instance OCamlType Float where
+  toOCamlType _ = OCamlPrimitive OFloat
 
-instance ReasonType Double where
-  toReasonType _ = ReasonPrimitive RFloat
+instance OCamlType Double where
+  toOCamlType _ = OCamlPrimitive OFloat
 
-instance ReasonType Int8 where
-  toReasonType _ = ReasonPrimitive RInt
+instance OCamlType Int8 where
+  toOCamlType _ = OCamlPrimitive OInt
 
-instance ReasonType Int16 where
-  toReasonType _ = ReasonPrimitive RInt
+instance OCamlType Int16 where
+  toOCamlType _ = OCamlPrimitive OInt
 
-instance ReasonType Int32 where
-  toReasonType _ = ReasonPrimitive RInt
+instance OCamlType Int32 where
+  toOCamlType _ = OCamlPrimitive OInt
 
-instance ReasonType Int64 where
-  toReasonType _ = ReasonPrimitive RInt
+instance OCamlType Int64 where
+  toOCamlType _ = OCamlPrimitive OInt
 
-instance (ReasonType a, ReasonType b) => ReasonType (a, b) where
-  toReasonType _ =
-    ReasonPrimitive $
-    RTuple2 (toReasonType (Proxy :: Proxy a)) (toReasonType (Proxy :: Proxy b))
+instance (OCamlType a, OCamlType b) => OCamlType (a, b) where
+  toOCamlType _ =
+    OCamlPrimitive $
+    OTuple2 (toOCamlType (Proxy :: Proxy a)) (toOCamlType (Proxy :: Proxy b))
 
-instance (ReasonType a, ReasonType b, ReasonType c) => ReasonType (a, b, c) where
-  toReasonType _ =
-    ReasonPrimitive $
-    RTuple3 (toReasonType (Proxy :: Proxy a)) (toReasonType (Proxy :: Proxy b))
-            (toReasonType (Proxy :: Proxy c))
+instance (OCamlType a, OCamlType b, OCamlType c) => OCamlType (a, b, c) where
+  toOCamlType _ =
+    OCamlPrimitive $
+    OTuple3 (toOCamlType (Proxy :: Proxy a)) (toOCamlType (Proxy :: Proxy b))
+            (toOCamlType (Proxy :: Proxy c))
 
-instance (ReasonType a, ReasonType b, ReasonType c, ReasonType d) => ReasonType (a, b, c, d) where
-  toReasonType _ =
-    ReasonPrimitive $
-    RTuple4 (toReasonType (Proxy :: Proxy a)) (toReasonType (Proxy :: Proxy b))
-            (toReasonType (Proxy :: Proxy c)) (toReasonType (Proxy :: Proxy d))
+instance (OCamlType a, OCamlType b, OCamlType c, OCamlType d) => OCamlType (a, b, c, d) where
+  toOCamlType _ =
+    OCamlPrimitive $
+    OTuple4 (toOCamlType (Proxy :: Proxy a)) (toOCamlType (Proxy :: Proxy b))
+            (toOCamlType (Proxy :: Proxy c)) (toOCamlType (Proxy :: Proxy d))
 
-instance (ReasonType a, ReasonType b, ReasonType c, ReasonType d, ReasonType e) => ReasonType (a, b, c, d, e) where
-  toReasonType _ =
-    ReasonPrimitive $
-    RTuple5 (toReasonType (Proxy :: Proxy a)) (toReasonType (Proxy :: Proxy b))
-            (toReasonType (Proxy :: Proxy c)) (toReasonType (Proxy :: Proxy d))
-            (toReasonType (Proxy :: Proxy e))
+instance (OCamlType a, OCamlType b, OCamlType c, OCamlType d, OCamlType e) => OCamlType (a, b, c, d, e) where
+  toOCamlType _ =
+    OCamlPrimitive $
+    OTuple5 (toOCamlType (Proxy :: Proxy a)) (toOCamlType (Proxy :: Proxy b))
+            (toOCamlType (Proxy :: Proxy c)) (toOCamlType (Proxy :: Proxy d))
+            (toOCamlType (Proxy :: Proxy e))
 
-instance (ReasonType a, ReasonType b, ReasonType c, ReasonType d, ReasonType e, ReasonType f) => ReasonType (a, b, c, d, e, f) where
-  toReasonType _ =
-    ReasonPrimitive $
-    RTuple6 (toReasonType (Proxy :: Proxy a)) (toReasonType (Proxy :: Proxy b))
-            (toReasonType (Proxy :: Proxy c)) (toReasonType (Proxy :: Proxy d))
-            (toReasonType (Proxy :: Proxy e)) (toReasonType (Proxy :: Proxy f))
+instance (OCamlType a, OCamlType b, OCamlType c, OCamlType d, OCamlType e, OCamlType f) => OCamlType (a, b, c, d, e, f) where
+  toOCamlType _ =
+    OCamlPrimitive $
+    OTuple6 (toOCamlType (Proxy :: Proxy a)) (toOCamlType (Proxy :: Proxy b))
+            (toOCamlType (Proxy :: Proxy c)) (toOCamlType (Proxy :: Proxy d))
+            (toOCamlType (Proxy :: Proxy e)) (toOCamlType (Proxy :: Proxy f))
 
 
-instance (ReasonType a) =>
-         ReasonType (Proxy a) where
-  toReasonType _ = toReasonType (undefined :: a)
+instance (OCamlType a) =>
+         OCamlType (Proxy a) where
+  toOCamlType _ = toOCamlType (undefined :: a)
 
-instance (HasReasonComparable k, ReasonType v) =>
-         ReasonType (Map k v) where
-  toReasonType _ =
-    ReasonPrimitive $
-    RDict (toReasonComparable (undefined :: k)) (toReasonType (Proxy :: Proxy v))
+instance (HasOCamlComparable k, OCamlType v) =>
+         OCamlType (Map k v) where
+  toOCamlType _ =
+    OCamlPrimitive $
+    ODict (toOCamlComparable (undefined :: k)) (toOCamlType (Proxy :: Proxy v))
 
-instance (ReasonType v) =>
-         ReasonType (IntMap v) where
-  toReasonType _ = ReasonPrimitive $ RDict RInt (toReasonType (Proxy :: Proxy v))
+instance (OCamlType v) =>
+         OCamlType (IntMap v) where
+  toOCamlType _ = OCamlPrimitive $ ODict OInt (toOCamlType (Proxy :: Proxy v))
 
-class HasReasonComparable a where
-  toReasonComparable :: a -> ReasonPrimitive
+class HasOCamlComparable a where
+  toOCamlComparable :: a -> OCamlPrimitive
 
-instance HasReasonComparable String where
-  toReasonComparable _ = RString
+instance HasOCamlComparable String where
+  toOCamlComparable _ = OString
 
-instance ReasonType Int where
-  toReasonType _ = ReasonPrimitive RInt
+instance OCamlType Int where
+  toOCamlType _ = OCamlPrimitive OInt
 
-instance ReasonType Char where
-  toReasonType _ = ReasonPrimitive RChar
+instance OCamlType Char where
+  toOCamlType _ = OCamlPrimitive OChar
 
-instance ReasonType Bool where
-  toReasonType _ = ReasonPrimitive RBool
+instance OCamlType Bool where
+  toOCamlType _ = OCamlPrimitive OBool
 
 -- | Whether a set of constructors is an enumeration, i.e. whether they lack
 --   values. data A = A | B | C would be simple data A = A Int | B | C would not
 --   be simple.
-isEnumeration :: ReasonConstructor -> Bool
-isEnumeration (NamedConstructor _ ReasonEmpty) = True
+isEnumeration :: OCamlConstructor -> Bool
+isEnumeration (NamedConstructor _ OCamlEmpty) = True
 isEnumeration (MultipleConstructors cs) = all isEnumeration cs
 isEnumeration _ = False
 
@@ -229,10 +229,10 @@ isEnumeration _ = False
 -- i.e. data A = A {a :: Int} | B {b :: String}. This does not exist in
 -- OCaml so we have to work around it.
 
-isSumWithRecords :: ReasonConstructor -> Bool
+isSumWithRecords :: OCamlConstructor -> Bool
 isSumWithRecords (MultipleConstructors cs) = (\x -> length x > 1 && or x) $ isSumWithRecordsAux <$> cs
 isSumWithRecords _ = False
 
-isSumWithRecordsAux :: ReasonConstructor -> Bool
+isSumWithRecordsAux :: OCamlConstructor -> Bool
 isSumWithRecordsAux (RecordConstructor _ _) = True
 isSumWithRecordsAux _ = False

@@ -1,14 +1,13 @@
-
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeOperators #-}
 
 module OCaml.BuckleScript.Decode
-  ( toReasonDecoderRef
-  , toReasonDecoderRefWith
-  , toReasonDecoderSource
-  , toReasonDecoderSourceWith
+  ( toOCamlDecoderRef
+  , toOCamlDecoderRefWith
+  , toOCamlDecoderSource
+  , toOCamlDecoderSourceWith
   ) where
 
 import           Control.Monad.Reader
@@ -24,20 +23,20 @@ class HasDecoder a where
 class HasDecoderRef a where
   renderRef :: a -> Reader Options Doc
 
-instance HasDecoder ReasonDatatype where
-  render d@(ReasonDatatype name constructor) = do
+instance HasDecoder OCamlDatatype where
+  render d@(OCamlDatatype name constructor) = do
     fnName <- renderRef d
     ctor <- render constructor
     return $
       (fnName <+> ": Decoder" <+> stext name) <$$>
       (fnName <+> "=" <$$> indent 4 ctor)
-  render (ReasonPrimitive primitive) = renderRef primitive
+  render (OCamlPrimitive primitive) = renderRef primitive
 
-instance HasDecoderRef ReasonDatatype where
-  renderRef (ReasonDatatype name _) = pure $ "decode" <> stext name
-  renderRef (ReasonPrimitive primitive) = renderRef primitive
+instance HasDecoderRef OCamlDatatype where
+  renderRef (OCamlDatatype name _) = pure $ "decode" <> stext name
+  renderRef (OCamlPrimitive primitive) = renderRef primitive
 
-instance HasDecoder ReasonConstructor where
+instance HasDecoder OCamlConstructor where
   render (NamedConstructor name value) = do
     dv <- render value
     return $ "decode" <+> stext name <$$> indent 4 dv
@@ -74,8 +73,8 @@ renderSumCondition name contents =
 
 -- | Render a sum type constructor in context of a data type with multiple
 -- constructors.
-renderSum :: ReasonConstructor -> Reader Options Doc
-renderSum (NamedConstructor name ReasonEmpty) = renderSumCondition name mempty
+renderSum :: OCamlConstructor -> Reader Options Doc
+renderSum (NamedConstructor name OCamlEmpty) = renderSumCondition name mempty
 renderSum (NamedConstructor name v@(Values _ _)) = do
   (_, val) <- renderConstructorArgs 0 v
   renderSumCondition name val
@@ -91,7 +90,7 @@ renderSum (MultipleConstructors constrs) =
 -- | Render the decoding of a constructor's arguments. Note the constructor must
 -- be from a data type with multiple constructors and that it has multiple
 -- constructors itself.
-renderConstructorArgs :: Int -> ReasonValue -> Reader Options (Int, Doc)
+renderConstructorArgs :: Int -> OCamlValue -> Reader Options (Int, Doc)
 renderConstructorArgs i (Values l r) = do
   (iL, rndrL) <- renderConstructorArgs i l
   (iR, rndrR) <- renderConstructorArgs (iL + 1) r
@@ -101,52 +100,52 @@ renderConstructorArgs i val = do
   let index = parens $ "index" <+> int i <+> rndrVal
   pure (i, "|>" <+> requiredContents <+> index)
 
-instance HasDecoder ReasonValue where
-  render (ReasonRef name) = pure $ "decode" <> stext name
-  render (ReasonPrimitiveRef primitive) = renderRef primitive
+instance HasDecoder OCamlValue where
+  render (OCamlRef name) = pure $ "decode" <> stext name
+  render (OCamlPrimitiveRef primitive) = renderRef primitive
   render (Values x y) = do
     dx <- render x
     dy <- render y
     return $ dx <$$> dy
-  render (ReasonField name value) = do
+  render (OCamlField name value) = do
     fieldModifier <- asks fieldLabelModifier
     dv <- render value
     return $ "|> required" <+> dquotes (stext (fieldModifier name)) <+> dv
-  render ReasonEmpty = pure (stext "")
+  render OCamlEmpty = pure (stext "")
   
-instance HasDecoderRef ReasonPrimitive where
-  renderRef (RList (ReasonPrimitive RChar)) = pure "string"
-  renderRef (RList datatype) = do
+instance HasDecoderRef OCamlPrimitive where
+  renderRef (OList (OCamlPrimitive OChar)) = pure "string"
+  renderRef (OList datatype) = do
     dt <- renderRef datatype
     return . parens $ "list" <+> dt
-  renderRef (RDict key value) = do
-    d <- renderRef (RList (ReasonPrimitive (RTuple2 (ReasonPrimitive key) value)))
+  renderRef (ODict key value) = do
+    d <- renderRef (OList (OCamlPrimitive (OTuple2 (OCamlPrimitive key) value)))
     return . parens $ "map Dict.fromList" <+> d
-  renderRef (RMaybe datatype) = do
+  renderRef (OOption datatype) = do
     dt <- renderRef datatype
     return . parens $ "maybe" <+> dt
-  renderRef (RTuple2 x y) = do
+  renderRef (OTuple2 x y) = do
     dx <- renderRef x
     dy <- renderRef y
     return . parens $
       "map2 (,)" <+> parens ("index 0" <+> dx) <+> parens ("index 1" <+> dy)
-  renderRef RUnit = pure $ parens "succeed ()"
-  renderRef RDate = pure "decodeDate"
-  renderRef RInt = pure "int"
-  renderRef RBool = pure "bool"
-  renderRef RChar = pure "char"
-  renderRef RFloat = pure "float"
-  renderRef RString = pure "string"
+  renderRef OUnit = pure $ parens "succeed ()"
+  renderRef ODate = pure "decodeDate"
+  renderRef OInt = pure "int"
+  renderRef OBool = pure "bool"
+  renderRef OChar = pure "char"
+  renderRef OFloat = pure "float"
+  renderRef OString = pure "string"
 
-toReasonDecoderRefWith :: ReasonType a => Options -> a -> T.Text
-toReasonDecoderRefWith options x = pprinter $ runReader (renderRef (toReasonType x)) options
+toOCamlDecoderRefWith :: OCamlType a => Options -> a -> T.Text
+toOCamlDecoderRefWith options x = pprinter $ runReader (renderRef (toOCamlType x)) options
 
-toReasonDecoderRef :: ReasonType a => a -> T.Text
-toReasonDecoderRef = toReasonDecoderRefWith defaultOptions
+toOCamlDecoderRef :: OCamlType a => a -> T.Text
+toOCamlDecoderRef = toOCamlDecoderRefWith defaultOptions
 
-toReasonDecoderSourceWith :: ReasonType a => Options -> a -> T.Text
-toReasonDecoderSourceWith options x = pprinter $ runReader (render (toReasonType x)) options
+toOCamlDecoderSourceWith :: OCamlType a => Options -> a -> T.Text
+toOCamlDecoderSourceWith options x = pprinter $ runReader (render (toOCamlType x)) options
 
-toReasonDecoderSource :: ReasonType a => a -> T.Text
-toReasonDecoderSource = toReasonDecoderSourceWith defaultOptions
+toOCamlDecoderSource :: OCamlType a => a -> T.Text
+toOCamlDecoderSource = toOCamlDecoderSourceWith defaultOptions
 

@@ -11,40 +11,40 @@ import OCaml.Export
 data Person = Person
   { id :: Int
   , name :: Maybe String
-  } deriving (Show, Eq, Generic, ReasonType)
+  } deriving (Show, Eq, Generic, OCamlType)
 
 data Company = Company
   { address   :: String
   , employees :: [Person]
-  } deriving (Show, Eq, Generic, ReasonType)
+  } deriving (Show, Eq, Generic, OCamlType)
 
 data RecWithTuple2 = RecWithTuple2
   { point :: (Int,Int)
   , graph :: Bool
-  } deriving (Show, Eq, Generic, ReasonType)
+  } deriving (Show, Eq, Generic, OCamlType)
 
 data RecWithTuples = RecWithTuples
   { pointIn3d :: (Float,Float,Float)
   , details   :: (Bool,String,Int,String,Company)
-  } deriving (Show, Eq, Generic, ReasonType)
+  } deriving (Show, Eq, Generic, OCamlType)
 
 data SumWithTuple = SumWithTuple (Int,Float,Int) String
-  deriving (Show, Eq, Generic, ReasonType)
+  deriving (Show, Eq, Generic, OCamlType)
 
 data User = User String String
-  deriving (Show, Eq, Generic, ReasonType)  
+  deriving (Show, Eq, Generic, OCamlType)  
 
 data Item
   = A Int String
   | B
   | C Double
-  deriving (Show, Eq, Generic, ReasonType)
+  deriving (Show, Eq, Generic, OCamlType)
 
 data Triple
   = Triple1
   | Triple2
   | Triple3
-  deriving (Show, Eq, Generic, ReasonType)
+  deriving (Show, Eq, Generic, OCamlType)
 
 data Five
   = Five1 Int
@@ -52,71 +52,71 @@ data Five
   | Five3 Int
   | Five4 Int
   | Five5 Int
-  deriving (Show, Eq, Generic, ReasonType)
+  deriving (Show, Eq, Generic, OCamlType)
 
 
 data EndsInSingle
   = AA Int
   | BB String
-  deriving (Show, Eq, Generic, ReasonType)
+  deriving (Show, Eq, Generic, OCamlType)
 
 data EndsInDouble
   = CC Int
   | DD String String
-  deriving (Show, Eq, Generic, ReasonType)
+  deriving (Show, Eq, Generic, OCamlType)
 
 {-
 data Shape
   = Circle Float Float Float
   | Rectangle Float Float Float Float   
-  deriving (Show, Eq, Generic, ReasonType)
+  deriving (Show, Eq, Generic, OCamlType)
 -}
 data SingletonWithSingle = SingletonWithSingle Double
-  deriving (Show, Eq, Generic, ReasonType)
+  deriving (Show, Eq, Generic, OCamlType)
 
 data Point =
   Point
     { x :: Int
     , y :: Int
-    } deriving (Show, Eq, Generic, ReasonType)
+    } deriving (Show, Eq, Generic, OCamlType)
 
 data Rectangle =
   Rectangle
     { leftPoint :: Point
     , rightPoinit :: Point
-    } deriving (Show, Eq, Generic, ReasonType)
+    } deriving (Show, Eq, Generic, OCamlType)
 
 
 spec :: Spec
 spec =
   Spec
     ["Types"]
-    [ toReasonTypeSource (Proxy :: Proxy Person)
-    , toReasonEncoderSource (Proxy :: Proxy Person)
-    , toReasonTypeSource (Proxy :: Proxy Company)
-    , toReasonEncoderSource (Proxy :: Proxy Company)
+    [ toOCamlTypeSource (Proxy :: Proxy Person)
+    , toOCamlEncoderSource (Proxy :: Proxy Person)
+    , toOCamlTypeSource (Proxy :: Proxy Company)
+    , toOCamlEncoderSource (Proxy :: Proxy Company)
     ]
 
 main :: IO ()
 main = do
-  print $ toReasonTypeSource (Proxy :: Proxy Person)
-  print $ toReasonTypeSource (Proxy :: Proxy Company)
-  print $ toReasonTypeSource (Proxy :: Proxy RecWithTuple2)
-  print $ toReasonTypeSource (Proxy :: Proxy RecWithTuples)
-  print $ toReasonTypeSource (Proxy :: Proxy SumWithTuple)
-  print $ toReasonTypeSource (Proxy :: Proxy User)
-  print $ toReasonTypeSource (Proxy :: Proxy Item)
-  print $ toReasonTypeSource (Proxy :: Proxy Triple)
-  print $ toReasonTypeSource (Proxy :: Proxy Five)
-  print $ toReasonTypeSource (Proxy :: Proxy EndsInSingle)
-  print $ toReasonTypeSource (Proxy :: Proxy EndsInDouble)
---  print $ toReasonTypeSource (Proxy :: Proxy Shape)
-  print $ toReasonTypeSource (Proxy :: Proxy SingletonWithSingle)
+  print $ toOCamlTypeSource (Proxy :: Proxy Person)
+  print $ toOCamlTypeSource (Proxy :: Proxy Company)
+  print $ toOCamlTypeSource (Proxy :: Proxy RecWithTuple2)
+  print $ toOCamlTypeSource (Proxy :: Proxy RecWithTuples)
+  print $ toOCamlTypeSource (Proxy :: Proxy SumWithTuple)
+  print $ toOCamlTypeSource (Proxy :: Proxy User)
+  print $ toOCamlTypeSource (Proxy :: Proxy Item)
+  print $ toOCamlTypeSource (Proxy :: Proxy Triple)
+  print $ toOCamlTypeSource (Proxy :: Proxy Five)
+  print $ toOCamlTypeSource (Proxy :: Proxy EndsInSingle)
+  print $ toOCamlTypeSource (Proxy :: Proxy EndsInDouble)
+--  print $ toOCamlTypeSource (Proxy :: Proxy Shape)
+  print $ toOCamlTypeSource (Proxy :: Proxy SingletonWithSingle)
 
-  print $ toReasonEncoderSource (Proxy :: Proxy Person)
-  print $ toReasonEncoderSource (Proxy :: Proxy RecWithTuple2)
+  print $ toOCamlEncoderSource (Proxy :: Proxy Person)
+  print $ toOCamlEncoderSource (Proxy :: Proxy RecWithTuple2)
 
-  print $ toReasonEncoderSource (Proxy :: Proxy Rectangle)
+  print $ toOCamlEncoderSource (Proxy :: Proxy Rectangle)
 
   specsToDir [spec] "./"
   return ()

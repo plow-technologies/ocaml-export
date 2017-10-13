@@ -1,10 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module OCaml.BuckleScript.Encode 
-  ( toReasonEncoderRef
-  , toReasonEncoderRefWith
-  , toReasonEncoderSource
-  , toReasonEncoderSourceWith
+  ( toOCamlEncoderRef
+  , toOCamlEncoderRefWith
+  , toOCamlEncoderSource
+  , toOCamlEncoderSourceWith
   ) where
 
 import           Control.Monad.Reader
@@ -23,9 +23,9 @@ class HasEncoder a where
 class HasEncoderRef a where
   renderRef :: a -> Reader Options Doc
 
-instance HasEncoder ReasonDatatype where
+instance HasEncoder OCamlDatatype where
   -- handle case where SumWithRecords exists
-  render d@(ReasonDatatype typeName mc@(MultipleConstructors constrs)) = do
+  render d@(OCamlDatatype typeName mc@(MultipleConstructors constrs)) = do
     fnName <- renderRef d
       
     if isSumWithRecords mc
@@ -43,22 +43,22 @@ instance HasEncoder ReasonDatatype where
           ("let" <+> fnName <+> "(x :" <+> stext (textLowercaseFirst typeName) <> ") =") <$$>
           (indent 2 ("match x with" <$$> foldl1 (<$$>) dc))
 
-  render d@(ReasonDatatype name constructor) = do
+  render d@(OCamlDatatype name constructor) = do
     fnName <- renderRef d
     ctor <- render constructor
     return $
       ("let" <+> fnName <+> "(x :" <+> stext (textLowercaseFirst name) <> ") =") <$$>
       (indent 2 ctor)
 
-  render (ReasonPrimitive primitive) = renderRef primitive
+  render (OCamlPrimitive primitive) = renderRef primitive
     
-instance HasEncoderRef ReasonDatatype where
-  renderRef (ReasonDatatype name _) = pure $ "encode" <> stext name
-  renderRef (ReasonPrimitive primitive) = renderRef primitive
+instance HasEncoderRef OCamlDatatype where
+  renderRef (OCamlDatatype name _) = pure $ "encode" <> stext name
+  renderRef (OCamlPrimitive primitive) = renderRef primitive
 
-instance HasEncoder ReasonConstructor where
+instance HasEncoder OCamlConstructor where
   -- Single constructor, no values: empty array
-  render (NamedConstructor _name ReasonEmpty) =
+  render (NamedConstructor _name OCamlEmpty) =
     return $ "Json.Encode.list []"
 
   -- Single constructor, multiple values: create array with values
@@ -82,7 +82,7 @@ instance HasEncoder ReasonConstructor where
     dc <- mapM rndr constrs
     return $ extra <> "match x with" <$$> foldl1 (<$$>) dc
 
-renderSumRecord :: Text -> ReasonConstructor -> Reader Options (Maybe Doc)
+renderSumRecord :: Text -> OCamlConstructor -> Reader Options (Maybe Doc)
 renderSumRecord typeName c@(RecordConstructor name value) = do
   s <- render (RecordConstructor (typeName <> name) value)
   return $ Just $ "let encode" <> (stext newName) <> " (x : " <> (stext $ textLowercaseFirst newName) <> ") =" <$$> (indent 2 s)
@@ -96,8 +96,8 @@ jsonEncodeObject constructor tag mContents =
     Nothing -> constructor <$$> nest 5 ("   Json.Encode.object_" <$$> ("[" <+> tag <$$> "]"))
     Just contents -> constructor <$$> nest 5 ("   Json.Encode.object_" <$$> ("[" <+> tag <$$> contents <$$> "]"))
   
-renderSum :: ReasonConstructor -> Reader Options Doc
-renderSum (NamedConstructor name ReasonEmpty) = do
+renderSum :: OCamlConstructor -> Reader Options Doc
+renderSum (NamedConstructor name OCamlEmpty) = do
   let cs = "|" <+> stext name <+> "->"
   let tag = pair (dquotes "tag") ("Json.Encode.string" <+> dquotes (stext name))
   return $ jsonEncodeObject cs tag Nothing
@@ -126,7 +126,7 @@ renderSum (MultipleConstructors constrs) = do
   return $ foldl1 (<$$>) dc
 
 
-renderEnumeration :: ReasonConstructor -> Reader Options Doc
+renderEnumeration :: OCamlConstructor -> Reader Options Doc
 renderEnumeration (NamedConstructor name _) =
   return $ "|" <+> stext name <+> "->" <$$>
       "   Json.Encode.string" <+> dquotes (stext name)
@@ -136,59 +136,59 @@ renderEnumeration (MultipleConstructors constrs) = do
 renderEnumeration c = render c
 
 
-instance HasEncoder ReasonValue where
-  render (ReasonField name value) = do
+instance HasEncoder OCamlValue where
+  render (OCamlField name value) = do
     fieldModifier <- asks fieldLabelModifier
     valueBody <- render value
     return . spaceparens $
       dquotes (stext (fieldModifier name)) <> comma <+>
       (valueBody <+> "x." <> stext name)
-  render (ReasonPrimitiveRef primitive) = renderRef primitive
-  render (ReasonRef name) = pure $ "encode" <> stext name
+  render (OCamlPrimitiveRef primitive) = renderRef primitive
+  render (OCamlRef name) = pure $ "encode" <> stext name
   render (Values x y) = do
     dx <- render x
     dy <- render y
     return $ dx <$$> ";" <+> dy
-  render _ = error "HasEncoderRef ReasonValue: should not happen"
+  render _ = error "HasEncoderRef OCamlValue: should not happen"
 
-instance HasEncoderRef ReasonPrimitive where
-  renderRef RDate   = pure $ parens "Json.Encode.string << toString"
-  renderRef RUnit   = pure "Json.Encode.null"
-  renderRef RInt    = pure "Json.Encode.int"
-  renderRef RChar   = pure "Json.Encode.string"
-  renderRef RBool   = pure "Json.Encode.boolean"
-  renderRef RFloat  = pure "Json.Encode.float"
-  renderRef RString = pure "Json.Encode.string"
-  renderRef (RList (ReasonPrimitive RChar)) = pure "Json.Encode.string"
-  renderRef (RList datatype) = do
+instance HasEncoderRef OCamlPrimitive where
+  renderRef ODate   = pure $ parens "Json.Encode.string << toString"
+  renderRef OUnit   = pure "Json.Encode.null"
+  renderRef OInt    = pure "Json.Encode.int"
+  renderRef OChar   = pure "Json.Encode.string"
+  renderRef OBool   = pure "Json.Encode.boolean"
+  renderRef OFloat  = pure "Json.Encode.float"
+  renderRef OString = pure "Json.Encode.string"
+  renderRef (OList (OCamlPrimitive OChar)) = pure "Json.Encode.string"
+  renderRef (OList datatype) = do
     dd <- renderRef datatype
     return . parens $ "Json.Encode.list" <+> dd
-  renderRef (RMaybe datatype) = do
+  renderRef (OOption datatype) = do
     dd <- renderRef datatype
     return . parens $ "fun a -> Option.default Json.Encode.null (Option.map" <+> dd <+> "a)"
-  renderRef (RTuple2 a b) = do
+  renderRef (OTuple2 a b) = do
     da <- renderRef a
     db <- renderRef b
     return . parens $ "fun (a,b) -> Json.Encode.array [|" <+> da <+> "a ;" <+> db <+> "b" <+> " |]"
-  renderRef (RTuple3 a b c) = do
+  renderRef (OTuple3 a b c) = do
     da <- renderRef a
     db <- renderRef b
     dc <- renderRef c
     return . parens $ "fun (a,b,c) -> Json.Encode.array [|" <+> da <+> "a ;" <+> db <+> "b ;" <+> dc <+> "c" <+> "|]"
-  renderRef (RTuple4 a b c d) = do
+  renderRef (OTuple4 a b c d) = do
     da <- renderRef a
     db <- renderRef b
     dc <- renderRef c
     dd <- renderRef d
     return . parens $ "fun (a,b,c,d) -> Json.Encode.array [|" <+> da <+> "a ;" <+> db <+> "b ;" <+> dc <+> "c ;" <+> dd <+> "d" <+> "|]"
-  renderRef (RTuple5 a b c d e) = do
+  renderRef (OTuple5 a b c d e) = do
     da <- renderRef a
     db <- renderRef b
     dc <- renderRef c
     dd <- renderRef d
     de <- renderRef e
     return . parens $ "fun (a,b,c,d,e) -> Json.Encode.array [|" <+> da <+> "a ;" <+> db <+> "b ;" <+> dc <+> "c ;" <+> dd <+> "d ;" <+> de <+> "e" <+> "|]"
-  renderRef (RTuple6 a b c d e f) = do
+  renderRef (OTuple6 a b c d e f) = do
     da <- renderRef a
     db <- renderRef b
     dc <- renderRef c
@@ -196,29 +196,29 @@ instance HasEncoderRef ReasonPrimitive where
     de <- renderRef e
     df <- renderRef f
     return . parens $ "fun (a,b,c,d,e,f) -> Json.Encode.array [|" <+> da <+> "a ;" <+> db <+> "b ;" <+> dc <+> "c ;" <+> dd <+> "d ;" <+> de <+> "e ;" <+> df <+> "f" <+> "|]"
-  renderRef (RDict k v) = do
+  renderRef (ODict k v) = do
     dk <- renderRef k
     dv <- renderRef v
     return . parens $ "Js.Encode.dict" <+> dk <+> dv
 
-toReasonEncoderRefWith :: ReasonType a => Options -> a -> T.Text
-toReasonEncoderRefWith options x =
-  pprinter $ runReader (renderRef (toReasonType x)) options
+toOCamlEncoderRefWith :: OCamlType a => Options -> a -> T.Text
+toOCamlEncoderRefWith options x =
+  pprinter $ runReader (renderRef (toOCamlType x)) options
 
-toReasonEncoderRef :: ReasonType a => a -> T.Text
-toReasonEncoderRef = toReasonEncoderRefWith defaultOptions
+toOCamlEncoderRef :: OCamlType a => a -> T.Text
+toOCamlEncoderRef = toOCamlEncoderRefWith defaultOptions
 
-toReasonEncoderSourceWith :: ReasonType a => Options -> a -> T.Text
-toReasonEncoderSourceWith options x =
-  pprinter $ runReader (render (toReasonType x)) options
+toOCamlEncoderSourceWith :: OCamlType a => Options -> a -> T.Text
+toOCamlEncoderSourceWith options x =
+  pprinter $ runReader (render (toOCamlType x)) options
 
-toReasonEncoderSource :: ReasonType a => a -> T.Text
-toReasonEncoderSource = toReasonEncoderSourceWith defaultOptions
+toOCamlEncoderSource :: OCamlType a => a -> T.Text
+toOCamlEncoderSource = toOCamlEncoderSourceWith defaultOptions
 
 -- | Variable names for the members of constructors
 -- Used in pattern matches
-constructorParameters :: Int -> ReasonValue -> [Doc]
-constructorParameters _ ReasonEmpty = [ empty ]
+constructorParameters :: Int -> OCamlValue -> [Doc]
+constructorParameters _ OCamlEmpty = [ empty ]
 constructorParameters i (Values l r) =
     left ++ right
   where
@@ -227,22 +227,22 @@ constructorParameters i (Values l r) =
 constructorParameters i _ = [ "y" <> int i ]
 
 
--- | Encode variables following the recipe of an ReasonValue
-renderVariable :: [Doc] -> ReasonValue -> Reader Options (Doc, [Doc])
-renderVariable (d : ds) v@(ReasonRef {}) = do
+-- | Encode variables following the recipe of an OCamlValue
+renderVariable :: [Doc] -> OCamlValue -> Reader Options (Doc, [Doc])
+renderVariable (d : ds) v@(OCamlRef {}) = do
   v' <- render v
   return (v' <+> d, ds)
-renderVariable ds ReasonEmpty = return (empty, ds)
-renderVariable (_ : ds) (ReasonPrimitiveRef RUnit) =
+renderVariable ds OCamlEmpty = return (empty, ds)
+renderVariable (_ : ds) (OCamlPrimitiveRef OUnit) =
   return ("Json.Encode.null", ds)
-renderVariable (d : ds) (ReasonPrimitiveRef ref) = do
+renderVariable (d : ds) (OCamlPrimitiveRef ref) = do
   r <- renderRef ref
   return (r <+> d, ds)
 renderVariable ds (Values l r) = do
   (left, dsl) <- renderVariable ds l
   (right, dsr) <- renderVariable dsl r
   return (left <+> ";" <+> right, dsr)
-renderVariable ds f@(ReasonField _ _) = do
+renderVariable ds f@(OCamlField _ _) = do
   f' <- render f
   return (f', ds)
 renderVariable [] _ = error "Amount of variables does not match variables"

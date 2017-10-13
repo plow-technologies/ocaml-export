@@ -1,10 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module OCaml.Record
-  ( toReasonTypeRef
-  , toReasonTypeRefWith
-  , toReasonTypeSource
-  , toReasonTypeSourceWith
+  ( toOCamlTypeRef
+  , toOCamlTypeRefWith
+  , toOCamlTypeSource
+  , toOCamlTypeSourceWith
   ) where
 
 import           Control.Monad.Reader
@@ -25,7 +25,7 @@ class HasRecordType a where
 class HasTypeRef a where
   renderRef :: a -> Reader Options Doc
 {-
-makeAuxTypeDef :: [Doc] -> Text -> ReasonConstructor -> Reader Options Doc
+makeAuxTypeDef :: [Doc] -> Text -> OCamlConstructor -> Reader Options Doc
 makeAuxTypeDef (d:ds) typeName c@(RecordConstructor rName _rValue) = do
   let newName = (stext $ textLowercaseFirst typeName) <> (stext rName)
   ctor <- render c
@@ -33,7 +33,7 @@ makeAuxTypeDef (d:ds) typeName c@(RecordConstructor rName _rValue) = do
 makeAuxTypeDef ds _ _ = return ""
 -}
 -- | For Haskell Sum of Records, create OCaml record types of each RecordConstructorn
-makeAuxTypeDef :: Text -> ReasonConstructor -> Reader Options (Maybe (Doc,(Text,ReasonConstructor)))
+makeAuxTypeDef :: Text -> OCamlConstructor -> Reader Options (Maybe (Doc,(Text,OCamlConstructor)))
 makeAuxTypeDef typeName c@(RecordConstructor rName _rValue) = do
   let newName = (stext $ textLowercaseFirst typeName) <> (stext rName)
   ctor <- render c
@@ -42,24 +42,24 @@ makeAuxTypeDef _ _ = return Nothing
 
 -- | A Haskell Sum of Records needs to be transformed into OCaml record types
 --   and a sum type. Replace RecordConstructor with NamedConstructor.
-replaceRecordConstructors :: [(Text,ReasonConstructor)] -> ReasonConstructor -> ReasonConstructor
+replaceRecordConstructors :: [(Text,OCamlConstructor)] -> OCamlConstructor -> OCamlConstructor
 replaceRecordConstructors newConstructors rc@(RecordConstructor oldName _)  = 
   case length mrc > 0 of
     False -> rc
     True  -> head mrc
   where
     rplc (oldName', rc@(RecordConstructor newName _rValue)) =
-      if oldName == oldName' then (Just $ NamedConstructor oldName' (ReasonRef newName)) else Nothing
+      if oldName == oldName' then (Just $ NamedConstructor oldName' (OCamlRef newName)) else Nothing
     rplc _ = Nothing
     mrc = catMaybes $ rplc <$> newConstructors
 replaceRecordConstructors _ rc = rc
 
-instance HasType ReasonDatatype where
-  render d@(ReasonDatatype _ constructor@(RecordConstructor _ _)) = do
+instance HasType OCamlDatatype where
+  render d@(OCamlDatatype _ constructor@(RecordConstructor _ _)) = do
     name <- renderRef d
     ctor <- render constructor
     return . nest 2 $ "type" <+> name <+> "=" <$$> ctor
-  render d@(ReasonDatatype typeName cs@(MultipleConstructors css)) = do
+  render d@(OCamlDatatype typeName cs@(MultipleConstructors css)) = do
     if isSumWithRecords cs
       then do
         -- for each constructor, if it is a record constructor
@@ -74,22 +74,22 @@ instance HasType ReasonDatatype where
         name <- renderRef d
         ctor <- render cs
         return . nest 2 $ "type" <+> name <+> "=" <$$> "|" <+> ctor
-  render d@(ReasonDatatype _ constructor) = do
+  render d@(OCamlDatatype _ constructor) = do
     name <- renderRef d
     ctor <- render constructor
     return . nest 2 $ "type" <+> name <+> "=" <$$> "|" <+> ctor
-  render (ReasonPrimitive primitive) = renderRef primitive
+  render (OCamlPrimitive primitive) = renderRef primitive
 
-instance HasTypeRef ReasonDatatype where
-  renderRef (ReasonDatatype typeName _) = pure (stext $ textLowercaseFirst typeName)
-  renderRef (ReasonPrimitive primitive) = renderRef primitive
+instance HasTypeRef OCamlDatatype where
+  renderRef (OCamlDatatype typeName _) = pure (stext $ textLowercaseFirst typeName)
+  renderRef (OCamlPrimitive primitive) = renderRef primitive
 
-instance HasType ReasonConstructor where
+instance HasType OCamlConstructor where
   render (RecordConstructor _ value) = do
     dv <- renderRecord value
     return $ "{" <+> dv <$$> "}"
-  render (NamedConstructor constructorName (ReasonEmpty)) = do
-    dv <- render ReasonEmpty
+  render (NamedConstructor constructorName (OCamlEmpty)) = do
+    dv <- render OCamlEmpty
     return $ stext constructorName <+> dv
   render (NamedConstructor constructorName value) = do
     dv <- render value
@@ -97,55 +97,55 @@ instance HasType ReasonConstructor where
   render (MultipleConstructors constructors) = do
     mintercalate (line <> "|" <> space) <$> sequence (render <$> constructors)
 
-instance HasType ReasonValue where
-  render (ReasonRef name) = pure (stext $ textLowercaseFirst name)
-  render (ReasonPrimitiveRef primitive) = reasonRefParens primitive <$> renderRef primitive
-  render ReasonEmpty = pure (text "")
+instance HasType OCamlValue where
+  render (OCamlRef name) = pure (stext $ textLowercaseFirst name)
+  render (OCamlPrimitiveRef primitive) = reasonRefParens primitive <$> renderRef primitive
+  render OCamlEmpty = pure (text "")
   render (Values x y) = do
     dx <- render x
     dy <- render y
     return $ dx <+> "*" <+> dy
-  render (ReasonField name value) = do
+  render (OCamlField name value) = do
     fieldModifier <- asks fieldLabelModifier
     dv <- renderRecord value
     return $ stext (fieldModifier name) <+> ":" <+> dv
 
-instance HasRecordType ReasonValue where
-  renderRecord (ReasonPrimitiveRef primitive) = renderRef primitive
+instance HasRecordType OCamlValue where
+  renderRecord (OCamlPrimitiveRef primitive) = renderRef primitive
   renderRecord (Values x y) = do
     dx <- renderRecord x
     dy <- renderRecord y
     return $ dx <$$> ";" <+> dy
   renderRecord value = render value
 
-instance HasTypeRef ReasonPrimitive where
-  renderRef (RList (ReasonPrimitive RChar)) = renderRef RString
-  renderRef (RList datatype) = do
+instance HasTypeRef OCamlPrimitive where
+  renderRef (OList (OCamlPrimitive OChar)) = renderRef OString
+  renderRef (OList datatype) = do
     dt <- renderRef datatype
     return $ parens dt <+> "list"
-  renderRef (RTuple2 a b) = do
+  renderRef (OTuple2 a b) = do
     da <- renderRef a
     db <- renderRef b
     return . parens $ da <+> "*" <+> db
-  renderRef (RTuple3 a b c) = do
+  renderRef (OTuple3 a b c) = do
     da <- renderRef a
     db <- renderRef b
     dc <- renderRef c
     return . parens $ da <+> "*" <+> db <+> "*" <+> dc
-  renderRef (RTuple4 a b c d) = do
+  renderRef (OTuple4 a b c d) = do
     da <- renderRef a
     db <- renderRef b
     dc <- renderRef c
     dd <- renderRef d
     return . parens $ da <+> "*" <+> db <+> "*" <+> dc <+> "*" <+> dd
-  renderRef (RTuple5 a b c d e) = do
+  renderRef (OTuple5 a b c d e) = do
     da <- renderRef a
     db <- renderRef b
     dc <- renderRef c
     dd <- renderRef d
     de <- renderRef e
     return . parens $ da <+> "*" <+> db <+> "*" <+> dc <+> "*" <+> dd <+> "*" <+> de
-  renderRef (RTuple6 a b c d e f) = do
+  renderRef (OTuple6 a b c d e f) = do
     da <- renderRef a
     db <- renderRef b
     dc <- renderRef c
@@ -153,39 +153,39 @@ instance HasTypeRef ReasonPrimitive where
     de <- renderRef e
     df <- renderRef f
     return . parens $ da <+> "*" <+> db <+> "*" <+> dc <+> "*" <+> dd <+> "*" <+> de <+> "*" <+> df
-  renderRef (RMaybe datatype) = do
+  renderRef (OOption datatype) = do
     dt <- renderRef datatype
     return $ parens dt <+> "option"
-  renderRef (RDict k v) = do
+  renderRef (ODict k v) = do
     dk <- renderRef k
     dv <- renderRef v
     return $ "Dict" <+> parens dk <+> parens dv
-  renderRef RInt    = pure "int"
-  renderRef RDate   = pure "Js.Date"
-  renderRef RBool   = pure "bool"
-  renderRef RChar   = pure "string"
-  renderRef RString = pure "string"
-  renderRef RUnit   = pure "unit"
-  renderRef RFloat  = pure "Js.Float"
+  renderRef OInt    = pure "int"
+  renderRef ODate   = pure "Js.Date"
+  renderRef OBool   = pure "bool"
+  renderRef OChar   = pure "string"
+  renderRef OString = pure "string"
+  renderRef OUnit   = pure "unit"
+  renderRef OFloat  = pure "Js.Float"
 --  'a Js.Dict.t
-toReasonTypeRefWith :: ReasonType a => Options -> a -> T.Text
-toReasonTypeRefWith options x =
-  pprinter $ runReader (renderRef (toReasonType x)) options
+toOCamlTypeRefWith :: OCamlType a => Options -> a -> T.Text
+toOCamlTypeRefWith options x =
+  pprinter $ runReader (renderRef (toOCamlType x)) options
 
-toReasonTypeRef :: ReasonType a => a -> T.Text
-toReasonTypeRef = toReasonTypeRefWith defaultOptions
+toOCamlTypeRef :: OCamlType a => a -> T.Text
+toOCamlTypeRef = toOCamlTypeRefWith defaultOptions
 
-toReasonTypeSourceWith :: ReasonType a => Options -> a -> T.Text
-toReasonTypeSourceWith options x =
-  pprinter $ runReader (render (toReasonType x)) options
+toOCamlTypeSourceWith :: OCamlType a => Options -> a -> T.Text
+toOCamlTypeSourceWith options x =
+  pprinter $ runReader (render (toOCamlType x)) options
 
-toReasonTypeSource :: ReasonType a => a -> T.Text
-toReasonTypeSource = toReasonTypeSourceWith defaultOptions
+toOCamlTypeSource :: OCamlType a => a -> T.Text
+toOCamlTypeSource = toOCamlTypeSourceWith defaultOptions
 
 -- | Puts parentheses around the doc of an elm ref if it contains spaces.
-reasonRefParens :: ReasonPrimitive -> Doc -> Doc
-reasonRefParens (RList (ReasonPrimitive RChar)) = id
-reasonRefParens (RList _) = parens
-reasonRefParens (RMaybe _) = parens
-reasonRefParens (RDict _ _) = parens
+reasonRefParens :: OCamlPrimitive -> Doc -> Doc
+reasonRefParens (OList (OCamlPrimitive OChar)) = id
+reasonRefParens (OList _) = parens
+reasonRefParens (OOption _) = parens
+reasonRefParens (ODict _ _) = parens
 reasonRefParens _ = id

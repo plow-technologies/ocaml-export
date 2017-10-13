@@ -30,18 +30,18 @@ data OnOrOff = On Int | Off
 data Person = Person
   { id :: Int
   , name :: Maybe String
-  } deriving (Show, Eq, Generic, OC.ReasonType)
+  } deriving (Show, Eq, Generic, OC.OCamlType)
 
 data Company = Company
   { address   :: String
   , employees :: [Person]
-  } deriving (Show, Eq, Generic, OC.ReasonType)
+  } deriving (Show, Eq, Generic, OC.OCamlType)
 
 data OnOrOff = On | Off
-  deriving (Show,Eq,Generic, OC.ReasonType)
+  deriving (Show,Eq,Generic, OC.OCamlType)
 
 data NameOrIdNumber = Name String | IdNumber Int
-  deriving (Show,Eq,Generic, OC.ReasonType)
+  deriving (Show,Eq,Generic, OC.OCamlType)
 
 data SumVariant
   = HasNothing
@@ -49,106 +49,106 @@ data SumVariant
   | HasSingleTuple (Int,Int)
   | HasMultipleInts Int Int
   | HasMultipleTuples (Int,Int) (Int,Int)
-  deriving (Show,Eq,Generic, OC.ReasonType)  
+  deriving (Show,Eq,Generic, OC.OCamlType)  
 
 type Tuple
   = (Int,Int)
 
 data WithTuple = WithTuple Tuple
-  deriving (Show,Eq,Generic, OC.ReasonType)
+  deriving (Show,Eq,Generic, OC.OCamlType)
 
 data SumWithRecord
   = A1 {a1 :: Int}
   | B2 {b2 :: String, b3 :: Int}
-  deriving (Show,Eq,Generic, OC.ReasonType)
+  deriving (Show,Eq,Generic, OC.OCamlType)
 
 data Suit
   = Clubs
   | Diamonds
   | Hearts
   | Spades
-  deriving (Eq,Show,Generic,OC.ReasonType)
+  deriving (Eq,Show,Generic,OC.OCamlType)
 
 data Card =
   Card
     { cardSuit  :: Suit
     , cardValue :: Int
-    } deriving (Eq,Show,Generic,OC.ReasonType)
+    } deriving (Eq,Show,Generic,OC.OCamlType)
 
 personSpec :: OC.Spec
 personSpec =
   OC.Spec
     ["Person"]
-    [ OC.toReasonTypeSource (Proxy :: Proxy Person)
-    , OC.toReasonEncoderSource (Proxy :: Proxy Person)
+    [ OC.toOCamlTypeSource (Proxy :: Proxy Person)
+    , OC.toOCamlEncoderSource (Proxy :: Proxy Person)
     ]
 
 companySpec :: OC.Spec
 companySpec =
   OC.Spec
     ["Company"]
-    [ OC.toReasonTypeSource (Proxy :: Proxy Person)
-    , OC.toReasonEncoderSource (Proxy :: Proxy Person)
-    , OC.toReasonTypeSource (Proxy :: Proxy Company)
-    , OC.toReasonEncoderSource (Proxy :: Proxy Company)
+    [ OC.toOCamlTypeSource (Proxy :: Proxy Person)
+    , OC.toOCamlEncoderSource (Proxy :: Proxy Person)
+    , OC.toOCamlTypeSource (Proxy :: Proxy Company)
+    , OC.toOCamlEncoderSource (Proxy :: Proxy Company)
     ]
 
 onOrOffSpec :: OC.Spec
 onOrOffSpec =
   OC.Spec
     ["OnOrOff"]
-    [ OC.toReasonTypeSource (Proxy :: Proxy OnOrOff)
-    , OC.toReasonEncoderSource (Proxy :: Proxy OnOrOff)
+    [ OC.toOCamlTypeSource (Proxy :: Proxy OnOrOff)
+    , OC.toOCamlEncoderSource (Proxy :: Proxy OnOrOff)
     ]    
 
 nameOrIdNumberSpec :: OC.Spec
 nameOrIdNumberSpec =
   OC.Spec
     ["NameOrIdNumber"]
-    [ OC.toReasonTypeSource (Proxy :: Proxy NameOrIdNumber)
-    , OC.toReasonEncoderSource (Proxy :: Proxy NameOrIdNumber)
+    [ OC.toOCamlTypeSource (Proxy :: Proxy NameOrIdNumber)
+    , OC.toOCamlEncoderSource (Proxy :: Proxy NameOrIdNumber)
     ]
 
 sumVariantSpec :: OC.Spec
 sumVariantSpec =
   OC.Spec
     ["SumVariant"]
-    [ OC.toReasonTypeSource (Proxy :: Proxy SumVariant)
-    , OC.toReasonEncoderSource (Proxy :: Proxy SumVariant)
+    [ OC.toOCamlTypeSource (Proxy :: Proxy SumVariant)
+    , OC.toOCamlEncoderSource (Proxy :: Proxy SumVariant)
     ]
 
 tupleSpec :: OC.Spec
 tupleSpec =
   OC.Spec
     ["Tuple"]
-    [ OC.toReasonTypeSource (Proxy :: Proxy Tuple)
-    , OC.toReasonEncoderSource (Proxy :: Proxy Tuple)
+    [ OC.toOCamlTypeSource (Proxy :: Proxy Tuple)
+    , OC.toOCamlEncoderSource (Proxy :: Proxy Tuple)
     ]
 
 withTupleSpec :: OC.Spec
 withTupleSpec =
   OC.Spec
     ["WithTuple"]
-    [ OC.toReasonTypeSource (Proxy :: Proxy WithTuple)
-    , OC.toReasonEncoderSource (Proxy :: Proxy WithTuple)
+    [ OC.toOCamlTypeSource (Proxy :: Proxy WithTuple)
+    , OC.toOCamlEncoderSource (Proxy :: Proxy WithTuple)
     ]
 
 cardSpec :: OC.Spec
 cardSpec =
   OC.Spec
     ["Card"]
-    [ OC.toReasonTypeSource (Proxy :: Proxy Suit)
-    , OC.toReasonEncoderSource (Proxy :: Proxy Suit)
-    , OC.toReasonTypeSource (Proxy :: Proxy Card)
-    , OC.toReasonEncoderSource (Proxy :: Proxy Card)
+    [ OC.toOCamlTypeSource (Proxy :: Proxy Suit)
+    , OC.toOCamlEncoderSource (Proxy :: Proxy Suit)
+    , OC.toOCamlTypeSource (Proxy :: Proxy Card)
+    , OC.toOCamlEncoderSource (Proxy :: Proxy Card)
     ]
 
 sumWithRecordSpec :: OC.Spec
 sumWithRecordSpec =
   OC.Spec
     ["SumWithRecord"]
-    [ OC.toReasonTypeSource (Proxy :: Proxy SumWithRecord)
-    , OC.toReasonEncoderSource (Proxy :: Proxy SumWithRecord)
+    [ OC.toOCamlTypeSource (Proxy :: Proxy SumWithRecord)
+    , OC.toOCamlEncoderSource (Proxy :: Proxy SumWithRecord)
     ]
 
 
@@ -174,7 +174,7 @@ testOCamlType ocamlSpec typeName adt =
 
 spec :: Spec
 spec =
-  describe "toReasonTypeSource" $ do
+  describe "toOCamlTypeSource" $ do
     testOCamlType personSpec "Person" Product
     testOCamlType companySpec "Company" Product
     testOCamlType onOrOffSpec "OnOrOff" Sum

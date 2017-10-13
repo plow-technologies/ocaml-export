@@ -224,3 +224,15 @@ isEnumeration :: ReasonConstructor -> Bool
 isEnumeration (NamedConstructor _ ReasonEmpty) = True
 isEnumeration (MultipleConstructors cs) = all isEnumeration cs
 isEnumeration _ = False
+
+-- | Haskell allows you to directly declare a sum of records,
+-- i.e. data A = A {a :: Int} | B {b :: String}. This does not exist in
+-- OCaml so we have to work around it.
+
+isSumWithRecords :: ReasonConstructor -> Bool
+isSumWithRecords (MultipleConstructors cs) = (\x -> length x > 1 && or x) $ isSumWithRecordsAux <$> cs
+isSumWithRecords _ = False
+
+isSumWithRecordsAux :: ReasonConstructor -> Bool
+isSumWithRecordsAux (RecordConstructor _ _) = True
+isSumWithRecordsAux _ = False

@@ -40,7 +40,7 @@ instance HasEncoder ReasonConstructor where
     return $ "Json.Encode.list []"
 
   -- Single constructor, multiple values: create array with values
-  render c@(NamedConstructor name value) = do
+  render (NamedConstructor name value) = do
     let ps = constructorParameters 0 value
 
     (dc, _) <- renderVariable ps value
@@ -55,9 +55,10 @@ instance HasEncoder ReasonConstructor where
     return . nest 2 $ "Json.Encode.object_" <$$> "[" <+> dv <$$> "]"
 
   render mc@(MultipleConstructors constrs) = do
+    let extra = if isSumWithRecords mc then "extra extra" else ""
     let rndr = if isEnumeration mc then renderEnumeration else renderSum
     dc <- mapM rndr constrs
-    return $ "match x with" <$$> foldl1 (<$$>) dc
+    return $ extra <> "match x with" <$$> foldl1 (<$$>) dc
 
 jsonEncodeObject :: Doc -> Doc -> Maybe Doc -> Doc
 jsonEncodeObject constructor tag mContents =

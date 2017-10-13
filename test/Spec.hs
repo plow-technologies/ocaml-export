@@ -55,7 +55,12 @@ type Tuple
   = (Int,Int)
 
 data WithTuple = WithTuple Tuple
-  deriving (Show,Eq,Generic, OC.ReasonType)  
+  deriving (Show,Eq,Generic, OC.ReasonType)
+
+data SumWithRecord
+  = A1 {a1 :: Int}
+  | B2 {b2 :: String, b3 :: Int}
+  deriving (Show,Eq,Generic, OC.ReasonType)
 
 data Suit
   = Clubs
@@ -138,45 +143,46 @@ cardSpec =
     , OC.toReasonEncoderSource (Proxy :: Proxy Card)
     ]
 
+sumWithRecordSpec :: OC.Spec
+sumWithRecordSpec =
+  OC.Spec
+    ["SumWithRecord"]
+    [ OC.toReasonTypeSource (Proxy :: Proxy SumWithRecord)
+    , OC.toReasonEncoderSource (Proxy :: Proxy SumWithRecord)
+    ]
+
+
+data ADT
+  = Product
+  | Sum
+
+adtToPath :: ADT -> FilePath
+adtToPath Product = "product"
+adtToPath Sum = "sum"
+
+testOCamlType :: OC.Spec -> FilePath -> ADT -> SpecWith ()
+testOCamlType ocamlSpec typeName adt =
+  it typeName $ do
+    OC.specsToDir [ocamlSpec] testPath
+    automated   <- T.readFile (testPath   <> "/" <> typeName <> ".ml")
+    handWritten <- T.readFile (goldenPath <> "/" <> typeName <> ".ml")
+    automated `shouldBe` handWritten
+  where
+    adtPath    = adtToPath adt
+    testPath   = "test/temp/" <> adtPath
+    goldenPath = "test/golden/" <> adtPath
 
 spec :: Spec
 spec =
   describe "toReasonTypeSource" $ do
-    it "" $ do
-      OC.specsToDir [personSpec] "./test/temp/product"
-      handWritten <- T.readFile "test/golden/product/Person.ml"
-      automated   <- T.readFile "test/temp/product/Person.ml"
-      automated `shouldBe` handWritten
-    it "" $ do
-      OC.specsToDir [companySpec] "./test/temp/product"
-      handWritten <- T.readFile "test/golden/product/Company.ml"
-      automated   <- T.readFile "test/temp/product/Company.ml"
-      automated `shouldBe` handWritten
-    it "" $ do
-      OC.specsToDir [onOrOffSpec] "./test/temp/sum"
-      handWritten <- T.readFile "test/golden/sum/OnOrOff.ml"
-      automated   <- T.readFile "test/temp/sum/OnOrOff.ml"
-      automated `shouldBe` handWritten
-    it "" $ do
-      OC.specsToDir [nameOrIdNumberSpec] "./test/temp/sum"
-      handWritten <- T.readFile "test/golden/sum/NameOrIdNumber.ml"
-      automated   <- T.readFile "test/temp/sum/NameOrIdNumber.ml"
-      automated `shouldBe` handWritten
-    it "" $ do
-      OC.specsToDir [sumVariantSpec] "./test/temp/sum"
-      handWritten <- T.readFile "test/golden/sum/SumVariant.ml"
-      automated   <- T.readFile "test/temp/sum/SumVariant.ml"
-      automated `shouldBe` handWritten
-    it "" $ do
-      OC.specsToDir [withTupleSpec] "./test/temp/sum"
-      handWritten <- T.readFile "test/golden/sum/WithTuple.ml"
-      automated   <- T.readFile "test/temp/sum/WithTuple.ml"
-      automated `shouldBe` handWritten
-    it "" $ do
-      OC.specsToDir [cardSpec] "./test/temp/product"
-      handWritten <- T.readFile "test/golden/product/Card.ml"
-      automated   <- T.readFile "test/temp/product/Card.ml"
-      automated `shouldBe` handWritten
-      
+    testOCamlType personSpec "Person" Product
+    testOCamlType companySpec "Company" Product
+    testOCamlType onOrOffSpec "OnOrOff" Sum
+    testOCamlType nameOrIdNumberSpec "NameOrIdNumber" Sum
+    testOCamlType sumVariantSpec "SumVariant" Sum
+    testOCamlType withTupleSpec "WithTuple" Sum
+    testOCamlType cardSpec "Card" Product
+    testOCamlType sumWithRecordSpec "SumWithRecord" Sum
+    
 main :: IO ()
 main = hspec spec

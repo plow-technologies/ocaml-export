@@ -42,10 +42,22 @@ data OCamlPrimitive
   | OTuple6 OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype -- (,,,,,)
   deriving (Show, Eq)
 
-data OCamlConstructor
+-- ValueConstructor
+data OCamlConstructor 
+  = OCamlConstructor OCamlConstructorAux
+  | EnumeratorConstructors [OCamlEnumerator]
+  deriving (Show, Eq)
+-- ValueConstructorAux?
+data OCamlConstructorAux
   = NamedConstructor Text OCamlValue
   | RecordConstructor Text OCamlValue
   | MultipleConstructors [OCamlConstructor]
+  deriving (Show, Eq)
+
+-- set of named members of a set
+-- | Special type of constructor. Names but no values.
+data OCamlEnumerator
+  = OCamlEnumerator Text
   deriving (Show, Eq)
 
 data OCamlValue
@@ -71,8 +83,12 @@ instance (Datatype d, GenericOCamlConstructor f) => GenericOCamlDatatype (D1 d f
   genericToOCamlDatatype datatype =
     OCamlDatatype
       (T.pack (datatypeName datatype))
-      (genericToOCamlConstructor (unM1 datatype))
-
+      (transform (genericToOCamlConstructor (unM1 datatype)))
+    where
+      transform ocamlConstructor =
+        if isEnumeration ocamlConstructor
+          then transformToEnumeration ocamlConstructor
+          else ocamlConstructor               
 -- ------------------------------------------------------------
 class GenericOCamlConstructor f where
   genericToOCamlConstructor :: f a -> OCamlConstructor
@@ -80,15 +96,15 @@ class GenericOCamlConstructor f where
 instance (Constructor c, GenericOCamlValue f) => GenericOCamlConstructor (C1 c f) where
   genericToOCamlConstructor constructor =
     if conIsRecord constructor
-      then RecordConstructor name (genericToOCamlValue (unM1 constructor))
-      else NamedConstructor name (genericToOCamlValue (unM1 constructor))
+      then OCamlConstructor $ RecordConstructor name (genericToOCamlValue (unM1 constructor))
+      else OCamlConstructor $ NamedConstructor name (genericToOCamlValue (unM1 constructor))
     where
       name = T.pack $ conName constructor
 
 instance (GenericOCamlConstructor f, GenericOCamlConstructor g) =>
          GenericOCamlConstructor (f :+: g) where
   genericToOCamlConstructor _ =
-    MultipleConstructors
+    OCamlConstructor $ MultipleConstructors
       [ genericToOCamlConstructor (undefined :: f p)
       , genericToOCamlConstructor (undefined :: g p)
       ]
@@ -221,18 +237,24 @@ instance OCamlType Bool where
 --   values. data A = A | B | C would be simple data A = A Int | B | C would not
 --   be simple.
 isEnumeration :: OCamlConstructor -> Bool
-isEnumeration (NamedConstructor _ OCamlEmpty) = True
-isEnumeration (MultipleConstructors cs) = all isEnumeration cs
+isEnumeration (OCamlConstructor (NamedConstructor _ OCamlEmpty)) = True
+isEnumeration (OCamlConstructor (MultipleConstructors cs)) = all isEnumeration cs
 isEnumeration _ = False
+
+-- | Tranform a complete OCamlConstructor to EnumeratorConstructors 
+transformToEnumeration :: OCamlConstructor -> OCamlConstructor
+transformToEnumeration (OCamlConstructor (NamedConstructor name OCamlEmpty)) = EnumeratorConstructors [OCamlEnumerator name]
+transformToEnumeration (OCamlConstructor (MultipleConstructors cs)) = EnumeratorConstructors $ concat $ (\(EnumeratorConstructors es) -> es) <$> transformToEnumeration <$> cs
+transformToEnumeration _ = undefined
 
 -- | Haskell allows you to directly declare a sum of records,
 -- i.e. data A = A {a :: Int} | B {b :: String}. This does not exist in
 -- OCaml so we have to work around it.
 
 isSumWithRecords :: OCamlConstructor -> Bool
-isSumWithRecords (MultipleConstructors cs) = (\x -> length x > 1 && or x) $ isSumWithRecordsAux <$> cs
+isSumWithRecords (OCamlConstructor (MultipleConstructors cs)) = (\x -> length x > 1 && or x) $ isSumWithRecordsAux <$> cs
 isSumWithRecords _ = False
 
 isSumWithRecordsAux :: OCamlConstructor -> Bool
-isSumWithRecordsAux (RecordConstructor _ _) = True
+isSumWithRecordsAux (OCamlConstructor (RecordConstructor _ _)) = True
 isSumWithRecordsAux _ = False

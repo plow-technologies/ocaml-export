@@ -37,13 +37,13 @@ instance HasDecoderRef OCamlDatatype where
   renderRef (OCamlPrimitive primitive) = renderRef primitive
 
 instance HasDecoder OCamlConstructor where
-  render (NamedConstructor name value) = do
+  render (OCamlConstructor (NamedConstructor name value)) = do
     dv <- render value
     return $ "decode" <+> stext name <$$> indent 4 dv
-  render (RecordConstructor name value) = do
+  render (OCamlConstructor (RecordConstructor name value)) = do
     dv <- render value
     return $ "decode" <+> stext name <$$> indent 4 dv
-  render mc@(MultipleConstructors constrs) = do
+  render mc@(OCamlConstructor (MultipleConstructors constrs)) = do
       cstrs <- mapM renderSum constrs
       pure $ constructorName <$$> indent 4
         ("|> andThen" <$$>
@@ -74,17 +74,17 @@ renderSumCondition name contents =
 -- | Render a sum type constructor in context of a data type with multiple
 -- constructors.
 renderSum :: OCamlConstructor -> Reader Options Doc
-renderSum (NamedConstructor name OCamlEmpty) = renderSumCondition name mempty
-renderSum (NamedConstructor name v@(Values _ _)) = do
+renderSum (OCamlConstructor (NamedConstructor name OCamlEmpty)) = renderSumCondition name mempty
+renderSum (OCamlConstructor (NamedConstructor name v@(Values _ _))) = do
   (_, val) <- renderConstructorArgs 0 v
   renderSumCondition name val
-renderSum (NamedConstructor name value) = do
+renderSum (OCamlConstructor (NamedConstructor name value)) = do
   val <- render value
   renderSumCondition name $ "|>" <+> requiredContents <+> val
-renderSum (RecordConstructor name value) = do
+renderSum (OCamlConstructor (RecordConstructor name value)) = do
   val <- render value
   renderSumCondition name val
-renderSum (MultipleConstructors constrs) =
+renderSum (OCamlConstructor (MultipleConstructors constrs)) =
   foldl1 (<$+$>) <$> mapM renderSum constrs
 
 -- | Render the decoding of a constructor's arguments. Note the constructor must

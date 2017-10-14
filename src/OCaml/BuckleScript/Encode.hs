@@ -25,22 +25,21 @@ class HasEncoderRef a where
 
 instance HasEncoder OCamlDatatype where
   -- handle case where SumWithRecords exists
-  render d@(OCamlDatatype typeName mc@(OCamlValueConstructor (MultipleConstructors constrs))) = do
+  render d@(OCamlDatatype typeName (OCamlSumOfRecordConstructor (MultipleConstructors constrs))) = do  
     fnName <- renderRef d
-      
-    if isSumWithRecords mc
-      then do
-        docs <- catMaybes <$> sequence (renderSumRecord typeName . OCamlValueConstructor <$> constrs)
-        let vs = msuffix (line <> line) docs
-        dc <- mapM renderSum (OCamlValueConstructor <$> constrs)
-        return $ vs <$$>
-          ("let" <+> fnName <+> "(x :" <+> stext (textLowercaseFirst typeName) <> ") =") <$$>
-          (indent 2 ("match x with" <$$> foldl1 (<$$>) dc))
-      else do
-        dc <- mapM renderSum (OCamlValueConstructor <$> constrs)
-        return $
-          ("let" <+> fnName <+> "(x :" <+> stext (textLowercaseFirst typeName) <> ") =") <$$>
-          (indent 2 ("match x with" <$$> foldl1 (<$$>) dc))
+    docs <- catMaybes <$> sequence (renderSumRecord typeName . OCamlValueConstructor <$> constrs)
+    let vs = msuffix (line <> line) docs
+    dc <- mapM renderSum (OCamlValueConstructor <$> constrs)
+    return $ vs <$$>
+      ("let" <+> fnName <+> "(x :" <+> stext (textLowercaseFirst typeName) <> ") =") <$$>
+      (indent 2 ("match x with" <$$> foldl1 (<$$>) dc))
+    
+  render d@(OCamlDatatype typeName (OCamlValueConstructor (MultipleConstructors constrs))) = do
+    fnName <- renderRef d
+    dc <- mapM renderSum (OCamlValueConstructor <$> constrs)
+    return $
+      ("let" <+> fnName <+> "(x :" <+> stext (textLowercaseFirst typeName) <> ") =") <$$>
+      (indent 2 ("match x with" <$$> foldl1 (<$$>) dc))
 
   render d@(OCamlDatatype name constructor) = do
     fnName <- renderRef d
@@ -82,7 +81,9 @@ instance HasEncoder OCamlConstructor where
   render ec@(OCamlEnumeratorConstructor _constructors) = do
     dv <- renderSum ec
     return $ "match x with" <$$> dv
-    
+
+  render _  = return ""
+  
 renderSumRecord :: Text -> OCamlConstructor -> Reader Options (Maybe Doc)
 renderSumRecord typeName (OCamlValueConstructor (RecordConstructor name value)) = do
   s <- render (OCamlValueConstructor $ RecordConstructor (typeName <> name) value)
@@ -129,6 +130,7 @@ renderSum (OCamlValueConstructor (MultipleConstructors constrs)) = do
 renderSum (OCamlEnumeratorConstructor constructors) =
   return $ foldl1 (<$$>) $ (\(EnumeratorConstructor name) -> "|" <+> stext name <+> "->" <$$> "   Json.Encode.string" <+> dquotes (stext name)) <$> constructors
 
+renderSum _ = return ""
 {-
 renderEnumeration :: OCamlConstructor -> Reader Options Doc
 renderEnumeration (OCamlConstructor (NamedConstructor name _)) =

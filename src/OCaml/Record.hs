@@ -48,29 +48,31 @@ replaceRecordConstructors newConstructors rc@(RecordConstructor oldName _) =
 replaceRecordConstructors _ rc = rc
 
 instance HasType OCamlDatatype where
+  render d@(OCamlDatatype typeName cs@(OCamlSumOfRecordConstructor (MultipleConstructors css))) = do
+    -- for each constructor, if it is a record constructor
+    -- make a special new one, other wise do normal things
+    vs' <- catMaybes <$> sequence (makeAuxTypeDef typeName <$> css)
+    let vs = msuffix (line <> line) (fst <$> vs')
+    let cs' = replaceRecordConstructors (snd <$> vs') <$> css 
+    name <- renderRef d
+    ctor <- render (OCamlValueConstructor $ MultipleConstructors cs')
+    return $ vs <> (nest 2 $ "type" <+> name <+> "=" <$$> "|" <+> ctor)
+
   render d@(OCamlDatatype _ constructor@(OCamlValueConstructor (RecordConstructor _ _))) = do
     name <- renderRef d
     ctor <- render constructor
     return . nest 2 $ "type" <+> name <+> "=" <$$> ctor
+
   render d@(OCamlDatatype typeName cs@(OCamlValueConstructor (MultipleConstructors css))) = do
-    if isSumWithRecords cs
-      then do
-        -- for each constructor, if it is a record constructor
-        -- make a special new one, other wise do normal things
-        vs' <- catMaybes <$> sequence (makeAuxTypeDef typeName <$> css)
-        let vs = msuffix (line <> line) (fst <$> vs')
-        let cs' = replaceRecordConstructors (snd <$> vs') <$> css 
-        name <- renderRef d
-        ctor <- render (OCamlValueConstructor $ MultipleConstructors cs')
-        return $ vs <> (nest 2 $ "type" <+> name <+> "=" <$$> "|" <+> ctor)
-      else do
-        name <- renderRef d
-        ctor <- render cs
-        return . nest 2 $ "type" <+> name <+> "=" <$$> "|" <+> ctor
+    name <- renderRef d
+    ctor <- render cs
+    return . nest 2 $ "type" <+> name <+> "=" <$$> "|" <+> ctor
+
   render d@(OCamlDatatype _ constructor) = do
     name <- renderRef d
     ctor <- render constructor
     return . nest 2 $ "type" <+> name <+> "=" <$$> "|" <+> ctor
+
   render (OCamlPrimitive primitive) = renderRef primitive
 
 instance HasTypeRef OCamlDatatype where

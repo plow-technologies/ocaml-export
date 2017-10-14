@@ -47,6 +47,7 @@ data OCamlPrimitive
 data OCamlConstructor 
   = OCamlValueConstructor ValueConstructor
   | OCamlEnumeratorConstructor [EnumeratorConstructor]
+  | OCamlSumOfRecordConstructor ValueConstructor
   deriving (Show, Eq)
 
 -- | Common type declarations found in Haskell and OCaml.
@@ -90,7 +91,12 @@ instance (Datatype d, GenericValueConstructor f) => GenericOCamlDatatype (D1 d f
       transform ocamlConstructor =
         if isEnumeration ocamlConstructor
           then transformToEnumeration ocamlConstructor
-          else ocamlConstructor               
+          else 
+            if isSumWithRecord ocamlConstructor
+              then transformToSumOfRecord ocamlConstructor
+              else ocamlConstructor
+
+--   | OCamlSumOfRecordConstructor ValueConstructor               
 ------------------------------------------------------------
 class GenericValueConstructor f where
   genericToValueConstructor :: f a -> ValueConstructor
@@ -292,17 +298,22 @@ transformToEnumeration (OCamlValueConstructor (MultipleConstructors cs)) =
         
 transformToEnumeration _ = undefined
 
+transformToSumOfRecord :: OCamlConstructor -> OCamlConstructor
+transformToSumOfRecord (OCamlValueConstructor value@(MultipleConstructors _cs)) = OCamlSumOfRecordConstructor value
+transformToSumOfRecord constructor = constructor   
+
+
 -- | Haskell allows you to directly declare a sum of records,
 -- i.e. data A = A {a :: Int} | B {b :: String}. This does not exist in
 -- OCaml so we have to work around it.
 
-isSumWithRecords :: OCamlConstructor -> Bool
-isSumWithRecords (OCamlValueConstructor (MultipleConstructors cs)) =
+isSumWithRecord :: OCamlConstructor -> Bool
+isSumWithRecord (OCamlValueConstructor (MultipleConstructors cs)) =
   -- if there is only one constructor than it is not a SumWithRecords.
   -- if there are multiple constructors and at least one is a record constructor
   -- than it is a SumWithRecords
   (\x -> length x > 1 && or x) $ isSumWithRecordsAux . OCamlValueConstructor <$> cs
-isSumWithRecords _ = False
+isSumWithRecord _ = False
 
 isSumWithRecordsAux :: OCamlConstructor -> Bool
 isSumWithRecordsAux (OCamlValueConstructor (RecordConstructor _ _)) = True

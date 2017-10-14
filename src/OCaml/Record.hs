@@ -26,33 +26,33 @@ class HasTypeRef a where
   renderRef :: a -> Reader Options Doc
 
 -- | For Haskell Sum of Records, create OCaml record types of each RecordConstructorn
-makeAuxTypeDef :: Text -> OCamlConstructor -> Reader Options (Maybe (Doc,(Text,OCamlConstructor)))
-makeAuxTypeDef typeName c@(OCamlConstructor (RecordConstructor rName _rValue)) = do
+makeAuxTypeDef :: Text -> ValueConstructor -> Reader Options (Maybe (Doc,(Text,ValueConstructor)))
+makeAuxTypeDef typeName c@(RecordConstructor rName _rValue) = do
   let newName = (stext $ textLowercaseFirst typeName) <> (stext rName)
   ctor <- render c
-  return $ Just ((nest 2 $ "type" <+> newName <+> "=" <$$> ctor), (rName, (OCamlConstructor $ RecordConstructor (typeName <> rName) _rValue)))
+  return $ Just ((nest 2 $ "type" <+> newName <+> "=" <$$> ctor), (rName, (RecordConstructor (typeName <> rName) _rValue)))
 makeAuxTypeDef _ _ = return Nothing
 
 -- | A Haskell Sum of Records needs to be transformed into OCaml record types
 --   and a sum type. Replace RecordConstructor with NamedConstructor.
-replaceRecordConstructors :: [(Text,OCamlConstructor)] -> OCamlConstructor -> OCamlConstructor
-replaceRecordConstructors newConstructors rc@(OCamlConstructor (RecordConstructor oldName _))  = 
+replaceRecordConstructors :: [(Text,ValueConstructor)] -> ValueConstructor -> ValueConstructor
+replaceRecordConstructors newConstructors rc@(RecordConstructor oldName _) = 
   case length mrc > 0 of
     False -> rc
     True  -> head mrc
   where
-    rplc (oldName', (OCamlConstructor (RecordConstructor newName _rValue))) =
-      if oldName == oldName' then (Just $ OCamlConstructor $ NamedConstructor oldName' (OCamlRef newName)) else Nothing
+    rplc (oldName', (RecordConstructor newName _rValue)) =
+      if oldName == oldName' then (Just $ NamedConstructor oldName' (OCamlRef newName)) else Nothing
     rplc _ = Nothing
     mrc = catMaybes $ rplc <$> newConstructors
 replaceRecordConstructors _ rc = rc
 
 instance HasType OCamlDatatype where
-  render d@(OCamlDatatype _ constructor@(OCamlConstructor (RecordConstructor _ _))) = do
+  render d@(OCamlDatatype _ constructor@(OCamlValueConstructor (RecordConstructor _ _))) = do
     name <- renderRef d
     ctor <- render constructor
     return . nest 2 $ "type" <+> name <+> "=" <$$> ctor
-  render d@(OCamlDatatype typeName cs@(OCamlConstructor (MultipleConstructors css))) = do
+  render d@(OCamlDatatype typeName cs@(OCamlValueConstructor (MultipleConstructors css))) = do
     if isSumWithRecords cs
       then do
         -- for each constructor, if it is a record constructor
@@ -61,7 +61,7 @@ instance HasType OCamlDatatype where
         let vs = msuffix (line <> line) (fst <$> vs')
         let cs' = replaceRecordConstructors (snd <$> vs') <$> css 
         name <- renderRef d
-        ctor <- render (OCamlConstructor $ MultipleConstructors cs')
+        ctor <- render (OCamlValueConstructor $ MultipleConstructors cs')
         return $ vs <> (nest 2 $ "type" <+> name <+> "=" <$$> "|" <+> ctor)
       else do
         name <- renderRef d
@@ -78,22 +78,25 @@ instance HasTypeRef OCamlDatatype where
   renderRef (OCamlPrimitive primitive) = renderRef primitive
 
 instance HasType OCamlConstructor where
-  render (OCamlConstructor (RecordConstructor _ value)) = do
-    dv <- renderRecord value
-    return $ "{" <+> dv <$$> "}"
-  render (OCamlConstructor (NamedConstructor constructorName (OCamlEmpty))) = do
-    dv <- render OCamlEmpty
-    return $ stext constructorName <+> dv
-  render (OCamlConstructor (NamedConstructor constructorName value)) = do
-    dv <- render value
-    return $ stext constructorName <+> "of" <+> dv
-  render (OCamlConstructor (MultipleConstructors constructors)) = do
-    mintercalate (line <> "|" <> space) <$> sequence (render <$> constructors)
-  render (EnumeratorConstructors constructors) = do
+  render (OCamlValueConstructor value) = render value
+  render (OCamlEnumeratorConstructor constructors) = do
     mintercalate (line <> "|" <> space) <$> sequence (render <$> constructors)
 
-instance HasType OCamlEnumerator where
-  render (OCamlEnumerator name) = pure (stext name)
+instance HasType ValueConstructor where
+  render (RecordConstructor _ value) = do
+    dv <- renderRecord value
+    return $ "{" <+> dv <$$> "}"
+  render (NamedConstructor constructorName (OCamlEmpty)) = do
+    dv <- render OCamlEmpty
+    return $ stext constructorName <+> dv
+  render (NamedConstructor constructorName value) = do
+    dv <- render value
+    return $ stext constructorName <+> "of" <+> dv
+  render (MultipleConstructors constructors) = do
+    mintercalate (line <> "|" <> space) <$> sequence (render <$> constructors)
+
+instance HasType EnumeratorConstructor where
+  render (EnumeratorConstructor name) = pure (stext name)
 
 instance HasType OCamlValue where
   render (OCamlRef name) = pure (stext $ textLowercaseFirst name)

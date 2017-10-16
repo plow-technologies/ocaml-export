@@ -230,3 +230,9 @@ let encodeSumWithRecord (x : sumWithRecord) =
       | None ->
          Json.Encode.object_ []
      )
+
+type t = int Map.t
+
+let empty = Map.empty
+
+let to_list t = Map.to_alist t

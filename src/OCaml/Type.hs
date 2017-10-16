@@ -6,8 +6,13 @@
 {-# LANGUAGE TypeOperators        #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 
+{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE DeriveGeneric #-}
+
 module OCaml.Type where
 
+import           Data.Char    (isLower)
 import           Data.Int     (Int16, Int32, Int64, Int8)
 import           Data.IntMap
 import           Data.Map
@@ -19,6 +24,7 @@ import           Data.Time
 import           GHC.Generics
 import           Prelude
 
+import Unsafe.Coerce (unsafeCoerce)
 
 data OCamlDatatype
   = OCamlDatatype Text OCamlConstructor
@@ -35,12 +41,13 @@ data OCamlPrimitive
   | OUnit -- ()
   | OList OCamlDatatype -- ... list
   | OOption OCamlDatatype -- ... option
-  | ODict OCamlPrimitive OCamlDatatype
-  | OTuple2 OCamlDatatype OCamlDatatype -- (,)
-  | OTuple3 OCamlDatatype OCamlDatatype OCamlDatatype -- (,,)
-  | OTuple4 OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype -- (,,,)
-  | OTuple5 OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype -- (,,,,)
-  | OTuple6 OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype -- (,,,,,)
+  | ODict OCamlPrimitive OCamlDatatype -- Js_dict
+  | OTuple2 OCamlDatatype OCamlDatatype -- (*)
+  | OTuple3 OCamlDatatype OCamlDatatype OCamlDatatype -- (**)
+  | OTuple4 OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype -- (***)
+  | OTuple5 OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype -- (****)
+  | OTuple6 OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype -- (*****)
+  | OTypeParameterRef Text
   deriving (Show, Eq)
 
 -- | OCamlConstructor bridges all Haskell type declarations to OCaml type declaractions.
@@ -65,11 +72,78 @@ data EnumeratorConstructor
 
 data OCamlValue
   = OCamlRef Text
+  | OCamlTypeParameterRef Text
   | OCamlEmpty
   | OCamlPrimitiveRef OCamlPrimitive
   | Values OCamlValue OCamlValue
   | OCamlField Text OCamlValue
   deriving (Show, Eq)
+
+data TypeParameterRef0 = TypeParameterRef0 deriving (Show, Eq, Generic)
+instance OCamlType TypeParameterRef0 where
+  toOCamlType _ = OCamlPrimitive (OTypeParameterRef "TypeParameterRef0")
+{-
+class OCamlType a where
+  toOCamlType :: a -> OCamlDatatype
+  toOCamlType = genericToOCamlDatatype . from
+  default toOCamlType :: (Generic a, GenericOCamlDatatype (Rep a)) =>
+    a -> OCamlDatatype
+
+-}
+
+data TypeParameterRef1 = TypeParameterRef1 deriving (Show, Eq)
+data TypeParameterRef2 = TypeParameterRef2 deriving (Show, Eq)
+
+class OCamlTypeParameter (a :: * -> *) where
+  toOCamlTypeParameter :: a b -> String
+  toOCamlTypeParameter = genericToOCamlTypeParameter . from1
+  default toOCamlTypeParameter :: (Generic1 a, GenericOCamlTypeParameter (Rep1 a)) => a b -> String
+
+class GenericOCamlTypeParameter a where
+  genericToOCamlTypeParameter :: a b -> String
+
+instance (GenericOCamlTypeParameter f) => GenericOCamlTypeParameter (D1 d f) where
+  genericToOCamlTypeParameter d = genericToOCamlTypeParameter (unM1 d)
+
+instance (GenericOCamlTypeParameter f) => GenericOCamlTypeParameter (M1 C k (S1 d f)) where
+  genericToOCamlTypeParameter d = genericToOCamlTypeParameter (unM1 d)
+
+instance (GenericOCamlTypeParameter f) => GenericOCamlTypeParameter (S1 d f) where
+  genericToOCamlTypeParameter (M1 d) = genericToOCamlTypeParameter d
+
+instance GenericOCamlTypeParameter Par1 where
+  genericToOCamlTypeParameter a = unsafeCoerce a
+{-
+    D1 ('MetaData "Tree" "Main" "package-name" 'False)
+      (C1 ('MetaCons "Leaf" 'PrefixI 'False)
+         (S1 ('MetaSel 'Nothing
+                         'NoSourceUnpackedness
+                         'NoSourceStrictness
+                         'DecidedLazy)
+               Par1)
+       :+:
+       C1 ('MetaCons "Node" 'PrefixI 'False)
+         (S1 ('MetaSel 'Nothing
+                         'NoSourceUnpackedness
+                         'NoSourceStrictness
+                         'DecidedLazy)
+               (Rec1 Tree)
+          :*:
+          S1 ('MetaSel 'Nothing
+                         'NoSourceUnpackedness
+                         'NoSourceStrictness
+                         'DecidedLazy)
+               (Rec1 Tree)))
+
+
+class Functor f where
+  fmap :: (a -> b) -> f a -> f b
+  default fmap :: (Generic1 f, Functor (Rep1 f)) => (a -> b) -> f a -> f b
+  fmap = to1 . fmap . from1
+
+instance Functor Par1 where
+  fmap f (Par1 p) = Par1 (f p)
+-}
 
 ------------------------------------------------------------
 class OCamlType a where
@@ -118,27 +192,6 @@ instance (GenericValueConstructor f, GenericValueConstructor g) =>
       ]
 
 ------------------------------------------------------------
-{-
-class GenericOCamlConstructor f where
-  genericToOCamlConstructor :: f a -> OCamlConstructor
-
-instance (Constructor c, GenericOCamlValue f) => GenericOCamlConstructor (C1 c f) where
-  genericToOCamlConstructor constructor =
-    if conIsRecord constructor
-      then OCamlValueConstructor $ RecordConstructor name (genericToOCamlValue (unM1 constructor))
-      else OCamlValueConstructor $ NamedConstructor name (genericToOCamlValue (unM1 constructor))
-    where
-      name = T.pack $ conName constructor
-
-instance (GenericOCamlConstructor f, GenericOCamlConstructor g) =>
-         GenericOCamlConstructor (f :+: g) where
-  genericToOCamlConstructor _ =
-    OCamlConstructor $ $ MultipleConstructors
-      [ genericToOCamlConstructor (undefined :: f p)
-      , genericToOCamlConstructor (undefined :: g p)
-      ]
--}
-------------------------------------------------------------
 class GenericOCamlValue f where
   genericToOCamlValue :: f a -> OCamlValue
 
@@ -162,9 +215,19 @@ instance GenericOCamlValue U1 where
 instance OCamlType a => GenericOCamlValue (Rec0 a) where
   genericToOCamlValue _ =
     case toOCamlType (Proxy :: Proxy a) of
-      OCamlPrimitive primitive -> OCamlPrimitiveRef primitive
+      OCamlPrimitive primitive -> mkRef primitive
       OCamlDatatype name _     -> OCamlRef name
-
+    where
+      mkRef p =
+        case p of
+          OTypeParameterRef t -> OCamlTypeParameterRef t
+          _ -> OCamlPrimitiveRef p
+          
+{-
+      OCamlDatatype name _     -> if isLowercase name then OCamlTypeParameterRef name else OCamlRef name
+    where
+      isLowercase = isLower . head . T.unpack
+-}
 instance OCamlType a => OCamlType [a] where
   toOCamlType _ = OCamlPrimitive (OList (toOCamlType (Proxy :: Proxy a)))
 
@@ -265,12 +328,6 @@ instance OCamlType Bool where
 -- | Whether a set of constructors is an enumeration, i.e. whether they lack
 --   values. data A = A | B | C would be simple data A = A Int | B | C would not
 --   be simple.
-{-
-isEnumeration :: ValueConstructor -> Bool
-isEnumeration (NamedConstructor _ OCamlEmpty) = True
-isEnumeration (MultipleConstructors cs) = all isEnumeration cs
-isEnumeration _ = False
--}
 isEnumeration :: OCamlConstructor -> Bool
 isEnumeration (OCamlValueConstructor (NamedConstructor _ OCamlEmpty)) = True
 isEnumeration (OCamlValueConstructor (MultipleConstructors cs)) = all isEnumeration (OCamlValueConstructor <$> cs)
@@ -279,7 +336,6 @@ isEnumeration _ = False
 
 -- | Tranform a complete OCamlConstructor to EnumeratorConstructors 
 transformToEnumeration :: OCamlConstructor -> OCamlConstructor
-
 transformToEnumeration (OCamlValueConstructor (NamedConstructor name OCamlEmpty)) =
   OCamlEnumeratorConstructor [EnumeratorConstructor name]
 

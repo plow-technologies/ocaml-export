@@ -2,6 +2,8 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 
+{-# LANGUAGE PolyKinds #-}
+
 import           Data.Monoid ((<>))
 import           Data.Proxy
 import qualified Data.Text.IO as T
@@ -30,6 +32,15 @@ data OnOrOff = On Int | Off
 data Person = Person
   { id :: Int
   , name :: Maybe String
+  } deriving (Show, Eq, Generic, OC.OCamlType)
+
+data Tree a =
+  Leaf a | Node (Tree a) (Tree a)
+  deriving (Show, Eq, Generic, OC.OCamlType)
+
+data Holder a = Holder
+  { holderId :: Int
+  , holderValue :: a
   } deriving (Show, Eq, Generic, OC.OCamlType)
 
 data Company = Company
@@ -160,6 +171,8 @@ adtToPath :: ADT -> FilePath
 adtToPath Product = "product"
 adtToPath Sum = "sum"
 
+data ZZ a = ZZ {zz :: a} deriving (Eq,Read,Show,Generic,Generic1,OC.OCamlTypeParameter)
+
 testOCamlType :: OC.Spec -> FilePath -> ADT -> SpecWith ()
 testOCamlType ocamlSpec typeName adt =
   it typeName $ do
@@ -174,6 +187,13 @@ testOCamlType ocamlSpec typeName adt =
 
 spec :: Spec
 spec =
+  describe "toOCamlTypeParameter" $ do
+    it "" $ do
+      print $ OC.toOCamlTypeParameter (ZZ 1 :: ZZ Int)-- (Proxy :: Proxy (ZZ Int))
+      print $ OC.toOCamlType (Proxy :: Proxy Person)
+      print $ OC.toOCamlType (Proxy :: Proxy (Holder OC.TypeParameterRef0))
+      False `shouldBe` True
+  {-
   describe "toOCamlTypeSource" $ do
     testOCamlType personSpec "Person" Product
     testOCamlType companySpec "Company" Product
@@ -183,6 +203,6 @@ spec =
     testOCamlType withTupleSpec "WithTuple" Sum
     testOCamlType cardSpec "Card" Product
     testOCamlType sumWithRecordSpec "SumWithRecord" Sum
-    
+  -}
 main :: IO ()
 main = hspec spec

@@ -43,6 +43,13 @@ data Holder a = Holder
   , holderValue :: a
   } deriving (Show, Eq, Generic, OC.OCamlType)
 
+data Holder2 a b = Holder2
+  { holder2Id :: Int
+  , holder2AValue :: a
+  , holder2BValue :: b
+  } deriving (Show, Eq, Generic, OC.OCamlType)
+
+
 data Company = Company
   { address   :: String
   , employees :: [Person]
@@ -171,7 +178,6 @@ adtToPath :: ADT -> FilePath
 adtToPath Product = "product"
 adtToPath Sum = "sum"
 
-data ZZ a = ZZ {zz :: a} deriving (Eq,Read,Show,Generic,Generic1,OC.OCamlTypeParameter)
 
 testOCamlType :: OC.Spec -> FilePath -> ADT -> SpecWith ()
 testOCamlType ocamlSpec typeName adt =
@@ -187,11 +193,10 @@ testOCamlType ocamlSpec typeName adt =
 
 spec :: Spec
 spec =
-  describe "toOCamlTypeParameter" $ do
+  describe "toOCamlType" $ do
     it "" $ do
-      print $ OC.toOCamlTypeParameter (ZZ 1 :: ZZ Int)-- (Proxy :: Proxy (ZZ Int))
-      print $ OC.toOCamlType (Proxy :: Proxy Person)
       print $ OC.toOCamlType (Proxy :: Proxy (Holder OC.TypeParameterRef0))
+      print $ OC.toOCamlType (Proxy :: Proxy (Holder2 OC.TypeParameterRef0  OC.TypeParameterRef1))
       False `shouldBe` True
   {-
   describe "toOCamlTypeSource" $ do

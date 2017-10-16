@@ -42,7 +42,6 @@ data OCamlPrimitive
   | OTuple4 OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype -- (***)
   | OTuple5 OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype -- (****)
   | OTuple6 OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype -- (*****)
-  | OTypeParameterRef Text
   deriving (Show, Eq)
 
 -- | OCamlConstructor bridges all Haskell type declarations to OCaml type declaractions.
@@ -76,27 +75,27 @@ data OCamlValue
 
 data TypeParameterRef0 = TypeParameterRef0 deriving (Show, Eq, Generic)
 instance OCamlType TypeParameterRef0 where
-  toOCamlType _ = OCamlPrimitive (OTypeParameterRef "a0")
+  toOCamlType _ = OCamlDatatype "a0" (OCamlValueConstructor (MultipleConstructors []))
 
 data TypeParameterRef1 = TypeParameterRef1 deriving (Show, Eq)
 instance OCamlType TypeParameterRef1 where
-  toOCamlType _ = OCamlPrimitive (OTypeParameterRef "a1")
+  toOCamlType _ = OCamlDatatype "a1" (OCamlValueConstructor (MultipleConstructors []))
 
 data TypeParameterRef2 = TypeParameterRef2 deriving (Show, Eq)
 instance OCamlType TypeParameterRef2 where
-  toOCamlType _ = OCamlPrimitive (OTypeParameterRef "a2")
+  toOCamlType _ = OCamlDatatype "a2" (OCamlValueConstructor (MultipleConstructors []))
 
 data TypeParameterRef3 = TypeParameterRef3 deriving (Show, Eq)
 instance OCamlType TypeParameterRef3 where
-  toOCamlType _ = OCamlPrimitive (OTypeParameterRef "a3")
+  toOCamlType _ = OCamlDatatype "a3" (OCamlValueConstructor (MultipleConstructors []))
 
 data TypeParameterRef4 = TypeParameterRef4 deriving (Show, Eq)
 instance OCamlType TypeParameterRef4 where
-  toOCamlType _ = OCamlPrimitive (OTypeParameterRef "a4")
+  toOCamlType _ = OCamlDatatype "a4" (OCamlValueConstructor (MultipleConstructors []))
 
 data TypeParameterRef5 = TypeParameterRef5 deriving (Show, Eq)
 instance OCamlType TypeParameterRef5 where
-  toOCamlType _ = OCamlPrimitive (OTypeParameterRef "a5")
+  toOCamlType _ = OCamlDatatype "a5" (OCamlValueConstructor (MultipleConstructors []))
 
 ------------------------------------------------------------
 class OCamlType a where
@@ -168,13 +167,13 @@ instance GenericOCamlValue U1 where
 instance OCamlType a => GenericOCamlValue (Rec0 a) where
   genericToOCamlValue _ =
     case toOCamlType (Proxy :: Proxy a) of
-      OCamlPrimitive primitive -> mkRef primitive
-      OCamlDatatype name _     -> OCamlRef name
+      OCamlPrimitive primitive -> OCamlPrimitiveRef primitive -- mkRef primitive
+      OCamlDatatype name _     -> mkRef name
     where
-      mkRef p =
-        case p of
-          OTypeParameterRef t -> OCamlTypeParameterRef t
-          _ -> OCamlPrimitiveRef p
+      typeParameterRefs = (T.append) <$> ["a"] <*> (T.pack . show <$> ([0..5] :: [Int]))
+      mkRef n
+        | n `elem` typeParameterRefs = OCamlTypeParameterRef n
+        | otherwise = OCamlRef n
 
 instance OCamlType a => OCamlType [a] where
   toOCamlType _ = OCamlPrimitive (OList (toOCamlType (Proxy :: Proxy a)))

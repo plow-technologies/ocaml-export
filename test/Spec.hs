@@ -47,7 +47,7 @@ data Holder2 a b = Holder2
   { holder2Id :: Int
   , holder2AValue :: a
   , holder2BValue :: b
-  } deriving (Show, Eq, Generic, OC.OCamlType)
+  } deriving (Show, Eq, Generic, Read, OC.OCamlType)
 
 
 data Company = Company
@@ -196,7 +196,7 @@ spec =
   describe "toOCamlType" $ do
     it "" $ do
       print $ OC.toOCamlType (Proxy :: Proxy (Holder OC.TypeParameterRef0))
-      print $ OC.toOCamlType (Proxy :: Proxy (Holder2 OC.TypeParameterRef0  OC.TypeParameterRef1))
+      print $ OC.toOCamlType (Proxy :: Proxy (Holder2 OC.TypeParameterRef0 OC.TypeParameterRef1))
       False `shouldBe` True
   {-
   describe "toOCamlTypeSource" $ do

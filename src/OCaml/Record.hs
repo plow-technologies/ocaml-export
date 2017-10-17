@@ -25,6 +25,28 @@ class HasRecordType a where
 class HasTypeRef a where
   renderRef :: a -> Reader Options Doc
 
+
+getOCamlTypeParameterRef :: OCamlValue -> [Doc]
+getOCamlTypeParameterRef (OCamlTypeParameterRef name) = [stext name]
+getOCamlTypeParameterRef (OCamlField _ v1) = getOCamlTypeParameterRef v1
+getOCamlTypeParameterRef (Values v1 v2) = getOCamlTypeParameterRef v1 ++ getOCamlTypeParameterRef v2
+getOCamlTypeParameterRef _ = []
+
+getOCamlValues :: ValueConstructor -> [Doc]
+getOCamlValues (NamedConstructor     _ value) = getOCamlTypeParameterRef value
+getOCamlValues (RecordConstructor    _ value) = getOCamlTypeParameterRef value
+getOCamlValues (MultipleConstructors cs)      = concat $ getOCamlValues <$> cs
+
+renderTypeParameters :: OCamlConstructor -> Reader Options Doc
+renderTypeParameters (OCamlValueConstructor vc) = return $ foldl (<+>) "" (getOCamlValues vc)
+renderTypeParameters (OCamlSumOfRecordConstructor vc) = return $ foldl (<+>) "" (getOCamlValues vc)
+renderTypeParameters _ = return ""
+{-
+makeTypeParameter :: OCamlValue -> Reader Options (Maybe Doc)
+makeTypeParameter (OCamlTypeParamterRef name) = return $ Just name
+makeTypeParameter _ = Nothing
+-}
+
 -- | For Haskell Sum of Records, create OCaml record types of each RecordConstructorn
 makeAuxTypeDef :: Text -> ValueConstructor -> Reader Options (Maybe (Doc,(Text,ValueConstructor)))
 makeAuxTypeDef typeName c@(RecordConstructor rName _rValue) = do
@@ -48,30 +70,34 @@ replaceRecordConstructors newConstructors rc@(RecordConstructor oldName _) =
 replaceRecordConstructors _ rc = rc
 
 instance HasType OCamlDatatype where
-  render d@(OCamlDatatype typeName (OCamlSumOfRecordConstructor (MultipleConstructors css))) = do
+  render d@(OCamlDatatype typeName constructor@(OCamlSumOfRecordConstructor (MultipleConstructors css))) = do
     -- for each constructor, if it is a record constructor
     -- make a special new one, other wise do normal things
     vs' <- catMaybes <$> sequence (makeAuxTypeDef typeName <$> css)
     let vs = msuffix (line <> line) (fst <$> vs')
-    let cs' = replaceRecordConstructors (snd <$> vs') <$> css 
+    let cs' = replaceRecordConstructors (snd <$> vs') <$> css
+    typeParameters <- renderTypeParameters constructor
     name <- renderRef d
     ctor <- render (OCamlValueConstructor $ MultipleConstructors cs')
-    return $ vs <> (nest 2 $ "type" <+> name <+> "=" <$$> "|" <+> ctor)
+    return $ vs <> (nest 2 $ "type" <+> typeParameters <+> name <+> "=" <$$> "|" <+> ctor)
 
   render d@(OCamlDatatype _ constructor@(OCamlValueConstructor (RecordConstructor _ _))) = do
+    typeParameters <- renderTypeParameters constructor
     name <- renderRef d
     ctor <- render constructor
-    return . nest 2 $ "type" <+> name <+> "=" <$$> ctor
+    return . nest 2 $ "type" <+> typeParameters <+> name <+> "=" <$$> ctor
 
   render d@(OCamlDatatype _typeName cs@(OCamlValueConstructor (MultipleConstructors _css))) = do
+    typeParameters <- renderTypeParameters cs
     name <- renderRef d
     ctor <- render cs
-    return . nest 2 $ "type" <+> name <+> "=" <$$> "|" <+> ctor
+    return . nest 2 $ "type" <+> typeParameters <+> name <+> "=" <$$> "|" <+> ctor
 
   render d@(OCamlDatatype _ constructor) = do
+    typeParameters <- renderTypeParameters constructor
     name <- renderRef d
     ctor <- render constructor
-    return . nest 2 $ "type" <+> name <+> "=" <$$> "|" <+> ctor
+    return . nest 2 $ "type" <+> typeParameters <+> name <+> "=" <$$> "|" <+> ctor
 
   render (OCamlPrimitive primitive) = renderRef primitive
 
@@ -81,6 +107,7 @@ instance HasTypeRef OCamlDatatype where
 
 instance HasType OCamlConstructor where
   render (OCamlValueConstructor value) = render value
+  render (OCamlSumOfRecordConstructor value) = render value
   render (OCamlEnumeratorConstructor constructors) = do
     mintercalate (line <> "|" <> space) <$> sequence (render <$> constructors)
 
@@ -102,6 +129,7 @@ instance HasType EnumeratorConstructor where
 
 instance HasType OCamlValue where
   render (OCamlRef name) = pure (stext $ textLowercaseFirst name)
+  render (OCamlTypeParameterRef name) = pure (stext name)
   render (OCamlPrimitiveRef primitive) = reasonRefParens primitive <$> renderRef primitive
   render OCamlEmpty = pure (text "")
   render (Values x y) = do

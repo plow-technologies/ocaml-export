@@ -195,8 +195,10 @@ spec :: Spec
 spec =
   describe "toOCamlType" $ do
     it "" $ do
-      print $ OC.toOCamlType (Proxy :: Proxy (Holder OC.TypeParameterRef0))
-      print $ OC.toOCamlType (Proxy :: Proxy (Holder2 OC.TypeParameterRef0 OC.TypeParameterRef1))
+--      print $ OC.toOCamlType (Proxy :: Proxy (Holder OC.TypeParameterRef0))
+--      print $ OC.toOCamlType (Proxy :: Proxy (Holder2 OC.TypeParameterRef0 OC.TypeParameterRef1))
+--      print $ OC.toOCamlEncoderSource (Proxy :: Proxy (Holder2 OC.TypeParameterRef0 OC.TypeParameterRef1))
+      print $ OC.toOCamlTypeSource (Proxy :: Proxy (Holder2 OC.TypeParameterRef0 OC.TypeParameterRef1))
       False `shouldBe` True
   {-
   describe "toOCamlTypeSource" $ do

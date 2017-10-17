@@ -149,6 +149,10 @@ instance HasEncoder OCamlValue where
     return . spaceparens $
       dquotes (stext (fieldModifier name)) <> comma <+>
       (valueBody <+> "x." <> stext name)
+  render (OCamlTypeParameterRef name) = do
+    return . spaceparens $
+      dquotes (stext name) <> comma <+>
+      ("x." <> stext name)
   render (OCamlPrimitiveRef primitive) = renderRef primitive
   render (OCamlRef name) = pure $ "encode" <> stext name
   render (Values x y) = do
@@ -251,4 +255,5 @@ renderVariable ds (Values l r) = do
 renderVariable ds f@(OCamlField _ _) = do
   f' <- render f
   return (f', ds)
-renderVariable [] _ = error "Amount of variables does not match variables"
+renderVariable [] _ = error "Amount of variables does not match variables."
+renderVariable _  _ = error "This variable is not intended to be rendered."  

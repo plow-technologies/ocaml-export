@@ -23,6 +23,26 @@ class HasEncoder a where
 class HasEncoderRef a where
   renderRef :: a -> Reader Options Doc
 
+{-
+x :: OCamlValue -> _
+x (OCamlTypeParameterRef name) = "(parse" <> name <+> ":string -> :json)"
+
+getOCamlTypeParameterRef :: OCamlValue -> [Doc]
+getOCamlTypeParameterRef (OCamlTypeParameterRef name) = [stext name]
+getOCamlTypeParameterRef (OCamlField _ v1) = getOCamlTypeParameterRef v1
+getOCamlTypeParameterRef (Values v1 v2) = getOCamlTypeParameterRef v1 ++ getOCamlTypeParameterRef v2
+getOCamlTypeParameterRef _ = []
+
+getOCamlValues :: ValueConstructor -> [Doc]
+getOCamlValues (NamedConstructor     _ value) = getOCamlTypeParameterRef value
+getOCamlValues (RecordConstructor    _ value) = getOCamlTypeParameterRef value
+getOCamlValues (MultipleConstructors cs)      = concat $ getOCamlValues <$> cs
+
+renderTypeParameters :: OCamlConstructor -> Reader Options Doc
+renderTypeParameters (OCamlValueConstructor vc) = return $ foldl (<+>) "" (getOCamlValues vc)
+renderTypeParameters (OCamlSumOfRecordConstructor vc) = return $ foldl (<+>) "" (getOCamlValues vc)
+renderTypeParameters _ = return ""
+-}
 instance HasEncoder OCamlDatatype where
   -- handle case where SumWithRecords exists
   render d@(OCamlDatatype typeName (OCamlSumOfRecordConstructor (MultipleConstructors constrs))) = do  

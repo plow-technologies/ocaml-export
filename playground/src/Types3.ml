@@ -212,7 +212,7 @@ let encodeB2 (x : sumWithRecordB2) =
     ; ( "b3", Json.Encode.int x.b3 )
     ]
 
-let encodeSumWithRecord (x : sumWithRecord) =
+let encodeSumWithRecord (x : sumWithRecord) :Js_json.t =
   match x with
   | A1 y0 ->
      (match (Js.Json.decodeObject (encodeA1 y0)) with
@@ -231,8 +231,48 @@ let encodeSumWithRecord (x : sumWithRecord) =
          Json.Encode.object_ []
      )
 
-type t = int Map.t
+type 'a0 holdone =
+  { id : int
+  ; thing1 : 'a0
+  }
 
-let empty = Map.empty
+type holdstring = string holdone
 
-let to_list t = Map.to_alist t
+let encodeHoldone (parseA0 : 'a0 -> Js_json.t) (x : 'a0 holdone) :Js_json.t =
+  Json.Encode.object_
+    [ ( "id", Json.Encode.int x.id )
+    ; ( "thing1", parseA0 x.thing1 )
+    ]
+
+type ('a0, 'a1) holdTwoTypeParameters =
+  { id : int
+  ; first : 'a0
+  ; second : 'a1
+  }
+
+let encodeHoldTwoTypeParameters (type a0) (type a1) (parseA0 : a0 -> Js_json.t) (parseA1 : a1 -> Js_json.t) (x : (a0, a1) holdTwoTypeParameters) :Js_json.t =
+  Json.Encode.object_
+    [ ( "id", Json.Encode.int x.id )
+    ; ( "first", parseA0 x.first )
+    ; ( "second", parseA1 x.second )
+    ]  
+
+type ('a0, 'a1) holdtwo =
+  { id : int
+  ; thing1 : 'a0
+  ; thing2 : 'a1
+  }
+
+(* let encodeHoldtwo : 'a0 'a1. (parseA0 : 'a0 -> Js_json.t) (parseA1 : 'a1 -> Js_json.t) (x : ('a0, 'a1) holdtwo) :Js_json.t = *)
+let encodeHoldtwo (type a0) (type a1) (parseA0 : a0 -> Js_json.t) (parseA1 : a1 -> Js_json.t) (x : (a0, a1) holdtwo) :Js_json.t =
+  Json.Encode.object_
+    [ ( "id", Json.Encode.int x.id )
+    ; ( "thing1", parseA0 x.thing1 )
+    ; ( "thing2", parseA1 x.thing2 )
+    ]  
+
+let x = encodeHoldtwo Json.Encode.string Json.Encode.int {id = 1; thing1 = "Hi"; thing2 = 12}
+(* let y = encodeHoldtwo Json.Encode.string Json.Encode.int {id = 1; thing1 = 12; thing2 = "Hi"} *)
+      
+type holdstringandint = (string, int) holdtwo
+

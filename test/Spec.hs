@@ -93,6 +93,12 @@ data Card =
     , cardValue :: Int
     } deriving (Eq,Show,Generic,OC.OCamlType)
 
+data OneTypeParameter a =
+  OneTypeParameter
+    { otpId :: Int
+    , otpFirst :: a
+    } deriving (Eq,Show,Generic,OC.OCamlType)
+
 data TwoTypeParameters a b =
   TwoTypeParameters
     { ttpId :: Int
@@ -176,6 +182,14 @@ sumWithRecordSpec =
     , OC.toOCamlEncoderSource (Proxy :: Proxy SumWithRecord)
     ]
 
+oneTypeParameterSpec :: OC.Spec
+oneTypeParameterSpec =
+  OC.Spec
+    ["OneTypeParameter"]
+    [ OC.toOCamlTypeSource (Proxy :: Proxy (OneTypeParameter OC.TypeParameterRef0))
+    , OC.toOCamlEncoderSource (Proxy :: Proxy (OneTypeParameter OC.TypeParameterRef0))
+    ]
+
 twoTypeParametersSpec :: OC.Spec
 twoTypeParametersSpec =
   OC.Spec
@@ -224,6 +238,7 @@ spec =
     testOCamlType sumVariantSpec "SumVariant" Sum
     testOCamlType withTupleSpec "WithTuple" Sum
     testOCamlType cardSpec "Card" Product
+    testOCamlType oneTypeParameterSpec "OneTypeParameter" Product
     testOCamlType twoTypeParametersSpec "TwoTypeParameters" Product
 --    testOCamlType sumWithRecordSpec "SumWithRecord" Sum
 

@@ -40,12 +40,8 @@ getOCamlValues (RecordConstructor    _ value) = getOCamlTypeParameterRef value
 getOCamlValues (MultipleConstructors cs)      = concat $ getOCamlValues <$> cs
 
 renderTypeParameters :: OCamlConstructor -> Reader Options Doc
-renderTypeParameters (OCamlValueConstructor vc) = do
-  let vc' = (getOCamlValues vc)
-  return $ foldl (<>) "" $ if length vc' > 1 then  ["("] <> (L.intersperse ", " vc') <> [")"] else (vc')
-renderTypeParameters (OCamlSumOfRecordConstructor vc) = do
-  let vc' = (getOCamlValues vc)
-  return $ foldl (<>) "" $ if length vc' > 1 then  ["("] <> (L.intersperse ", " vc') <> [")"] else (vc')
+renderTypeParameters (OCamlValueConstructor vc) = return $ mkDocList (getOCamlValues vc)
+renderTypeParameters (OCamlSumOfRecordConstructor _ vc) = return $ mkDocList (getOCamlValues vc)  
 renderTypeParameters _ = return ""
 
 -- | For Haskell Sum of Records, create OCaml record types of each RecordConstructorn
@@ -71,7 +67,7 @@ replaceRecordConstructors newConstructors rc@(RecordConstructor oldName _) =
 replaceRecordConstructors _ rc = rc
 
 instance HasType OCamlDatatype where
-  render d@(OCamlDatatype typeName constructor@(OCamlSumOfRecordConstructor (MultipleConstructors css))) = do
+  render d@(OCamlDatatype typeName constructor@(OCamlSumOfRecordConstructor _ (MultipleConstructors css))) = do
     -- for each constructor, if it is a record constructor
     -- make a special new one, other wise do normal things
     vs' <- catMaybes <$> sequence (makeAuxTypeDef typeName <$> css)
@@ -108,7 +104,7 @@ instance HasTypeRef OCamlDatatype where
 
 instance HasType OCamlConstructor where
   render (OCamlValueConstructor value) = render value
-  render (OCamlSumOfRecordConstructor value) = render value
+  render (OCamlSumOfRecordConstructor _ value) = render value
   render (OCamlEnumeratorConstructor constructors) = do
     mintercalate (line <> "|" <> space) <$> sequence (render <$> constructors)
 

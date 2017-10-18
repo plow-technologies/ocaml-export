@@ -48,7 +48,7 @@ data OCamlPrimitive
 data OCamlConstructor 
   = OCamlValueConstructor ValueConstructor
   | OCamlEnumeratorConstructor [EnumeratorConstructor]
-  | OCamlSumOfRecordConstructor ValueConstructor
+  | OCamlSumOfRecordConstructor Text ValueConstructor -- type name for reference
   deriving (Show, Eq)
 
 {-
@@ -128,7 +128,7 @@ instance (Datatype d, GenericValueConstructor f) => GenericOCamlDatatype (D1 d f
           then transformToEnumeration ocamlConstructor
           else 
             if isSumWithRecord ocamlConstructor
-              then transformToSumOfRecord ocamlConstructor
+              then transformToSumOfRecord (T.pack (datatypeName datatype)) ocamlConstructor
               else ocamlConstructor
 
 
@@ -310,9 +310,9 @@ transformToEnumeration (OCamlValueConstructor (MultipleConstructors cs)) =
         
 transformToEnumeration cs = cs
 
-transformToSumOfRecord :: OCamlConstructor -> OCamlConstructor
-transformToSumOfRecord (OCamlValueConstructor value@(MultipleConstructors _cs)) = OCamlSumOfRecordConstructor value
-transformToSumOfRecord constructor = constructor   
+transformToSumOfRecord :: Text -> OCamlConstructor -> OCamlConstructor
+transformToSumOfRecord typeName (OCamlValueConstructor value@(MultipleConstructors _cs)) = OCamlSumOfRecordConstructor typeName value
+transformToSumOfRecord _ constructor = constructor   
 
 
 -- | Haskell allows you to directly declare a sum of records,

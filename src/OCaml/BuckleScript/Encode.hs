@@ -31,7 +31,6 @@ renderTypeParametersAux ocamlValues = do
       typeParams = foldl (<>) "" $ if length typeParameterNames > 1 then  ["("] <> (L.intersperse ", " $ stext <$> typeParameterNames) <> [") "] else ((\x -> stext $ x <> " ") <$> typeParameterNames) :: [Doc]
   (foldl (<+>) "" (typeDecs ++ parserDecs), typeParams )
 
---   return $ foldl (<+>) "" $ if length vc' > 1 then  ["("] <> (L.intersperse "," vc') <> [")"] else (vc')
 getOCamlValues :: ValueConstructor -> [OCamlValue]
 getOCamlValues (NamedConstructor     _ value) = [value]
 getOCamlValues (RecordConstructor    _ value) = [value]
@@ -39,16 +38,16 @@ getOCamlValues (MultipleConstructors cs)      = concat $ getOCamlValues <$> cs
 
 renderTypeParameters :: OCamlConstructor -> (Doc,Doc)
 renderTypeParameters (OCamlValueConstructor vc) = renderTypeParametersAux $ getOCamlValues vc
-renderTypeParameters (OCamlSumOfRecordConstructor vc) = renderTypeParametersAux $ getOCamlValues vc
+renderTypeParameters (OCamlSumOfRecordConstructor _ vc) = renderTypeParametersAux $ getOCamlValues vc
 renderTypeParameters _ = ("","")
 
 instance HasEncoder OCamlDatatype where
   -- handle case where SumWithRecords exists
-  render d@(OCamlDatatype typeName c@(OCamlSumOfRecordConstructor (MultipleConstructors constrs))) = do  
+  render d@(OCamlDatatype typeName c@(OCamlSumOfRecordConstructor _ (MultipleConstructors constrs))) = do  
     fnName <- renderRef d
     docs <- catMaybes <$> sequence (renderSumRecord typeName . OCamlValueConstructor <$> constrs)
     let vs = msuffix (line <> line) docs
-    dc <- mapM renderSum (OCamlValueConstructor <$> constrs)
+    dc <- mapM renderSum (OCamlSumOfRecordConstructor typeName <$> constrs)
     let (tps,aps) = renderTypeParameters c
     return $ vs <$$>
       ("let" <+> fnName <+> tps <+> "(x :" <+> aps <> stext (textLowercaseFirst typeName) <> ") :Js_json.t =") <$$>
@@ -105,11 +104,11 @@ instance HasEncoder OCamlConstructor where
     return $ "match x with" <$$> dv
 
   render _  = return ""
-  
+
 renderSumRecord :: Text -> OCamlConstructor -> Reader Options (Maybe Doc)
 renderSumRecord typeName (OCamlValueConstructor (RecordConstructor name value)) = do
   s <- render (OCamlValueConstructor $ RecordConstructor (typeName <> name) value)
-  return $ Just $ "let encode" <> (stext newName) <> " (x : " <> (stext $ textLowercaseFirst newName) <> ") =" <$$> (indent 2 s)
+  return $ Just $ "let encode" <> (stext newName) <> " (x : " <> (stext $ textLowercaseFirst newName) <> ") :Js_json.t =" <$$> (indent 2 s)
   where
     newName = typeName <> name
 renderSumRecord _ _ = return Nothing
@@ -119,6 +118,19 @@ jsonEncodeObject constructor tag mContents =
   case mContents of
     Nothing -> constructor <$$> nest 5 ("   Json.Encode.object_" <$$> ("[" <+> tag <$$> "]"))
     Just contents -> constructor <$$> nest 5 ("   Json.Encode.object_" <$$> ("[" <+> tag <$$> contents <$$> "]"))
+
+renderOutsideEncoder :: Text -> Text -> Reader Options Doc
+renderOutsideEncoder typeName name =  
+   return $
+         "|" <+> (stext name) <+> "y0 ->"
+    <$$> "   (match (Js.Json.decodeObject (encode" <> (stext typeName) <> (stext name) <+> "y0)) with"
+    <$$> "    | Some dict ->"
+    <$$> "       Js.Dict.set dict \"tag\" (Js.Json.string \"" <> (stext name) <> "\");"
+    <$$> "       Js.Json.object_ dict"
+    <$$> "    | None ->"
+    <$$> "       Json.Encode.object_ []"
+    <$$> "   )"
+    
   
 renderSum :: OCamlConstructor -> Reader Options Doc
 renderSum (OCamlValueConstructor (NamedConstructor name OCamlEmpty)) = do
@@ -148,6 +160,13 @@ renderSum (OCamlValueConstructor (RecordConstructor name value)) = do
 renderSum (OCamlValueConstructor (MultipleConstructors constrs)) = do
   dc <- mapM renderSum (OCamlValueConstructor <$> constrs)
   return $ foldl1 (<$$>) dc
+
+renderSum (OCamlSumOfRecordConstructor typeName (RecordConstructor name _value)) = do
+  renderOutsideEncoder typeName name
+  
+renderSum (OCamlSumOfRecordConstructor typeName (MultipleConstructors constrs)) = do
+  dc <- mapM renderSum (OCamlSumOfRecordConstructor typeName <$> constrs)
+  return $ foldl1 (<$$>) dc  
 
 renderSum (OCamlEnumeratorConstructor constructors) =
   return $ foldl1 (<$$>) $ (\(EnumeratorConstructor name) -> "|" <+> stext name <+> "->" <$$> "   Json.Encode.string" <+> dquotes (stext name)) <$> constructors

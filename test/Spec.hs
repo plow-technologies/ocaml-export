@@ -240,7 +240,7 @@ spec =
     testOCamlType cardSpec "Card" Product
     testOCamlType oneTypeParameterSpec "OneTypeParameter" Product
     testOCamlType twoTypeParametersSpec "TwoTypeParameters" Product
---    testOCamlType sumWithRecordSpec "SumWithRecord" Sum
+    testOCamlType sumWithRecordSpec "SumWithRecord" Sum
 
 main :: IO ()
 main = hspec spec

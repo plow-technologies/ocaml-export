@@ -244,13 +244,13 @@ let encodeHoldone (parseA0 : 'a0 -> Js_json.t) (x : 'a0 holdone) :Js_json.t =
     ; ( "thing1", parseA0 x.thing1 )
     ]
 
-type ('a0, 'a1) holdTwoTypeParameters =
+type ('a0, 'a1) twoTypeParameters =
   { id : int
   ; first : 'a0
   ; second : 'a1
   }
 
-let encodeHoldTwoTypeParameters (type a0) (type a1) (parseA0 : a0 -> Js_json.t) (parseA1 : a1 -> Js_json.t) (x : (a0, a1) holdTwoTypeParameters) :Js_json.t =
+let encodeTwoTypeParameters (type a0) (type a1) (parseA0 : a0 -> Js_json.t) (parseA1 : a1 -> Js_json.t) (x : (a0, a1) twoTypeParameters) :Js_json.t =
   Json.Encode.object_
     [ ( "id", Json.Encode.int x.id )
     ; ( "first", parseA0 x.first )

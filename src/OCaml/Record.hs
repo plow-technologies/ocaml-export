@@ -16,6 +16,8 @@ import           OCaml.Common
 import           OCaml.Type
 import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
 
+import qualified Data.List as L
+
 class HasType a where
   render :: a -> Reader Options Doc
 
@@ -27,7 +29,7 @@ class HasTypeRef a where
 
 
 getOCamlTypeParameterRef :: OCamlValue -> [Doc]
-getOCamlTypeParameterRef (OCamlTypeParameterRef name) = [stext name]
+getOCamlTypeParameterRef (OCamlTypeParameterRef name) = [stext ("'" <> name)]
 getOCamlTypeParameterRef (OCamlField _ v1) = getOCamlTypeParameterRef v1
 getOCamlTypeParameterRef (Values v1 v2) = getOCamlTypeParameterRef v1 ++ getOCamlTypeParameterRef v2
 getOCamlTypeParameterRef _ = []
@@ -38,10 +40,17 @@ getOCamlValues (RecordConstructor    _ value) = getOCamlTypeParameterRef value
 getOCamlValues (MultipleConstructors cs)      = concat $ getOCamlValues <$> cs
 
 renderTypeParameters :: OCamlConstructor -> Reader Options Doc
-renderTypeParameters (OCamlValueConstructor vc) = return $ foldl (<+>) "" (getOCamlValues vc)
-renderTypeParameters (OCamlSumOfRecordConstructor vc) = return $ foldl (<+>) "" (getOCamlValues vc)
+renderTypeParameters (OCamlValueConstructor vc) = do
+  let vc' = (getOCamlValues vc)
+  return $ foldl (<+>) "" $ if length vc' > 1 then  ["("] <> (L.intersperse "," vc') <> [")"] else (vc')
+renderTypeParameters (OCamlSumOfRecordConstructor vc) = do
+  let vc' = (getOCamlValues vc)
+  return $ foldl (<+>) "" $ if length vc' > 1 then  ["("] <> (L.intersperse "," vc') <> [")"] else (vc')
 renderTypeParameters _ = return ""
+
 {-
+ps' = if length ps > 1 then ["("] <> (L.intersperse "," ps) <> [")"] else (L.intersperse "," ps)
+
 makeTypeParameter :: OCamlValue -> Reader Options (Maybe Doc)
 makeTypeParameter (OCamlTypeParamterRef name) = return $ Just name
 makeTypeParameter _ = Nothing
@@ -129,7 +138,7 @@ instance HasType EnumeratorConstructor where
 
 instance HasType OCamlValue where
   render (OCamlRef name) = pure (stext $ textLowercaseFirst name)
-  render (OCamlTypeParameterRef name) = pure (stext name)
+  render (OCamlTypeParameterRef name) = pure (stext ("'" <> name))
   render (OCamlPrimitiveRef primitive) = reasonRefParens primitive <$> renderRef primitive
   render OCamlEmpty = pure (text "")
   render (Values x y) = do

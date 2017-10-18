@@ -23,49 +23,56 @@ class HasEncoder a where
 class HasEncoderRef a where
   renderRef :: a -> Reader Options Doc
 
-{-
-x :: OCamlValue -> _
-x (OCamlTypeParameterRef name) = "(parse" <> name <+> ":string -> :json)"
+renderTypeParametersAux :: [OCamlValue] -> Reader Options Doc
+renderTypeParametersAux ocamlValues = do
+  let typeParameterNames = concat $ match <$> ocamlValues
+      typeDecs = (\t -> "(type " <> (stext t) <> ")") <$> typeParameterNames :: [Doc]
+      parserDecs  = (\t -> "(parse" <> (stext $ textUppercaseFirst t) <+> ":" <+> (stext t) <+> "-> Js_json.t)" ) <$> typeParameterNames :: [Doc]
+  return $ foldl (<+>) "" (typeDecs ++ parserDecs)
+  where
+    match value =
+      case value of
+        (OCamlTypeParameterRef name) -> [name]
+        (Values v1 v2) -> match v1 ++ match v2
+        (OCamlField _ v1) -> match v1
+        _ -> []
 
-getOCamlTypeParameterRef :: OCamlValue -> [Doc]
-getOCamlTypeParameterRef (OCamlTypeParameterRef name) = [stext name]
-getOCamlTypeParameterRef (OCamlField _ v1) = getOCamlTypeParameterRef v1
-getOCamlTypeParameterRef (Values v1 v2) = getOCamlTypeParameterRef v1 ++ getOCamlTypeParameterRef v2
-getOCamlTypeParameterRef _ = []
-
-getOCamlValues :: ValueConstructor -> [Doc]
-getOCamlValues (NamedConstructor     _ value) = getOCamlTypeParameterRef value
-getOCamlValues (RecordConstructor    _ value) = getOCamlTypeParameterRef value
+getOCamlValues :: ValueConstructor -> [OCamlValue]
+getOCamlValues (NamedConstructor     _ value) = [value]
+getOCamlValues (RecordConstructor    _ value) = [value]
 getOCamlValues (MultipleConstructors cs)      = concat $ getOCamlValues <$> cs
 
 renderTypeParameters :: OCamlConstructor -> Reader Options Doc
-renderTypeParameters (OCamlValueConstructor vc) = return $ foldl (<+>) "" (getOCamlValues vc)
-renderTypeParameters (OCamlSumOfRecordConstructor vc) = return $ foldl (<+>) "" (getOCamlValues vc)
+renderTypeParameters (OCamlValueConstructor vc) = renderTypeParametersAux $ getOCamlValues vc
+renderTypeParameters (OCamlSumOfRecordConstructor vc) = renderTypeParametersAux $ getOCamlValues vc
 renderTypeParameters _ = return ""
--}
+
 instance HasEncoder OCamlDatatype where
   -- handle case where SumWithRecords exists
-  render d@(OCamlDatatype typeName (OCamlSumOfRecordConstructor (MultipleConstructors constrs))) = do  
+  render d@(OCamlDatatype typeName c@(OCamlSumOfRecordConstructor (MultipleConstructors constrs))) = do  
     fnName <- renderRef d
     docs <- catMaybes <$> sequence (renderSumRecord typeName . OCamlValueConstructor <$> constrs)
     let vs = msuffix (line <> line) docs
     dc <- mapM renderSum (OCamlValueConstructor <$> constrs)
+    tps <- renderTypeParameters c
     return $ vs <$$>
-      ("let" <+> fnName <+> "(x :" <+> stext (textLowercaseFirst typeName) <> ") =") <$$>
+      ("let" <+> fnName <+> tps <+> "(x :" <+> stext (textLowercaseFirst typeName) <> ") =") <$$>
       (indent 2 ("match x with" <$$> foldl1 (<$$>) dc))
     
-  render d@(OCamlDatatype typeName (OCamlValueConstructor (MultipleConstructors constrs))) = do
+  render d@(OCamlDatatype typeName c@(OCamlValueConstructor (MultipleConstructors constrs))) = do
     fnName <- renderRef d
     dc <- mapM renderSum (OCamlValueConstructor <$> constrs)
+    tps <- renderTypeParameters c
     return $
-      ("let" <+> fnName <+> "(x :" <+> stext (textLowercaseFirst typeName) <> ") =") <$$>
+      ("let" <+> fnName <+> tps <+> "(x :" <+> stext (textLowercaseFirst typeName) <> ") =") <$$>
       (indent 2 ("match x with" <$$> foldl1 (<$$>) dc))
 
   render d@(OCamlDatatype name constructor) = do
     fnName <- renderRef d
     ctor <- render constructor
+    tps <- renderTypeParameters constructor
     return $
-      ("let" <+> fnName <+> "(x :" <+> stext (textLowercaseFirst name) <> ") =") <$$>
+      ("let" <+> fnName <+> tps <+> "(x :" <+> stext (textLowercaseFirst name) <> ") =") <$$>
       (indent 2 ctor)
 
   render (OCamlPrimitive primitive) = renderRef primitive

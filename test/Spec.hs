@@ -93,6 +93,13 @@ data Card =
     , cardValue :: Int
     } deriving (Eq,Show,Generic,OC.OCamlType)
 
+data TwoTypeParameters a b =
+  TwoTypeParameters
+    { ttpId :: Int
+    , ttpFirst :: a
+    , ttpSecond :: b
+    } deriving (Eq,Show,Generic,OC.OCamlType)
+
 personSpec :: OC.Spec
 personSpec =
   OC.Spec
@@ -169,6 +176,13 @@ sumWithRecordSpec =
     , OC.toOCamlEncoderSource (Proxy :: Proxy SumWithRecord)
     ]
 
+twoTypeParametersSpec :: OC.Spec
+twoTypeParametersSpec =
+  OC.Spec
+    ["TwoTypeParameters"]
+    [ OC.toOCamlTypeSource (Proxy :: Proxy (TwoTypeParameters OC.TypeParameterRef0 OC.TypeParameterRef1))
+    , OC.toOCamlEncoderSource (Proxy :: Proxy (TwoTypeParameters OC.TypeParameterRef0 OC.TypeParameterRef1))
+    ]
 
 data ADT
   = Product
@@ -193,14 +207,15 @@ testOCamlType ocamlSpec typeName adt =
 
 spec :: Spec
 spec =
-  describe "toOCamlType" $ do
-    it "" $ do
+--  describe "toOCamlType" $ do
+--    it "" $ do
 --      print $ OC.toOCamlType (Proxy :: Proxy (Holder OC.TypeParameterRef0))
 --      print $ OC.toOCamlType (Proxy :: Proxy (Holder2 OC.TypeParameterRef0 OC.TypeParameterRef1))
 --      print $ OC.toOCamlEncoderSource (Proxy :: Proxy (Holder2 OC.TypeParameterRef0 OC.TypeParameterRef1))
-      print $ OC.toOCamlTypeSource (Proxy :: Proxy (Holder2 OC.TypeParameterRef0 OC.TypeParameterRef1))
-      False `shouldBe` True
-  {-
+--      print $ OC.toOCamlTypeSource (Proxy :: Proxy (Holder2 OC.TypeParameterRef0 OC.TypeParameterRef1))
+--      print $ OC.toOCamlTypeSource (Proxy :: Proxy (TwoTypeParameters OC.TypeParameterRef0 OC.TypeParameterRef1))
+
+
   describe "toOCamlTypeSource" $ do
     testOCamlType personSpec "Person" Product
     testOCamlType companySpec "Company" Product
@@ -209,7 +224,8 @@ spec =
     testOCamlType sumVariantSpec "SumVariant" Sum
     testOCamlType withTupleSpec "WithTuple" Sum
     testOCamlType cardSpec "Card" Product
-    testOCamlType sumWithRecordSpec "SumWithRecord" Sum
-  -}
+    testOCamlType twoTypeParametersSpec "TwoTypeParameters" Product
+--    testOCamlType sumWithRecordSpec "SumWithRecord" Sum
+
 main :: IO ()
 main = hspec spec

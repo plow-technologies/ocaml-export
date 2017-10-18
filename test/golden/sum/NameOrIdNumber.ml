@@ -2,7 +2,7 @@ type nameOrIdNumber =
   | Name of string
   | IdNumber of int
 
-let encodeNameOrIdNumber (x : nameOrIdNumber) =
+let encodeNameOrIdNumber (x : nameOrIdNumber) :Js_json.t =
   match x with
   | Name y0 ->
      Json.Encode.object_

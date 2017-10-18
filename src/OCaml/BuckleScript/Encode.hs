@@ -56,7 +56,7 @@ instance HasEncoder OCamlDatatype where
     dc <- mapM renderSum (OCamlValueConstructor <$> constrs)
     tps <- renderTypeParameters c
     return $ vs <$$>
-      ("let" <+> fnName <+> tps <+> "(x :" <+> stext (textLowercaseFirst typeName) <> ") =") <$$>
+      ("let" <+> fnName <+> tps <+> "(x :" <+> stext (textLowercaseFirst typeName) <> ") :Js_json.t =") <$$>
       (indent 2 ("match x with" <$$> foldl1 (<$$>) dc))
     
   render d@(OCamlDatatype typeName c@(OCamlValueConstructor (MultipleConstructors constrs))) = do
@@ -64,7 +64,7 @@ instance HasEncoder OCamlDatatype where
     dc <- mapM renderSum (OCamlValueConstructor <$> constrs)
     tps <- renderTypeParameters c
     return $
-      ("let" <+> fnName <+> tps <+> "(x :" <+> stext (textLowercaseFirst typeName) <> ") =") <$$>
+      ("let" <+> fnName <+> tps <+> "(x :" <+> stext (textLowercaseFirst typeName) <> ") :Js_json.t =") <$$>
       (indent 2 ("match x with" <$$> foldl1 (<$$>) dc))
 
   render d@(OCamlDatatype name constructor) = do
@@ -72,7 +72,7 @@ instance HasEncoder OCamlDatatype where
     ctor <- render constructor
     tps <- renderTypeParameters constructor
     return $
-      ("let" <+> fnName <+> tps <+> "(x :" <+> stext (textLowercaseFirst name) <> ") =") <$$>
+      ("let" <+> fnName <+> tps <+> "(x :" <+> stext (textLowercaseFirst name) <> ") :Js_json.t =") <$$>
       (indent 2 ctor)
 
   render (OCamlPrimitive primitive) = renderRef primitive

@@ -4,7 +4,7 @@ type suit =
   | Hearts
   | Spades
 
-let encodeSuit (x : suit) =
+let encodeSuit (x : suit) :Js_json.t =
   match x with
   | Clubs ->
      Json.Encode.string "Clubs"
@@ -20,7 +20,7 @@ type card =
   ; cardValue : int
   }
 
-let encodeCard (x : card) =
+let encodeCard (x : card) :Js_json.t =
   Json.Encode.object_
     [ ( "cardSuit", encodeSuit x.cardSuit )
     ; ( "cardValue", Json.Encode.int x.cardValue )

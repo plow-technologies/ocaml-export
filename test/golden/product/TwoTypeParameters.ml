@@ -1,4 +1,4 @@
-type ( 'a0, 'a1 ) twoTypeParameters =
+type ('a0, 'a1) twoTypeParameters =
   { ttpId : int
   ; ttpFirst : 'a0
   ; ttpSecond : 'a1
@@ -9,4 +9,4 @@ let encodeTwoTypeParameters (type a0) (type a1) (parseA0 : a0 -> Js_json.t) (par
     [ ( "ttpId", Json.Encode.int x.ttpId )
     ; ( "ttpFirst", parseA0 x.ttpFirst )
     ; ( "ttpSecond", parseA1 x.ttpSecond )
-    ]  
+    ]

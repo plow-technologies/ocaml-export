@@ -42,19 +42,11 @@ getOCamlValues (MultipleConstructors cs)      = concat $ getOCamlValues <$> cs
 renderTypeParameters :: OCamlConstructor -> Reader Options Doc
 renderTypeParameters (OCamlValueConstructor vc) = do
   let vc' = (getOCamlValues vc)
-  return $ foldl (<+>) "" $ if length vc' > 1 then  ["("] <> (L.intersperse "," vc') <> [")"] else (vc')
+  return $ foldl (<>) "" $ if length vc' > 1 then  ["("] <> (L.intersperse ", " vc') <> [")"] else (vc')
 renderTypeParameters (OCamlSumOfRecordConstructor vc) = do
   let vc' = (getOCamlValues vc)
-  return $ foldl (<+>) "" $ if length vc' > 1 then  ["("] <> (L.intersperse "," vc') <> [")"] else (vc')
+  return $ foldl (<>) "" $ if length vc' > 1 then  ["("] <> (L.intersperse ", " vc') <> [")"] else (vc')
 renderTypeParameters _ = return ""
-
-{-
-ps' = if length ps > 1 then ["("] <> (L.intersperse "," ps) <> [")"] else (L.intersperse "," ps)
-
-makeTypeParameter :: OCamlValue -> Reader Options (Maybe Doc)
-makeTypeParameter (OCamlTypeParamterRef name) = return $ Just name
-makeTypeParameter _ = Nothing
--}
 
 -- | For Haskell Sum of Records, create OCaml record types of each RecordConstructorn
 makeAuxTypeDef :: Text -> ValueConstructor -> Reader Options (Maybe (Doc,(Text,ValueConstructor)))

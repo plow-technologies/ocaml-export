@@ -330,3 +330,14 @@ isSumWithRecord _ = False
 isSumWithRecordsAux :: OCamlConstructor -> Bool
 isSumWithRecordsAux (OCamlValueConstructor (RecordConstructor _ _)) = True
 isSumWithRecordsAux _ = False
+
+
+getTypeParameterRefNames :: [OCamlValue] -> [Text]
+getTypeParameterRefNames = concat . (fmap match)
+  where
+    match value =
+      case value of
+        (OCamlTypeParameterRef name) -> [name]
+        (Values v1 v2) -> match v1 ++ match v2
+        (OCamlField _ v1) -> match v1
+        _ -> []

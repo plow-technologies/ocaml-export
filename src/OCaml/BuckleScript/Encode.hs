@@ -23,29 +23,24 @@ class HasEncoder a where
 class HasEncoderRef a where
   renderRef :: a -> Reader Options Doc
 
-renderTypeParametersAux :: [OCamlValue] -> Reader Options Doc
+renderTypeParametersAux :: [OCamlValue] -> (Doc,Doc)
 renderTypeParametersAux ocamlValues = do
-  let typeParameterNames = concat $ match <$> ocamlValues
+  let typeParameterNames = getTypeParameterRefNames ocamlValues
       typeDecs = (\t -> "(type " <> (stext t) <> ")") <$> typeParameterNames :: [Doc]
       parserDecs  = (\t -> "(parse" <> (stext $ textUppercaseFirst t) <+> ":" <+> (stext t) <+> "-> Js_json.t)" ) <$> typeParameterNames :: [Doc]
-  return $ foldl (<+>) "" (typeDecs ++ parserDecs)
-  where
-    match value =
-      case value of
-        (OCamlTypeParameterRef name) -> [name]
-        (Values v1 v2) -> match v1 ++ match v2
-        (OCamlField _ v1) -> match v1
-        _ -> []
+      typeParams = foldl (<>) "" $ if length typeParameterNames > 1 then  ["("] <> (L.intersperse ", " $ stext <$> typeParameterNames) <> [") "] else ((\x -> stext $ x <> " ") <$> typeParameterNames) :: [Doc]
+  (foldl (<+>) "" (typeDecs ++ parserDecs), typeParams )
 
+--   return $ foldl (<+>) "" $ if length vc' > 1 then  ["("] <> (L.intersperse "," vc') <> [")"] else (vc')
 getOCamlValues :: ValueConstructor -> [OCamlValue]
 getOCamlValues (NamedConstructor     _ value) = [value]
 getOCamlValues (RecordConstructor    _ value) = [value]
 getOCamlValues (MultipleConstructors cs)      = concat $ getOCamlValues <$> cs
 
-renderTypeParameters :: OCamlConstructor -> Reader Options Doc
+renderTypeParameters :: OCamlConstructor -> (Doc,Doc)
 renderTypeParameters (OCamlValueConstructor vc) = renderTypeParametersAux $ getOCamlValues vc
 renderTypeParameters (OCamlSumOfRecordConstructor vc) = renderTypeParametersAux $ getOCamlValues vc
-renderTypeParameters _ = return ""
+renderTypeParameters _ = ("","")
 
 instance HasEncoder OCamlDatatype where
   -- handle case where SumWithRecords exists
@@ -54,25 +49,25 @@ instance HasEncoder OCamlDatatype where
     docs <- catMaybes <$> sequence (renderSumRecord typeName . OCamlValueConstructor <$> constrs)
     let vs = msuffix (line <> line) docs
     dc <- mapM renderSum (OCamlValueConstructor <$> constrs)
-    tps <- renderTypeParameters c
+    let (tps,aps) = renderTypeParameters c
     return $ vs <$$>
-      ("let" <+> fnName <+> tps <+> "(x :" <+> stext (textLowercaseFirst typeName) <> ") :Js_json.t =") <$$>
+      ("let" <+> fnName <+> tps <+> "(x :" <+> aps <> stext (textLowercaseFirst typeName) <> ") :Js_json.t =") <$$>
       (indent 2 ("match x with" <$$> foldl1 (<$$>) dc))
     
   render d@(OCamlDatatype typeName c@(OCamlValueConstructor (MultipleConstructors constrs))) = do
     fnName <- renderRef d
     dc <- mapM renderSum (OCamlValueConstructor <$> constrs)
-    tps <- renderTypeParameters c
+    let (tps,aps) = renderTypeParameters c
     return $
-      ("let" <+> fnName <+> tps <+> "(x :" <+> stext (textLowercaseFirst typeName) <> ") :Js_json.t =") <$$>
+      ("let" <+> fnName <+> tps <+> "(x :" <+> aps <> stext (textLowercaseFirst typeName) <> ") :Js_json.t =") <$$>
       (indent 2 ("match x with" <$$> foldl1 (<$$>) dc))
 
   render d@(OCamlDatatype name constructor) = do
     fnName <- renderRef d
     ctor <- render constructor
-    tps <- renderTypeParameters constructor
+    let (tps,aps) = renderTypeParameters constructor
     return $
-      ("let" <+> fnName <+> tps <+> "(x :" <+> stext (textLowercaseFirst name) <> ") :Js_json.t =") <$$>
+      ("let" <+> fnName <+> tps <+> "(x :" <+> aps <> stext (textLowercaseFirst name) <> ") :Js_json.t =") <$$>
       (indent 2 ctor)
 
   render (OCamlPrimitive primitive) = renderRef primitive
@@ -176,10 +171,8 @@ instance HasEncoder OCamlValue where
     return . spaceparens $
       dquotes (stext (fieldModifier name)) <> comma <+>
       (valueBody <+> "x." <> stext name)
-  render (OCamlTypeParameterRef name) = do
-    return . spaceparens $
-      dquotes (stext name) <> comma <+>
-      ("x." <> stext name)
+  render (OCamlTypeParameterRef name) =
+    return $ ("parse" <> stext (textUppercaseFirst name))
   render (OCamlPrimitiveRef primitive) = renderRef primitive
   render (OCamlRef name) = pure $ "encode" <> stext name
   render (Values x y) = do

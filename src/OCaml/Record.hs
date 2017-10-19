@@ -16,8 +16,6 @@ import           OCaml.Common
 import           OCaml.Type
 import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
 
-import qualified Data.List as L
-
 class HasType a where
   render :: a -> Reader Options Doc
 

@@ -24,6 +24,45 @@ let encodePerson (x: person) =
     ; ("name", Json.Encode.string x.name)
     ]
 
+let decodePerson (json : Js_json.t) :person option =
+  match Json.Decode.
+    { id = field "id" int json
+    ; name = field "name" string json
+    }
+  with
+  | v -> Some v
+  | exception Json.Decode.DecodeError _ -> None
+(*
+let decodePersonSafe (json : Js_json.t) :person option =
+  Json.Decode.(
+    match field "id" int json with
+    | f0 ->
+       (match field "name" string json with
+        | f1 -> Some {id = f0 ; name = f1}
+        | exception DecodeError _ -> None
+       )
+    | exception DecodeError _ -> None
+  )
+
+
+let decodePersonSafe (json : Js_json.t) :person option =
+  match decodePerson json with
+  | exception Json.Decode.DecodeError _ -> None
+  | v -> Some v
+  *)
+(*
+  match Json.Decode.(field "x" int json) with
+  | x ->
+    Js.log x
+  | exception Json.Decode.DecodeError msg ->
+Js.log ("Error:" ^ msg)
+
+match decode json with
+  | exception DecodeError _ -> None
+| v -> Some v
+*)
+
+  
 type person2 =
   { id: int
   ; name: string option
@@ -120,10 +159,11 @@ let encodeSumVariant (x : sumVariant) =
        ; ( "contents", Json.Encode.array [| (fun (a,b) -> Json.Encode.array [| Json.Encode.int a ; Json.Encode.int b  |]) y0 ; (fun (a,b) -> Json.Encode.array [| Json.Encode.int a ; Json.Encode.int b  |]) y1 |] )
        ]
 
+(*
 let x = Json.Encode.array [| Json.Encode.int 1 ; Json.Encode.string "asdf" |]
 let y = [1 ; 2 ]
 let z = [ Json.Encode.int 1 ; Json.Encode.int 2 ; Json.Encode.string "asdf" ]
-
+ *)
 type tuple =
   int * int
 
@@ -287,3 +327,60 @@ let encodeOneTypeParameter (type a0) (parseA0 : a0 -> Js_json.t) (x : a0 oneType
     [ ( "otpId", Json.Encode.int x.otpId )
     ; ( "otpFirst", parseA0 x.otpFirst )
     ]
+
+
+    (* let decode (x : card) :Js_json.t option = *)
+(*
+
+
+  let parseCompanyJson json :company =>
+  Json.Decode.{
+    address: field "address" string json,
+    city:    field "city" string json,
+    delete:  field "delete" int json,
+    gid:     optional (field "gid" string) json,
+    name:    field "name" string json,
+    oid:     optional (field "oid" int) json,
+    refId:   field "refId" int json,
+    state:   field "state" string json,
+    zip:     field "zip" string json
+  };
+
+let parseCompanyEntityJson json :companyEntity =>
+  Json.Decode.{
+    key:   field "key" string json,
+    value: field "value" parseCompanyJson json
+  };
+
+let parseCompanyEntitiesJson json :list companyEntity =>
+  Json.Decode.list parseCompanyEntityJson json;
+    *)
+
+let () = Js.log "The End";
+
+let p = Js.Json.parseExn {| {"id": 1,"name":"James"} |} in let pp = decodePerson p in Js.log pp;
+
+
+(*
+type person =
+  { id: int
+  ; name: string
+  }
+
+let encodePerson (x: person) =
+  Json.Encode.object_
+    [ ("id", Json.Encode.int x.id)
+    ; ("name", Json.Encode.string x.name)
+    ]
+
+let decodePerson (json : Js_json.t) :person =
+  Json.Decode.
+    { id = field "id" int json
+    ; name = field "name" string json
+    }
+
+let decodePersonSafe (json : Js_json.t) :person option =
+  match decodePerson json with
+  | exception Invalid_argument _ -> None
+  | v -> Some v
+         *)

@@ -18,7 +18,7 @@ library
                        OCaml.File
                        OCaml.Record
                        OCaml.Type
---                       OCaml.BuckleScript.Decode
+                       OCaml.BuckleScript.Decode
                        OCaml.BuckleScript.Encode
                        
   build-depends:       base >= 4.7 && < 5

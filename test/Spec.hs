@@ -106,6 +106,16 @@ data TwoTypeParameters a b =
     , ttpSecond :: b
     } deriving (Eq,Show,Generic,OC.OCamlType)
 
+data Three a b c =
+  Three
+    { threeId :: Int
+    , threeFirst :: a
+    , threeSecond :: b
+    , threeThird :: c
+    , threeString :: String
+    } deriving (Eq,Show,Generic,OC.OCamlType)
+
+
 personSpec :: OC.Spec
 personSpec =
   OC.Spec
@@ -198,6 +208,14 @@ twoTypeParametersSpec =
     , OC.toOCamlEncoderSource (Proxy :: Proxy (TwoTypeParameters OC.TypeParameterRef0 OC.TypeParameterRef1))
     ]
 
+threeSpec :: OC.Spec
+threeSpec =
+  OC.Spec
+    ["ThreeTypeParameters"]
+    [ OC.toOCamlTypeSource (Proxy :: Proxy (Three OC.TypeParameterRef0 OC.TypeParameterRef1 OC.TypeParameterRef2))
+    , OC.toOCamlEncoderSource (Proxy :: Proxy (Three OC.TypeParameterRef0 OC.TypeParameterRef1 OC.TypeParameterRef2))
+    ]
+
 data ADT
   = Product
   | Sum
@@ -240,6 +258,7 @@ spec =
     testOCamlType cardSpec "Card" Product
     testOCamlType oneTypeParameterSpec "OneTypeParameter" Product
     testOCamlType twoTypeParametersSpec "TwoTypeParameters" Product
+    testOCamlType threeSpec "ThreeTypeParameters" Product
     testOCamlType sumWithRecordSpec "SumWithRecord" Sum
 
 main :: IO ()

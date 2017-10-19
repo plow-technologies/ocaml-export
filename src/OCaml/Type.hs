@@ -6,6 +6,8 @@
 {-# LANGUAGE TypeOperators        #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 
+{-# LANGUAGE DeriveGeneric #-}
+
 module OCaml.Type where
 
 import           Data.Int     (Int16, Int32, Int64, Int8)
@@ -18,7 +20,6 @@ import qualified Data.Text as T
 import           Data.Time
 import           GHC.Generics
 import           Prelude
-
 
 data OCamlDatatype
   = OCamlDatatype Text OCamlConstructor
@@ -35,22 +36,31 @@ data OCamlPrimitive
   | OUnit -- ()
   | OList OCamlDatatype -- ... list
   | OOption OCamlDatatype -- ... option
-  | ODict OCamlPrimitive OCamlDatatype
-  | OTuple2 OCamlDatatype OCamlDatatype -- (,)
-  | OTuple3 OCamlDatatype OCamlDatatype OCamlDatatype -- (,,)
-  | OTuple4 OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype -- (,,,)
-  | OTuple5 OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype -- (,,,,)
-  | OTuple6 OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype -- (,,,,,)
+  | ODict OCamlPrimitive OCamlDatatype -- Js_dict
+  | OTuple2 OCamlDatatype OCamlDatatype -- (*)
+  | OTuple3 OCamlDatatype OCamlDatatype OCamlDatatype -- (**)
+  | OTuple4 OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype -- (***)
+  | OTuple5 OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype -- (****)
+  | OTuple6 OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype -- (*****)
   deriving (Show, Eq)
 
 -- | OCamlConstructor bridges all Haskell type declarations to OCaml type declaractions.
 data OCamlConstructor 
   = OCamlValueConstructor ValueConstructor
   | OCamlEnumeratorConstructor [EnumeratorConstructor]
-  | OCamlSumOfRecordConstructor ValueConstructor
+  | OCamlSumOfRecordConstructor Text ValueConstructor -- type name for reference
   deriving (Show, Eq)
 
--- | Common type declarations found in Haskell and OCaml.
+{-
+data OCamlConstructor2
+  = OCamlRecordConstructor      -- Single Record only
+  | OCamlEnumerationConstructor -- Enumerations only
+  | OCamlSumConstructor         -- Enumerations and Products with unnamed fields
+  | OCamlSumOfRecordConstructor -- Enumerations, Records and Products with unnamed fields, at least two items, at least one Record
+-}
+
+-- | Used for building the tree, but transformed before returning.
+--   Common type declarations found in Haskell and OCaml.
 data ValueConstructor
   = NamedConstructor Text OCamlValue
   | RecordConstructor Text OCamlValue
@@ -65,11 +75,36 @@ data EnumeratorConstructor
 
 data OCamlValue
   = OCamlRef Text
+  | OCamlTypeParameterRef Text
   | OCamlEmpty
   | OCamlPrimitiveRef OCamlPrimitive
-  | Values OCamlValue OCamlValue
   | OCamlField Text OCamlValue
+  | Values OCamlValue OCamlValue
   deriving (Show, Eq)
+
+data TypeParameterRef0 = TypeParameterRef0 deriving (Show, Eq, Generic)
+instance OCamlType TypeParameterRef0 where
+  toOCamlType _ = OCamlDatatype "a0" (OCamlValueConstructor (MultipleConstructors []))
+
+data TypeParameterRef1 = TypeParameterRef1 deriving (Show, Eq)
+instance OCamlType TypeParameterRef1 where
+  toOCamlType _ = OCamlDatatype "a1" (OCamlValueConstructor (MultipleConstructors []))
+
+data TypeParameterRef2 = TypeParameterRef2 deriving (Show, Eq)
+instance OCamlType TypeParameterRef2 where
+  toOCamlType _ = OCamlDatatype "a2" (OCamlValueConstructor (MultipleConstructors []))
+
+data TypeParameterRef3 = TypeParameterRef3 deriving (Show, Eq)
+instance OCamlType TypeParameterRef3 where
+  toOCamlType _ = OCamlDatatype "a3" (OCamlValueConstructor (MultipleConstructors []))
+
+data TypeParameterRef4 = TypeParameterRef4 deriving (Show, Eq)
+instance OCamlType TypeParameterRef4 where
+  toOCamlType _ = OCamlDatatype "a4" (OCamlValueConstructor (MultipleConstructors []))
+
+data TypeParameterRef5 = TypeParameterRef5 deriving (Show, Eq)
+instance OCamlType TypeParameterRef5 where
+  toOCamlType _ = OCamlDatatype "a5" (OCamlValueConstructor (MultipleConstructors []))
 
 ------------------------------------------------------------
 class OCamlType a where
@@ -93,10 +128,10 @@ instance (Datatype d, GenericValueConstructor f) => GenericOCamlDatatype (D1 d f
           then transformToEnumeration ocamlConstructor
           else 
             if isSumWithRecord ocamlConstructor
-              then transformToSumOfRecord ocamlConstructor
+              then transformToSumOfRecord (T.pack (datatypeName datatype)) ocamlConstructor
               else ocamlConstructor
 
---   | OCamlSumOfRecordConstructor ValueConstructor               
+
 ------------------------------------------------------------
 class GenericValueConstructor f where
   genericToValueConstructor :: f a -> ValueConstructor
@@ -117,27 +152,6 @@ instance (GenericValueConstructor f, GenericValueConstructor g) =>
       , genericToValueConstructor (undefined :: g p)
       ]
 
-------------------------------------------------------------
-{-
-class GenericOCamlConstructor f where
-  genericToOCamlConstructor :: f a -> OCamlConstructor
-
-instance (Constructor c, GenericOCamlValue f) => GenericOCamlConstructor (C1 c f) where
-  genericToOCamlConstructor constructor =
-    if conIsRecord constructor
-      then OCamlValueConstructor $ RecordConstructor name (genericToOCamlValue (unM1 constructor))
-      else OCamlValueConstructor $ NamedConstructor name (genericToOCamlValue (unM1 constructor))
-    where
-      name = T.pack $ conName constructor
-
-instance (GenericOCamlConstructor f, GenericOCamlConstructor g) =>
-         GenericOCamlConstructor (f :+: g) where
-  genericToOCamlConstructor _ =
-    OCamlConstructor $ $ MultipleConstructors
-      [ genericToOCamlConstructor (undefined :: f p)
-      , genericToOCamlConstructor (undefined :: g p)
-      ]
--}
 ------------------------------------------------------------
 class GenericOCamlValue f where
   genericToOCamlValue :: f a -> OCamlValue
@@ -162,8 +176,13 @@ instance GenericOCamlValue U1 where
 instance OCamlType a => GenericOCamlValue (Rec0 a) where
   genericToOCamlValue _ =
     case toOCamlType (Proxy :: Proxy a) of
-      OCamlPrimitive primitive -> OCamlPrimitiveRef primitive
-      OCamlDatatype name _     -> OCamlRef name
+      OCamlPrimitive primitive -> OCamlPrimitiveRef primitive -- mkRef primitive
+      OCamlDatatype name _     -> mkRef name
+    where
+      typeParameterRefs = (T.append) <$> ["a"] <*> (T.pack . show <$> ([0..5] :: [Int]))
+      mkRef n
+        | n `elem` typeParameterRefs = OCamlTypeParameterRef n
+        | otherwise = OCamlRef n
 
 instance OCamlType a => OCamlType [a] where
   toOCamlType _ = OCamlPrimitive (OList (toOCamlType (Proxy :: Proxy a)))
@@ -265,12 +284,6 @@ instance OCamlType Bool where
 -- | Whether a set of constructors is an enumeration, i.e. whether they lack
 --   values. data A = A | B | C would be simple data A = A Int | B | C would not
 --   be simple.
-{-
-isEnumeration :: ValueConstructor -> Bool
-isEnumeration (NamedConstructor _ OCamlEmpty) = True
-isEnumeration (MultipleConstructors cs) = all isEnumeration cs
-isEnumeration _ = False
--}
 isEnumeration :: OCamlConstructor -> Bool
 isEnumeration (OCamlValueConstructor (NamedConstructor _ OCamlEmpty)) = True
 isEnumeration (OCamlValueConstructor (MultipleConstructors cs)) = all isEnumeration (OCamlValueConstructor <$> cs)
@@ -279,7 +292,6 @@ isEnumeration _ = False
 
 -- | Tranform a complete OCamlConstructor to EnumeratorConstructors 
 transformToEnumeration :: OCamlConstructor -> OCamlConstructor
-
 transformToEnumeration (OCamlValueConstructor (NamedConstructor name OCamlEmpty)) =
   OCamlEnumeratorConstructor [EnumeratorConstructor name]
 
@@ -296,11 +308,11 @@ transformToEnumeration (OCamlValueConstructor (MultipleConstructors cs)) =
         (OCamlEnumeratorConstructor c) -> Just c
         _ -> Nothing
         
-transformToEnumeration _ = undefined
+transformToEnumeration cs = cs
 
-transformToSumOfRecord :: OCamlConstructor -> OCamlConstructor
-transformToSumOfRecord (OCamlValueConstructor value@(MultipleConstructors _cs)) = OCamlSumOfRecordConstructor value
-transformToSumOfRecord constructor = constructor   
+transformToSumOfRecord :: Text -> OCamlConstructor -> OCamlConstructor
+transformToSumOfRecord typeName (OCamlValueConstructor value@(MultipleConstructors _cs)) = OCamlSumOfRecordConstructor typeName value
+transformToSumOfRecord _ constructor = constructor   
 
 
 -- | Haskell allows you to directly declare a sum of records,
@@ -318,3 +330,14 @@ isSumWithRecord _ = False
 isSumWithRecordsAux :: OCamlConstructor -> Bool
 isSumWithRecordsAux (OCamlValueConstructor (RecordConstructor _ _)) = True
 isSumWithRecordsAux _ = False
+
+
+getTypeParameterRefNames :: [OCamlValue] -> [Text]
+getTypeParameterRefNames = concat . (fmap match)
+  where
+    match value =
+      case value of
+        (OCamlTypeParameterRef name) -> [name]
+        (Values v1 v2) -> match v1 ++ match v2
+        (OCamlField _ v1) -> match v1
+        _ -> []

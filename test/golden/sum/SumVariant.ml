@@ -5,7 +5,7 @@ type sumVariant =
   | HasMultipleInts of int * int
   | HasMultipleTuples of (int * int) * (int * int)
 
-let encodeSumVariant (x : sumVariant) =
+let encodeSumVariant (x : sumVariant) :Js_json.t =
   match x with
   | HasNothing ->
      Json.Encode.object_

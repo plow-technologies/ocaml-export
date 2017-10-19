@@ -2,7 +2,8 @@
 
 module OCaml.Common where
 
-import           Data.Char (toLower)
+import           Data.Char (toLower,toUpper)
+import qualified Data.List as L
 import           Data.Monoid
 import           Data.Text  (Text)
 import qualified Data.Text as T
@@ -75,5 +76,21 @@ lowercaseFirst :: String -> String
 lowercaseFirst (hd:tl) = toLower hd : tl
 lowercaseFirst [] = []
 
+uppercaseFirst :: String -> String
+uppercaseFirst (hd:tl) = toUpper hd : tl
+uppercaseFirst [] = []
+
 textLowercaseFirst :: Text -> Text
 textLowercaseFirst = T.pack . lowercaseFirst . T.unpack
+
+textUppercaseFirst :: Text -> Text
+textUppercaseFirst = T.pack . uppercaseFirst . T.unpack
+
+mkDocList :: [Doc] -> Doc
+mkDocList ds =
+  foldl (<>) "" $
+    if length ds > 1
+      then ["("] <> (L.intersperse ", " ds) <> [")"]
+      else ds
+
+--      return $ foldl (<>) "" $ if length vc' > 1 then  ["("] <> (L.intersperse ", " vc') <> [")"] else (vc')

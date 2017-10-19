@@ -189,44 +189,101 @@ let encodeCoo (x : coo) =
        ]
 
 type sumWithRecordA1 =
-  { a1 : int    
+  { a1 : int
   }
 
 type sumWithRecordB2 =
   { b2 : string
   ; b3 : int
   }
-   
+
 type sumWithRecord =
   | A1 of sumWithRecordA1
   | B2 of sumWithRecordB2
 
-let encodeA1 (x : sumWithRecordA1) =
+let encodeSumWithRecordA1 (x : sumWithRecordA1) :Js_json.t =
   Json.Encode.object_
     [ ( "a1", Json.Encode.int x.a1 )
     ]
 
-let encodeB2 (x : sumWithRecordB2) =
+let encodeSumWithRecordB2 (x : sumWithRecordB2) :Js_json.t =
   Json.Encode.object_
     [ ( "b2", Json.Encode.string x.b2 )
     ; ( "b3", Json.Encode.int x.b3 )
     ]
 
-let encodeSumWithRecord (x : sumWithRecord) =
+
+let encodeSumWithRecord (x : sumWithRecord) :Js_json.t =
   match x with
   | A1 y0 ->
-     (match (Js.Json.decodeObject (encodeA1 y0)) with
+     (match (Js.Json.decodeObject (encodeSumWithRecordA1 y0)) with
       | Some dict ->
          Js.Dict.set dict "tag" (Js.Json.string "A1");
-         Js.Json.object_ dict;
+         Js.Json.object_ dict
       | None ->
          Json.Encode.object_ []
      )
   | B2 y0 ->
-     (match (Js.Json.decodeObject (encodeB2 y0)) with
+     (match (Js.Json.decodeObject (encodeSumWithRecordB2 y0)) with
       | Some dict ->
          Js.Dict.set dict "tag" (Js.Json.string "B2");
-         Js.Json.object_ dict;
+         Js.Json.object_ dict
       | None ->
          Json.Encode.object_ []
      )
+
+type 'a0 holdone =
+  { id : int
+  ; thing1 : 'a0
+  }
+
+type holdstring = string holdone
+
+let encodeHoldone (parseA0 : 'a0 -> Js_json.t) (x : 'a0 holdone) :Js_json.t =
+  Json.Encode.object_
+    [ ( "id", Json.Encode.int x.id )
+    ; ( "thing1", parseA0 x.thing1 )
+    ]
+
+type ('a0, 'a1) twoTypeParameters =
+  { id : int
+  ; first : 'a0
+  ; second : 'a1
+  }
+
+let encodeTwoTypeParameters (type a0) (type a1) (parseA0 : a0 -> Js_json.t) (parseA1 : a1 -> Js_json.t) (x : (a0, a1) twoTypeParameters) :Js_json.t =
+  Json.Encode.object_
+    [ ( "id", Json.Encode.int x.id )
+    ; ( "first", parseA0 x.first )
+    ; ( "second", parseA1 x.second )
+    ]  
+
+type ('a0, 'a1) holdtwo =
+  { id : int
+  ; thing1 : 'a0
+  ; thing2 : 'a1
+  }
+
+(* let encodeHoldtwo : 'a0 'a1. (parseA0 : 'a0 -> Js_json.t) (parseA1 : 'a1 -> Js_json.t) (x : ('a0, 'a1) holdtwo) :Js_json.t = *)
+let encodeHoldtwo (type a0) (type a1) (parseA0 : a0 -> Js_json.t) (parseA1 : a1 -> Js_json.t) (x : (a0, a1) holdtwo) :Js_json.t =
+  Json.Encode.object_
+    [ ( "id", Json.Encode.int x.id )
+    ; ( "thing1", parseA0 x.thing1 )
+    ; ( "thing2", parseA1 x.thing2 )
+    ]  
+
+let x = encodeHoldtwo Json.Encode.string Json.Encode.int {id = 1; thing1 = "Hi"; thing2 = 12}
+(* let y = encodeHoldtwo Json.Encode.string Json.Encode.int {id = 1; thing1 = 12; thing2 = "Hi"} *)
+      
+type holdstringandint = (string, int) holdtwo
+
+type 'a0 oneTypeParameter =
+  { otpId : int
+  ; otpFirst : 'a0
+  }
+
+let encodeOneTypeParameter (type a0) (parseA0 : a0 -> Js_json.t) (x : a0 oneTypeParameter) :Js_json.t =
+  Json.Encode.object_
+    [ ( "otpId", Json.Encode.int x.otpId )
+    ; ( "otpFirst", parseA0 x.otpFirst )
+    ]

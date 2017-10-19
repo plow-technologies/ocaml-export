@@ -3,7 +3,7 @@ type person =
   ; name : (string) option
   }
 
-let encodePerson (x : person) =
+let encodePerson (x : person) :Js_json.t =
   Json.Encode.object_
     [ ( "id", Json.Encode.int x.id )
     ; ( "name", (fun a -> Option.default Json.Encode.null (Option.map Json.Encode.string a)) x.name )
@@ -14,7 +14,7 @@ type company =
   ; employees : (person) list
   }
 
-let encodeCompany (x : company) =
+let encodeCompany (x : company) :Js_json.t =
   Json.Encode.object_
     [ ( "address", Json.Encode.string x.address )
     ; ( "employees", (Json.Encode.list encodePerson) x.employees )

@@ -115,105 +115,118 @@ data Three a b c =
     , threeString :: String
     } deriving (Eq,Show,Generic,OC.OCamlType)
 
+data SubTypeParameter a =
+  SubTypeParameter
+    { as :: [a]
+    } deriving (Eq,Show,Generic,OC.OCamlType)
 
-personSpec :: OC.Spec
+
+personSpec :: OC.OCamlFile
 personSpec =
-  OC.Spec
-    ["Person"]
+  OC.OCamlFile
+    "Person"
     [ OC.toOCamlTypeSource (Proxy :: Proxy Person)
     , OC.toOCamlEncoderSource (Proxy :: Proxy Person)
     ]
 
-companySpec :: OC.Spec
+companySpec :: OC.OCamlFile
 companySpec =
-  OC.Spec
-    ["Company"]
+  OC.OCamlFile
+    "Company"
     [ OC.toOCamlTypeSource (Proxy :: Proxy Person)
     , OC.toOCamlEncoderSource (Proxy :: Proxy Person)
     , OC.toOCamlTypeSource (Proxy :: Proxy Company)
     , OC.toOCamlEncoderSource (Proxy :: Proxy Company)
     ]
 
-onOrOffSpec :: OC.Spec
+onOrOffSpec :: OC.OCamlFile
 onOrOffSpec =
-  OC.Spec
-    ["OnOrOff"]
+  OC.OCamlFile
+    "OnOrOff"
     [ OC.toOCamlTypeSource (Proxy :: Proxy OnOrOff)
     , OC.toOCamlEncoderSource (Proxy :: Proxy OnOrOff)
     ]    
 
-nameOrIdNumberSpec :: OC.Spec
+nameOrIdNumberSpec :: OC.OCamlFile
 nameOrIdNumberSpec =
-  OC.Spec
-    ["NameOrIdNumber"]
+  OC.OCamlFile
+    "NameOrIdNumber"
     [ OC.toOCamlTypeSource (Proxy :: Proxy NameOrIdNumber)
     , OC.toOCamlEncoderSource (Proxy :: Proxy NameOrIdNumber)
     ]
 
-sumVariantSpec :: OC.Spec
+sumVariantSpec :: OC.OCamlFile
 sumVariantSpec =
-  OC.Spec
-    ["SumVariant"]
+  OC.OCamlFile
+    "SumVariant"
     [ OC.toOCamlTypeSource (Proxy :: Proxy SumVariant)
     , OC.toOCamlEncoderSource (Proxy :: Proxy SumVariant)
     ]
 
-tupleSpec :: OC.Spec
+tupleSpec :: OC.OCamlFile
 tupleSpec =
-  OC.Spec
-    ["Tuple"]
+  OC.OCamlFile
+    "Tuple"
     [ OC.toOCamlTypeSource (Proxy :: Proxy Tuple)
     , OC.toOCamlEncoderSource (Proxy :: Proxy Tuple)
     ]
 
-withTupleSpec :: OC.Spec
+withTupleSpec :: OC.OCamlFile
 withTupleSpec =
-  OC.Spec
-    ["WithTuple"]
+  OC.OCamlFile
+    "WithTuple"
     [ OC.toOCamlTypeSource (Proxy :: Proxy WithTuple)
     , OC.toOCamlEncoderSource (Proxy :: Proxy WithTuple)
     ]
 
-cardSpec :: OC.Spec
+cardSpec :: OC.OCamlFile
 cardSpec =
-  OC.Spec
-    ["Card"]
+  OC.OCamlFile
+    "Card"
     [ OC.toOCamlTypeSource (Proxy :: Proxy Suit)
     , OC.toOCamlEncoderSource (Proxy :: Proxy Suit)
     , OC.toOCamlTypeSource (Proxy :: Proxy Card)
     , OC.toOCamlEncoderSource (Proxy :: Proxy Card)
     ]
 
-sumWithRecordSpec :: OC.Spec
+sumWithRecordSpec :: OC.OCamlFile
 sumWithRecordSpec =
-  OC.Spec
-    ["SumWithRecord"]
+  OC.OCamlFile
+    "SumWithRecord"
     [ OC.toOCamlTypeSource (Proxy :: Proxy SumWithRecord)
     , OC.toOCamlEncoderSource (Proxy :: Proxy SumWithRecord)
     ]
 
-oneTypeParameterSpec :: OC.Spec
+oneTypeParameterSpec :: OC.OCamlFile
 oneTypeParameterSpec =
-  OC.Spec
-    ["OneTypeParameter"]
+  OC.OCamlFile
+    "OneTypeParameter"
     [ OC.toOCamlTypeSource (Proxy :: Proxy (OneTypeParameter OC.TypeParameterRef0))
     , OC.toOCamlEncoderSource (Proxy :: Proxy (OneTypeParameter OC.TypeParameterRef0))
     ]
 
-twoTypeParametersSpec :: OC.Spec
+twoTypeParametersSpec :: OC.OCamlFile
 twoTypeParametersSpec =
-  OC.Spec
-    ["TwoTypeParameters"]
+  OC.OCamlFile
+    "TwoTypeParameters"
     [ OC.toOCamlTypeSource (Proxy :: Proxy (TwoTypeParameters OC.TypeParameterRef0 OC.TypeParameterRef1))
     , OC.toOCamlEncoderSource (Proxy :: Proxy (TwoTypeParameters OC.TypeParameterRef0 OC.TypeParameterRef1))
     ]
 
-threeSpec :: OC.Spec
+threeSpec :: OC.OCamlFile
 threeSpec =
-  OC.Spec
-    ["ThreeTypeParameters"]
+  OC.OCamlFile
+    "ThreeTypeParameters"
     [ OC.toOCamlTypeSource (Proxy :: Proxy (Three OC.TypeParameterRef0 OC.TypeParameterRef1 OC.TypeParameterRef2))
     , OC.toOCamlEncoderSource (Proxy :: Proxy (Three OC.TypeParameterRef0 OC.TypeParameterRef1 OC.TypeParameterRef2))
+    ]
+
+subTypeParameterSpec :: OC.OCamlFile
+subTypeParameterSpec =
+  OC.OCamlFile
+    "SubTypeParameter"
+    [ OC.toOCamlTypeSource (Proxy :: Proxy (SubTypeParameter OC.TypeParameterRef0))
+    , OC.toOCamlEncoderSource (Proxy :: Proxy (SubTypeParameter OC.TypeParameterRef0))
     ]
 
 data ADT
@@ -225,10 +238,10 @@ adtToPath Product = "product"
 adtToPath Sum = "sum"
 
 
-testOCamlType :: OC.Spec -> FilePath -> ADT -> SpecWith ()
+testOCamlType :: OC.OCamlFile -> FilePath -> ADT -> SpecWith ()
 testOCamlType ocamlSpec typeName adt =
   it typeName $ do
-    OC.specsToDir [ocamlSpec] testPath
+    OC.createOCamlFile testPath ocamlSpec
     automated   <- T.readFile (testPath   <> "/" <> typeName <> ".ml")
     handWritten <- T.readFile (goldenPath <> "/" <> typeName <> ".ml")
     automated `shouldBe` handWritten
@@ -260,6 +273,7 @@ spec =
     testOCamlType twoTypeParametersSpec "TwoTypeParameters" Product
     testOCamlType threeSpec "ThreeTypeParameters" Product
     testOCamlType sumWithRecordSpec "SumWithRecord" Sum
+    testOCamlType subTypeParameterSpec "SubTypeParameter" Product
 
 main :: IO ()
 main = hspec spec

@@ -65,12 +65,6 @@ data EndsInDouble
   | DD String String
   deriving (Show, Eq, Generic, OCamlType)
 
-{-
-data Shape
-  = Circle Float Float Float
-  | Rectangle Float Float Float Float   
-  deriving (Show, Eq, Generic, OCamlType)
--}
 data SingletonWithSingle = SingletonWithSingle Double
   deriving (Show, Eq, Generic, OCamlType)
 
@@ -87,10 +81,10 @@ data Rectangle =
     } deriving (Show, Eq, Generic, OCamlType)
 
 
-spec :: Spec
+spec :: OCamlFile
 spec =
-  Spec
-    ["Types"]
+  OCamlFile
+    "Types"
     [ toOCamlTypeSource (Proxy :: Proxy Person)
     , toOCamlEncoderSource (Proxy :: Proxy Person)
     , toOCamlTypeSource (Proxy :: Proxy Company)
@@ -118,50 +112,5 @@ main = do
 
   print $ toOCamlEncoderSource (Proxy :: Proxy Rectangle)
 
-  specsToDir [spec] "./"
+  -- specsToDir [spec] "./"
   return ()
-
-{-
-type person = {
-  age: int,
-  name: string
-};
-
-type person = {
-  id: int,
-  name: option (string)
-};
-
-
-let encodeJson.Decode.{
-      start:     json |> field "start" point,
-      end_:      json |> field "end" point,
-      thickness: json |> optional (field "thickness" int)
-    };
-
-let encodePerson (x : person) :json => {
-  Json.Encode.(
-    object_
-      [ ("id", Json.Encode.int x)
-      , ("name",Json.Encode.string x)
-      ]
-  );
-};
-
-
-let encodePerson (x : person) => 
-  Json.Encode.object_
-    [ ("id", Json.Encode.int x.id)
-    , ("name", (fun xx => Option.default Json.Encode.null (Option.map Json.Encode.string xx)) x.name)
-    ];
-
-:set -XDeriveGeneric
-import GHC.Generics
-import Data.Aeson
-data Person = Person
-  { id :: Int
-  , name :: Maybe String
-  } deriving (Show, Eq, Generic)
-instance ToJSON Person
-instance FromJSON Person
--}

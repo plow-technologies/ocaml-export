@@ -30,7 +30,7 @@ instance HasDecoder OCamlDatatype where
     return $
       ("let" <+> fnName <+> "(json : Js_json.t) :" <> (stext . textLowercaseFirst $ name) <+> "option =") <$$>
       "  match Json.Decode." <$$>
-      "    {" <+> ctor <$$> "    }" <$$>
+      (indent 4 ("{" <+> ctor <$$> "}")) <$$>
       "  with" <$$>
       "  | v -> Some v" <$$>
       "  | exception Json.Decode.DecodeError _ -> None"
@@ -47,7 +47,7 @@ instance HasDecoder OCamlConstructor where
     return $ stext name <$$> indent 4 dv
   render (OCamlValueConstructor (RecordConstructor name value)) = do
     dv <- render value
-    return $ indent 0 dv
+    pure dv
   render mc@(OCamlValueConstructor (MultipleConstructors constrs)) = do
       cstrs <- mapM (renderSum . OCamlValueConstructor) constrs
       pure $ constructorName <$$> indent 4
@@ -111,10 +111,16 @@ instance HasDecoder OCamlValue where
   render (Values x y) = do
     dx <- render x
     dy <- render y
-    return $ dx <$$> dy
+    return $ dx <$$> ";" <+> dy
+
+  render (OCamlField name (OCamlPrimitiveRef (OOption datatype))) = do
+    dv <- renderRef datatype
+    return $ (stext name) <+> "=" <+> "optional (field" <+> dquotes (stext name) <+> dv <> ")" <+> "json"
+
   render (OCamlField name value) = do
     dv <- render value
     return $ (stext name) <+> "=" <+> "field" <+> dquotes (stext name) <+> dv <+> "json"
+
   render OCamlEmpty = pure (stext "")
   
 instance HasDecoderRef OCamlPrimitive where

@@ -79,8 +79,8 @@ person =
   OCamlFile
     "Person"
     [ toOCamlTypeSource (Proxy :: Proxy Person)
-    , toOCamlEncoderSource (Proxy :: Proxy Person)
-    , toOCamlDecoderSource (Proxy :: Proxy Person)
+    , toOCamlEncoderSourceWith (defaultOptions {decodeError = OptionType}) (Proxy :: Proxy Person)
+    , toOCamlDecoderSourceWith (defaultOptions {decodeError = OptionType}) (Proxy :: Proxy Person)
     ]
 
 company :: OCamlFile
@@ -89,8 +89,10 @@ company =
     "Company"
     [ toOCamlTypeSource (Proxy :: Proxy Person)
     , toOCamlEncoderSource (Proxy :: Proxy Person)
+    , toOCamlDecoderSource (Proxy :: Proxy Person)
     , toOCamlTypeSource (Proxy :: Proxy Company)
     , toOCamlEncoderSource (Proxy :: Proxy Company)
+    , toOCamlDecoderSource (Proxy :: Proxy Company)
     ]
 
 card :: OCamlFile

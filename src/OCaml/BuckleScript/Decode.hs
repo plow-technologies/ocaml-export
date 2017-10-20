@@ -25,15 +25,33 @@ class HasDecoderRef a where
 
 instance HasDecoder OCamlDatatype where
   render d@(OCamlDatatype name constructor) = do
+    de <- asks decodeError
     fnName <- renderRef d
     ctor <- render constructor
     return $
-      ("let" <+> fnName <+> "(json : Js_json.t) :" <> (stext . textLowercaseFirst $ name) <+> "option =") <$$>
-      "  match Json.Decode." <$$>
+      "let" <+> fnName <+> "(json : Js_json.t) :" <> (returnType de) <$$>
+      "  " <> (if includeMatch de then "match " else "") <> "Json.Decode." <$$>
       (indent 4 ("{" <+> ctor <$$> "}")) <$$>
-      "  with" <$$>
-      "  | v -> Some v" <$$>
-      "  | exception Json.Decode.DecodeError _ -> None"
+      (if includeMatch de then "  with" else "") <$$>
+      footer de
+
+    where
+      returnType de =
+        case de of
+          AllowErrors -> (stext . textLowercaseFirst $ name)
+          OptionType  -> (stext . textLowercaseFirst $ name) <+> "option ="
+          ResultType  -> "(" <> (stext . textLowercaseFirst $ name) <> ", string) Js_result.t ="
+
+      includeMatch de =
+        case de of
+          AllowErrors -> False
+          _ -> True
+
+      footer de =
+        case de of
+          AllowErrors -> ""
+          OptionType  -> "  | v -> Some v" <$$> "  | exception Json.Decode.DecodeError _ -> None"
+          ResultType  -> "  | v -> Js_result.Ok v" <$$> "  | exception Json.Decode.DecodeError message -> Js_result.Error (\"decode" <> stext name <> ": \" ^ message)"
 
   render (OCamlPrimitive primitive) = renderRef primitive
 
@@ -106,7 +124,9 @@ renderConstructorArgs i val = do
   pure (i, "|>" <+> requiredContents <+> index)
 
 instance HasDecoder OCamlValue where
-  render (OCamlRef name) = pure $ stext name
+  render (OCamlRef name) = do
+    pure $ "(fun a -> unwrapResult (decode" <> stext name <+> "a))"
+
   render (OCamlPrimitiveRef primitive) = renderRef primitive
   render (Values x y) = do
     dx <- render x
@@ -125,9 +145,15 @@ instance HasDecoder OCamlValue where
   
 instance HasDecoderRef OCamlPrimitive where
   renderRef (OList (OCamlPrimitive OChar)) = pure "string"
+
+  renderRef (OList (OCamlDatatype name _)) = do
+
+    return . parens $ "list" <+> (parens $ "fun a -> unwrapResult (decode" <> stext name <+> "a)")
+
   renderRef (OList datatype) = do
     dt <- renderRef datatype
     return . parens $ "list" <+> dt
+
   renderRef (ODict key value) = do
     d <- renderRef (OList (OCamlPrimitive (OTuple2 (OCamlPrimitive key) value)))
     return . parens $ "map Dict.fromList" <+> d

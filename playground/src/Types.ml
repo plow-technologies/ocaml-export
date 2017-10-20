@@ -52,7 +52,7 @@ let decodePersonResult (json : Js_json.t) :(person, string) Js_result.t =
     }
   with
   | v -> Js_result.Ok v
-  | exception Json.Decode.DecodeError message -> Js_result.Error message
+  | exception Json.Decode.DecodeError message -> Js_result.Error ("decodePersonResult: " ^ message)
 
 
 type company =
@@ -79,20 +79,23 @@ let unwrapResult (type a) (r: (a, string) Js_result.t) :a =
 let decodeCompany (json : Js_json.t) :company option =
   match Json.Decode.
     { address = field "address" string json
-    ; employees = list (fun a -> unwrapOption (field "employees" decodePerson a)) json
+    ; employees = field "employees" (list (fun a -> unwrapOption (decodePerson a))) json
     }
   with
   | v -> Some v
   | exception Json.Decode.DecodeError _ -> None
 
+(*
+list (fun a -> unwrapResult (field "employees" decodePersonResult a)) json
+ *)                                         
 let decodeCompanyResult (json : Js_json.t) :(company, string) Js_result.t =
   match Json.Decode.
     { address = field "address" string json
-    ; employees = list (fun a -> unwrapResult (field "employees" decodePersonResult a)) json
+    ; employees = field "employees" (list (fun a -> unwrapResult (decodePersonResult a))) json
     }
   with
   | v -> Js_result.Ok v
-  | exception Json.Decode.DecodeError message -> Js_result.Error message
+  | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeCompanyResult: " ^ message)
 
   
 type person2 =
@@ -379,7 +382,15 @@ let parseCompanyEntitiesJson json :list companyEntity =>
 
 let () = Js.log "The End";
 
+(* compare fail results *)
 let p = Js.Json.parseExn {| {"id": 1,"name":"James"} |} in let pp = decodePerson p in Js.log pp;
+let p = Js.Json.parseExn {| {"id": 1,"name":"James"} |} in let pp = decodePerson p in Js.log pp;
+
+let p = Js.Json.parseExn {| {"id": 1,"name":"James"} |} in let pp = decodePersonResult p in Js.log pp;
+let p = Js.Json.parseExn {| {"id": 1,"name":"James"} |} in let pp = decodePersonResult p in Js.log pp;
+
+let p = Js.Json.parseExn {| {"address": "OK City", "employees": [ {"id": 1,"name":"James"} ]} |} in let pp = decodeCompany p in Js.log pp;
+let p = Js.Json.parseExn {| {"address": "OK City", "employees": [ {"id": 1,"name":"James"} ]} |} in let pp = decodeCompanyResult p in Js.log pp;
 
 
 (*

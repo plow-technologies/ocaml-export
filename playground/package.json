@@ -16,7 +16,7 @@
     "bs-json": "^0.2.3"
   },
   "devDependencies": {
-    "bs-platform": "^1.9.2",
+    "bs-platform": "^1.9.3",
     "concurrently": "^3.5.0"
   }
 }

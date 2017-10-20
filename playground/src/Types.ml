@@ -12,55 +12,87 @@ module Option = struct
     | Some x -> x    
 end
 
-     
+(*
+module Result = struct
+  
+end
+ *)
+              
 type person =
-  { id: int
-  ; name: string
+  { id : int
+  ; name : (string) option
   }
 
-let encodePerson (x: person) =
+let encodePerson (x : person) :Js_json.t =
   Json.Encode.object_
-    [ ("id", Json.Encode.int x.id)
-    ; ("name", Json.Encode.string x.name)
+    [ ( "id", Json.Encode.int x.id )
+    ; ( "name", (fun a -> Option.default Json.Encode.null (Option.map Json.Encode.string a)) x.name )
     ]
 
 let decodePerson (json : Js_json.t) :person option =
   match Json.Decode.
     { id = field "id" int json
-    ; name = field "name" string json
+    ; name = optional (field "name" string) json
     }
   with
   | v -> Some v
   | exception Json.Decode.DecodeError _ -> None
-(*
-let decodePersonSafe (json : Js_json.t) :person option =
-  Json.Decode.(
-    match field "id" int json with
-    | f0 ->
-       (match field "name" string json with
-        | f1 -> Some {id = f0 ; name = f1}
-        | exception DecodeError _ -> None
-       )
-    | exception DecodeError _ -> None
-  )
+
+(*                                          
+let decodePerson (json : Js_json.t) :person =
+  Json.Decode.
+    { id = field "id" int json
+    ; name = optional (field "name" string) json
+    } 
+ *)
+let decodePersonResult (json : Js_json.t) :(person, string) Js_result.t =
+  match Json.Decode.
+    { id = field "id" int json
+    ; name = optional (field "name" string) json
+    }
+  with
+  | v -> Js_result.Ok v
+  | exception Json.Decode.DecodeError message -> Js_result.Error message
 
 
-let decodePersonSafe (json : Js_json.t) :person option =
-  match decodePerson json with
-  | exception Json.Decode.DecodeError _ -> None
+type company =
+  { address : string
+  ; employees : (person) list
+  }
+
+let encodeCompany (x : company) :Js_json.t =
+  Json.Encode.object_
+    [ ( "address", Json.Encode.string x.address )
+    ; ( "employees", (Json.Encode.list encodePerson) x.employees )
+    ]
+
+let unwrapOption (oa : 'a option) :'a =
+  match oa with
+  | Some a -> a
+  | None -> raise @@ Json.Decode.DecodeError ""
+
+let unwrapResult (type a) (r: (a, string) Js_result.t) :a =
+  match r with
+  | Js_result.Ok a -> a
+  | Js_result.Error message -> raise @@ Json.Decode.DecodeError message
+  
+let decodeCompany (json : Js_json.t) :company option =
+  match Json.Decode.
+    { address = field "address" string json
+    ; employees = list (fun a -> unwrapOption (field "employees" decodePerson a)) json
+    }
+  with
   | v -> Some v
-  *)
-(*
-  match Json.Decode.(field "x" int json) with
-  | x ->
-    Js.log x
-  | exception Json.Decode.DecodeError msg ->
-Js.log ("Error:" ^ msg)
+  | exception Json.Decode.DecodeError _ -> None
 
-match decode json with
-  | exception DecodeError _ -> None
-| v -> Some v
-*)
+let decodeCompanyResult (json : Js_json.t) :(company, string) Js_result.t =
+  match Json.Decode.
+    { address = field "address" string json
+    ; employees = list (fun a -> unwrapResult (field "employees" decodePersonResult a)) json
+    }
+  with
+  | v -> Js_result.Ok v
+  | exception Json.Decode.DecodeError message -> Js_result.Error message
 
   
 type person2 =
@@ -84,17 +116,6 @@ type thing2 =
   | ABC of int
   | DEF of int * string
 
-type company =
-  { address : string
-  ; employees : (person) list
-  }
-
-
-let encodeCompany (x : company) =
-  Json.Encode.object_
-    [ ( "address", Json.Encode.string x.address )
-    ; ( "employees", (Json.Encode.list encodePerson) x.employees )
-    ]
          
 type onOrOff =
   | On

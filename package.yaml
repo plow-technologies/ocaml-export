@@ -1,0 +1,43 @@
+name: ocaml-export
+version: 0.1.0.0
+synopsis: Collect statistics for all plowtech servers
+description: README.md
+category: Web
+author: James M.C. Haver II
+maintainer: james.haver@plowtech.net
+copyright: 2017 Plow Technologies
+license: BSD3
+github: plow-technologies/ocaml-export
+
+library:
+  source-dirs: src
+  exposed-modules: 
+  - OCaml.Common
+  - OCaml.Export
+  - OCaml.File
+  - OCaml.Record
+  - OCaml.Type
+  - OCaml.BuckleScript.Decode
+  - OCaml.BuckleScript.Encode
+  dependencies:
+  - base >= 4.7 && < 5
+  - bytestring
+  - containers
+  - directory
+  - formatting
+  - mtl
+  - text
+  - time
+  - wl-pprint-text
+  ghc-options:
+  - -Wall
+
+tests:
+  spec:
+    main: Spec.hs
+    source-dirs: test
+    dependencies:
+    - base
+    - hspec
+    - ocaml-export
+    - text

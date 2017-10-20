@@ -28,8 +28,13 @@ instance HasDecoder OCamlDatatype where
     fnName <- renderRef d
     ctor <- render constructor
     return $
-      (fnName <+> ": Decoder" <+> stext name) <$$>
-      (fnName <+> "=" <$$> indent 4 ctor)
+      ("let" <+> fnName <+> "(json : Js_json.t) :" <> (stext . textLowercaseFirst $ name) <+> "option =") <$$>
+      "  match Json.Decode." <$$>
+      "    {" <+> ctor <$$> "    }" <$$>
+      "  with" <$$>
+      "  | v -> Some v" <$$>
+      "  | exception Json.Decode.DecodeError _ -> None"
+
   render (OCamlPrimitive primitive) = renderRef primitive
 
 instance HasDecoderRef OCamlDatatype where
@@ -37,14 +42,14 @@ instance HasDecoderRef OCamlDatatype where
   renderRef (OCamlPrimitive primitive) = renderRef primitive
 
 instance HasDecoder OCamlConstructor where
-  render (OCamlConstructor (NamedConstructor name value)) = do
+  render (OCamlValueConstructor (NamedConstructor name value)) = do
     dv <- render value
-    return $ "decode" <+> stext name <$$> indent 4 dv
-  render (OCamlConstructor (RecordConstructor name value)) = do
+    return $ stext name <$$> indent 4 dv
+  render (OCamlValueConstructor (RecordConstructor name value)) = do
     dv <- render value
-    return $ "decode" <+> stext name <$$> indent 4 dv
-  render mc@(OCamlConstructor (MultipleConstructors constrs)) = do
-      cstrs <- mapM renderSum constrs
+    return $ indent 0 dv
+  render mc@(OCamlValueConstructor (MultipleConstructors constrs)) = do
+      cstrs <- mapM (renderSum . OCamlValueConstructor) constrs
       pure $ constructorName <$$> indent 4
         ("|> andThen" <$$>
           indent 4 (newlineparens ("\\x ->" <$$>
@@ -69,23 +74,23 @@ renderSumCondition :: T.Text -> Doc -> Reader Options Doc
 renderSumCondition name contents =
   pure $ dquotes (stext name) <+> "->" <$$>
     indent 4
-      ("decode" <+> stext name <$$> indent 4 contents)
+      (stext name <$$> indent 4 contents)
 
 -- | Render a sum type constructor in context of a data type with multiple
 -- constructors.
 renderSum :: OCamlConstructor -> Reader Options Doc
-renderSum (OCamlConstructor (NamedConstructor name OCamlEmpty)) = renderSumCondition name mempty
-renderSum (OCamlConstructor (NamedConstructor name v@(Values _ _))) = do
+renderSum (OCamlValueConstructor (NamedConstructor name OCamlEmpty)) = renderSumCondition name mempty
+renderSum (OCamlValueConstructor (NamedConstructor name v@(Values _ _))) = do
   (_, val) <- renderConstructorArgs 0 v
   renderSumCondition name val
-renderSum (OCamlConstructor (NamedConstructor name value)) = do
+renderSum (OCamlValueConstructor (NamedConstructor name value)) = do
   val <- render value
-  renderSumCondition name $ "|>" <+> requiredContents <+> val
-renderSum (OCamlConstructor (RecordConstructor name value)) = do
+  renderSumCondition name $ "=" <+> requiredContents <+> val
+renderSum (OCamlValueConstructor (RecordConstructor name value)) = do
   val <- render value
   renderSumCondition name val
-renderSum (OCamlConstructor (MultipleConstructors constrs)) =
-  foldl1 (<$+$>) <$> mapM renderSum constrs
+renderSum (OCamlValueConstructor (MultipleConstructors constrs)) =
+  foldl1 (<$+$>) <$> mapM (renderSum . OCamlValueConstructor) constrs
 
 -- | Render the decoding of a constructor's arguments. Note the constructor must
 -- be from a data type with multiple constructors and that it has multiple
@@ -101,16 +106,15 @@ renderConstructorArgs i val = do
   pure (i, "|>" <+> requiredContents <+> index)
 
 instance HasDecoder OCamlValue where
-  render (OCamlRef name) = pure $ "decode" <> stext name
+  render (OCamlRef name) = pure $ stext name
   render (OCamlPrimitiveRef primitive) = renderRef primitive
   render (Values x y) = do
     dx <- render x
     dy <- render y
     return $ dx <$$> dy
   render (OCamlField name value) = do
-    fieldModifier <- asks fieldLabelModifier
     dv <- render value
-    return $ "|> required" <+> dquotes (stext (fieldModifier name)) <+> dv
+    return $ (stext name) <+> "=" <+> "field" <+> dquotes (stext name) <+> dv <+> "json"
   render OCamlEmpty = pure (stext "")
   
 instance HasDecoderRef OCamlPrimitive where

@@ -80,6 +80,7 @@ person =
     "Person"
     [ toOCamlTypeSource (Proxy :: Proxy Person)
     , toOCamlEncoderSource (Proxy :: Proxy Person)
+    , toOCamlDecoderSource (Proxy :: Proxy Person)
     ]
 
 company :: OCamlFile

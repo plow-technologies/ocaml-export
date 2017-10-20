@@ -6,3 +6,4 @@ playground/node_modules
 .#*
 *.log
 test/temp
+*.cabal

@@ -24,6 +24,25 @@ class HasDecoderRef a where
   renderRef :: a -> Reader Options Doc
 
 instance HasDecoder OCamlDatatype where
+  render d@(OCamlDatatype name (OCamlEnumeratorConstructor constructors)) = do
+    de <- asks decodeError
+    dv <- mapM render constructors
+    fnName <- renderRef d
+    pure $
+      "let" <+> fnName <+> "(json : Js_json.t) :" <> (returnType de) <$$>
+      indent 2 ("match Js_json.decodeString json with" <$$>
+      foldl1 (<$$>) dv <$$> footer fnName)
+    where
+      returnType de =
+        case de of
+          AllowErrors -> (stext . textLowercaseFirst $ name)
+          OptionType  -> (stext . textLowercaseFirst $ name) <+> "option ="
+          ResultType  -> "(" <> (stext . textLowercaseFirst $ name) <> ", string) Js_result.t ="
+
+      footer fnName
+        =    "| Some err -> Js_result.Error (\"" <> fnName <> ": unknown enumeration '\" ^ err ^ \"'.\")"
+        <$$> "| None -> Js_result.Error \"" <> fnName <> ": expected a top-level JSON string.\""
+      
   render d@(OCamlDatatype name constructor) = do
     de <- asks decodeError
     fnName <- renderRef d
@@ -46,7 +65,7 @@ instance HasDecoder OCamlDatatype where
         case de of
           AllowErrors -> False
           _ -> True
-
+      
       footer de =
         case de of
           AllowErrors -> ""
@@ -63,9 +82,11 @@ instance HasDecoder OCamlConstructor where
   render (OCamlValueConstructor (NamedConstructor name value)) = do
     dv <- render value
     return $ stext name <$$> indent 4 dv
-  render (OCamlValueConstructor (RecordConstructor name value)) = do
+
+  render (OCamlValueConstructor (RecordConstructor _name value)) = do
     dv <- render value
     pure dv
+
   render mc@(OCamlValueConstructor (MultipleConstructors constrs)) = do
       cstrs <- mapM (renderSum . OCamlValueConstructor) constrs
       pure $ constructorName <$$> indent 4
@@ -83,6 +104,9 @@ instance HasDecoder OCamlConstructor where
       constructorName =
         if isEnumeration mc then "string" else "field \"tag\" string"
 
+  render (OCamlEnumeratorConstructor _constructors) = fail "OCamlEnumeratorConstructor should be handled at the OCamlDataType level."
+  render (OCamlSumOfRecordConstructor _name _constructors) = fail "OCamlEnumeratorConstructor should be handled at the OCamlDataType level."
+    
 -- | required "contents"
 requiredContents :: Doc
 requiredContents = "required" <+> dquotes "contents"
@@ -109,6 +133,8 @@ renderSum (OCamlValueConstructor (RecordConstructor name value)) = do
   renderSumCondition name val
 renderSum (OCamlValueConstructor (MultipleConstructors constrs)) =
   foldl1 (<$+$>) <$> mapM (renderSum . OCamlValueConstructor) constrs
+renderSum (OCamlEnumeratorConstructor _) = pure "" -- handled elsewhere
+renderSum (OCamlSumOfRecordConstructor _ _) = pure "" -- handled elsewhere
 
 -- | Render the decoding of a constructor's arguments. Note the constructor must
 -- be from a data type with multiple constructors and that it has multiple
@@ -128,6 +154,7 @@ instance HasDecoder OCamlValue where
     pure $ "(fun a -> unwrapResult (decode" <> stext name <+> "a))"
 
   render (OCamlPrimitiveRef primitive) = renderRef primitive
+  render (OCamlTypeParameterRef _) = pure "" -- handled elsewhere
   render (Values x y) = do
     dx <- render x
     dy <- render y
@@ -142,6 +169,9 @@ instance HasDecoder OCamlValue where
     return $ (stext name) <+> "=" <+> "field" <+> dquotes (stext name) <+> dv <+> "json"
 
   render OCamlEmpty = pure (stext "")
+
+instance HasDecoder EnumeratorConstructor where
+  render (EnumeratorConstructor name) = pure $ "| Some \"" <> stext name <> "\" -> Js_result.Ok" <+> stext name
   
 instance HasDecoderRef OCamlPrimitive where
   renderRef (OList (OCamlPrimitive OChar)) = pure "string"

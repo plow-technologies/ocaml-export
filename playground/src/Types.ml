@@ -218,17 +218,35 @@ let encodeSuit (x : suit) =
      Json.Encode.string "Hearts"
   | Spades ->
      Json.Encode.string "Spades"
-  
+
+let decodeSuit (json : Js_json.t) :(suit, string) Js_result.t =
+  match Js_json.decodeString json with
+  | Some "Clubs" -> Js_result.Ok Clubs
+  | Some "Diamonds" -> Js_result.Ok Diamonds
+  | Some "Hearts" -> Js_result.Ok Hearts
+  | Some "Spades" -> Js_result.Ok Spades
+  | Some x -> Js_result.Error ("decodeSuit: unknown enumeration '" ^ x ^ "'")
+  | None -> Js_result.Error "decodeSuit: expected string"
+    
 type card =
-  { suit  : suit
-  ; value : int
+  { cardSuit  : suit
+  ; cardValue : int
   }
 
 let encodeCard (x : card) =
   Json.Encode.object_
-    [ ( "suit", encodeSuit x.suit )
-    ; ( "value", Json.Encode.int x.value )
+    [ ( "cardSuit", encodeSuit x.cardSuit )
+    ; ( "cardValue", Json.Encode.int x.cardValue )
     ]
+
+let decodeCard (json : Js_json.t) :(card, string) Js_result.t =
+  match Json.Decode.
+    { cardSuit = field "cardSuit" (fun a -> unwrapResult (decodeSuit a)) json
+    ; cardValue = field "cardValue" int json
+    }
+  with
+  | v -> Js_result.Ok v
+  | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeCard: " ^ message)
 
 (*work around for the fact that ocaml does not support sum of product that has named accessors *)
   
@@ -393,6 +411,10 @@ let p = Js.Json.parseExn {| {"address": "OK City", "employees": [ {"id": 1,"name
 let p = Js.Json.parseExn {| {"address": "OK City", "employees": [ {"id": 1,"name":"James"} ]} |} in let pp = decodeCompanyResult p in Js.log pp;
 
 
+
+let p = Js.Json.parseExn {| {"cardSuit": "Diamonds", "cardValue": 1} |} in let pp = decodeCard p in Js.log pp;
+
+let p = Js.Json.parseExn {| {"cardSuit": "Diamond", "cardValue": 10} |} in let pp = decodeCard p in Js.log pp;
 (*
 type person =
   { id: int

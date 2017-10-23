@@ -101,8 +101,10 @@ card =
     "Card"
     [ toOCamlTypeSource (Proxy :: Proxy Suit)
     , toOCamlEncoderSource (Proxy :: Proxy Suit)
+    , toOCamlDecoderSource (Proxy :: Proxy Suit)
     , toOCamlTypeSource (Proxy :: Proxy Card)
     , toOCamlEncoderSource (Proxy :: Proxy Card)
+    , toOCamlDecoderSource (Proxy :: Proxy Card)
     ]
 
 oneTypeParameter :: OCamlFile

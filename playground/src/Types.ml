@@ -23,6 +23,8 @@ type person =
   ; name : (string) option
   }
 
+let bob = { id = 1; name = Some "Bob"}
+let billy = { bob with name = Some "Billy"}   
 let encodePerson (x : person) :Js_json.t =
   Json.Encode.object_
     [ ( "id", Json.Encode.int x.id )
@@ -145,10 +147,32 @@ let encodeNameOrIdNumber (x : nameOrIdNumber) =
        ]
   | IdNumber a ->
      Json.Encode.object_
-       [ ("tag", Json.Encode.string "Name")
+       [ ("tag", Json.Encode.string "IdNumber")
        ; ( "contents", Json.Encode.int a )
        ]
 
+let decodeNameOrIdNumber (json : Js_json.t) :(nameOrIdNumber, string) Js_result.t =
+  match Json.Decode.(field "tag" string json) with
+  | "Name" ->
+     (match Json.Decode.(field "contents" string json) with
+      | v -> Js_result.Ok (Name v)
+      | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeNameOrIdNumber: parse 'contents' " ^ message)
+     )
+  | "IdNumber" ->
+     (match Json.Decode.(field "contents" int json) with
+      | v -> Js_result.Ok (IdNumber v)
+      | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeNameOrIdNumber: parse 'contents' " ^ message)
+     )
+  | err -> Js_result.Error ("decodeCompany: unknown tag value found '" ^ err ^ "'.")
+  | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeNameOrIdNumber: " ^ message)
+
+
+(*
+unnamed products of more than one value are in array
+match Js.Json.decodeArray json with
+| Some a
+| None -> Js_result.Error ""
+*)
 type sumVariant =
   | HasNothing
   | HasSingleInt of int
@@ -183,6 +207,90 @@ let encodeSumVariant (x : sumVariant) =
        ; ( "contents", Json.Encode.array [| (fun (a,b) -> Json.Encode.array [| Json.Encode.int a ; Json.Encode.int b  |]) y0 ; (fun (a,b) -> Json.Encode.array [| Json.Encode.int a ; Json.Encode.int b  |]) y1 |] )
        ]
 
+
+external _unsafeCreateUninitializedArray : int -> 'a array = "Array" [@@bs.new]
+                                                           
+let arrayOfUndecodedValues json = 
+  if Js.Array.isArray json then begin
+    let source = (Obj.magic (json : Js.Json.t) : Js.Json.t array) in
+    let length = Js.Array.length source in
+    let target = _unsafeCreateUninitializedArray length in
+    for i = 0 to length - 1 do
+      let value = (Array.unsafe_get source i) in
+      Array.unsafe_set target i value;
+    done;
+    target
+  end
+  else
+    raise @@ Json.Decode.DecodeError ("Expected array, got " ^ Js.Json.stringify json)
+
+let decodeSumVariant (json : Js_json.t) :(sumVariant, string) Js_result.t =
+  match Json.Decode.(field "tag" string json) with
+  | "HasNothing" -> Js_result.Ok HasNothing
+  | "HasSingleInt" ->
+     (match Json.Decode.(field "contents" int json) with
+      | v -> Js_result.Ok (HasSingleInt v)
+      | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant: parse 'contents' " ^ message)
+     )
+  | "HasSingleTuple" ->
+     (match Json.Decode.(field "contents" Js.Json.decodeArray json) with
+      | Some v ->
+         (match Json.Decode.int v.(0) with
+          | v0 ->
+             (match Json.Decode.int v.(1) with
+              | v1 -> Js_result.Ok (HasSingleTuple (v0,v1))
+              | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant HasSingleTuple: " ^ message)
+             )
+          | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant HasSingleTuple: " ^ message)
+         )
+      | None -> Js_result.Error ("asdf")
+     )
+  | "HasMultipleInts" ->
+     (match Json.Decode.(field "contents" Js.Json.decodeArray json) with
+      | Some v ->
+         (match Json.Decode.int v.(0) with
+          | v0 ->
+             (match Json.Decode.int v.(1) with
+              | v1 -> Js_result.Ok (HasMultipleInts (v0,v1))
+              | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant HasMultipleInts: " ^ message)
+             )
+          | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant HasMultipleInts: " ^ message)
+         )
+      | None -> Js_result.Error ("asdf")
+     )
+  | "HasMultipleTuples" ->
+     (match Json.Decode.(field "contents" arrayOfUndecodedValues json) with
+      | v ->
+         (match arrayOfUndecodedValues v.(0) with
+          | v0 ->
+             (match arrayOfUndecodedValues v.(1) with
+              | v1 ->
+                 (match Json.Decode.int v0.(0) with
+                  | v2 ->
+                     (match Json.Decode.int v0.(1) with
+                      | v3 ->
+                         (match Json.Decode.int v1.(0) with
+                          | v4 ->
+                             (match Json.Decode.int v1.(1) with
+                              | v5 -> Js_result.Ok (HasMultipleTuples ((v2,v3), (v4,v5)))
+                              | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant HasMultipleInts: " ^ message)
+                             )
+                          | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant HasMultipleInts: " ^ message)
+                         )
+                      | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant HasMultipleInts: " ^ message)
+                     )
+                  | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant HasMultipleInts: " ^ message)
+                 )
+              | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant HasMultipleInts: " ^ message)
+             )
+          | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant HasMultipleInts: " ^ message)
+         )
+      | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant HasMultipleInts: " ^ message)
+     )
+  | err -> Js_result.Error ("decodeCompany: unknown tag value found '" ^ err ^ "'.")
+  | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant: " ^ message)
+
+
 (*
 let x = Json.Encode.array [| Json.Encode.int 1 ; Json.Encode.string "asdf" |]
 let y = [1 ; 2 ]
@@ -201,6 +309,27 @@ let encodeWithTuple (x : withTuple) =
   match x with
   | WithTuple y0 ->
      (fun (a,b) -> Json.Encode.array [| Json.Encode.int a ; Json.Encode.int b  |]) y0
+
+
+let decodeWithTuple2 (json : Js_json.t) :(withTuple, string) Js_result.t =
+  match Json.Decode.(tuple2 int int json) with
+  | v -> Js_result.Ok (WithTuple v)
+  | exception Json.Decode.DecodeError msg -> Js_result.Error msg
+
+
+    
+let decodeWithTuple (json : Js_json.t) :(withTuple, string) Js_result.t =
+  match Js.Json.decodeArray json with
+  | Some v when Js_array.length v == 2 ->
+     (match Json.Decode.int v.(0) with
+      | v0 ->
+         (match Json.Decode.int v.(1) with
+          | v1 -> Js_result.Ok (WithTuple (v0,v1))
+          | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeWithTuple HasMultipleInts: " ^ message)
+         )
+      | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeWithTuple HasMultipleInts: " ^ message)
+     )
+  | _ -> Js_result.Error ("decodeWithTuple: unable to decodeArray.")
 
 type suit =
   | Clubs
@@ -371,7 +500,20 @@ let encodeOneTypeParameter (type a0) (parseA0 : a0 -> Js_json.t) (x : a0 oneType
     ]
 
 
-    (* let decode (x : card) :Js_json.t option = *)
+let safeGet (type a) (xs : a Js_array.t) (x : int) :(a,string) Js_result.t =
+  match xs.(x) with
+  | value -> Js_result.Ok value
+  | exception Js.Exn.Error e ->
+    match Js.Exn.message e with
+    | Some message -> Js_result.Error message
+    | None -> Js_result.Error "An unknown error occurred"
+
+let safeGet2 (type a) (xs : a Js_array.t) (i :int) :a Js_option.t =
+  if i >= 0 && i < Js_array.length xs + 1 then Some xs.(i) else None
+
+
+
+(* let decode (x : card) :Js_json.t option = *)
 (*
 
 
@@ -415,6 +557,11 @@ let p = Js.Json.parseExn {| {"address": "OK City", "employees": [ {"id": 1,"name
 let p = Js.Json.parseExn {| {"cardSuit": "Diamonds", "cardValue": 1} |} in let pp = decodeCard p in Js.log pp;
 
 let p = Js.Json.parseExn {| {"cardSuit": "Diamond", "cardValue": 10} |} in let pp = decodeCard p in Js.log pp;
+
+let p = Js.Json.parseExn {| {"tag": "IdNumber", "contents": 1} |} in let pp = decodeNameOrIdNumber p in Js.log pp;
+
+let p = Js.Json.parseExn {| {"tag": "IdNumber", "contents": "hello"} |} in let pp = decodeNameOrIdNumber p in Js.log pp;
+
 (*
 type person =
   { id: int
@@ -438,3 +585,16 @@ let decodePersonSafe (json : Js_json.t) :person option =
   | exception Invalid_argument _ -> None
   | v -> Some v
          *)
+
+(* length *)
+let x = [| 1 ; 2 ; 3 |] in Js.log (safeGet2 x 2);
+
+let zzz = HasMultipleInts (1, 2) in Js.log zzz;
+let zzz = HasMultipleTuples ((1, 2), (3,4)) in Js.log zzz;
+                                                                                   
+let yy = Js.Json.parseExn {| {"tag" : "HasMultipleInts", "contents" : [1, 2]} |} in let pp = decodeSumVariant yy in Js.log pp;
+let yy = Js.Json.parseExn {| {"tag" : "HasMultipleTuples", "contents" : [[1, 2],[3,4]]} |} in let pp = decodeSumVariant yy in Js.log pp;
+let yy = Js.Json.parseExn {| {"tag" : "HasSingleTuple", "contents" : [1, 2]} |} in let pp = decodeSumVariant yy in Js.log pp;
+let yy = Js.Json.parseExn {| {"tag" : "HasSingleTuple", "contents" : [1, "asdf"]} |} in let pp = decodeSumVariant yy in Js.log pp;
+
+let zzz = Js.Json.parseExn "[1, 2, \"c\"]" in let pp = arrayOfUndecodedValues zzz in Js.log pp;

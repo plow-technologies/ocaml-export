@@ -31,3 +31,22 @@ let encodeSumVariant (x : sumVariant) :Js_json.t =
        [ ( "tag", Json.Encode.string "HasMultipleTuples" )
        ; ( "contents", Json.Encode.array [| (fun (a,b) -> Json.Encode.array [| Json.Encode.int a ; Json.Encode.int b  |]) y0 ; (fun (a,b) -> Json.Encode.array [| Json.Encode.int a ; Json.Encode.int b  |]) y1 |] )
        ]
+
+let decodeSumVariant (json : Js_json.t) :(sumVariant, string) Js_result.t =
+  match Json.Decode.(field "tag" string json) with
+  | "HasNothing" -> Js_result.Ok "HasNothing"
+  | "HasSingleInt" ->
+     (match Json.Decode.(field "contents" int json) with
+      | v -> Js_result.Ok (HasSingleInt v)
+      | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant: parse 'contents' " ^ message)
+     )
+  | "HasMultipleInts" ->
+     (match Json.Decode.(field "contents" array json) with
+      | v ->
+         (if Js_array.length v == 2
+          then Js_result.Ok (HasMultipleInts (v.[0]) (v.[1]))
+          else Js_result.Error "Too short")
+      | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant: parse 'contents' " ^ message)
+     )
+  | err -> Js_result.Error ("decodeCompany: unknown tag value found '" ^ err ^ "'.")
+  | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeNameOrIdNumber: " ^ message)

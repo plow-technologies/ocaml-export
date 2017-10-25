@@ -52,6 +52,7 @@ onOrOff =
     "OnOrOff"
     [ toOCamlTypeSource (Proxy :: Proxy OnOrOff)
     , toOCamlEncoderSource (Proxy :: Proxy OnOrOff)
+    , toOCamlDecoderSource (Proxy :: Proxy OnOrOff)
     ]    
 
 nameOrIdNumber :: OCamlFile

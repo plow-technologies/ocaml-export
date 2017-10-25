@@ -13,7 +13,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "bs-json": "^0.2.3"
+    "bs-json": "git+ssh://git@github.com/plow-technologies/bs-json.git#f6d7c466433933e26ee323216e885c5f9fd1b490"
   },
   "devDependencies": {
     "bs-platform": "^1.9.3",

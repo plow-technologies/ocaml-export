@@ -75,7 +75,7 @@ instance HasDecoder OCamlConstructor where
       <$$> "  | v -> Js_result.Ok v"
       <$$> "  | exception Json.Decode.DecodeError message -> Js_result.Error (\"decode" <> stext name <> ": \" ^ message)"
 
-  render mc@(OCamlValueConstructor (MultipleConstructors constructors)) = do
+  render (OCamlValueConstructor (MultipleConstructors constructors)) = do
     renderedConstructors <- mapM (renderSum . OCamlValueConstructor) constructors
     pure $ indent 2 "match Json.Decode.(field \"tag\" string json) with"
       <$$> indent 2 (foldl (<$$>) "" renderedConstructors)
@@ -95,7 +95,7 @@ requiredContents = "required" <+> dquotes "contents"
 renderSumCondition :: T.Text -> Doc -> Reader Options Doc
 renderSumCondition name contents =
   pure $ "|" <+> dquotes (stext name) <+> "->" <$$>
-    indent 2 contents
+    indent 3 contents
 
 -- | Render a sum type constructor in context of a data type with multiple
 -- constructors.
@@ -113,8 +113,7 @@ renderSum (OCamlValueConstructor (NamedConstructor name value)) = do
         indent 1
           (    "| v -> Js_result.Ok (" <> (stext name) <+> "v)"
           <$$> "| exception Json.Decode.DecodeError message -> Js_result.Error (\"" <> (stext name) <> ": \" ^ message)"
-          <> line
-          )
+          )           <> line
     )
 
 renderSum (OCamlValueConstructor (RecordConstructor name value)) = do
@@ -140,15 +139,15 @@ rArgs name vals = do
   pure $
     parens $ "match Json.Decode.(field \"contents\" Js.Json.decodeArray json) with"
     <$$> (indent 1 "| Some v ->"
-    <$$> (indent 4 v)
-    <$$> "| None -> Js_result.Error (\"expected an array.\")" ) <> line
+    <$$> (indent 3 v)
+    <$$> (indent 1 "| None -> Js_result.Error (\"" <> (stext name) <+> "expected an array.\")" )) <> line
 
 mk :: Text -> Int -> [Maybe OCamlValue] -> Reader Options Doc
 mk name i [x] =
   case x of
     Nothing -> do
       let ts = foldl (<>) "" $ L.intersperse ", " ((stext . T.append "v" . T.pack . show) <$> [0..i-1])
-      pure $ "Js_result.Ok" <+> parens (stext name <+> parens ts)
+      pure $ indent 1 $ "Js_result.Ok" <+> parens (stext name <+> parens ts)
     Just _ -> pure ""
 mk name i (x:xs) =
   case x of
@@ -157,11 +156,11 @@ mk name i (x:xs) =
       renderedVal <- render x'
       renderedInternal <- mk name (i+1) xs
       let iDoc = (stext . T.pack . show $ i)
-      pure $ "(match Json.Decode." <> renderedVal <+> ("v." <> parens iDoc) <+> "with"
+      pure $ indent 1 $ "(match Json.Decode." <> renderedVal <+> ("v." <> parens iDoc) <+> "with"
         <$$>
           indent 1
-            ("| Some v" <> iDoc <+> "->" <$$> (indent 2 renderedInternal)
-            <$$> "| None -> Js_result.Error (\"\")"
+            ("| v" <> iDoc <+> "->" <$$> (indent 2 renderedInternal)
+            <$$> "| exception Json.Decode.DecodeError message -> Js_result.Error (\"" <> (stext name) <> ": \" ^ message)"
             )
         <$$> ")"
 

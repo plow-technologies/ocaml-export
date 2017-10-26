@@ -187,12 +187,12 @@ instance HasTypeRef OCamlPrimitive where
     dv <- renderRef v
     return $ "Dict" <+> parens dk <+> parens dv
   renderRef OInt    = pure "int"
-  renderRef ODate   = pure "Js.Date"
+  renderRef ODate   = pure "Js_date.t"
   renderRef OBool   = pure "bool"
   renderRef OChar   = pure "string"
   renderRef OString = pure "string"
   renderRef OUnit   = pure "unit"
-  renderRef OFloat  = pure "Js.Float"
+  renderRef OFloat  = pure "float"
 --  'a Js.Dict.t
 toOCamlTypeRefWith :: OCamlType a => Options -> a -> T.Text
 toOCamlTypeRefWith options x =

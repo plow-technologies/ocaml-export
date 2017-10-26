@@ -30,8 +30,8 @@ data OCamlPrimitive
   = OInt -- int (Int32 or JS.Int)
   | OBool -- bool
   | OChar -- char, Char doesn't support Unicode or UTF-8, better to use string
-  | ODate -- Js.Date
-  | OFloat -- Js.Float
+  | ODate -- Js_date.t
+  | OFloat -- float
   | OString -- string
   | OUnit -- ()
   | OList OCamlDatatype -- ... list

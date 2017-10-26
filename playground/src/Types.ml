@@ -1,5 +1,9 @@
 Js.log "Hello"
 
+type x =
+  | HasFloat of float
+  | HasDate of Js_date.t
+     
 module Option = struct
   let map (f: 'a -> 'b) (o: 'a option) =
     match o with

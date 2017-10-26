@@ -4,7 +4,7 @@ type sumVariant =
   | HasSingleTuple of (int * int)
   | HasMultipleInts of int * int
   | HasMultipleTuples of (int * int) * (int * int)
-  | HasMixed of int * string * double
+  | HasMixed of int * string * float
 
 let encodeSumVariant (x : sumVariant) :Js_json.t =
   match x with
@@ -34,7 +34,7 @@ let encodeSumVariant (x : sumVariant) :Js_json.t =
        ]
   | HasMixed (y0,y1,y2) ->
      Json.Encode.object_
-       [ ( "tag", Json.Encode.string "HasMultipleInts" )
+       [ ( "tag", Json.Encode.string "HasMixed" )
        ; ( "contents", Json.Encode.array [| Json.Encode.int y0 ; Json.Encode.string y1 ; Json.Encode.float y2 |] )
        ]
 
@@ -46,40 +46,61 @@ let decodeSumVariant (json : Js_json.t) :(sumVariant, string) Js_result.t =
   | "HasSingleInt" ->
      (match Json.Decode.(field "contents" int json) with
       | v -> Js_result.Ok (HasSingleInt v)
-      | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant: parse 'contents' " ^ message)
+      | exception Json.Decode.DecodeError message -> Js_result.Error ("HasSingleInt: " ^ message)
      )
+
   | "HasSingleTuple" ->
      (match Json.Decode.(field "contents" (pair int int) json) with
       | v -> Js_result.Ok (HasSingleTuple v)
-      | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant HasSingleTuple: " ^ message)
+      | exception Json.Decode.DecodeError message -> Js_result.Error ("HasSingleTuple: " ^ message)
      )
-
   | "HasMultipleInts" ->
      (match Json.Decode.(field "contents" Js.Json.decodeArray json) with
       | Some v ->
          (match Json.Decode.int v.(0) with
           | v0 ->
              (match Json.Decode.int v.(1) with
-              | v1 -> Js_result.Ok (HasMultipleInts (v0,v1))
-              | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant HasMultipleInts: " ^ message)
+              | v1 ->
+                 Js_result.Ok (HasMultipleInts (v0, v1))
+              | exception Json.Decode.DecodeError message -> Js_result.Error ("HasMultipleInts: " ^ message)
              )
-          | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant HasMultipleInts: " ^ message)
+          | exception Json.Decode.DecodeError message -> Js_result.Error ("HasMultipleInts: " ^ message)
          )
-      | None -> Js_result.Error ("asdf")
+      | None -> Js_result.Error ("HasMultipleInts expected an array.")
      )
 
   | "HasMultipleTuples" ->
-      (match Json.Decode.(field "contents" Js.Json.decodeArray json) with
+     (match Json.Decode.(field "contents" Js.Json.decodeArray json) with
       | Some v ->
          (match Json.Decode.(pair int int) v.(0) with
           | v0 ->
              (match Json.Decode.(pair int int) v.(1) with
-              | v1 -> Js_result.Ok (HasMultipleTuples (v0,v1))
-              | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant HasMultipleTuples: " ^ message)
+              | v1 ->
+                 Js_result.Ok (HasMultipleTuples (v0, v1))
+              | exception Json.Decode.DecodeError message -> Js_result.Error ("HasMultipleTuples: " ^ message)
              )
-          | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant HasMultipleTuples: " ^ message)
+          | exception Json.Decode.DecodeError message -> Js_result.Error ("HasMultipleTuples: " ^ message)
          )
-      | None -> Js_result.Error ("decodeSumVariant HasMultipleTuples expected an array.")
+      | None -> Js_result.Error ("HasMultipleTuples expected an array.")
+     )
+
+  | "HasMixed" ->
+     (match Json.Decode.(field "contents" Js.Json.decodeArray json) with
+      | Some v ->
+         (match Json.Decode.int v.(0) with
+          | v0 ->
+             (match Json.Decode.string v.(1) with
+              | v1 ->
+                 (match Json.Decode.float v.(2) with
+                  | v2 ->
+                     Js_result.Ok (HasMixed (v0, v1, v2))
+                  | exception Json.Decode.DecodeError message -> Js_result.Error ("HasMixed: " ^ message)
+                 )
+              | exception Json.Decode.DecodeError message -> Js_result.Error ("HasMixed: " ^ message)
+             )
+          | exception Json.Decode.DecodeError message -> Js_result.Error ("HasMixed: " ^ message)
+         )
+      | None -> Js_result.Error ("HasMixed expected an array.")
      )
   | err -> Js_result.Error ("decodeSumVariant: unknown tag value found '" ^ err ^ "'.")
   | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant: " ^ message)

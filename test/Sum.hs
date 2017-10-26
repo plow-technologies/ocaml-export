@@ -18,6 +18,7 @@ spec = do
     testSum onOrOff "OnOrOff"
     testSum nameOrIdNumber "NameOrIdNumber"
     testSum sumVariant "SumVariant"
+--    testSum tuple "Tuple"
     testSum withTuple "WithTuple"
     testSum sumWithRecord "SumWithRecord"
     
@@ -33,6 +34,7 @@ data SumVariant
   | HasSingleTuple (Int,Int)
   | HasMultipleInts Int Int
   | HasMultipleTuples (Int,Int) (Int,Int)
+  | HasMixed Int String Double
   deriving (Show,Eq,Generic, OCamlType)  
 
 type Tuple
@@ -69,6 +71,7 @@ sumVariant =
     "SumVariant"
     [ toOCamlTypeSource (Proxy :: Proxy SumVariant)
     , toOCamlEncoderSource (Proxy :: Proxy SumVariant)
+    , toOCamlDecoderSource (Proxy :: Proxy SumVariant)
     ]
 
 tuple :: OCamlFile
@@ -77,6 +80,7 @@ tuple =
     "Tuple"
     [ toOCamlTypeSource (Proxy :: Proxy Tuple)
     , toOCamlEncoderSource (Proxy :: Proxy Tuple)
+    , toOCamlDecoderSource (Proxy :: Proxy Tuple)
     ]
 
 withTuple :: OCamlFile
@@ -85,6 +89,7 @@ withTuple =
     "WithTuple"
     [ toOCamlTypeSource (Proxy :: Proxy WithTuple)
     , toOCamlEncoderSource (Proxy :: Proxy WithTuple)
+    , toOCamlDecoderSource (Proxy :: Proxy WithTuple)
     ]
 
 sumWithRecord :: OCamlFile

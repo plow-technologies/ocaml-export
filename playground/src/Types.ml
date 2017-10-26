@@ -233,17 +233,9 @@ let decodeSumVariant (json : Js_json.t) :(sumVariant, string) Js_result.t =
       | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant: parse 'contents' " ^ message)
      )
   | "HasSingleTuple" ->
-     (match Json.Decode.(field "contents" Js.Json.decodeArray json) with
-      | Some v ->
-         (match Json.Decode.int v.(0) with
-          | v0 ->
-             (match Json.Decode.int v.(1) with
-              | v1 -> Js_result.Ok (HasSingleTuple (v0,v1))
-              | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant HasSingleTuple: " ^ message)
-             )
-          | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant HasSingleTuple: " ^ message)
-         )
-      | None -> Js_result.Error ("asdf")
+     (match Json.Decode.(field "contents" (pair int int) json) with
+      | v -> Js_result.Ok (HasSingleTuple v)
+      | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant HasSingleTuple: " ^ message)        
      )
   | "HasMultipleInts" ->
      (match Json.Decode.(field "contents" Js.Json.decodeArray json) with
@@ -259,33 +251,17 @@ let decodeSumVariant (json : Js_json.t) :(sumVariant, string) Js_result.t =
       | None -> Js_result.Error ("asdf")
      )
   | "HasMultipleTuples" ->
-     (match Json.Decode.(field "contents" arrayOfUndecodedValues json) with
-      | v ->
-         (match arrayOfUndecodedValues v.(0) with
+      (match Json.Decode.(field "contents" Js.Json.decodeArray json) with
+      | Some v ->
+         (match Json.Decode.(pair int int v.(0)) with
           | v0 ->
-             (match arrayOfUndecodedValues v.(1) with
-              | v1 ->
-                 (match Json.Decode.int v0.(0) with
-                  | v2 ->
-                     (match Json.Decode.int v0.(1) with
-                      | v3 ->
-                         (match Json.Decode.int v1.(0) with
-                          | v4 ->
-                             (match Json.Decode.int v1.(1) with
-                              | v5 -> Js_result.Ok (HasMultipleTuples ((v2,v3), (v4,v5)))
-                              | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant HasMultipleInts: " ^ message)
-                             )
-                          | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant HasMultipleInts: " ^ message)
-                         )
-                      | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant HasMultipleInts: " ^ message)
-                     )
-                  | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant HasMultipleInts: " ^ message)
-                 )
-              | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant HasMultipleInts: " ^ message)
+             (match Json.Decode.(pair int int v.(1)) with
+              | v1 -> Js_result.Ok (HasMultipleTuples (v0,v1))
+              | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant HasMultipleTuples: " ^ message)
              )
-          | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant HasMultipleInts: " ^ message)
+          | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant HasMultipleTuples: " ^ message)
          )
-      | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant HasMultipleInts: " ^ message)
+      | None -> Js_result.Error ("decodeSumVariant HasMultipleTuples expected an array.")
      )
   | err -> Js_result.Error ("decodeCompany: unknown tag value found '" ^ err ^ "'.")
   | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant: " ^ message)
@@ -312,7 +288,7 @@ let encodeWithTuple (x : withTuple) =
 
 
 let decodeWithTuple2 (json : Js_json.t) :(withTuple, string) Js_result.t =
-  match Json.Decode.(tuple2 int int json) with
+  match Json.Decode.(tuple2 int int) json with
   | v -> Js_result.Ok (WithTuple v)
   | exception Json.Decode.DecodeError msg -> Js_result.Error msg
 

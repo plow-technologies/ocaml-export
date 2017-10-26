@@ -11,7 +11,9 @@ module OCaml.BuckleScript.Decode
   ) where
 
 import           Control.Monad.Reader
+import qualified Data.List as L
 import           Data.Monoid
+import           Data.Text (Text)
 import qualified Data.Text as T
 import           OCaml.Common
 import           OCaml.Type
@@ -25,52 +27,28 @@ class HasDecoderRef a where
 
 instance HasDecoder OCamlDatatype where
   render d@(OCamlDatatype name (OCamlEnumeratorConstructor constructors)) = do
-    de <- asks decodeError
     dv <- mapM render constructors
     fnName <- renderRef d
     pure $
-      "let" <+> fnName <+> "(json : Js_json.t) :" <> (returnType de) <$$>
+      "let" <+> fnName <+> "(json : Js_json.t) :" <> returnType <$$>
       indent 2 ("match Js_json.decodeString json with" <$$>
       foldl1 (<$$>) dv <$$> footer fnName)
     where
-      returnType de =
-        case de of
-          AllowErrors -> (stext . textLowercaseFirst $ name)
-          OptionType  -> (stext . textLowercaseFirst $ name) <+> "option ="
-          ResultType  -> "(" <> (stext . textLowercaseFirst $ name) <> ", string) Js_result.t ="
+      returnType =  "(" <> (stext . textLowercaseFirst $ name) <> ", string) Js_result.t ="
 
       footer fnName
         =    "| Some err -> Js_result.Error (\"" <> fnName <> ": unknown enumeration '\" ^ err ^ \"'.\")"
         <$$> "| None -> Js_result.Error \"" <> fnName <> ": expected a top-level JSON string.\""
       
   render d@(OCamlDatatype name constructor) = do
-    de <- asks decodeError
     fnName <- renderRef d
     ctor <- render constructor
-    return $
-      "let" <+> fnName <+> "(json : Js_json.t) :" <> (returnType de) <$$>
-      "  " <> (if includeMatch de then "match " else "") <> "Json.Decode." <$$>
-      (indent 4 ("{" <+> ctor <$$> "}")) <$$>
-      (if includeMatch de then "  with" else "") <$$>
-      footer de
+    return
+       $   "let" <+> fnName <+> "(json : Js_json.t) :" <> returnType
+      <$$> ctor
 
     where
-      returnType de =
-        case de of
-          AllowErrors -> (stext . textLowercaseFirst $ name)
-          OptionType  -> (stext . textLowercaseFirst $ name) <+> "option ="
-          ResultType  -> "(" <> (stext . textLowercaseFirst $ name) <> ", string) Js_result.t ="
-
-      includeMatch de =
-        case de of
-          AllowErrors -> False
-          _ -> True
-      
-      footer de =
-        case de of
-          AllowErrors -> ""
-          OptionType  -> "  | v -> Some v" <$$> "  | exception Json.Decode.DecodeError _ -> None"
-          ResultType  -> "  | v -> Js_result.Ok v" <$$> "  | exception Json.Decode.DecodeError message -> Js_result.Error (\"decode" <> stext name <> ": \" ^ message)"
+      returnType = "(" <> (stext . textLowercaseFirst $ name) <> ", string) Js_result.t ="
 
   render (OCamlPrimitive primitive) = renderRef primitive
 
@@ -81,28 +59,30 @@ instance HasDecoderRef OCamlDatatype where
 instance HasDecoder OCamlConstructor where
   render (OCamlValueConstructor (NamedConstructor name value)) = do
     dv <- render value
-    return $ stext name <$$> indent 4 dv
-
-  render (OCamlValueConstructor (RecordConstructor _name value)) = do
+    return
+       $   indent 2
+           ("match Json.Decode." <> dv <+> "json" <+> "with"
+      <$$> "| v -> Js_result.Ok" <+> parens (stext name <+> "v")
+      <$$> "| exception Json.Decode.DecodeError msg -> Js_result.Error (\"decode" <> (stext name) <> ": \" ^ msg)"
+           )
+           
+  render (OCamlValueConstructor (RecordConstructor name value)) = do
     dv <- render value
-    pure dv
+    pure
+         $ "  match Json.Decode."
+      <$$> (indent 4 ("{" <+> dv <$$> "}"))
+      <$$> "  with"
+      <$$> "  | v -> Js_result.Ok v"
+      <$$> "  | exception Json.Decode.DecodeError message -> Js_result.Error (\"decode" <> stext name <> ": \" ^ message)"
 
-  render mc@(OCamlValueConstructor (MultipleConstructors constrs)) = do
-      cstrs <- mapM (renderSum . OCamlValueConstructor) constrs
-      pure $ constructorName <$$> indent 4
-        ("|> andThen" <$$>
-          indent 4 (newlineparens ("\\x ->" <$$>
-            (indent 4 $ "case x of" <$$>
-              (indent 4 $ foldl1 (<$+$>) cstrs <$+$>
-               "_ ->" <$$> indent 4 "fail \"Constructor not matched\""
-              )
-            )
-          ))
-        )
+  render mc@(OCamlValueConstructor (MultipleConstructors constructors)) = do
+    renderedConstructors <- mapM (renderSum . OCamlValueConstructor) constructors
+    pure $ indent 2 "match Json.Decode.(field \"tag\" string json) with"
+      <$$> indent 2 (foldl (<$$>) "" renderedConstructors)
+      <$$> indent 2 footer
     where
-      constructorName :: Doc
-      constructorName =
-        if isEnumeration mc then "string" else "field \"tag\" string"
+      footer = "| err -> Js_result.Error (\"decodeSumVariant: unknown tag value found '\" ^ err ^ \"'.\")"
+          <$$> "| exception Json.Decode.DecodeError message -> Js_result.Error (\"decodeSumVariant: \" ^ message)"
 
   render (OCamlEnumeratorConstructor _constructors) = fail "OCamlEnumeratorConstructor should be handled at the OCamlDataType level."
   render (OCamlSumOfRecordConstructor _name _constructors) = fail "OCamlEnumeratorConstructor should be handled at the OCamlDataType level."
@@ -114,31 +94,80 @@ requiredContents = "required" <+> dquotes "contents"
 -- | "<name>" -> decode <name>
 renderSumCondition :: T.Text -> Doc -> Reader Options Doc
 renderSumCondition name contents =
-  pure $ dquotes (stext name) <+> "->" <$$>
-    indent 4
-      (stext name <$$> indent 4 contents)
+  pure $ "|" <+> dquotes (stext name) <+> "->" <$$>
+    indent 2 contents
 
 -- | Render a sum type constructor in context of a data type with multiple
 -- constructors.
 renderSum :: OCamlConstructor -> Reader Options Doc
-renderSum (OCamlValueConstructor (NamedConstructor name OCamlEmpty)) = renderSumCondition name mempty
+renderSum (OCamlValueConstructor (NamedConstructor name OCamlEmpty)) = renderSumCondition name ("Js_result.Ok" <+> stext name) 
 renderSum (OCamlValueConstructor (NamedConstructor name v@(Values _ _))) = do
-  (_, val) <- renderConstructorArgs 0 v
+  val <- rArgs name v
   renderSumCondition name val
+
 renderSum (OCamlValueConstructor (NamedConstructor name value)) = do
   val <- render value
-  renderSumCondition name $ "=" <+> requiredContents <+> val
+  renderSumCondition name $ parens
+    ("match Json.Decode." <> parens ("field \"contents\"" <+> val <+> "json") <+> "with"
+      <$$>
+        indent 1
+          (    "| v -> Js_result.Ok (" <> (stext name) <+> "v)"
+          <$$> "| exception Json.Decode.DecodeError message -> Js_result.Error (\"" <> (stext name) <> ": \" ^ message)"
+          <> line
+          )
+    )
+
 renderSum (OCamlValueConstructor (RecordConstructor name value)) = do
   val <- render value
   renderSumCondition name val
+
 renderSum (OCamlValueConstructor (MultipleConstructors constrs)) =
   foldl1 (<$+$>) <$> mapM (renderSum . OCamlValueConstructor) constrs
+
 renderSum (OCamlEnumeratorConstructor _) = pure "" -- handled elsewhere
+
 renderSum (OCamlSumOfRecordConstructor _ _) = pure "" -- handled elsewhere
 
+flattenOCamlValue :: OCamlValue -> [OCamlValue]
+flattenOCamlValue (Values l r) = flattenOCamlValue l ++ flattenOCamlValue r
+flattenOCamlValue val = [val]
 -- | Render the decoding of a constructor's arguments. Note the constructor must
 -- be from a data type with multiple constructors and that it has multiple
 -- constructors itself.
+rArgs :: Text -> OCamlValue -> Reader Options Doc
+rArgs name vals = do
+  v <- mk name 0 $ (Just <$> flattenOCamlValue vals) ++ [Nothing]
+  pure $
+    parens $ "match Json.Decode.(field \"contents\" Js.Json.decodeArray json) with"
+    <$$> (indent 1 "| Some v ->"
+    <$$> (indent 4 v)
+    <$$> "| None -> Js_result.Error (\"expected an array.\")" ) <> line
+
+mk :: Text -> Int -> [Maybe OCamlValue] -> Reader Options Doc
+mk name i [x] =
+  case x of
+    Nothing -> do
+      let ts = foldl (<>) "" $ L.intersperse ", " ((stext . T.append "v" . T.pack . show) <$> [0..i-1])
+      pure $ "Js_result.Ok" <+> parens (stext name <+> parens ts)
+    Just _ -> pure ""
+mk name i (x:xs) =
+  case x of
+    Nothing -> mk name i xs
+    Just x' -> do
+      renderedVal <- render x'
+      renderedInternal <- mk name (i+1) xs
+      let iDoc = (stext . T.pack . show $ i)
+      pure $ "(match Json.Decode." <> renderedVal <+> ("v." <> parens iDoc) <+> "with"
+        <$$>
+          indent 1
+            ("| Some v" <> iDoc <+> "->" <$$> (indent 2 renderedInternal)
+            <$$> "| None -> Js_result.Error (\"\")"
+            )
+        <$$> ")"
+
+mk _name _i [] = pure ""
+  
+
 renderConstructorArgs :: Int -> OCamlValue -> Reader Options (Int, Doc)
 renderConstructorArgs i (Values l r) = do
   (iL, rndrL) <- renderConstructorArgs i l
@@ -146,8 +175,16 @@ renderConstructorArgs i (Values l r) = do
   pure (iR, rndrL <$$> rndrR)
 renderConstructorArgs i val = do
   rndrVal <- render val
-  let index = parens $ "index" <+> int i <+> rndrVal
-  pure (i, "|>" <+> requiredContents <+> index)
+  -- let index = parens $ "index" <+> int i <+> rndrVal
+  pure (i,
+             "(match Json.Decode.(field \"contents\"" <+> rndrVal <+> "json) with"
+        <$$>
+          indent 1
+            ("| Some v" <> (stext . T.pack . show $ i) <+> "->"
+            <$$> "| None -> Js_result.Error (\"\")"
+            )
+        <$$> ")"
+       )
 
 instance HasDecoder OCamlValue where
   render (OCamlRef name) = do
@@ -187,14 +224,17 @@ instance HasDecoderRef OCamlPrimitive where
   renderRef (ODict key value) = do
     d <- renderRef (OList (OCamlPrimitive (OTuple2 (OCamlPrimitive key) value)))
     return . parens $ "map Dict.fromList" <+> d
+
   renderRef (OOption datatype) = do
     dt <- renderRef datatype
     return . parens $ "maybe" <+> dt
+
   renderRef (OTuple2 x y) = do
     dx <- renderRef x
     dy <- renderRef y
-    return . parens $
-      "map2 (,)" <+> parens ("index 0" <+> dx) <+> parens ("index 1" <+> dy)
+--    return $ "Json.Decode." <> (parens $ "pair" <+> dx <+> dy)
+    pure $ parens $ "pair" <+> dx <+> dy
+    
   renderRef OUnit = pure $ parens "succeed ()"
   renderRef ODate = pure "decodeDate"
   renderRef OInt = pure "int"

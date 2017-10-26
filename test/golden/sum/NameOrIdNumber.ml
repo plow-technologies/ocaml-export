@@ -20,12 +20,12 @@ let decodeNameOrIdNumber (json : Js_json.t) :(nameOrIdNumber, string) Js_result.
   | "Name" ->
      (match Json.Decode.(field "contents" string json) with
       | v -> Js_result.Ok (Name v)
-      | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeNameOrIdNumber: parse 'contents' " ^ message)
+      | exception Json.Decode.DecodeError message -> Js_result.Error ("Name: " ^ message)
      )
   | "IdNumber" ->
      (match Json.Decode.(field "contents" int json) with
       | v -> Js_result.Ok (IdNumber v)
-      | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeNameOrIdNumber: parse 'contents' " ^ message)
+      | exception Json.Decode.DecodeError message -> Js_result.Error ("IdNumber: " ^ message)
      )
-  | err -> Js_result.Error ("decodeCompany: unknown tag value found '" ^ err ^ "'.")
-  | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeNameOrIdNumber: " ^ message)
+  | err -> Js_result.Error ("Unknown tag value found '" ^ err ^ "'.")
+  | exception Json.Decode.DecodeError message -> Js_result.Error message

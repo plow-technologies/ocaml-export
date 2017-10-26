@@ -63,6 +63,7 @@ nameOrIdNumber =
     "NameOrIdNumber"
     [ toOCamlTypeSource (Proxy :: Proxy NameOrIdNumber)
     , toOCamlEncoderSource (Proxy :: Proxy NameOrIdNumber)
+    , toOCamlDecoderSource (Proxy :: Proxy NameOrIdNumber)
     ]
 
 sumVariant :: OCamlFile

@@ -102,5 +102,5 @@ let decodeSumVariant (json : Js_json.t) :(sumVariant, string) Js_result.t =
          )
       | None -> Js_result.Error ("HasMixed expected an array.")
      )
-  | err -> Js_result.Error ("decodeSumVariant: unknown tag value found '" ^ err ^ "'.")
-  | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumVariant: " ^ message)
+  | err -> Js_result.Error ("Unknown tag value found '" ^ err ^ "'.")
+  | exception Json.Decode.DecodeError message -> Js_result.Error message

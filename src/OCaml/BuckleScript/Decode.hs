@@ -81,8 +81,8 @@ instance HasDecoder OCamlConstructor where
       <$$> indent 2 (foldl (<$$>) "" renderedConstructors)
       <$$> indent 2 footer
     where
-      footer = "| err -> Js_result.Error (\"decodeSumVariant: unknown tag value found '\" ^ err ^ \"'.\")"
-          <$$> "| exception Json.Decode.DecodeError message -> Js_result.Error (\"decodeSumVariant: \" ^ message)"
+      footer = "| err -> Js_result.Error (\"Unknown tag value found '\" ^ err ^ \"'.\")"
+          <$$> "| exception Json.Decode.DecodeError message -> Js_result.Error message"
 
   render (OCamlEnumeratorConstructor _constructors) = fail "OCamlEnumeratorConstructor should be handled at the OCamlDataType level."
   render (OCamlSumOfRecordConstructor _name _constructors) = fail "OCamlEnumeratorConstructor should be handled at the OCamlDataType level."

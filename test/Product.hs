@@ -68,9 +68,10 @@ data Three a b c =
     , threeString :: String
     } deriving (Eq,Show,Generic,OCamlType)
 
-data SubTypeParameter a =
+data SubTypeParameter a b =
   SubTypeParameter
     { listA :: [a]
+    , maybeB :: Maybe b
     } deriving (Eq,Show,Generic,OCamlType)
 
 person :: OCamlFile
@@ -137,7 +138,7 @@ subTypeParameter :: OCamlFile
 subTypeParameter =
   OCamlFile
     "SubTypeParameter"
-    [ toOCamlTypeSource (Proxy :: Proxy (SubTypeParameter TypeParameterRef0))
-    , toOCamlEncoderSource (Proxy :: Proxy (SubTypeParameter TypeParameterRef0))
-    , toOCamlDecoderSource (Proxy :: Proxy (SubTypeParameter TypeParameterRef0)) 
+    [ toOCamlTypeSource (Proxy :: Proxy (SubTypeParameter TypeParameterRef0 TypeParameterRef1))
+    , toOCamlEncoderSource (Proxy :: Proxy (SubTypeParameter TypeParameterRef0 TypeParameterRef1))
+    , toOCamlDecoderSource (Proxy :: Proxy (SubTypeParameter TypeParameterRef0 TypeParameterRef1))
     ]

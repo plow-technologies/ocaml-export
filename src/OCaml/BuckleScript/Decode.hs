@@ -74,7 +74,7 @@ instance HasDecoderRef OCamlDatatype where
   renderRef d@(OCamlDatatype name _) =
     if isTypeParameterRef d
     then
-      pure $ parens ("fun a -> unwrap" <+> parens ("decode" <> (stext . textUppercaseFirst $ name) <+> "a"))
+      pure $ parens ("fun a -> unwrapResult" <+> parens ("decode" <> (stext . textUppercaseFirst $ name) <+> "a"))
     else
       pure $ "decode" <> (stext . textUppercaseFirst $ name)
       

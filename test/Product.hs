@@ -72,7 +72,7 @@ data SubTypeParameter a b c =
   SubTypeParameter
     { listA :: [a]
     , maybeB :: Maybe b
-    , tupleC :: (c,Int)
+    , tupleC :: (c,b)
     } deriving (Eq,Show,Generic,OCamlType)
 
 person :: OCamlFile

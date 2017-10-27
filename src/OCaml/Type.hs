@@ -12,6 +12,7 @@ module OCaml.Type where
 
 import           Data.Int     (Int16, Int32, Int64, Int8)
 import           Data.IntMap
+import           Data.List (nub)
 import           Data.Map
 import           Data.Maybe (catMaybes)
 import           Data.Proxy
@@ -82,10 +83,7 @@ data OCamlValue
   | Values OCamlValue OCamlValue
   deriving (Show, Eq)
 
-isTypeParameterRef :: OCamlDatatype -> Bool
-isTypeParameterRef (OCamlDatatype _ (OCamlValueConstructor (NamedConstructor _ (OCamlTypeParameterRef _)))) = True
-isTypeParameterRef _ = False
-
+-- | Used to fill the type parameters of proxy types
 data TypeParameterRef0 = TypeParameterRef0 deriving (Show, Eq, Generic)
 instance OCamlType TypeParameterRef0 where
   toOCamlType _ = OCamlDatatype "a0" $ OCamlValueConstructor $ NamedConstructor "a0" $ OCamlTypeParameterRef "a0"
@@ -337,7 +335,7 @@ isSumWithRecordsAux _ = False
 
 
 getTypeParameterRefNames :: [OCamlValue] -> [Text]
-getTypeParameterRefNames = concat . (fmap match)
+getTypeParameterRefNames = nub . concat . (fmap match)
   where
     match value =
       case value of
@@ -361,3 +359,9 @@ getTypeParameterRefNamesForOCamlDatatype (OCamlDatatype _ valueConstructor) =
     OCamlSumOfRecordConstructor _ vc -> getO vc
     _ -> []
 getTypeParameterRefNamesForOCamlDatatype _ = []
+
+-- | Matches all of the TypeParameterRefs (TypeParameterRef0 to TypeParameterRef5)
+--   needed to work around the tree structure for special rules for rendering type parameters
+isTypeParameterRef :: OCamlDatatype -> Bool
+isTypeParameterRef (OCamlDatatype _ (OCamlValueConstructor (NamedConstructor _ (OCamlTypeParameterRef _)))) = True
+isTypeParameterRef _ = False

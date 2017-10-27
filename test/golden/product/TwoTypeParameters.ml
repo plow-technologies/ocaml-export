@@ -4,9 +4,9 @@ type ('a0, 'a1) twoTypeParameters =
   ; ttpSecond : 'a1
   }
 
-let encodeTwoTypeParameters (type a0) (type a1) (parseA0 : a0 -> Js_json.t) (parseA1 : a1 -> Js_json.t) (x : (a0, a1) twoTypeParameters) :Js_json.t =
+let encodeTwoTypeParameters (type a0) (type a1) (encodeA0 : a0 -> Js_json.t) (encodeA1 : a1 -> Js_json.t) (x : (a0, a1) twoTypeParameters) :Js_json.t =
   Json.Encode.object_
     [ ( "ttpId", Json.Encode.int x.ttpId )
-    ; ( "ttpFirst", parseA0 x.ttpFirst )
-    ; ( "ttpSecond", parseA1 x.ttpSecond )
+    ; ( "ttpFirst", encodeA0 x.ttpFirst )
+    ; ( "ttpSecond", encodeA1 x.ttpSecond )
     ]

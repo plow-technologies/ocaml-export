@@ -77,11 +77,13 @@ let unwrapOption (oa : 'a option) :'a =
   | Some a -> a
   | None -> raise @@ Json.Decode.DecodeError ""
 
+(*
 let unwrapResult (type a) (r: (a, string) Js_result.t) :a =
   match r with
   | Js_result.Ok a -> a
   | Js_result.Error message -> raise @@ Json.Decode.DecodeError message
-  
+*)
+
 let decodeCompany (json : Js_json.t) :company option =
   match Json.Decode.
     { address = field "address" string json
@@ -479,7 +481,16 @@ let encodeOneTypeParameter (type a0) (parseA0 : a0 -> Js_json.t) (x : a0 oneType
     ; ( "otpFirst", parseA0 x.otpFirst )
     ]
 
+let decodeOneTypeParameter (type a0) (decodeA0 : Js_json.t -> (a0, string) Js_result.t) (json : Js_json.t) :(a0 oneTypeParameter, string) Js_result.t =
+  match Json.Decode.
+    { otpId = field "optId" int json
+    ; otpFirst = field "optFirst" (fun a -> unwrapResult (decodeA0 a)) json
+    }
+  with
+  | v -> Js_result.Ok v
+  | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeOneTypeParameter: " ^ message)
 
+  
 let safeGet (type a) (xs : a Js_array.t) (x : int) :(a,string) Js_result.t =
   match xs.(x) with
   | value -> Js_result.Ok value

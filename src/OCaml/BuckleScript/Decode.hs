@@ -25,17 +25,35 @@ class HasDecoder a where
 class HasDecoderRef a where
   renderRef :: a -> Reader Options Doc
 
+renderTypeParametersAux :: [OCamlValue] -> (Doc,Doc)
+renderTypeParametersAux ocamlValues = do
+  let typeParameterNames = getTypeParameterRefNames ocamlValues
+      typeDecs = (\t -> "(type " <> (stext t) <> ")") <$> typeParameterNames :: [Doc]
+      encoderDecs  = (\t -> "(decode" <> (stext $ textUppercaseFirst t) <+> ":" <+> "Js_json.t -> (" <> (stext t) <> ", string) Js_result.t)" ) <$> typeParameterNames :: [Doc]
+      typeParams = foldl (<>) "" $ if length typeParameterNames > 1 then  ["("] <> (L.intersperse ", " $ stext <$> typeParameterNames) <> [") "] else ((\x -> stext $ x <> " ") <$> typeParameterNames) :: [Doc]
+  (foldl (<+>) "" (typeDecs ++ encoderDecs), typeParams )
+
+getOCamlValues :: ValueConstructor -> [OCamlValue]
+getOCamlValues (NamedConstructor     _ value) = [value]
+getOCamlValues (RecordConstructor    _ value) = [value]
+getOCamlValues (MultipleConstructors cs)      = concat $ getOCamlValues <$> cs
+
+renderTypeParameters :: OCamlConstructor -> (Doc,Doc)
+renderTypeParameters (OCamlValueConstructor vc) = renderTypeParametersAux $ getOCamlValues vc
+renderTypeParameters (OCamlSumOfRecordConstructor _ vc) = renderTypeParametersAux $ getOCamlValues vc
+renderTypeParameters _ = ("","")
+
 instance HasDecoder OCamlDatatype where
-  render d@(OCamlDatatype name (OCamlEnumeratorConstructor constructors)) = do
+  render d@(OCamlDatatype name cs@(OCamlEnumeratorConstructor constructors)) = do
     dv <- mapM render constructors
     fnName <- renderRef d
+    let (tps,aps) = renderTypeParameters cs
+        returnType =  "(" <> aps <> (stext . textLowercaseFirst $ name) <> ", string) Js_result.t ="
     pure $
-      "let" <+> fnName <+> "(json : Js_json.t) :" <> returnType <$$>
+      "let" <+> fnName <+> tps <+>"(json : Js_json.t) :" <> returnType <$$>
       indent 2 ("match Js_json.decodeString json with" <$$>
       foldl1 (<$$>) dv <$$> footer fnName)
     where
-      returnType =  "(" <> (stext . textLowercaseFirst $ name) <> ", string) Js_result.t ="
-
       footer fnName
         =    "| Some err -> Js_result.Error (\"" <> fnName <> ": unknown enumeration '\" ^ err ^ \"'.\")"
         <$$> "| None -> Js_result.Error \"" <> fnName <> ": expected a top-level JSON string.\""
@@ -43,12 +61,11 @@ instance HasDecoder OCamlDatatype where
   render d@(OCamlDatatype name constructor) = do
     fnName <- renderRef d
     ctor <- render constructor
-    return
-       $   "let" <+> fnName <+> "(json : Js_json.t) :" <> returnType
+    let (tps,aps) = renderTypeParameters constructor
+        returnType = "(" <> aps <> (stext . textLowercaseFirst $ name) <> ", string) Js_result.t ="
+    pure
+       $   "let" <+> fnName <+> tps <+> "(json : Js_json.t) :" <> returnType
       <$$> ctor
-
-    where
-      returnType = "(" <> (stext . textLowercaseFirst $ name) <> ", string) Js_result.t ="
 
   render (OCamlPrimitive primitive) = renderRef primitive
 
@@ -190,7 +207,10 @@ instance HasDecoder OCamlValue where
     pure $ "(fun a -> unwrapResult (decode" <> stext name <+> "a))"
 
   render (OCamlPrimitiveRef primitive) = renderRef primitive
-  render (OCamlTypeParameterRef _) = pure "" -- handled elsewhere
+
+  render (OCamlTypeParameterRef name) =
+    pure $ ("(fun a -> unwrapResult (decode" <> stext (textUppercaseFirst name)) <+> "a))"
+
   render (Values x y) = do
     dx <- render x
     dy <- render y

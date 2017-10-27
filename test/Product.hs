@@ -113,6 +113,7 @@ oneTypeParameter =
     "OneTypeParameter"
     [ toOCamlTypeSource (Proxy :: Proxy (OneTypeParameter TypeParameterRef0))
     , toOCamlEncoderSource (Proxy :: Proxy (OneTypeParameter TypeParameterRef0))
+    , toOCamlDecoderSource (Proxy :: Proxy (OneTypeParameter TypeParameterRef0))
     ]
 
 twoTypeParameters :: OCamlFile

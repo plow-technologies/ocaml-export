@@ -27,7 +27,7 @@ renderTypeParametersAux :: [OCamlValue] -> (Doc,Doc)
 renderTypeParametersAux ocamlValues = do
   let typeParameterNames = getTypeParameterRefNames ocamlValues
       typeDecs = (\t -> "(type " <> (stext t) <> ")") <$> typeParameterNames :: [Doc]
-      parserDecs  = (\t -> "(parse" <> (stext $ textUppercaseFirst t) <+> ":" <+> (stext t) <+> "-> Js_json.t)" ) <$> typeParameterNames :: [Doc]
+      parserDecs  = (\t -> "(encode" <> (stext $ textUppercaseFirst t) <+> ":" <+> (stext t) <+> "-> Js_json.t)" ) <$> typeParameterNames :: [Doc]
       typeParams = foldl (<>) "" $ if length typeParameterNames > 1 then  ["("] <> (L.intersperse ", " $ stext <$> typeParameterNames) <> [") "] else ((\x -> stext $ x <> " ") <$> typeParameterNames) :: [Doc]
   (foldl (<+>) "" (typeDecs ++ parserDecs), typeParams )
 
@@ -191,7 +191,7 @@ instance HasEncoder OCamlValue where
       dquotes (stext (fieldModifier name)) <> comma <+>
       (valueBody <+> "x." <> stext name)
   render (OCamlTypeParameterRef name) =
-    return $ ("parse" <> stext (textUppercaseFirst name))
+    return $ ("encode" <> stext (textUppercaseFirst name))
   render (OCamlPrimitiveRef primitive) = renderRef primitive
   render (OCamlRef name) = pure $ "encode" <> stext name
   render (Values x y) = do

@@ -70,7 +70,14 @@ instance HasDecoder OCamlDatatype where
   render (OCamlPrimitive primitive) = renderRef primitive
 
 instance HasDecoderRef OCamlDatatype where
-  renderRef (OCamlDatatype name _) = pure $ "decode" <> stext name
+  -- this should only catch type parameters
+  renderRef d@(OCamlDatatype name _) =
+    if isTypeParameterRef d
+    then
+      pure $ parens ("fun a -> unwrap" <+> parens ("decode" <> (stext . textUppercaseFirst $ name) <+> "a"))
+    else
+      pure $ "decode" <> (stext . textUppercaseFirst $ name)
+      
   renderRef (OCamlPrimitive primitive) = renderRef primitive
 
 instance HasDecoder OCamlConstructor where
@@ -80,7 +87,7 @@ instance HasDecoder OCamlConstructor where
        $   indent 2
            ("match Json.Decode." <> dv <+> "json" <+> "with"
       <$$> "| v -> Js_result.Ok" <+> parens (stext name <+> "v")
-      <$$> "| exception Json.Decode.DecodeError msg -> Js_result.Error (\"decode" <> (stext name) <> ": \" ^ msg)"
+      <$$> "| exception Json.Decode.DecodeError msg -> Js_result.Error (\"decode" <> (stext . textUppercaseFirst $ name) <> ": \" ^ msg)"
            )
            
   render (OCamlValueConstructor (RecordConstructor name value)) = do
@@ -90,7 +97,7 @@ instance HasDecoder OCamlConstructor where
       <$$> (indent 4 ("{" <+> dv <$$> "}"))
       <$$> "  with"
       <$$> "  | v -> Js_result.Ok v"
-      <$$> "  | exception Json.Decode.DecodeError message -> Js_result.Error (\"decode" <> stext name <> ": \" ^ message)"
+      <$$> "  | exception Json.Decode.DecodeError message -> Js_result.Error (\"decode" <> (stext . textUppercaseFirst $ name) <> ": \" ^ message)"
 
   render (OCamlValueConstructor (MultipleConstructors constructors)) = do
     renderedConstructors <- mapM (renderSum . OCamlValueConstructor) constructors
@@ -204,12 +211,12 @@ renderConstructorArgs i val = do
 
 instance HasDecoder OCamlValue where
   render (OCamlRef name) = do
-    pure $ "(fun a -> unwrapResult (decode" <> stext name <+> "a))"
+    pure $ "(fun a -> unwrapResult (decode" <> (stext . textUppercaseFirst $ name) <+> "a))"
 
   render (OCamlPrimitiveRef primitive) = renderRef primitive
 
   render (OCamlTypeParameterRef name) =
-    pure $ ("(fun a -> unwrapResult (decode" <> stext (textUppercaseFirst name)) <+> "a))"
+    pure $ "(fun a -> unwrapResult (decode" <> (stext . textUppercaseFirst $ name) <+> "a))"
 
   render (Values x y) = do
     dx <- render x
@@ -234,7 +241,7 @@ instance HasDecoderRef OCamlPrimitive where
 
   renderRef (OList (OCamlDatatype name _)) = do
 
-    return . parens $ "list" <+> (parens $ "fun a -> unwrapResult (decode" <> stext name <+> "a)")
+    return . parens $ "list" <+> (parens $ "fun a -> unwrapResult (decode" <> (stext . textUppercaseFirst $ name) <+> "a)")
 
   renderRef (OList datatype) = do
     dt <- renderRef datatype

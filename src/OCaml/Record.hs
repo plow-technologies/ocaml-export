@@ -8,7 +8,7 @@ module OCaml.Record
   ) where
 
 import           Control.Monad.Reader
-import           Data.Maybe (catMaybes)
+import           Data.Maybe (catMaybes, maybeToList)
 import           Data.Monoid
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -30,6 +30,13 @@ getOCamlTypeParameterRef :: OCamlValue -> [Doc]
 getOCamlTypeParameterRef (OCamlTypeParameterRef name) = [stext ("'" <> name)]
 getOCamlTypeParameterRef (OCamlField _ v1) = getOCamlTypeParameterRef v1
 getOCamlTypeParameterRef (Values v1 v2) = getOCamlTypeParameterRef v1 ++ getOCamlTypeParameterRef v2
+getOCamlTypeParameterRef (OCamlPrimitiveRef (OList v1)) = maybeToList $ renderDatatype v1
+getOCamlTypeParameterRef (OCamlPrimitiveRef (OOption v1)) = maybeToList $ renderDatatype v1
+getOCamlTypeParameterRef (OCamlPrimitiveRef (OTuple2 v1 v2)) = (maybeToList $ renderDatatype v1) ++ (maybeToList $ renderDatatype v2)
+getOCamlTypeParameterRef (OCamlPrimitiveRef (OTuple3 v1 v2 v3)) = (maybeToList $ renderDatatype v1) ++ (maybeToList $ renderDatatype v2) ++ (maybeToList $ renderDatatype v3)
+getOCamlTypeParameterRef (OCamlPrimitiveRef (OTuple4 v1 v2 v3 v4)) = (maybeToList $ renderDatatype v1) ++ (maybeToList $ renderDatatype v2) ++ (maybeToList $ renderDatatype v3) ++ (maybeToList $ renderDatatype v4)
+getOCamlTypeParameterRef (OCamlPrimitiveRef (OTuple5 v1 v2 v3 v4 v5)) = (maybeToList $ renderDatatype v1) ++ (maybeToList $ renderDatatype v2) ++ (maybeToList $ renderDatatype v3) ++ (maybeToList $ renderDatatype v4) ++ (maybeToList $ renderDatatype v5)
+getOCamlTypeParameterRef (OCamlPrimitiveRef (OTuple6 v1 v2 v3 v4 v5 v6)) = (maybeToList $ renderDatatype v1) ++ (maybeToList $ renderDatatype v2) ++ (maybeToList $ renderDatatype v3) ++ (maybeToList $ renderDatatype v4) ++ (maybeToList $ renderDatatype v5) ++ (maybeToList $ renderDatatype v6)
 getOCamlTypeParameterRef _ = []
 
 getOCamlValues :: ValueConstructor -> [Doc]
@@ -37,10 +44,21 @@ getOCamlValues (NamedConstructor     _ value) = getOCamlTypeParameterRef value
 getOCamlValues (RecordConstructor    _ value) = getOCamlTypeParameterRef value
 getOCamlValues (MultipleConstructors cs)      = concat $ getOCamlValues <$> cs
 
-renderTypeParameters :: OCamlConstructor -> Reader Options Doc
-renderTypeParameters (OCamlValueConstructor vc) = return $ mkDocList (getOCamlValues vc)
-renderTypeParameters (OCamlSumOfRecordConstructor _ vc) = return $ mkDocList (getOCamlValues vc)  
-renderTypeParameters _ = return ""
+renderTypeParameters' :: OCamlConstructor -> Maybe Doc
+renderTypeParameters' (OCamlValueConstructor vc) = Just $ mkDocList (getOCamlValues vc)
+renderTypeParameters' (OCamlSumOfRecordConstructor _ vc) = Just $ mkDocList (getOCamlValues vc)  
+renderTypeParameters' _ = Nothing
+
+renderDatatype :: OCamlDatatype -> Maybe Doc
+renderDatatype (OCamlDatatype _ constructor) = renderTypeParameters' constructor
+renderDatatype (OCamlPrimitive _primitive) = Nothing --Just $ mkDocList . getOCamlTypeParameterRef . OCamlPrimitiveRef $ primitive
+
+renderTypeParameters :: OCamlConstructor -> Doc
+renderTypeParameters constructor =
+  case renderTypeParameters' constructor of
+    Just doc -> doc
+    Nothing -> ""
+
 
 -- | For Haskell Sum of Records, create OCaml record types of each RecordConstructorn
 makeAuxTypeDef :: Text -> ValueConstructor -> Reader Options (Maybe (Doc,(Text,ValueConstructor)))
@@ -71,25 +89,25 @@ instance HasType OCamlDatatype where
     vs' <- catMaybes <$> sequence (makeAuxTypeDef typeName <$> css)
     let vs = msuffix (line <> line) (fst <$> vs')
     let cs' = replaceRecordConstructors (snd <$> vs') <$> css
-    typeParameters <- renderTypeParameters constructor
+    let typeParameters = renderTypeParameters constructor
     name <- renderRef d
     ctor <- render (OCamlValueConstructor $ MultipleConstructors cs')
     return $ vs <> (nest 2 $ "type" <+> typeParameters <+> name <+> "=" <$$> "|" <+> ctor)
 
   render d@(OCamlDatatype _ constructor@(OCamlValueConstructor (RecordConstructor _ _))) = do
-    typeParameters <- renderTypeParameters constructor
+    let typeParameters = renderTypeParameters constructor
     name <- renderRef d
     ctor <- render constructor
     return . nest 2 $ "type" <+> typeParameters <+> name <+> "=" <$$> ctor
 
   render d@(OCamlDatatype _typeName cs@(OCamlValueConstructor (MultipleConstructors _css))) = do
-    typeParameters <- renderTypeParameters cs
+    let typeParameters = renderTypeParameters cs
     name <- renderRef d
     ctor <- render cs
     return . nest 2 $ "type" <+> typeParameters <+> name <+> "=" <$$> "|" <+> ctor
 
   render d@(OCamlDatatype _ constructor) = do
-    typeParameters <- renderTypeParameters constructor
+    let typeParameters = renderTypeParameters constructor
     name <- renderRef d
     ctor <- render constructor
     return . nest 2 $ "type" <+> typeParameters <+> name <+> "=" <$$> "|" <+> ctor
@@ -97,7 +115,7 @@ instance HasType OCamlDatatype where
   render (OCamlPrimitive primitive) = renderRef primitive
 
 instance HasTypeRef OCamlDatatype where
-  renderRef (OCamlDatatype typeName _) = pure (stext $ textLowercaseFirst typeName)
+  renderRef d@(OCamlDatatype typeName _) = pure (stext $ (if isTypeParameterRef d then "'" else "") <> textLowercaseFirst typeName)
   renderRef (OCamlPrimitive primitive) = renderRef primitive
 
 instance HasType OCamlConstructor where

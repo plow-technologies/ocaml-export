@@ -23,7 +23,6 @@ spec = do
     testProduct three "ThreeTypeParameters"
     testProduct subTypeParameter "SubTypeParameter"
 
-
 data Person = Person
   { id :: Int
   , name :: Maybe String
@@ -71,7 +70,7 @@ data Three a b c =
 
 data SubTypeParameter a =
   SubTypeParameter
-    { as :: [a]
+    { listA :: [a]
     } deriving (Eq,Show,Generic,OCamlType)
 
 person :: OCamlFile
@@ -140,4 +139,5 @@ subTypeParameter =
     "SubTypeParameter"
     [ toOCamlTypeSource (Proxy :: Proxy (SubTypeParameter TypeParameterRef0))
     , toOCamlEncoderSource (Proxy :: Proxy (SubTypeParameter TypeParameterRef0))
+    , toOCamlDecoderSource (Proxy :: Proxy (SubTypeParameter TypeParameterRef0)) 
     ]

@@ -36,7 +36,7 @@ data OCamlPrimitive
   | OUnit -- ()
   | OList OCamlDatatype -- ... list
   | OOption OCamlDatatype -- ... option
-  | ODict OCamlPrimitive OCamlDatatype -- Js_dict
+  | ODict OCamlPrimitive OCamlDatatype -- Js_dict.t
   | OTuple2 OCamlDatatype OCamlDatatype -- (*)
   | OTuple3 OCamlDatatype OCamlDatatype OCamlDatatype -- (**)
   | OTuple4 OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype -- (***)
@@ -82,29 +82,33 @@ data OCamlValue
   | Values OCamlValue OCamlValue
   deriving (Show, Eq)
 
+isTypeParameterRef :: OCamlDatatype -> Bool
+isTypeParameterRef (OCamlDatatype _ (OCamlValueConstructor (NamedConstructor _ (OCamlTypeParameterRef _)))) = True
+isTypeParameterRef _ = False
+
 data TypeParameterRef0 = TypeParameterRef0 deriving (Show, Eq, Generic)
 instance OCamlType TypeParameterRef0 where
-  toOCamlType _ = OCamlDatatype "a0" (OCamlValueConstructor (MultipleConstructors []))
+  toOCamlType _ = OCamlDatatype "a0" $ OCamlValueConstructor $ NamedConstructor "a0" $ OCamlTypeParameterRef "a0"
 
 data TypeParameterRef1 = TypeParameterRef1 deriving (Show, Eq)
 instance OCamlType TypeParameterRef1 where
-  toOCamlType _ = OCamlDatatype "a1" (OCamlValueConstructor (MultipleConstructors []))
+  toOCamlType _ = OCamlDatatype "a1" $ OCamlValueConstructor $ NamedConstructor "a1" $ OCamlTypeParameterRef "a1"
 
 data TypeParameterRef2 = TypeParameterRef2 deriving (Show, Eq)
 instance OCamlType TypeParameterRef2 where
-  toOCamlType _ = OCamlDatatype "a2" (OCamlValueConstructor (MultipleConstructors []))
+  toOCamlType _ = OCamlDatatype "a2" $ OCamlValueConstructor $ NamedConstructor "a2" $ OCamlTypeParameterRef "a2"
 
 data TypeParameterRef3 = TypeParameterRef3 deriving (Show, Eq)
 instance OCamlType TypeParameterRef3 where
-  toOCamlType _ = OCamlDatatype "a3" (OCamlValueConstructor (MultipleConstructors []))
+  toOCamlType _ = OCamlDatatype "a3" $ OCamlValueConstructor $ NamedConstructor "a3" $ OCamlTypeParameterRef "a3"
 
 data TypeParameterRef4 = TypeParameterRef4 deriving (Show, Eq)
 instance OCamlType TypeParameterRef4 where
-  toOCamlType _ = OCamlDatatype "a4" (OCamlValueConstructor (MultipleConstructors []))
+  toOCamlType _ = OCamlDatatype "a4" $ OCamlValueConstructor $ NamedConstructor "a4" $ OCamlTypeParameterRef "a4"
 
 data TypeParameterRef5 = TypeParameterRef5 deriving (Show, Eq)
 instance OCamlType TypeParameterRef5 where
-  toOCamlType _ = OCamlDatatype "a5" (OCamlValueConstructor (MultipleConstructors []))
+  toOCamlType _ = OCamlDatatype "a5" $ OCamlValueConstructor $ NamedConstructor "a5" $ OCamlTypeParameterRef "a5"
 
 ------------------------------------------------------------
 class OCamlType a where
@@ -340,4 +344,20 @@ getTypeParameterRefNames = concat . (fmap match)
         (OCamlTypeParameterRef name) -> [name]
         (Values v1 v2) -> match v1 ++ match v2
         (OCamlField _ v1) -> match v1
+        (OCamlPrimitiveRef (OList v1)) -> getTypeParameterRefNamesForOCamlDatatype v1
+        (OCamlPrimitiveRef (OOption v1)) -> getTypeParameterRefNamesForOCamlDatatype v1
+        (OCamlPrimitiveRef (OTuple2 v1 v2)) -> getTypeParameterRefNamesForOCamlDatatype v1 ++ getTypeParameterRefNamesForOCamlDatatype v2
         _ -> []
+
+getO :: ValueConstructor -> [Text]
+getO (NamedConstructor     _ value) = getTypeParameterRefNames [value]
+getO (RecordConstructor    _ value) = getTypeParameterRefNames [value]
+getO (MultipleConstructors cs)      = concat $ getO <$> cs
+
+getTypeParameterRefNamesForOCamlDatatype :: OCamlDatatype -> [Text]
+getTypeParameterRefNamesForOCamlDatatype (OCamlDatatype _ valueConstructor) =
+  case valueConstructor of
+    OCamlValueConstructor vc -> getO vc
+    OCamlSumOfRecordConstructor _ vc -> getO vc
+    _ -> []
+getTypeParameterRefNamesForOCamlDatatype _ = []

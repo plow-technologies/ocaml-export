@@ -72,7 +72,7 @@ instance HasEncoder OCamlDatatype where
   render (OCamlPrimitive primitive) = renderRef primitive
     
 instance HasEncoderRef OCamlDatatype where
-  renderRef (OCamlDatatype name _) = pure $ "encode" <> stext name
+  renderRef (OCamlDatatype name _) = pure $ "encode" <> (stext . textUppercaseFirst $ name)
   renderRef (OCamlPrimitive primitive) = renderRef primitive
 
 instance HasEncoder OCamlConstructor where
@@ -123,7 +123,7 @@ renderOutsideEncoder :: Text -> Text -> Reader Options Doc
 renderOutsideEncoder typeName name =  
    return $
          "|" <+> (stext name) <+> "y0 ->"
-    <$$> "   (match (Js.Json.decodeObject (encode" <> (stext typeName) <> (stext name) <+> "y0)) with"
+    <$$> "   (match (Js.Json.decodeObject (encode" <> (stext . textUppercaseFirst $ typeName) <> (stext name) <+> "y0)) with"
     <$$> "    | Some dict ->"
     <$$> "       Js.Dict.set dict \"tag\" (Js.Json.string \"" <> (stext name) <> "\");"
     <$$> "       Js.Json.object_ dict"
@@ -191,9 +191,9 @@ instance HasEncoder OCamlValue where
       dquotes (stext (fieldModifier name)) <> comma <+>
       (valueBody <+> "x." <> stext name)
   render (OCamlTypeParameterRef name) =
-    return $ ("encode" <> stext (textUppercaseFirst name))
+    pure $ "encode" <> (stext . textUppercaseFirst $ name)
   render (OCamlPrimitiveRef primitive) = renderRef primitive
-  render (OCamlRef name) = pure $ "encode" <> stext name
+  render (OCamlRef name) = pure $ "encode" <> (stext . textUppercaseFirst $ name)
   render (Values x y) = do
     dx <- render x
     dy <- render y

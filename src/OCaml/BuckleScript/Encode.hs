@@ -172,16 +172,6 @@ renderSum (OCamlEnumeratorConstructor constructors) =
   return $ foldl1 (<$$>) $ (\(EnumeratorConstructor name) -> "|" <+> stext name <+> "->" <$$> "   Json.Encode.string" <+> dquotes (stext name)) <$> constructors
 
 renderSum _ = return ""
-{-
-renderEnumeration :: OCamlConstructor -> Reader Options Doc
-renderEnumeration (OCamlConstructor (NamedConstructor name _)) =
-  return $ "|" <+> stext name <+> "->" <$$>
-      "   Json.Encode.string" <+> dquotes (stext name)
-renderEnumeration (OCamlConstructor (MultipleConstructors constrs)) = do
-  dc <- mapM renderEnumeration constrs
-  return $ foldl1 (<$$>) dc
-renderEnumeration c = render c
--}
 
 instance HasEncoder OCamlValue where
   render (OCamlField name value) = do
@@ -287,6 +277,9 @@ renderVariable (_ : ds) (OCamlPrimitiveRef OUnit) =
 renderVariable (d : ds) (OCamlPrimitiveRef ref) = do
   r <- renderRef ref
   return (r <+> d, ds)
+renderVariable (d : ds) ref@(OCamlTypeParameterRef _) = do
+  r <- render ref
+  return (r <+> d, ds)
 renderVariable ds (Values l r) = do
   (left, dsl) <- renderVariable ds l
   (right, dsr) <- renderVariable dsl r
@@ -295,4 +288,3 @@ renderVariable ds f@(OCamlField _ _) = do
   f' <- render f
   return (f', ds)
 renderVariable [] _ = error "Amount of variables does not match variables."
-renderVariable _  _ = error "This variable is not intended to be rendered."  

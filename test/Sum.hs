@@ -21,12 +21,18 @@ spec = do
 --    testSum tuple "Tuple"
     testSum withTuple "WithTuple"
     testSum sumWithRecord "SumWithRecord"
+    testSum resultRecord "Result"
     
 data OnOrOff = On | Off
   deriving (Show,Eq,Generic, OCamlType)
 
 data NameOrIdNumber = Name String | IdNumber Int
-  deriving (Show,Eq,Generic, OCamlType)
+  deriving (Show, Eq, Generic, OCamlType)
+
+data Result a b
+  = Success a
+  | Error b
+  deriving (Show, Eq, Generic, OCamlType)
 
 data SumVariant
   = HasNothing
@@ -99,4 +105,13 @@ sumWithRecord =
     "SumWithRecord"
     [ toOCamlTypeSource (Proxy :: Proxy SumWithRecord)
     , toOCamlEncoderSource (Proxy :: Proxy SumWithRecord)
+    ]
+
+resultRecord :: OCamlFile
+resultRecord =
+  OCamlFile
+    "Result"
+    [ toOCamlTypeSource (Proxy :: Proxy (Result TypeParameterRef0 TypeParameterRef1))
+    , toOCamlEncoderSource (Proxy :: Proxy (Result TypeParameterRef0 TypeParameterRef1))
+    , toOCamlDecoderSource (Proxy :: Proxy (Result TypeParameterRef0 TypeParameterRef1))
     ]

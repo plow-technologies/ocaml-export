@@ -22,6 +22,10 @@ spec = do
     testSum withTuple "WithTuple"
     testSum sumWithRecord "SumWithRecord"
     testSum resultRecord "Result"
+ --   it "" $
+--      new
+--      shouldBe True False
+    testSum newTypeRecord "NewType"
     
 data OnOrOff = On | Off
   deriving (Show,Eq,Generic, OCamlType)
@@ -53,6 +57,10 @@ data SumWithRecord
   = A1 {a1 :: Int}
   | B2 {b2 :: String, b3 :: Int}
   deriving (Show,Eq,Generic, OCamlType)
+
+newtype NewType
+  = NewType Int
+  deriving (Show,Eq,Generic,OCamlType)
 
 onOrOff :: OCamlFile
 onOrOff =
@@ -114,4 +122,13 @@ resultRecord =
     [ toOCamlTypeSource (Proxy :: Proxy (Result TypeParameterRef0 TypeParameterRef1))
     , toOCamlEncoderSource (Proxy :: Proxy (Result TypeParameterRef0 TypeParameterRef1))
     , toOCamlDecoderSource (Proxy :: Proxy (Result TypeParameterRef0 TypeParameterRef1))
+    ]
+
+newTypeRecord :: OCamlFile
+newTypeRecord =
+  OCamlFile
+    "NewType"
+    [ toOCamlTypeSource (Proxy :: Proxy NewType)
+    , toOCamlEncoderSource (Proxy :: Proxy NewType)
+    , toOCamlDecoderSource (Proxy :: Proxy NewType)
     ]

@@ -27,6 +27,31 @@ type person =
   ; name : (string) option
   }
 
+
+type person3 =
+  { id : int
+  ; name : (string) option
+  ; created : Js_date.t
+  }
+
+let encodePerson3 (x : person3) :Js_json.t =
+  Json.Encode.object_
+    [ ( "id", Json.Encode.int x.id )
+    ; ( "name", Json.Encode.optional Json.Encode.string x.name )
+    ; ( "created", Json.Encode.date x.created )
+    ]
+
+let decodePerson3 (json : Js_json.t) :(person3, string) Js_result.t =
+  match Json.Decode.
+    { id = field "id" int json
+    ; name = optional (field "name" string) json
+    ; created = field "created" date json
+    }
+  with
+  | v -> Js_result.Ok v
+  | exception Json.Decode.DecodeError message -> Js_result.Error ("decodePerson: " ^ message)
+
+  
 let bob = { id = 1; name = Some "Bob"}
 let billy = { bob with name = Some "Billy"}   
 let encodePerson (x : person) :Js_json.t =
@@ -230,7 +255,7 @@ let encodeSubTypeParameter (type a0) (type a1) (type a2) (encodeA0 : a0 -> Js_js
   Json.Encode.object_
     [ ( "listA", (Json.Encode.list encodeA0) x.listA )
     ; ( "maybeB", (fun a -> Option.default Json.Encode.null (Option.map encodeA1 a)) x.maybeB )
-    ; ( "tupleC", (fun (a,b) -> Json.Encode.array [| encodeA2 a ; Json.Encode.int b  |]) x.tupleC )
+    ; ( "tupleC", Json.Encode.tuple2 encodeA2 Json.Encode.int x.tupleC )
     ]
 
 let decodeSubTypeParameter (type a0) (type a1) (type a2) (decodeA0 : Js_json.t -> (a0, string) Js_result.t) (decodeA1 : Js_json.t -> (a1, string) Js_result.t) (decodeA2 : Js_json.t -> (a2, string) Js_result.t) (json : Js_json.t) :((a0, a1, a2) subTypeParameter, string) Js_result.t =
@@ -567,9 +592,37 @@ let safeGet2 (type a) (xs : a Js_array.t) (i :int) :a Js_option.t =
   if i >= 0 && i < Js_array.length xs + 1 then Some xs.(i) else None
 
 
+type newUser =
+  { name : string
+  ; created : Js_date.t
+  }
+
+let encodeNewUser (x : newUser) :Js_json.t =
+  Json.Encode.object_
+    [ ( "name", Json.Encode.string x.name )
+    ; ( "created", Json.Encode.date x.created )
+    ]
+
+let decodeNewUser (json : Js_json.t) :(newUser,string) Js_result.t =
+  match Json.Decode.
+    { name = field "name" string json
+    ; created = field "created" date json    
+                   (*    ; created = field "created" (fun a -> let date = Js_date.fromString (string a) in if (Js_float.isNaN (Js_date.getTime date)) then raise @@ Json.Decode.DecodeError "invalid date" else date) json *)
+    }
+  with
+  | v -> Js_result.Ok v
+  | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeOneTypeParameter: " ^ message)
+
+
 
 (* let decode (x : card) :Js_json.t option = *)
 (*
+    "fromString_invalid", (fun _ ->
+      Ok( Js.Date.fromString "gibberish"
+          |> Js.Date.getTime
+          |> Js_float.isNaN
+));
+
 
 
   let parseCompanyJson json :company =>
@@ -617,31 +670,7 @@ let p = Js.Json.parseExn {| {"tag": "IdNumber", "contents": 1} |} in let pp = de
 
 let p = Js.Json.parseExn {| {"tag": "IdNumber", "contents": "hello"} |} in let pp = decodeNameOrIdNumber p in Js.log pp;
 
-(*
-type person =
-  { id: int
-  ; name: string
-  }
 
-let encodePerson (x: person) =
-  Json.Encode.object_
-    [ ("id", Json.Encode.int x.id)
-    ; ("name", Json.Encode.string x.name)
-    ]
-
-let decodePerson (json : Js_json.t) :person =
-  Json.Decode.
-    { id = field "id" int json
-    ; name = field "name" string json
-    }
-
-let decodePersonSafe (json : Js_json.t) :person option =
-  match decodePerson json with
-  | exception Invalid_argument _ -> None
-  | v -> Some v
-         *)
-
-(* length *)
 let x = [| 1 ; 2 ; 3 |] in Js.log (safeGet2 x 2);
 
 let zzz = HasMultipleInts (1, 2) in Js.log zzz;
@@ -654,3 +683,17 @@ let yy = Js.Json.parseExn {| {"tag" : "HasSingleTuple", "contents" : [1, "asdf"]
 
 let zzz = Js.Json.parseExn "[1, 2, \"c\"]" in let pp = arrayOfUndecodedValues zzz in Js.log pp;
 
+
+let now = Js_date.now () in
+  let zed : newUser = {name = "Zed" ; created = Js_date.fromFloat now} in
+  Js.log zed;
+  let zzed = encodeNewUser zed in
+  Js.log zzed;
+  let zzzed = decodeNewUser zzed in
+  Js.log zzzed;
+  let newUserJson2 = Js.Json.parseExn {| {"name" : "Johnson", "created" : "2017-10-30T07:38:37.085648Z"} |} in
+  let newUserJson = Js.Json.parseExn {| {"name" : "Johnson", "created" : "asdf"} |} in
+  let johnson = decodeNewUser newUserJson in
+  Js.log johnson;
+  let jsonNow = Js_date.toJSON (Js_date.fromFloat now) in
+  Js.log jsonNow;

@@ -262,7 +262,7 @@ instance HasDecoderRef OCamlPrimitive where
     pure $ parens $ "pair" <+> dx <+> dy
     
   renderRef OUnit = pure $ parens "succeed ()"
-  renderRef ODate = pure "decodeDate"
+  renderRef ODate = pure "date"
   renderRef OInt = pure "int"
   renderRef OBool = pure "bool"
   renderRef OChar = pure "char"

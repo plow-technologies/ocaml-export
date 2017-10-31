@@ -5,6 +5,7 @@
 module Product (spec) where
 
 import Data.Proxy
+import Data.Time
 import GHC.Generics
 import OCaml.Export
 import Test.Hspec
@@ -26,6 +27,7 @@ spec = do
 data Person = Person
   { id :: Int
   , name :: Maybe String
+  , created :: UTCTime
   } deriving (Show, Eq, Generic, OCamlType)
 
 data Company = Company

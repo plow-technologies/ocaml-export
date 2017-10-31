@@ -1,6 +1,8 @@
 .stack-work
 playground/lib
 playground/node_modules
+test/golden/lib
+test/golden/node_modules
 .merlin
 \#*#
 .#*

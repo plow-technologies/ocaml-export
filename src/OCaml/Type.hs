@@ -277,11 +277,22 @@ instance HasOCamlComparable String where
 instance OCamlType Int where
   toOCamlType _ = OCamlPrimitive OInt
 
+instance OCamlType Integer where
+  toOCamlType _ = OCamlPrimitive OInt
+
 instance OCamlType Char where
   toOCamlType _ = OCamlPrimitive OChar
 
 instance OCamlType Bool where
   toOCamlType _ = OCamlPrimitive OBool
+
+{-
+ToJSON and FromJSON instances are provided for the following types in aeson
+-- need to add Word, LocalTime, ZonedTime, IntSet, CTime, Version, Natural
+-- TimeOfDay, UTCTime, NominalDiffTime, Day, DiffTime, UUID, DotNetTime
+-- Value, Dual, First, Last, IntMap, Tree, Seq, Vector, HashSet, Proxy
+-- Const Tagged, Dual, First, Last, tuple up to lenght of 15
+-}
 
 -- | Whether a set of constructors is an enumeration, i.e. whether they lack
 --   values. data A = A | B | C would be simple data A = A Int | B | C would not

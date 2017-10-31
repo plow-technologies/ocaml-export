@@ -191,7 +191,7 @@ instance HasEncoder OCamlValue where
   render _ = error "HasEncoderRef OCamlValue: should not happen"
 
 instance HasEncoderRef OCamlPrimitive where
-  renderRef ODate   = pure $ parens "Json.Encode.string << toString"
+  renderRef ODate   = pure "Json.Encode.date"
   renderRef OUnit   = pure "Json.Encode.null"
   renderRef OInt    = pure "Json.Encode.int"
   renderRef OChar   = pure "Json.Encode.string"
@@ -204,37 +204,42 @@ instance HasEncoderRef OCamlPrimitive where
     return . parens $ "Json.Encode.list" <+> dd
   renderRef (OOption datatype) = do
     dd <- renderRef datatype
-    return . parens $ "fun a -> Option.default Json.Encode.null (Option.map" <+> dd <+> "a)"
-  renderRef (OTuple2 a b) = do
-    da <- renderRef a
-    db <- renderRef b
-    return . parens $ "fun (a,b) -> Json.Encode.array [|" <+> da <+> "a ;" <+> db <+> "b" <+> " |]"
-  renderRef (OTuple3 a b c) = do
-    da <- renderRef a
-    db <- renderRef b
-    dc <- renderRef c
-    return . parens $ "fun (a,b,c) -> Json.Encode.array [|" <+> da <+> "a ;" <+> db <+> "b ;" <+> dc <+> "c" <+> "|]"
-  renderRef (OTuple4 a b c d) = do
-    da <- renderRef a
-    db <- renderRef b
-    dc <- renderRef c
-    dd <- renderRef d
-    return . parens $ "fun (a,b,c,d) -> Json.Encode.array [|" <+> da <+> "a ;" <+> db <+> "b ;" <+> dc <+> "c ;" <+> dd <+> "d" <+> "|]"
-  renderRef (OTuple5 a b c d e) = do
-    da <- renderRef a
-    db <- renderRef b
-    dc <- renderRef c
-    dd <- renderRef d
-    de <- renderRef e
-    return . parens $ "fun (a,b,c,d,e) -> Json.Encode.array [|" <+> da <+> "a ;" <+> db <+> "b ;" <+> dc <+> "c ;" <+> dd <+> "d ;" <+> de <+> "e" <+> "|]"
-  renderRef (OTuple6 a b c d e f) = do
-    da <- renderRef a
-    db <- renderRef b
-    dc <- renderRef c
-    dd <- renderRef d
-    de <- renderRef e
-    df <- renderRef f
-    return . parens $ "fun (a,b,c,d,e,f) -> Json.Encode.array [|" <+> da <+> "a ;" <+> db <+> "b ;" <+> dc <+> "c ;" <+> dd <+> "d ;" <+> de <+> "e ;" <+> df <+> "f" <+> "|]"
+    return $ "Json.Encode.optional" <+> dd
+  renderRef (OTuple2 t0 t1) = do
+    dt0 <- renderRef t0
+    dt1 <- renderRef t1
+    return $ "Json.Encode.pair" <+> dt0 <+> dt1
+
+  renderRef (OTuple3 t0 t1 t2) = do
+    dt0 <- renderRef t0
+    dt1 <- renderRef t1
+    dt2 <- renderRef t2
+    return $ "Json.Encode.tuple3" <+> dt0 <+> dt1 <+> dt2
+
+  renderRef (OTuple4 t0 t1 t2 t3) = do
+    dt0 <- renderRef t0
+    dt1 <- renderRef t1
+    dt2 <- renderRef t2
+    dt3 <- renderRef t3
+    return $ "Json.Encode.tuple4" <+> dt0 <+> dt1 <+> dt2 <+> dt3
+    
+  renderRef (OTuple5 t0 t1 t2 t3 t4) = do
+    dt0 <- renderRef t0
+    dt1 <- renderRef t1
+    dt2 <- renderRef t2
+    dt3 <- renderRef t3
+    dt4 <- renderRef t4
+    return $ "Json.Encode.tuple5" <+> dt0 <+> dt1 <+> dt2 <+> dt3 <+> dt4
+
+  renderRef (OTuple6 t0 t1 t2 t3 t4 t5) = do
+    dt0 <- renderRef t0
+    dt1 <- renderRef t1
+    dt2 <- renderRef t2
+    dt3 <- renderRef t3
+    dt4 <- renderRef t4
+    dt5 <- renderRef t5
+    return $ "Json.Encode.tuple6" <+> dt0 <+> dt1 <+> dt2 <+> dt3 <+> dt4 <+> dt5
+
   renderRef (ODict k v) = do
     dk <- renderRef k
     dv <- renderRef v

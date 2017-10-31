@@ -41,3 +41,4 @@ tests:
     - hspec
     - ocaml-export
     - text
+    - time

@@ -20,7 +20,7 @@ let encodeSumVariant (x : sumVariant) :Js_json.t =
   | HasSingleTuple y0 ->
      Json.Encode.object_
        [ ( "tag", Json.Encode.string "HasSingleTuple" )
-       ; ( "contents", (fun (a,b) -> Json.Encode.array [| Json.Encode.int a ; Json.Encode.int b  |]) y0 )
+       ; ( "contents", Json.Encode.pair Json.Encode.int Json.Encode.int y0 )
        ]
   | HasMultipleInts (y0,y1) ->
      Json.Encode.object_
@@ -30,7 +30,7 @@ let encodeSumVariant (x : sumVariant) :Js_json.t =
   | HasMultipleTuples (y0,y1) ->
      Json.Encode.object_
        [ ( "tag", Json.Encode.string "HasMultipleTuples" )
-       ; ( "contents", Json.Encode.array [| (fun (a,b) -> Json.Encode.array [| Json.Encode.int a ; Json.Encode.int b  |]) y0 ; (fun (a,b) -> Json.Encode.array [| Json.Encode.int a ; Json.Encode.int b  |]) y1 |] )
+       ; ( "contents", Json.Encode.array [| Json.Encode.pair Json.Encode.int Json.Encode.int y0 ; Json.Encode.pair Json.Encode.int Json.Encode.int y1 |] )
        ]
   | HasMixed (y0,y1,y2) ->
      Json.Encode.object_

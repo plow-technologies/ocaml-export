@@ -17,6 +17,9 @@ import           OCaml.Common
 import           OCaml.Type
 import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
 
+-- renderLetTypeSignature
+-- renderValueTypeSignature
+
 class HasType a where
   render :: a -> Reader Options Doc
 
@@ -209,6 +212,9 @@ instance HasTypeRef OCamlPrimitive where
   renderRef OUnit   = pure "unit"
   renderRef OFloat  = pure "float"
 --  'a Js.Dict.t
+
+-- render val signature
+-- render render type signature
 toOCamlTypeRefWith :: OCamlType a => Options -> a -> T.Text
 toOCamlTypeRefWith options x =
   pprinter $ runReader (renderRef (toOCamlType x)) options

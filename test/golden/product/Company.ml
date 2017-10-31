@@ -1,18 +1,21 @@
 type person =
   { id : int
   ; name : (string) option
+  ; created : Js_date.t
   }
 
 let encodePerson (x : person) :Js_json.t =
   Json.Encode.object_
     [ ( "id", Json.Encode.int x.id )
-    ; ( "name", (fun a -> Option.default Json.Encode.null (Option.map Json.Encode.string a)) x.name )
+    ; ( "name", Json.Encode.optional Json.Encode.string x.name )
+    ; ( "created", Json.Encode.date x.created )
     ]
 
 let decodePerson (json : Js_json.t) :(person, string) Js_result.t =
   match Json.Decode.
     { id = field "id" int json
     ; name = optional (field "name" string) json
+    ; created = field "created" date json
     }
   with
   | v -> Js_result.Ok v

@@ -9,16 +9,13 @@ module OCaml.Record
 
 import           Control.Monad.Reader
 import           Data.List (nub)
-import           Data.Maybe (catMaybes, maybeToList)
+import           Data.Maybe (catMaybes)
 import           Data.Monoid
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           OCaml.Common
-import           OCaml.Type
+import           OCaml.Type hiding (getOCamlValues)
 import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
-
--- renderLetTypeSignature
--- renderValueTypeSignature
 
 class HasType a where
   render :: a -> Reader Options Doc
@@ -150,9 +147,8 @@ instance HasType OCamlValue where
     dy <- render y
     return $ dx <+> "*" <+> dy
   render (OCamlField name value) = do
-    fieldModifier <- asks fieldLabelModifier
     dv <- renderRecord value
-    return $ stext (fieldModifier name) <+> ":" <+> dv
+    return $ stext name <+> ":" <+> dv
 
 instance HasRecordType OCamlValue where
   renderRecord (OCamlPrimitiveRef primitive) = renderRef primitive

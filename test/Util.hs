@@ -26,5 +26,5 @@ testOCamlType adt ocamlFile typeName =
     automated `shouldBe` handWritten
   where
     adtPath    = adtToPath adt
-    testPath   = "test/temp/" <> adtPath
-    goldenPath = "test/golden/" <> adtPath
+    testPath   = "test/nointerface/temp/" <> adtPath
+    goldenPath = "test/nointerface/golden/" <> adtPath

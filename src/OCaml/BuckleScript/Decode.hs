@@ -16,7 +16,7 @@ import           Data.Monoid
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           OCaml.Common
-import           OCaml.Type
+import           OCaml.Type hiding (getOCamlValues)
 import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
 
 class HasDecoder a where

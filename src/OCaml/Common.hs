@@ -11,18 +11,12 @@ import qualified Data.Text.Lazy as LT
 import           Formatting hiding (text)
 import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
 
-data DecodeError
-  = AllowErrors
-  | OptionType
-  | ResultType
-
 data Options = Options
-  { fieldLabelModifier :: Text -> Text
-  , decodeError :: DecodeError
+  { includeOCamlInterface :: Bool
   }
 
 defaultOptions :: Options
-defaultOptions = Options {fieldLabelModifier = id, decodeError = ResultType }
+defaultOptions = Options {includeOCamlInterface = False}
 
 cr :: Format r r
 cr = now "\n"

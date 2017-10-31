@@ -371,6 +371,16 @@ getTypeParameterRefNamesForOCamlDatatype (OCamlDatatype _ valueConstructor) =
     _ -> []
 getTypeParameterRefNamesForOCamlDatatype _ = []
 
+getOCamlValues :: ValueConstructor -> [OCamlValue]
+getOCamlValues (NamedConstructor     _ value) = [value]
+getOCamlValues (RecordConstructor    _ value) = [value]
+getOCamlValues (MultipleConstructors cs)      = concat $ getOCamlValues <$> cs
+
+getTypeParameters :: OCamlConstructor -> [Text]
+getTypeParameters (OCamlValueConstructor vc) = getTypeParameterRefNames . getOCamlValues $ vc
+getTypeParameters (OCamlSumOfRecordConstructor _ vc) = getTypeParameterRefNames . getOCamlValues $ vc
+getTypeParameters _ = []
+
 -- | Matches all of the TypeParameterRefs (TypeParameterRef0 to TypeParameterRef5)
 --   needed to work around the tree structure for special rules for rendering type parameters
 isTypeParameterRef :: OCamlDatatype -> Bool

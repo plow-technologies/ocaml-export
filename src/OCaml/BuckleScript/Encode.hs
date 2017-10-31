@@ -5,6 +5,7 @@ module OCaml.BuckleScript.Encode
   , toOCamlEncoderRefWith
   , toOCamlEncoderSource
   , toOCamlEncoderSourceWith
+  , toOCamlEncoderVal
   ) where
 
 import           Control.Monad.Reader
@@ -23,6 +24,38 @@ class HasEncoder a where
 class HasEncoderRef a where
   renderRef :: a -> Reader Options Doc
 
+class HasValRef a where
+  renderValRef :: a -> Reader Options Doc
+
+
+instance HasValRef OCamlDatatype where
+  renderValRef d@(OCamlDatatype typeName constructors) = do
+    fnName <- renderRef d
+    let (tps,ex) = renderTypeParameterVals constructors
+    pure $ "val" <+> fnName <+> ":" <+> tps <+> ex <> (stext . textLowercaseFirst $ typeName) <+> "->" <+> "Js_json.t"
+
+-- "let" <+> fnName <> tps <+> "json"
+renderSimpleTypeParameters :: [OCamlValue] -> Doc
+renderSimpleTypeParameters ocamlValues = foldl (<>) "" $ L.intersperse " " $ (\t -> "encode" <> (stext . textUppercaseFirst $ t)) <$> getTypeParameterRefNames ocamlValues
+
+renderTypeParameterValsAux :: [OCamlValue] -> (Doc,Doc)
+renderTypeParameterValsAux ocamlValues =
+  let typeParameterNames = (<>) "'" <$> getTypeParameterRefNames ocamlValues
+      typeDecs = (\t -> "(" <> (stext t) <+> "-> Js_json.t)") <$> typeParameterNames :: [Doc]
+  in
+      if length typeDecs > 1
+      then
+        let ts = if length typeParameterNames > 1
+                   then foldl (<>) "" $ ["("] <> (L.intersperse ", " $ stext <$> typeParameterNames) <> [") "]
+                   else ""
+        in ((foldl (<>) "" $  (L.intersperse " -> " typeDecs)) <> " ->", ts)
+      else ("","")
+
+renderTypeParameterVals :: OCamlConstructor -> (Doc,Doc)
+renderTypeParameterVals (OCamlValueConstructor vc) = renderTypeParameterValsAux $ getOCamlValues vc
+renderTypeParameterVals (OCamlSumOfRecordConstructor _ vc) = renderTypeParameterValsAux $ getOCamlValues vc
+renderTypeParameterVals _ = ("","")
+
 renderTypeParametersAux :: [OCamlValue] -> (Doc,Doc)
 renderTypeParametersAux ocamlValues = do
   let typeParameterNames = getTypeParameterRefNames ocamlValues
@@ -31,11 +64,6 @@ renderTypeParametersAux ocamlValues = do
       typeParams = foldl (<>) "" $ if length typeParameterNames > 1 then  ["("] <> (L.intersperse ", " $ stext <$> typeParameterNames) <> [") "] else ((\x -> stext $ x <> " ") <$> typeParameterNames) :: [Doc]
   (foldl (<+>) "" (typeDecs ++ parserDecs), typeParams )
 
-getOCamlValues :: ValueConstructor -> [OCamlValue]
-getOCamlValues (NamedConstructor     _ value) = [value]
-getOCamlValues (RecordConstructor    _ value) = [value]
-getOCamlValues (MultipleConstructors cs)      = concat $ getOCamlValues <$> cs
-
 renderTypeParameters :: OCamlConstructor -> (Doc,Doc)
 renderTypeParameters (OCamlValueConstructor vc) = renderTypeParametersAux $ getOCamlValues vc
 renderTypeParameters (OCamlSumOfRecordConstructor _ vc) = renderTypeParametersAux $ getOCamlValues vc
@@ -43,15 +71,25 @@ renderTypeParameters _ = ("","")
 
 instance HasEncoder OCamlDatatype where
   -- handle case where SumWithRecords exists
-  render d@(OCamlDatatype typeName c@(OCamlSumOfRecordConstructor _ (MultipleConstructors constrs))) = do  
+  render d@(OCamlDatatype typeName c@(OCamlSumOfRecordConstructor _ (MultipleConstructors constrs))) = do
+    ocamlInterface <- asks includeOCamlInterface
     fnName <- renderRef d
     docs <- catMaybes <$> sequence (renderSumRecord typeName . OCamlValueConstructor <$> constrs)
     let vs = msuffix (line <> line) docs
     dc <- mapM renderSum (OCamlSumOfRecordConstructor typeName <$> constrs)
-    let (tps,aps) = renderTypeParameters c
-    return $ vs <$$>
-      ("let" <+> fnName <+> tps <+> "(x :" <+> aps <> stext (textLowercaseFirst typeName) <> ") :Js_json.t =") <$$>
-      (indent 2 ("match x with" <$$> foldl1 (<$$>) dc))
+    
+    if ocamlInterface
+      then do
+       let tps = getTypeParameters c
+           renderedTPS = foldl (<>) " " $ (\t -> stext $ "encode" <> (textUppercaseFirst t)) <$> tps
+       return $ vs <$$>
+         ("let" <+> fnName <+> renderedTPS <+> "x =") <$$>
+         (indent 2 ("match x with" <$$> foldl1 (<$$>) dc))
+      else do
+        let (tps,aps) = renderTypeParameters c
+        return $ vs <$$>
+          ("let" <+> fnName <+> tps <+> "(x :" <+> aps <> stext (textLowercaseFirst typeName) <> ") :Js_json.t =") <$$>
+          (indent 2 ("match x with" <$$> foldl1 (<$$>) dc))
     
   render d@(OCamlDatatype typeName c@(OCamlValueConstructor (MultipleConstructors constrs))) = do
     fnName <- renderRef d
@@ -175,10 +213,9 @@ renderSum _ = return ""
 
 instance HasEncoder OCamlValue where
   render (OCamlField name value) = do
-    fieldModifier <- asks fieldLabelModifier
     valueBody <- render value
     return . spaceparens $
-      dquotes (stext (fieldModifier name)) <> comma <+>
+      dquotes (stext name) <> comma <+>
       (valueBody <+> "x." <> stext name)
   render (OCamlTypeParameterRef name) =
     pure $ "encode" <> (stext . textUppercaseFirst $ name)
@@ -244,6 +281,10 @@ instance HasEncoderRef OCamlPrimitive where
     dk <- renderRef k
     dv <- renderRef v
     return . parens $ "Js.Encode.dict" <+> dk <+> dv
+
+toOCamlEncoderVal :: OCamlType a => a -> T.Text
+toOCamlEncoderVal x =
+  pprinter $ runReader (renderValRef (toOCamlType x)) defaultOptions
 
 toOCamlEncoderRefWith :: OCamlType a => Options -> a -> T.Text
 toOCamlEncoderRefWith options x =

@@ -3,6 +3,8 @@ playground/lib
 playground/node_modules
 test/golden/lib
 test/golden/node_modules
+node_modules
+lib
 .merlin
 \#*#
 .#*

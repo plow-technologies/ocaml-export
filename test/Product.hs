@@ -21,6 +21,7 @@ spec = do
     testProduct person "Person"
     testProductInt personInterface "Person"
     testProduct company "Company"
+    testProductInt companyInterface "Company"
     testProduct card "Card"
     testProduct oneTypeParameter "OneTypeParameter"
     testProduct twoTypeParameters "TwoTypeParameters"
@@ -114,6 +115,27 @@ company =
     , toOCamlTypeSource (Proxy :: Proxy Company)
     , toOCamlEncoderSource (Proxy :: Proxy Company)
     , toOCamlDecoderSource (Proxy :: Proxy Company)
+    ]
+
+companyInterface :: OCamlInterface
+companyInterface =
+  OCamlInterface
+    (OCamlFile
+     "Company"
+      [ toOCamlTypeSource (Proxy :: Proxy Person)
+      , toOCamlEncoderSourceWith (defaultOptions {includeOCamlInterface = True}) (Proxy :: Proxy Person)
+      , toOCamlDecoderSourceWith (defaultOptions {includeOCamlInterface = True}) (Proxy :: Proxy Person)
+      , toOCamlTypeSource (Proxy :: Proxy Company)
+      , toOCamlEncoderSourceWith (defaultOptions {includeOCamlInterface = True}) (Proxy :: Proxy Company)
+      , toOCamlDecoderSourceWith (defaultOptions {includeOCamlInterface = True}) (Proxy :: Proxy Company)
+      ]
+    )
+    [ toOCamlTypeSource (Proxy :: Proxy Person)
+    , toOCamlEncoderVal (Proxy :: Proxy Person)
+    , toOCamlDecoderInterface (Proxy :: Proxy Person)
+    , toOCamlTypeSource (Proxy :: Proxy Company)
+    , toOCamlEncoderVal (Proxy :: Proxy Company)
+    , toOCamlDecoderInterface (Proxy :: Proxy Company)
     ]
 
 card :: OCamlFile

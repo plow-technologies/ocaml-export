@@ -100,12 +100,20 @@ instance HasEncoder OCamlDatatype where
       (indent 2 ("match x with" <$$> foldl1 (<$$>) dc))
 
   render d@(OCamlDatatype name constructor) = do
+    ocamlInterface <- asks includeOCamlInterface
     fnName <- renderRef d
     ctor <- render constructor
-    let (tps,aps) = renderTypeParameters constructor
-    return $
-      ("let" <+> fnName <+> tps <+> "(x :" <+> aps <> stext (textLowercaseFirst name) <> ") :Js_json.t =") <$$>
-      (indent 2 ctor)
+    if ocamlInterface
+      then do
+        let tps = getTypeParameters constructor
+            renderedTPS = foldl (<>) " " $ (\t -> stext $ "encode" <> (textUppercaseFirst t)) <$> tps
+        return $
+          ("let" <+> fnName <+> renderedTPS <> "x =" <$$> (indent 2 ctor))
+      else do
+        let (tps,aps) = renderTypeParameters constructor
+        return $
+          ("let" <+> fnName <+> tps <+> "(x :" <+> aps <> stext (textLowercaseFirst name) <> ") :Js_json.t =") <$$>
+          (indent 2 ctor)
 
   render (OCamlPrimitive primitive) = renderRef primitive
     

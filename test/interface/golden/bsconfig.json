@@ -1,0 +1,10 @@
+{
+  "name": "ocaml-export",
+  "bsc-flags": ["-bs-no-version-header", "-bs-super-errors"],
+  "reason": {"react-jsx" : 2},
+  "bs-dependencies": ["bs-json"],
+  "sources": [{
+    "dir":    "product",
+    "subdirs": true
+  }]
+}

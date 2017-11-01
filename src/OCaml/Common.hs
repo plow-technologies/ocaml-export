@@ -92,5 +92,3 @@ mkDocList ds =
     if length ds > 1
       then ["("] <> (L.intersperse ", " ds) <> [")"]
       else ds
-
---      return $ foldl (<>) "" $ if length vc' > 1 then  ["("] <> (L.intersperse ", " vc') <> [")"] else (vc')

@@ -1,0 +1,22 @@
+{
+  "name": "playground",
+  "private": true,
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "bsb -make-world",
+    "start": "bsb -make-world -w",
+    "clean": "bsb -clean-world"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "bs-json": "git+ssh://git@github.com/plow-technologies/bs-json.git#c84cd837f460131a8499ea827d6d3d8df4167d63"
+  },
+  "devDependencies": {
+    "bs-platform": "^2.0.0",
+    "concurrently": "^3.5.0"
+  }
+}

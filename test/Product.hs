@@ -13,21 +13,28 @@ import Util
 
 testProduct = testOCamlType Product
 
+testProductInt = testOCamlTypeWithInterface Product
+
 spec :: Spec
 spec = do
   describe "Product Types" $ do
     testProduct person "Person"
+--    testProductInt personInterface "Person"
+{-
     it "" $ do
       print $ toOCamlEncoderVal (Proxy :: Proxy Person)
       shouldBe True False
+-}
     testProduct company "Company"
     testProduct card "Card"
     testProduct oneTypeParameter "OneTypeParameter"
     testProduct twoTypeParameters "TwoTypeParameters"
     testProduct three "ThreeTypeParameters"
+{-
     it "" $ do
       print $ toOCamlEncoderVal (Proxy :: Proxy (Three TypeParameterRef0 TypeParameterRef1 TypeParameterRef2))
       shouldBe True False
+-}
     testProduct subTypeParameter "SubTypeParameter"
 
 data Person = Person
@@ -90,6 +97,20 @@ person =
     [ toOCamlTypeSource (Proxy :: Proxy Person)
     , toOCamlEncoderSource (Proxy :: Proxy Person)
     , toOCamlDecoderSource (Proxy :: Proxy Person)
+    ]
+
+personInterface :: OCamlInterface
+personInterface =
+  OCamlInterface
+    (OCamlFile
+     "Person"
+      [ toOCamlTypeSource (Proxy :: Proxy Person)
+      , toOCamlEncoderSourceWith (defaultOptions {includeOCamlInterface = True}) (Proxy :: Proxy Person)
+      , toOCamlDecoderSourceWith (defaultOptions {includeOCamlInterface = True}) (Proxy :: Proxy Person)
+      ]
+    )
+    [ toOCamlTypeSource (Proxy :: Proxy Person)
+    , toOCamlEncoderVal (Proxy :: Proxy Person)
     ]
 
 company :: OCamlFile

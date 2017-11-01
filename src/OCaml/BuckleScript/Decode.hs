@@ -198,7 +198,6 @@ renderConstructorArgs i (Values l r) = do
   pure (iR, rndrL <$$> rndrR)
 renderConstructorArgs i val = do
   rndrVal <- render val
-  -- let index = parens $ "index" <+> int i <+> rndrVal
   pure (i,
              "(match Json.Decode.(field \"contents\"" <+> rndrVal <+> "json) with"
         <$$>
@@ -258,10 +257,9 @@ instance HasDecoderRef OCamlPrimitive where
   renderRef (OTuple2 x y) = do
     dx <- renderRef x
     dy <- renderRef y
---    return $ "Json.Decode." <> (parens $ "pair" <+> dx <+> dy)
     pure $ parens $ "pair" <+> dx <+> dy
     
-  renderRef OUnit = pure $ parens "succeed ()"
+  renderRef OUnit = pure $ parens "()"
   renderRef ODate = pure "date"
   renderRef OInt = pure "int"
   renderRef OBool = pure "bool"
@@ -280,4 +278,3 @@ toOCamlDecoderSourceWith options x = pprinter $ runReader (render (toOCamlType x
 
 toOCamlDecoderSource :: OCamlType a => a -> T.Text
 toOCamlDecoderSource = toOCamlDecoderSourceWith defaultOptions
-

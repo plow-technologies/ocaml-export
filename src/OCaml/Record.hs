@@ -14,7 +14,7 @@ import           Data.Monoid
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           OCaml.Common
-import           OCaml.Type hiding (getOCamlValues)
+import           OCaml.Type
 import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
 
 class HasType a where
@@ -26,36 +26,8 @@ class HasRecordType a where
 class HasTypeRef a where
   renderRef :: a -> Reader Options Doc
 
-getOCamlTypeParameterRef :: OCamlValue -> [Text]
-getOCamlTypeParameterRef (OCamlTypeParameterRef name) = ["'" <> name]
-getOCamlTypeParameterRef (OCamlField _ v1) = getOCamlTypeParameterRef v1
-getOCamlTypeParameterRef (Values v1 v2) = getOCamlTypeParameterRef v1 ++ getOCamlTypeParameterRef v2
-getOCamlTypeParameterRef (OCamlPrimitiveRef (OList v1)) = renderDatatype v1
-getOCamlTypeParameterRef (OCamlPrimitiveRef (OOption v1)) = renderDatatype v1
-getOCamlTypeParameterRef (OCamlPrimitiveRef (OTuple2 v1 v2)) = (renderDatatype v1) ++ (renderDatatype v2)
-getOCamlTypeParameterRef (OCamlPrimitiveRef (OTuple3 v1 v2 v3)) = (renderDatatype v1) ++ (renderDatatype v2) ++ (renderDatatype v3)
-getOCamlTypeParameterRef (OCamlPrimitiveRef (OTuple4 v1 v2 v3 v4)) = (renderDatatype v1) ++ (renderDatatype v2) ++ (renderDatatype v3) ++ (renderDatatype v4)
-getOCamlTypeParameterRef (OCamlPrimitiveRef (OTuple5 v1 v2 v3 v4 v5)) = (renderDatatype v1) ++ (renderDatatype v2) ++ (renderDatatype v3) ++ (renderDatatype v4) ++ (renderDatatype v5)
-getOCamlTypeParameterRef (OCamlPrimitiveRef (OTuple6 v1 v2 v3 v4 v5 v6)) = (renderDatatype v1) ++ (renderDatatype v2) ++ (renderDatatype v3) ++ (renderDatatype v4) ++ (renderDatatype v5) ++ (renderDatatype v6)
-getOCamlTypeParameterRef _ = []
-
-getOCamlValues :: ValueConstructor -> [Text]
-getOCamlValues (NamedConstructor     _ value) = getOCamlTypeParameterRef value
-getOCamlValues (RecordConstructor    _ value) = getOCamlTypeParameterRef value
-getOCamlValues (MultipleConstructors cs)      = concat $ getOCamlValues <$> cs
-
-renderTypeParameters' :: OCamlConstructor -> [Text]
-renderTypeParameters' (OCamlValueConstructor vc) = getOCamlValues vc
-renderTypeParameters' (OCamlSumOfRecordConstructor _ vc) = getOCamlValues vc
-renderTypeParameters' _ = []
-
-renderDatatype :: OCamlDatatype -> [Text]
-renderDatatype (OCamlDatatype _ constructor) = renderTypeParameters' constructor
-renderDatatype (OCamlPrimitive _primitive) = []
-
 renderTypeParameters :: OCamlConstructor -> Doc
-renderTypeParameters constructor = mkDocList $ stext <$> (nub $ renderTypeParameters' constructor)
-
+renderTypeParameters constructor = mkDocList $ stext . (<>) "'" <$> (nub $ getTypeParameters constructor)
 
 -- | For Haskell Sum of Records, create OCaml record types of each RecordConstructorn
 makeAuxTypeDef :: Text -> ValueConstructor -> Reader Options (Maybe (Doc,(Text,ValueConstructor)))
@@ -140,7 +112,7 @@ instance HasType EnumeratorConstructor where
 instance HasType OCamlValue where
   render (OCamlRef name) = pure (stext $ textLowercaseFirst name)
   render (OCamlTypeParameterRef name) = pure (stext ("'" <> name))
-  render (OCamlPrimitiveRef primitive) = reasonRefParens primitive <$> renderRef primitive
+  render (OCamlPrimitiveRef primitive) = ocamlRefParens primitive <$> renderRef primitive
   render OCamlEmpty = pure (text "")
   render (Values x y) = do
     dx <- render x
@@ -225,10 +197,10 @@ toOCamlTypeSourceWith options x =
 toOCamlTypeSource :: OCamlType a => a -> T.Text
 toOCamlTypeSource = toOCamlTypeSourceWith defaultOptions
 
--- | Puts parentheses around the doc of an elm ref if it contains spaces.
-reasonRefParens :: OCamlPrimitive -> Doc -> Doc
-reasonRefParens (OList (OCamlPrimitive OChar)) = id
-reasonRefParens (OList _) = parens
-reasonRefParens (OOption _) = parens
-reasonRefParens (ODict _ _) = parens
-reasonRefParens _ = id
+-- | Puts parentheses around the doc of an OCaml ref if it contains spaces.
+ocamlRefParens :: OCamlPrimitive -> Doc -> Doc
+ocamlRefParens (OList (OCamlPrimitive OChar)) = id
+ocamlRefParens (OList _) = parens
+ocamlRefParens (OOption _) = parens
+ocamlRefParens (ODict _ _) = parens
+ocamlRefParens _ = id

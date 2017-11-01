@@ -28,3 +28,18 @@ testOCamlType adt ocamlFile typeName =
     adtPath    = adtToPath adt
     testPath   = "test/nointerface/temp/" <> adtPath
     goldenPath = "test/nointerface/golden/" <> adtPath
+
+testOCamlTypeWithInterface :: ADT -> OCamlInterface -> FilePath -> SpecWith ()
+testOCamlTypeWithInterface adt ocamlFile typeName =
+  it typeName $ do
+    createOCamlFileWithInterface testPath ocamlFile
+    automated   <- T.readFile (testPath   <> "/" <> typeName <> ".ml")
+    handWritten <- T.readFile (goldenPath <> "/" <> typeName <> ".ml")
+    automated2   <- T.readFile (testPath   <> "/" <> typeName <> ".mli")
+    handWritten2 <- T.readFile (goldenPath <> "/" <> typeName <> ".mli")
+    automated `shouldBe` handWritten
+    automated2 `shouldBe` handWritten2
+  where
+    adtPath    = adtToPath adt
+    testPath   = "test/interface/temp/" <> adtPath
+    goldenPath = "test/interface/golden/" <> adtPath

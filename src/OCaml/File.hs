@@ -14,6 +14,12 @@ data OCamlFile =
     , ocamlDeclarations :: [Text]
     }
 
+data OCamlInterface =
+  OCamlInterface
+    { docamlFile :: OCamlFile
+    , ocamlInterfaceDeclarations :: [Text]
+    }
+
 createOCamlFile :: FilePath -> OCamlFile -> IO ()
 createOCamlFile rootDir ocamlFile = do
   createDirectoryIfMissing True rootDir
@@ -23,3 +29,12 @@ createOCamlFile rootDir ocamlFile = do
 
 createOCamlFiles :: FilePath ->  [OCamlFile] -> IO ()
 createOCamlFiles root files = mapM_ (createOCamlFile root) files
+
+createOCamlFileWithInterface :: FilePath -> OCamlInterface -> IO ()
+createOCamlFileWithInterface rootDir ocamlInterface = do
+  createDirectoryIfMissing True rootDir
+  let fp = rootDir <> "/" <> ocamlFilePath (docamlFile ocamlInterface)
+      body = T.intercalate "\n\n" (ocamlDeclarations . docamlFile $ ocamlInterface) <> "\n"
+      interfaceBody = T.intercalate "\n\n" (ocamlInterfaceDeclarations ocamlInterface) <> "\n"
+  T.writeFile (fp <> ".ml") body
+  T.writeFile (fp <> ".mli") interfaceBody

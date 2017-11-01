@@ -22,11 +22,16 @@ import           Data.Time
 import           GHC.Generics
 import           Prelude
 
+-- record is a product with named fields
+-- Name
+
+-- | Represent OCaml types as a tree
 data OCamlDatatype
-  = OCamlDatatype Text OCamlConstructor
-  | OCamlPrimitive OCamlPrimitive
+  = OCamlDatatype Text OCamlConstructor -- | constructor
+  | OCamlPrimitive OCamlPrimitive -- | primitive
   deriving (Show, Eq)
 
+-- | Smallest unit of computation in OCaml
 data OCamlPrimitive
   = OInt -- int (Int32 or JS.Int)
   | OBool -- bool
@@ -35,9 +40,9 @@ data OCamlPrimitive
   | OFloat -- float
   | OString -- string
   | OUnit -- ()
-  | OList OCamlDatatype -- ... list
-  | OOption OCamlDatatype -- ... option
-  | ODict OCamlPrimitive OCamlDatatype -- Js_dict.t
+  | OList OCamlDatatype -- 'a list
+  | OOption OCamlDatatype -- 'a option
+  | ODict OCamlPrimitive OCamlDatatype -- 'a Js_dict.t
   | OTuple2 OCamlDatatype OCamlDatatype -- (*)
   | OTuple3 OCamlDatatype OCamlDatatype OCamlDatatype -- (**)
   | OTuple4 OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype -- (***)
@@ -47,31 +52,21 @@ data OCamlPrimitive
 
 -- | OCamlConstructor bridges all Haskell type declarations to OCaml type declaractions.
 data OCamlConstructor 
-  = OCamlValueConstructor ValueConstructor
-  | OCamlEnumeratorConstructor [EnumeratorConstructor]
-  | OCamlSumOfRecordConstructor Text ValueConstructor -- type name for reference
+  = OCamlValueConstructor ValueConstructor -- sum
+  | OCamlEnumeratorConstructor [EnumeratorConstructor] -- sum of enumerations only
+  | OCamlSumOfRecordConstructor Text ValueConstructor -- sum that contains at least one record
   deriving (Show, Eq)
 
-{-
-data OCamlConstructor2
-  = OCamlRecordConstructor      -- Single Record only
-  | OCamlEnumerationConstructor -- Enumerations only
-  | OCamlSumConstructor         -- Enumerations and Products with unnamed fields
-  | OCamlSumOfRecordConstructor -- Enumerations, Records and Products with unnamed fields, at least two items, at least one Record
--}
-
--- | Used for building the tree, but transformed before returning.
---   Common type declarations found in Haskell and OCaml.
+-- | 
 data ValueConstructor
-  = NamedConstructor Text OCamlValue
-  | RecordConstructor Text OCamlValue
+  = NamedConstructor Text OCamlValue -- product without named fields
+  | RecordConstructor Text OCamlValue -- product with named fields
   | MultipleConstructors [ValueConstructor]
   deriving (Show, Eq)
 
--- | Special type of constructor. Names but no values. Accounts
---   for the way aeson handles Enumerations.   
+-- |
 data EnumeratorConstructor
-  = EnumeratorConstructor Text
+  = EnumeratorConstructor Text -- enumerator and tag
   deriving (Show, Eq)
 
 data OCamlValue
@@ -83,7 +78,7 @@ data OCamlValue
   | Values OCamlValue OCamlValue
   deriving (Show, Eq)
 
--- | Used to fill the type parameters of proxy types
+-- | Used to fill the type parameters of proxy types. `Proxy :: Proxy (Maybe TypeParameterRef0)`, `Proxy :: Proxy Either TypeParameterRef0 TypeParameterRef1`.
 data TypeParameterRef0 = TypeParameterRef0 deriving (Show, Eq, Generic)
 instance OCamlType TypeParameterRef0 where
   toOCamlType _ = OCamlDatatype "a0" $ OCamlValueConstructor $ NamedConstructor "a0" $ OCamlTypeParameterRef "a0"
@@ -338,38 +333,33 @@ isSumWithRecord (OCamlValueConstructor (MultipleConstructors cs)) =
   -- if there are multiple constructors and at least one is a record constructor
   -- than it is a SumWithRecords
   (\x -> length x > 1 && or x) $ isSumWithRecordsAux . OCamlValueConstructor <$> cs
+  where
+    isSumWithRecordsAux :: OCamlConstructor -> Bool
+    isSumWithRecordsAux (OCamlValueConstructor (RecordConstructor _ _)) = True
+    isSumWithRecordsAux _ = False
 isSumWithRecord _ = False
 
-isSumWithRecordsAux :: OCamlConstructor -> Bool
-isSumWithRecordsAux (OCamlValueConstructor (RecordConstructor _ _)) = True
-isSumWithRecordsAux _ = False
-
-
+-- | Convert OCamlValues to the type parameter names of a data type.
+--   `Either a0 a1` -> `["a0","a1"]`
 getTypeParameterRefNames :: [OCamlValue] -> [Text]
 getTypeParameterRefNames = nub . concat . (fmap match)
   where
+    lift (OCamlDatatype _ constructor) = getTypeParameters constructor
+    lift _ = []
+
     match value =
       case value of
         (OCamlTypeParameterRef name) -> [name]
         (Values v1 v2) -> match v1 ++ match v2
         (OCamlField _ v1) -> match v1
-        (OCamlPrimitiveRef (OList v1)) -> getTypeParameterRefNamesForOCamlDatatype v1
-        (OCamlPrimitiveRef (OOption v1)) -> getTypeParameterRefNamesForOCamlDatatype v1
-        (OCamlPrimitiveRef (OTuple2 v1 v2)) -> getTypeParameterRefNamesForOCamlDatatype v1 ++ getTypeParameterRefNamesForOCamlDatatype v2
+        (OCamlPrimitiveRef (OList v1)) -> lift v1
+        (OCamlPrimitiveRef (OOption v1)) -> lift v1
+        (OCamlPrimitiveRef (OTuple2 v1 v2)) -> lift v1 ++ lift v2
+        (OCamlPrimitiveRef (OTuple3 v1 v2 v3)) -> lift v1 ++ lift v2 ++ lift v3
+        (OCamlPrimitiveRef (OTuple4 v1 v2 v3 v4)) -> lift v1 ++ lift v2 ++ lift v3 ++ lift v4
+        (OCamlPrimitiveRef (OTuple5 v1 v2 v3 v4 v5)) -> lift v1 ++ lift v2 ++ lift v3 ++ lift v4 ++ lift v5
+        (OCamlPrimitiveRef (OTuple6 v1 v2 v3 v4 v5 v6)) -> lift v1 ++ lift v2 ++ lift v3 ++ lift v4 ++ lift v5 ++ lift v6
         _ -> []
-
-getO :: ValueConstructor -> [Text]
-getO (NamedConstructor     _ value) = getTypeParameterRefNames [value]
-getO (RecordConstructor    _ value) = getTypeParameterRefNames [value]
-getO (MultipleConstructors cs)      = concat $ getO <$> cs
-
-getTypeParameterRefNamesForOCamlDatatype :: OCamlDatatype -> [Text]
-getTypeParameterRefNamesForOCamlDatatype (OCamlDatatype _ valueConstructor) =
-  case valueConstructor of
-    OCamlValueConstructor vc -> getO vc
-    OCamlSumOfRecordConstructor _ vc -> getO vc
-    _ -> []
-getTypeParameterRefNamesForOCamlDatatype _ = []
 
 getOCamlValues :: ValueConstructor -> [OCamlValue]
 getOCamlValues (NamedConstructor     _ value) = [value]
@@ -381,8 +371,8 @@ getTypeParameters (OCamlValueConstructor vc) = getTypeParameterRefNames . getOCa
 getTypeParameters (OCamlSumOfRecordConstructor _ vc) = getTypeParameterRefNames . getOCamlValues $ vc
 getTypeParameters _ = []
 
--- | Matches all of the TypeParameterRefs (TypeParameterRef0 to TypeParameterRef5)
---   needed to work around the tree structure for special rules for rendering type parameters
+-- | Matches all of the TypeParameterRefs (TypeParameterRef0 to TypeParameterRef5).
+--   This function is needed to work around the tree structure for special rules for rendering type parameters.
 isTypeParameterRef :: OCamlDatatype -> Bool
 isTypeParameterRef (OCamlDatatype _ (OCamlValueConstructor (NamedConstructor _ (OCamlTypeParameterRef _)))) = True
 isTypeParameterRef _ = False

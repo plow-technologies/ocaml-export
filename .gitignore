@@ -9,5 +9,6 @@ lib
 \#*#
 .#*
 *.log
-test/temp
+test/nointerface/temp
+test/interface/temp
 *.cabal

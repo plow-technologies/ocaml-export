@@ -24,50 +24,16 @@ class HasEncoder a where
 class HasEncoderRef a where
   renderRef :: a -> Reader Options Doc
 
-class HasValRef a where
-  renderValRef :: a -> Reader Options Doc
+class HasEncoderTypeRef a where
+  renderTypeRef :: a -> Reader Options Doc
 
-
-instance HasValRef OCamlDatatype where
-  renderValRef d@(OCamlDatatype typeName constructors) = do
+instance HasEncoderTypeRef OCamlDatatype where
+  renderTypeRef d@(OCamlDatatype typeName constructors) = do
     fnName <- renderRef d
     let (tps,ex) = renderTypeParameterVals constructors
     pure $ "val" <+> fnName <+> ":" <+> tps <+> ex <> (stext . textLowercaseFirst $ typeName) <+> "->" <+> "Js_json.t"
 
--- "let" <+> fnName <> tps <+> "json"
-renderSimpleTypeParameters :: [OCamlValue] -> Doc
-renderSimpleTypeParameters ocamlValues = foldl (<>) "" $ L.intersperse " " $ (\t -> "encode" <> (stext . textUppercaseFirst $ t)) <$> getTypeParameterRefNames ocamlValues
-
-renderTypeParameterValsAux :: [OCamlValue] -> (Doc,Doc)
-renderTypeParameterValsAux ocamlValues =
-  let typeParameterNames = (<>) "'" <$> getTypeParameterRefNames ocamlValues
-      typeDecs = (\t -> "(" <> (stext t) <+> "-> Js_json.t)") <$> typeParameterNames :: [Doc]
-  in
-      if length typeDecs > 1
-      then
-        let ts = if length typeParameterNames > 1
-                   then foldl (<>) "" $ ["("] <> (L.intersperse ", " $ stext <$> typeParameterNames) <> [") "]
-                   else ""
-        in ((foldl (<>) "" $  (L.intersperse " -> " typeDecs)) <> " ->", ts)
-      else ("","")
-
-renderTypeParameterVals :: OCamlConstructor -> (Doc,Doc)
-renderTypeParameterVals (OCamlValueConstructor vc) = renderTypeParameterValsAux $ getOCamlValues vc
-renderTypeParameterVals (OCamlSumOfRecordConstructor _ vc) = renderTypeParameterValsAux $ getOCamlValues vc
-renderTypeParameterVals _ = ("","")
-
-renderTypeParametersAux :: [OCamlValue] -> (Doc,Doc)
-renderTypeParametersAux ocamlValues = do
-  let typeParameterNames = getTypeParameterRefNames ocamlValues
-      typeDecs = (\t -> "(type " <> (stext t) <> ")") <$> typeParameterNames :: [Doc]
-      parserDecs  = (\t -> "(encode" <> (stext $ textUppercaseFirst t) <+> ":" <+> (stext t) <+> "-> Js_json.t)" ) <$> typeParameterNames :: [Doc]
-      typeParams = foldl (<>) "" $ if length typeParameterNames > 1 then  ["("] <> (L.intersperse ", " $ stext <$> typeParameterNames) <> [") "] else ((\x -> stext $ x <> " ") <$> typeParameterNames) :: [Doc]
-  (foldl (<+>) "" (typeDecs ++ parserDecs), typeParams )
-
-renderTypeParameters :: OCamlConstructor -> (Doc,Doc)
-renderTypeParameters (OCamlValueConstructor vc) = renderTypeParametersAux $ getOCamlValues vc
-renderTypeParameters (OCamlSumOfRecordConstructor _ vc) = renderTypeParametersAux $ getOCamlValues vc
-renderTypeParameters _ = ("","")
+  renderTypeRef _ = pure ""
 
 instance HasEncoder OCamlDatatype where
   -- handle case where SumWithRecords exists
@@ -102,18 +68,18 @@ instance HasEncoder OCamlDatatype where
   render d@(OCamlDatatype name constructor) = do
     ocamlInterface <- asks includeOCamlInterface
     fnName <- renderRef d
-    ctor <- render constructor
+    renderedConstructor <- render constructor
     if ocamlInterface
       then do
-        let tps = getTypeParameters constructor
-            renderedTPS = foldl (<>) " " $ (\t -> stext $ "encode" <> (textUppercaseFirst t)) <$> tps
+        let typeParameters = getTypeParameters constructor
+            renderedTypeParameters = foldl (<>) "" $ stext <$> L.intersperse " " ((\t -> "encode" <> (textUppercaseFirst t)) <$> typeParameters)
         return $
-          ("let" <+> fnName <+> renderedTPS <> "x =" <$$> (indent 2 ctor))
+          ("let" <+> fnName <+> renderedTypeParameters <> "x =" <$$> (indent 2 renderedConstructor))
       else do
         let (tps,aps) = renderTypeParameters constructor
         return $
           ("let" <+> fnName <+> tps <+> "(x :" <+> aps <> stext (textLowercaseFirst name) <> ") :Js_json.t =") <$$>
-          (indent 2 ctor)
+          (indent 2 renderedConstructor)
 
   render (OCamlPrimitive primitive) = renderRef primitive
     
@@ -292,7 +258,7 @@ instance HasEncoderRef OCamlPrimitive where
 
 toOCamlEncoderVal :: OCamlType a => a -> T.Text
 toOCamlEncoderVal x =
-  pprinter $ runReader (renderValRef (toOCamlType x)) defaultOptions
+  pprinter $ runReader (renderTypeRef (toOCamlType x)) defaultOptions
 
 toOCamlEncoderRefWith :: OCamlType a => Options -> a -> T.Text
 toOCamlEncoderRefWith options x =
@@ -342,3 +308,36 @@ renderVariable ds f@(OCamlField _ _) = do
   f' <- render f
   return (f', ds)
 renderVariable [] _ = error "Amount of variables does not match variables."
+
+-- Util
+
+renderTypeParameterValsAux :: [OCamlValue] -> (Doc,Doc)
+renderTypeParameterValsAux ocamlValues =
+  let typeParameterNames = (<>) "'" <$> getTypeParameterRefNames ocamlValues
+      typeDecs = (\t -> "(" <> (stext t) <+> "-> Js_json.t)") <$> typeParameterNames :: [Doc]
+  in
+      if length typeDecs > 1
+      then
+        let ts = if length typeParameterNames > 1
+                   then foldl (<>) "" $ ["("] <> (L.intersperse ", " $ stext <$> typeParameterNames) <> [") "]
+                   else ""
+        in ((foldl (<>) "" $  (L.intersperse " -> " typeDecs)) <> " ->", ts)
+      else ("","")
+
+renderTypeParameterVals :: OCamlConstructor -> (Doc,Doc)
+renderTypeParameterVals (OCamlValueConstructor vc) = renderTypeParameterValsAux $ getOCamlValues vc
+renderTypeParameterVals (OCamlSumOfRecordConstructor _ vc) = renderTypeParameterValsAux $ getOCamlValues vc
+renderTypeParameterVals _ = ("","")
+
+renderTypeParametersAux :: [OCamlValue] -> (Doc,Doc)
+renderTypeParametersAux ocamlValues = do
+  let typeParameterNames = getTypeParameterRefNames ocamlValues
+      typeDecs = (\t -> "(type " <> (stext t) <> ")") <$> typeParameterNames :: [Doc]
+      parserDecs  = (\t -> "(encode" <> (stext $ textUppercaseFirst t) <+> ":" <+> (stext t) <+> "-> Js_json.t)" ) <$> typeParameterNames :: [Doc]
+      typeParams = foldl (<>) "" $ if length typeParameterNames > 1 then  ["("] <> (L.intersperse ", " $ stext <$> typeParameterNames) <> [") "] else ((\x -> stext $ x <> " ") <$> typeParameterNames) :: [Doc]
+  (foldl (<+>) "" (typeDecs ++ parserDecs), typeParams )
+
+renderTypeParameters :: OCamlConstructor -> (Doc,Doc)
+renderTypeParameters (OCamlValueConstructor vc) = renderTypeParametersAux $ getOCamlValues vc
+renderTypeParameters (OCamlSumOfRecordConstructor _ vc) = renderTypeParametersAux $ getOCamlValues vc
+renderTypeParameters _ = ("","")

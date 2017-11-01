@@ -8,7 +8,7 @@ import           Data.Monoid
 import           Data.Text  (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as LT
-import           Formatting hiding (text)
+import           Formatting hiding (stext, text)
 import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
 
 data Options = Options

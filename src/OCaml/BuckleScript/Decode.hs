@@ -8,6 +8,7 @@ module OCaml.BuckleScript.Decode
   , toOCamlDecoderRefWith
   , toOCamlDecoderSource
   , toOCamlDecoderSourceWith
+  , toOCamlDecoderInterface
   ) where
 
 import           Control.Monad.Reader
@@ -24,6 +25,19 @@ class HasDecoder a where
 
 class HasDecoderRef a where
   renderRef :: a -> Reader Options Doc
+
+class HasDecoderInterface a where
+  renderInterface :: a -> Reader Options Doc
+
+instance HasDecoderInterface OCamlDatatype where
+  renderInterface d@(OCamlDatatype typeName constructors) = do
+    fnName <- renderRef d
+    --let (tps,ex) = renderTypeParameters constructors
+    --pure $ "val" <+> fnName <+> ":" <+> "Js_json.t" <+> tps <+> ex <> "(" <> (stext . textLowercaseFirst $ typeName) <> ", string)" <+> "->" <+> "Js_result.t"
+    pure $ "val" <+> fnName <+> ":" <+> "Js_json.t ->" <+> "(" <> (stext . textLowercaseFirst $ typeName) <> ", string)" <+> "Js_result.t"
+
+  renderInterface _ = pure ""
+
 
 renderTypeParametersAux :: [OCamlValue] -> (Doc,Doc)
 renderTypeParametersAux ocamlValues = do
@@ -59,13 +73,16 @@ instance HasDecoder OCamlDatatype where
         <$$> "| None -> Js_result.Error \"" <> fnName <> ": expected a top-level JSON string.\""
       
   render d@(OCamlDatatype name constructor) = do
+    ocamlInterface <- asks includeOCamlInterface
     fnName <- renderRef d
-    ctor <- render constructor
-    let (tps,aps) = renderTypeParameters constructor
-        returnType = "(" <> aps <> (stext . textLowercaseFirst $ name) <> ", string) Js_result.t ="
-    pure
-       $   "let" <+> fnName <+> tps <+> "(json : Js_json.t) :" <> returnType
-      <$$> ctor
+    renderedConstructor <- render constructor
+    if ocamlInterface
+      then
+        pure $ "let" <+> fnName <+> "json" <+> "=" <$$> renderedConstructor
+      else do
+        let (tps,aps) = renderTypeParameters constructor
+            returnType = "(" <> aps <> (stext . textLowercaseFirst $ name) <> ", string) Js_result.t ="
+        pure $ "let" <+> fnName <+> tps <+> "(json : Js_json.t) :" <> returnType <$$> renderedConstructor
 
   render (OCamlPrimitive primitive) = renderRef primitive
 
@@ -267,6 +284,11 @@ instance HasDecoderRef OCamlPrimitive where
   renderRef OFloat = pure "float"
   renderRef OString = pure "string"
 
+
+toOCamlDecoderInterface :: OCamlType a => a -> T.Text
+toOCamlDecoderInterface x =
+  pprinter $ runReader (renderInterface (toOCamlType x)) defaultOptions
+  
 toOCamlDecoderRefWith :: OCamlType a => Options -> a -> T.Text
 toOCamlDecoderRefWith options x = pprinter $ runReader (renderRef (toOCamlType x)) options
 

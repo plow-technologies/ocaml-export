@@ -26,39 +26,14 @@ class HasRecordType a where
 class HasTypeRef a where
   renderRef :: a -> Reader Options Doc
 
-renderTypeParameters :: OCamlConstructor -> Doc
-renderTypeParameters constructor = mkDocList $ stext . (<>) "'" <$> (nub $ getTypeParameters constructor)
-
--- | For Haskell Sum of Records, create OCaml record types of each RecordConstructorn
-makeAuxTypeDef :: Text -> ValueConstructor -> Reader Options (Maybe (Doc,(Text,ValueConstructor)))
-makeAuxTypeDef typeName c@(RecordConstructor rName _rValue) = do
-  let newName = (stext $ textLowercaseFirst typeName) <> (stext rName)
-  ctor <- render c
-  return $ Just ((nest 2 $ "type" <+> newName <+> "=" <$$> ctor), (rName, (RecordConstructor (typeName <> rName) _rValue)))
-makeAuxTypeDef _ _ = return Nothing
-
--- | A Haskell Sum of Records needs to be transformed into OCaml record types
---   and a sum type. Replace RecordConstructor with NamedConstructor.
-replaceRecordConstructors :: [(Text,ValueConstructor)] -> ValueConstructor -> ValueConstructor
-replaceRecordConstructors newConstructors rc@(RecordConstructor oldName _) = 
-  case length mrc > 0 of
-    False -> rc
-    True  -> head mrc
-  where
-    rplc (oldName', (RecordConstructor newName _rValue)) =
-      if oldName == oldName' then (Just $ NamedConstructor oldName' (OCamlRef newName)) else Nothing
-    rplc _ = Nothing
-    mrc = catMaybes $ rplc <$> newConstructors
-replaceRecordConstructors _ rc = rc
-
 instance HasType OCamlDatatype where
   render d@(OCamlDatatype typeName constructor@(OCamlSumOfRecordConstructor _ (MultipleConstructors css))) = do
-    -- for each constructor, if it is a record constructor
-    -- make a special new one, other wise do normal things
+    -- For each constructor, if it is a record constructor, declare a type for that record
+    -- before and separate form the main sum type.
     vs' <- catMaybes <$> sequence (makeAuxTypeDef typeName <$> css)
     let vs = msuffix (line <> line) (fst <$> vs')
-    let cs' = replaceRecordConstructors (snd <$> vs') <$> css
-    let typeParameters = renderTypeParameters constructor
+        cs' = replaceRecordConstructors (snd <$> vs') <$> css
+        typeParameters = renderTypeParameters constructor
     name <- renderRef d
     ctor <- render (OCamlValueConstructor $ MultipleConstructors cs')
     return $ vs <> (nest 2 $ "type" <+> typeParameters <+> name <+> "=" <$$> "|" <+> ctor)
@@ -196,6 +171,38 @@ toOCamlTypeSourceWith options x =
 
 toOCamlTypeSource :: OCamlType a => a -> T.Text
 toOCamlTypeSource = toOCamlTypeSourceWith defaultOptions
+
+
+-- Util functions
+
+-- | A Haskell Sum of Records needs to be transformed into OCaml record types
+--   and a sum type. Replace RecordConstructor with NamedConstructor.
+replaceRecordConstructors :: [(Text,ValueConstructor)] -> ValueConstructor -> ValueConstructor
+replaceRecordConstructors newConstructors rc@(RecordConstructor oldName _) = 
+  case length mrc > 0 of
+    False -> rc
+    True  -> head mrc
+  where
+    rplc (oldName', (RecordConstructor newName _rValue)) =
+      if oldName == oldName' then (Just $ NamedConstructor oldName' (OCamlRef newName)) else Nothing
+    rplc _ = Nothing
+    mrc = catMaybes $ rplc <$> newConstructors
+replaceRecordConstructors _ rc = rc
+
+-- | Given a constructor, output a list of type parameters.
+--   (Maybe a) -> 'a0 list -> ["'a0"]
+--   (Either a b) -> 'a0 'a1 list -> ["'a0","'a1"]
+renderTypeParameters :: OCamlConstructor -> Doc
+renderTypeParameters constructor = mkDocList $ stext . (<>) "'" <$> (nub $ getTypeParameters constructor)
+
+-- | For Haskell Sum of Records, create OCaml record types of each RecordConstructorn
+makeAuxTypeDef :: Text -> ValueConstructor -> Reader Options (Maybe (Doc,(Text,ValueConstructor)))
+makeAuxTypeDef typeName c@(RecordConstructor rName _rValue) = do
+  let newName = (stext $ textLowercaseFirst typeName) <> (stext rName)
+  ctor <- render c
+  return $ Just ((nest 2 $ "type" <+> newName <+> "=" <$$> ctor), (rName, (RecordConstructor (typeName <> rName) _rValue)))
+makeAuxTypeDef _ _ = return Nothing
+
 
 -- | Puts parentheses around the doc of an OCaml ref if it contains spaces.
 ocamlRefParens :: OCamlPrimitive -> Doc -> Doc

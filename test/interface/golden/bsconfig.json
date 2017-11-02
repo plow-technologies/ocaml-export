@@ -6,5 +6,8 @@
   "sources": [{
     "dir":    "product",
     "subdirs": true
+  },{
+    "dir":    "sum",
+    "subdirs": true
   }]
 }

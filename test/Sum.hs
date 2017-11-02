@@ -11,20 +11,20 @@ import Test.Hspec
 import Util
 
 testSum = testOCamlType Sum
+testSumInterface = testOCamlTypeWithInterface Sum
 
 spec :: Spec
 spec = do
+  describe "OCaml Declaration with Interface: Sum Types" $ do
+    testSumInterface "OnOrOff" (mkOCamlInterface (Proxy :: Proxy OnOrOff))
+    
   describe "Sum Types" $ do
     testSum onOrOff "OnOrOff"
     testSum nameOrIdNumber "NameOrIdNumber"
     testSum sumVariant "SumVariant"
---    testSum tuple "Tuple"
     testSum withTuple "WithTuple"
     testSum sumWithRecord "SumWithRecord"
     testSum resultRecord "Result"
- --   it "" $
---      new
---      shouldBe True False
     testSum newTypeRecord "NewType"
     
 data OnOrOff = On | Off

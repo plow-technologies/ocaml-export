@@ -22,23 +22,6 @@ let encodeSumWithRecordB2 x =
     ; ( "b3", Json.Encode.int x.b3 )
     ]
 
-let decodeSumWithRecordA1 json =
-  match Json.Decode.
-    { a1 = field "a1" int json
-    }
-  with
-  | v -> Js_result.Ok v
-  | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeWithRecordA1: " ^ message)
-
-let decodeSumWithRecordB2 json =
-  match Json.Decode.
-    { b2 = field "b2" string json
-    ; b3 = field "b3" int json
-    }
-  with
-  | v -> Js_result.Ok v
-  | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeWithRecordA1: " ^ message)
-  
 let encodeSumWithRecord x =
   match x with
   | A1 y0 ->
@@ -58,6 +41,23 @@ let encodeSumWithRecord x =
          Json.Encode.object_ []
      )
 
+let decodeSumWithRecordA1 json =
+  match Json.Decode.
+    { a1 = field "a1" int json
+    }
+  with
+  | v -> Js_result.Ok v
+  | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumWithRecordA1: " ^ message)
+
+let decodeSumWithRecordB2 json =
+  match Json.Decode.
+    { b2 = field "b2" string json
+    ; b3 = field "b3" int json
+    }
+  with
+  | v -> Js_result.Ok v
+  | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumWithRecordB2: " ^ message)
+
 let decodeSumWithRecord json =
   match Json.Decode.(field "tag" string json) with
   | "A1" ->
@@ -72,4 +72,3 @@ let decodeSumWithRecord json =
      )
   | err -> Js_result.Error ("Unknown tag value found '" ^ err ^ "'.")
   | exception Json.Decode.DecodeError message -> Js_result.Error message
-

@@ -44,7 +44,7 @@ instance HasEncoder OCamlDatatype where
     ocamlInterface <- asks includeOCamlInterface
     fnName <- renderRef d
     docs <- catMaybes <$> sequence (renderSumRecord typeName . OCamlValueConstructor <$> constrs)
-    let vs = msuffix (line <> line) docs
+    let vs = linesBetween docs
     dc <- mapM renderSum (OCamlSumOfRecordConstructor typeName <$> constrs)
     
     if ocamlInterface
@@ -128,8 +128,13 @@ instance HasEncoder OCamlConstructor where
 
 renderSumRecord :: Text -> OCamlConstructor -> Reader Options (Maybe Doc)
 renderSumRecord typeName (OCamlValueConstructor (RecordConstructor name value)) = do
+  ocamlInterface <- asks includeOCamlInterface
   s <- render (OCamlValueConstructor $ RecordConstructor (typeName <> name) value)
-  return $ Just $ "let encode" <> (stext newName) <> " (x : " <> (stext $ textLowercaseFirst newName) <> ") :Js_json.t =" <$$> (indent 2 s)
+  if ocamlInterface
+    then
+      pure $ Just $ "let encode" <> stext newName <+> "x =" <$$> (indent 2 s)
+    else
+      pure $ Just $ "let encode" <> (stext newName) <> " (x : " <> (stext $ textLowercaseFirst newName) <> ") :Js_json.t =" <$$> (indent 2 s)
   where
     newName = typeName <> name
 renderSumRecord _ _ = return Nothing

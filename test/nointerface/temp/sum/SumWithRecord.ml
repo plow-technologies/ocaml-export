@@ -22,7 +22,6 @@ let encodeSumWithRecordB2 (x : sumWithRecordB2) :Js_json.t =
     ; ( "b3", Json.Encode.int x.b3 )
     ]
 
-
 let encodeSumWithRecord (x : sumWithRecord) :Js_json.t =
   match x with
   | A1 y0 ->

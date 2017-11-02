@@ -14,11 +14,11 @@ type sumWithRecord =
 val encodeSumWithRecordA1 : sumWithRecordA1 -> Js_json.t
 
 val encodeSumWithRecordB2 : sumWithRecordB2 -> Js_json.t
+  
+val encodeSumWithRecord : sumWithRecord -> Js_json.t
 
 val decodeSumWithRecordA1 : Js_json.t -> (sumWithRecordA1, string) Js_result.t
 
 val decodeSumWithRecordB2 : Js_json.t -> (sumWithRecordB2, string) Js_result.t
-  
-val encodeSumWithRecord : sumWithRecord -> Js_json.t
 
 val decodeSumWithRecord : Js_json.t -> (sumWithRecord, string) Js_result.t

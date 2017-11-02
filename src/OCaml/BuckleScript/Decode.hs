@@ -13,6 +13,7 @@ module OCaml.BuckleScript.Decode
 
 import           Control.Monad.Reader
 import qualified Data.List as L
+import           Data.Maybe (catMaybes)
 import           Data.Monoid
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -37,7 +38,46 @@ instance HasDecoderInterface OCamlDatatype where
 
   renderInterface _ = pure ""
 
+
+renderSumRecord :: Text -> OCamlConstructor -> Reader Options (Maybe Doc)
+renderSumRecord typeName (OCamlValueConstructor (RecordConstructor name value)) = do
+  ocamlInterface <- asks includeOCamlInterface
+  s <- render (OCamlValueConstructor $ RecordConstructor (typeName <> name) value)
+  if ocamlInterface
+    then
+      pure $ Just $ "let decode" <> stext newName <+> "json =" <$$> s
+    else
+      pure $ Just $ "let decode" <> stext newName <+> (parens "x :" <+> (stext $ textLowercaseFirst newName)) <+> ":Js_json.t =" <$$> (indent 2 s)
+  where
+    newName = typeName <> name
+renderSumRecord _ _ = return Nothing
+
+
 instance HasDecoder OCamlDatatype where
+  -- Sum with records
+  render d@(OCamlDatatype typeName c@(OCamlSumOfRecordConstructor _ (MultipleConstructors constrs))) = do
+    ocamlInterface <- asks includeOCamlInterface
+    fnName <- renderRef d
+    docs <- catMaybes <$> sequence (renderSumRecord typeName . OCamlValueConstructor <$> constrs)
+    let vs = linesBetween docs
+    dc <- mapM renderSum (OCamlSumOfRecordConstructor typeName <$> constrs)
+    
+    if ocamlInterface
+      then do
+       pure $ vs <$$>
+         ("let" <+> fnName <+> "json =") <$$>
+         (indent 2 ("match Json.Decode.(field \"tag\" string json) with" <$$> foldl1 (<$$>) dc <$$> footer))
+      else do
+        let (tps,aps) = renderTypeParameters c
+        pure $ vs <$$>
+          ("let" <+> fnName <+> tps <+> "(x :" <+> aps <> stext (textLowercaseFirst typeName) <> ") :Js_json.t =") <$$>
+          (indent 2 ("match x with" <$$> foldl1 (<$$>) dc))
+    where
+      footer =
+         "| err -> Js_result.Error (\"Unknown tag value found '\" ^ err ^ \"'.\")"
+         <$$> "| exception Json.Decode.DecodeError message -> Js_result.Error message"
+
+
   render d@(OCamlDatatype name cs@(OCamlEnumeratorConstructor constructors)) = do
     ocamlInterface <- asks includeOCamlInterface
     dv <- mapM render constructors
@@ -115,8 +155,9 @@ instance HasDecoder OCamlConstructor where
       footer = "| err -> Js_result.Error (\"Unknown tag value found '\" ^ err ^ \"'.\")"
           <$$> "| exception Json.Decode.DecodeError message -> Js_result.Error message"
 
-  render (OCamlEnumeratorConstructor _constructors) = fail "OCamlEnumeratorConstructor should be handled at the OCamlDataType level."
-  render (OCamlSumOfRecordConstructor _name _constructors) = fail "OCamlEnumeratorConstructor should be handled at the OCamlDataType level."
+  render _ = pure ""
+--  render (OCamlEnumeratorConstructor _constructors) = fail "OCamlEnumeratorConstructor should be handled at the OCamlDataType level."
+--  render (OCamlSumOfRecordConstructor _name _constructors) = fail "OCamlEnumeratorConstructor should be handled at the OCamlDataType level."
 
 instance HasDecoder OCamlValue where
   render (OCamlRef name) = do
@@ -257,9 +298,24 @@ renderSum (OCamlValueConstructor (RecordConstructor name value)) = do
 renderSum (OCamlValueConstructor (MultipleConstructors constrs)) =
   foldl1 (<$+$>) <$> mapM (renderSum . OCamlValueConstructor) constrs
 
-renderSum (OCamlEnumeratorConstructor _) = pure "" -- handled elsewhere
+renderSum (OCamlSumOfRecordConstructor typeName (RecordConstructor name _value)) =
+  renderOutsideEncoder typeName name
 
-renderSum (OCamlSumOfRecordConstructor _ _) = pure "" -- handled elsewhere
+renderSum (OCamlSumOfRecordConstructor typeName (MultipleConstructors constrs)) =
+  foldl1 (<$+$>) <$> mapM renderSum (OCamlSumOfRecordConstructor typeName <$> constrs)
+
+renderSum (OCamlEnumeratorConstructor _) = pure "" -- handled elsewhere
+renderSum _ = pure ""
+
+renderOutsideEncoder :: Text -> Text -> Reader Options Doc
+renderOutsideEncoder typeName name =  
+   return $
+         "|" <+> (dquotes . stext $ name) <+> "->"
+    <$$> indent 3 ("(match" <+> "decode" <> (stext $ typeName <> textUppercaseFirst name) <+> "json" <+> "with"
+    <$$> indent 1 ("| Js_result.Ok v -> Js_result.Ok" <+> (parens ((stext $ textUppercaseFirst name) <+> "v"))
+    <$$> "| Js_result.Error message -> Js_result.Error" <+> (parens $ (dquotes $ "decode" <> stext typeName <> ": ") <+> "^ message"))
+    <$$> ")")
+
 
 flattenOCamlValue :: OCamlValue -> [OCamlValue]
 flattenOCamlValue (Values l r) = flattenOCamlValue l ++ flattenOCamlValue r

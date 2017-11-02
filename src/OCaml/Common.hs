@@ -63,6 +63,11 @@ emptyline = nest minBound linebreak
 (<$+$>) :: Doc -> Doc -> Doc
 l <$+$> r = l <> emptyline <$$> r
 
+linesBetween :: [Doc] -> Doc
+linesBetween docs =
+  let extra = if length docs > 0 then line else ""
+  in foldl (<>) "" $ (L.intersperse (line <> line) docs) <> [extra]
+
 squarebracks :: Doc -> Doc
 squarebracks doc = "[" <+> doc <+> "]"
 

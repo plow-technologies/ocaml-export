@@ -27,6 +27,9 @@ class HasEncoderRef a where
 class HasEncoderInterface a where
   renderTypeInterface :: a -> Reader Options Doc
 
+-- render the type signature for an OCaml Encoder for an interface file (.mli)
+-- let encodePerson x , val encodePerson : person -> Js_json.t
+-- let encodeList encodeA0 x, val encodeList : ('a0 -> Js_json.t) -> 'a0 list -> Js_json.t
 instance HasEncoderInterface OCamlDatatype where
   renderTypeInterface d@(OCamlDatatype typeName constructors) = do
     fnName <- renderRef d
@@ -36,7 +39,7 @@ instance HasEncoderInterface OCamlDatatype where
   renderTypeInterface _ = pure ""
 
 instance HasEncoder OCamlDatatype where
-  -- handle case where SumWithRecords exists
+  -- sum that has at least one record constructor
   render d@(OCamlDatatype typeName c@(OCamlSumOfRecordConstructor _ (MultipleConstructors constrs))) = do
     ocamlInterface <- asks includeOCamlInterface
     fnName <- renderRef d
@@ -74,7 +77,7 @@ instance HasEncoder OCamlDatatype where
         let typeParameters = getTypeParameters constructor
             renderedTypeParameters = foldl (<>) "" $ stext <$> L.intersperse " " ((\t -> "encode" <> (textUppercaseFirst t)) <$> typeParameters)
         return $
-          ("let" <+> fnName <+> renderedTypeParameters <> "x =" <$$> (indent 2 renderedConstructor))
+          ("let" <+> fnName <+> renderedTypeParameters <+> "x =" <$$> (indent 2 renderedConstructor))
       else do
         let (tps,aps) = renderTypeParameters constructor
         return $
@@ -314,13 +317,17 @@ renderVariable [] _ = error "Amount of variables does not match variables."
 renderTypeParameterValsAux :: [OCamlValue] -> (Doc,Doc)
 renderTypeParameterValsAux ocamlValues =
   let typeParameterNames = (<>) "'" <$> getTypeParameterRefNames ocamlValues
-      typeDecs = (\t -> "(" <> (stext t) <+> "-> Js_json.t)") <$> typeParameterNames :: [Doc]
+      typeDecs = (\t -> "(" <> (stext t) <+> "-> Js_json.t)") <$> typeParameterNames
   in
-      if length typeDecs > 1
+      if length typeDecs > 0
       then
-        let ts = if length typeParameterNames > 1
-                   then foldl (<>) "" $ ["("] <> (L.intersperse ", " $ stext <$> typeParameterNames) <> [") "]
-                   else ""
+        let ts =
+              if length typeParameterNames > 1
+              then foldl (<>) "" $ ["("] <> (L.intersperse ", " $ stext <$> typeParameterNames) <> [") "]
+              else
+                -- `flip (<>) " "` means add a space to the end
+                if length typeParameterNames == 1 then stext . flip (<>) " " . head $ typeParameterNames
+                else ""
         in ((foldl (<>) "" $  (L.intersperse " -> " typeDecs)) <> " ->", ts)
       else ("","")
 

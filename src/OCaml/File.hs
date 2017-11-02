@@ -2,29 +2,31 @@
 
 module OCaml.File where
 
-import           Data.Monoid
+-- base
+import Data.Monoid
+
+-- directory
+import System.Directory
+
+-- text
 import           Data.Text        (Text)
 import qualified Data.Text        as T
 import qualified Data.Text.IO     as T
-import OCaml.Record
+
+-- ocaml-export
 import OCaml.BuckleScript.Decode
 import OCaml.BuckleScript.Encode
 import OCaml.Common
+import OCaml.Record
 import OCaml.Type
-import           System.Directory
+
 
 data OCamlFile =
   OCamlFile
     { ocamlFilePath     :: FilePath
     , ocamlDeclarations :: [Text]
     }
-{-
-data OCamlInterface =
-  OCamlInterface
-    { docamlFile :: OCamlFile
-    , ocamlInterfaceDeclarations :: [Text]
-    }
--}
+
 data OCamlInterface =
   OCamlInterface
     { declars :: [Text]
@@ -59,14 +61,3 @@ createOCamlFileWithInterface rootDir fileName ocamlInterface = do
       interfaceBody = T.intercalate "\n\n" (inters ocamlInterface) <> "\n"
   T.writeFile (fp <> ".ml") body
   T.writeFile (fp <> ".mli") interfaceBody
-
-{-
-createOCamlFileWithInterface :: FilePath -> OCamlInterface -> IO ()
-createOCamlFileWithInterface rootDir ocamlInterface = do
-  createDirectoryIfMissing True rootDir
-  let fp = rootDir <> "/" <> ocamlFilePath (docamlFile ocamlInterface)
-      body = T.intercalate "\n\n" (ocamlDeclarations . docamlFile $ ocamlInterface) <> "\n"
-      interfaceBody = T.intercalate "\n\n" (ocamlInterfaceDeclarations ocamlInterface) <> "\n"
-  T.writeFile (fp <> ".ml") body
-  T.writeFile (fp <> ".mli") interfaceBody
--}

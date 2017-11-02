@@ -32,11 +32,41 @@ class HasDecoderInterface a where
 instance HasDecoderInterface OCamlDatatype where
   renderInterface d@(OCamlDatatype typeName constructors) = do
     fnName <- renderRef d
-    --let (tps,ex) = renderTypeParameters constructors
-    --pure $ "val" <+> fnName <+> ":" <+> "Js_json.t" <+> tps <+> ex <> "(" <> (stext . textLowercaseFirst $ typeName) <> ", string)" <+> "->" <+> "Js_result.t"
-    pure $ "val" <+> fnName <+> ":" <+> "Js_json.t ->" <+> "(" <> (stext . textLowercaseFirst $ typeName) <> ", string)" <+> "Js_result.t"
+    let (typeParameterEncoders, typeParameters) = renderTypeParameterVals constructors
+    pure $ "val" <+> fnName <+> ":" <+> typeParameterEncoders <> "Js_json.t ->" <+> "(" <> typeParameters <> (stext . textLowercaseFirst $ typeName) <> ", string)" <+> "Js_result.t"
 
   renderInterface _ = pure ""
+
+
+renderTypeParameterValsAux :: [OCamlValue] -> (Doc,Doc)
+renderTypeParameterValsAux ocamlValues =
+  let typeParameterNames = (<>) "'" <$> getTypeParameterRefNames ocamlValues
+      typeDecs = (foldl (<>) "" $ L.intersperse " -> " $ (\t -> "(Js_json.t -> (" <> (stext t) <> ", string) Js_result.t)") <$> typeParameterNames) <> " -> "
+  in
+      if length typeParameterNames > 0
+      then
+        if length typeParameterNames > 1
+          then (typeDecs, foldl (<>) "" $ ["("] <> (L.intersperse ", " $ stext <$> typeParameterNames) <> [") "])
+          else (typeDecs, stext . flip (<>) " " . head $ typeParameterNames)
+      else ("","")
+        
+
+{-
+        let ts =
+              if length typeParameterNames > 1
+              then foldl (<>) "" $ ["("] <> (L.intersperse ", " $ stext <$> typeParameterNames) <> [") "]
+              else
+                -- `flip (<>) " "` means add a space to the end
+                if length typeParameterNames == 1 then stext . flip (<>) " " . head $ typeParameterNames
+                else ""
+        in ((foldl (<>) "" $  (L.intersperse " -> " typeDecs)) <> " ->", ts)
+-}
+
+renderTypeParameterVals :: OCamlConstructor -> (Doc,Doc)
+renderTypeParameterVals (OCamlValueConstructor vc) = renderTypeParameterValsAux $ getOCamlValues vc
+renderTypeParameterVals (OCamlSumOfRecordConstructor _ vc) = renderTypeParameterValsAux $ getOCamlValues vc
+renderTypeParameterVals _ = ("","")
+
 
 
 renderTypeParametersAux :: [OCamlValue] -> (Doc,Doc)
@@ -77,8 +107,10 @@ instance HasDecoder OCamlDatatype where
     fnName <- renderRef d
     renderedConstructor <- render constructor
     if ocamlInterface
-      then
-        pure $ "let" <+> fnName <+> "json" <+> "=" <$$> renderedConstructor
+      then do
+        let typeParameters = getTypeParameters constructor
+            renderedTypeParameters = foldl (<>) "" $ stext <$> L.intersperse " " ((\t -> "decode" <> (textUppercaseFirst t)) <$> typeParameters)
+        pure $ "let" <+> fnName <+> renderedTypeParameters <+>"json" <+> "=" <$$> renderedConstructor
       else do
         let (tps,aps) = renderTypeParameters constructor
             returnType = "(" <> aps <> (stext . textLowercaseFirst $ name) <> ", string) Js_result.t ="

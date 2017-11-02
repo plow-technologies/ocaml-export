@@ -27,6 +27,7 @@ spec = do
     testProductInt "Company" (mkOCamlInterface (Proxy :: Proxy Person) <> (mkOCamlInterface (Proxy :: Proxy Company)))
     testProduct card "Card"
     testProduct oneTypeParameter "OneTypeParameter"
+    testProductInt "OneTypeParameter" (mkOCamlInterface (Proxy :: Proxy (OneTypeParameter TypeParameterRef0)))
     testProduct twoTypeParameters "TwoTypeParameters"
     testProduct three "ThreeTypeParameters"
     testProduct subTypeParameter "SubTypeParameter"
@@ -93,22 +94,6 @@ person =
     , toOCamlDecoderSource (Proxy :: Proxy Person)
     ]
 
-{-
-personInterface :: OCamlInterface
-personInterface =
-  OCamlInterface
-    (OCamlFile
-     "Person"
-      [ toOCamlTypeSource (Proxy :: Proxy Person)
-      , toOCamlEncoderSourceWith (defaultOptions {includeOCamlInterface = True}) (Proxy :: Proxy Person)
-      , toOCamlDecoderSourceWith (defaultOptions {includeOCamlInterface = True}) (Proxy :: Proxy Person)
-      ]
-    )
-    [ toOCamlTypeSource (Proxy :: Proxy Person)
-    , toOCamlEncoderInterface (Proxy :: Proxy Person)
-    , toOCamlDecoderInterface (Proxy :: Proxy Person)
-    ]
--}
 company :: OCamlFile
 company =
   OCamlFile
@@ -120,28 +105,7 @@ company =
     , toOCamlEncoderSource (Proxy :: Proxy Company)
     , toOCamlDecoderSource (Proxy :: Proxy Company)
     ]
-{-
-companyInterface :: OCamlInterface
-companyInterface =
-  OCamlInterface
-    (OCamlFile
-     "Company"
-      [ toOCamlTypeSource (Proxy :: Proxy Person)
-      , toOCamlEncoderSourceWith (defaultOptions {includeOCamlInterface = True}) (Proxy :: Proxy Person)
-      , toOCamlDecoderSourceWith (defaultOptions {includeOCamlInterface = True}) (Proxy :: Proxy Person)
-      , toOCamlTypeSource (Proxy :: Proxy Company)
-      , toOCamlEncoderSourceWith (defaultOptions {includeOCamlInterface = True}) (Proxy :: Proxy Company)
-      , toOCamlDecoderSourceWith (defaultOptions {includeOCamlInterface = True}) (Proxy :: Proxy Company)
-      ]
-    )
-    [ toOCamlTypeSource (Proxy :: Proxy Person)
-    , toOCamlEncoderInterface (Proxy :: Proxy Person)
-    , toOCamlDecoderInterface (Proxy :: Proxy Person)
-    , toOCamlTypeSource (Proxy :: Proxy Company)
-    , toOCamlEncoderInterface (Proxy :: Proxy Company)
-    , toOCamlDecoderInterface (Proxy :: Proxy Company)
-    ]
--}
+
 card :: OCamlFile
 card =
   OCamlFile

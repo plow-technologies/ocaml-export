@@ -49,8 +49,7 @@ instance HasEncoder OCamlDatatype where
     
     if ocamlInterface
       then do
-       let tps = getTypeParameters c
-           renderedTPS = foldl (<>) " " $ (\t -> stext $ "encode" <> (textUppercaseFirst t)) <$> tps
+       let renderedTPS = renderEncodeTypeParameters c
        return $ vs <$$>
          ("let" <+> fnName <+> renderedTPS <+> "x =") <$$>
          (indent 2 ("match x with" <$$> foldl1 (<$$>) dc))
@@ -61,12 +60,20 @@ instance HasEncoder OCamlDatatype where
           (indent 2 ("match x with" <$$> foldl1 (<$$>) dc))
     
   render d@(OCamlDatatype typeName c@(OCamlValueConstructor (MultipleConstructors constrs))) = do
+    ocamlInterface <- asks includeOCamlInterface
     fnName <- renderRef d
     dc <- mapM renderSum (OCamlValueConstructor <$> constrs)
-    let (tps,aps) = renderTypeParameters c
-    return $
-      ("let" <+> fnName <+> tps <+> "(x :" <+> aps <> stext (textLowercaseFirst typeName) <> ") :Js_json.t =") <$$>
-      (indent 2 ("match x with" <$$> foldl1 (<$$>) dc))
+    if ocamlInterface
+      then do
+        let encodeTypeParameters = renderEncodeTypeParameters c
+        pure $
+          ("let" <+> fnName <+> encodeTypeParameters <+> "x =") <$$>
+          (indent 2 ("match x with" <$$> foldl1 (<$$>) dc))
+      else do
+        let (tps,aps) = renderTypeParameters c
+        pure $
+          ("let" <+> fnName <+> tps <+> "(x :" <+> aps <> stext (textLowercaseFirst typeName) <> ") :Js_json.t =") <$$>
+          (indent 2 ("match x with" <$$> foldl1 (<$$>) dc))
 
   render d@(OCamlDatatype name constructor) = do
     ocamlInterface <- asks includeOCamlInterface
@@ -74,8 +81,7 @@ instance HasEncoder OCamlDatatype where
     renderedConstructor <- render constructor
     if ocamlInterface
       then do
-        let typeParameters = getTypeParameters constructor
-            renderedTypeParameters = foldl (<>) "" $ stext <$> L.intersperse " " ((\t -> "encode" <> (textUppercaseFirst t)) <$> typeParameters)
+        let renderedTypeParameters = renderEncodeTypeParameters constructor
         return $
           ("let" <+> fnName <+> renderedTypeParameters <+> "x =" <$$> (indent 2 renderedConstructor))
       else do
@@ -348,3 +354,8 @@ renderTypeParameters :: OCamlConstructor -> (Doc,Doc)
 renderTypeParameters (OCamlValueConstructor vc) = renderTypeParametersAux $ getOCamlValues vc
 renderTypeParameters (OCamlSumOfRecordConstructor _ vc) = renderTypeParametersAux $ getOCamlValues vc
 renderTypeParameters _ = ("","")
+
+
+renderEncodeTypeParameters :: OCamlConstructor -> Doc
+renderEncodeTypeParameters constructor =
+  foldl (<>) "" $ stext <$> L.intersperse " " ((\t -> "encode" <> (textUppercaseFirst t)) <$> getTypeParameters constructor)

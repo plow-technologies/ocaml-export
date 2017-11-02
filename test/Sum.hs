@@ -17,6 +17,10 @@ spec :: Spec
 spec = do
   describe "OCaml Declaration with Interface: Sum Types" $ do
     testSumInterface "OnOrOff" (mkOCamlInterface (Proxy :: Proxy OnOrOff))
+    testSumInterface "NameOrIdNumber" (mkOCamlInterface (Proxy :: Proxy NameOrIdNumber))
+    testSumInterface "SumVariant" (mkOCamlInterface (Proxy :: Proxy SumVariant))
+    testSumInterface "WithTuple" (mkOCamlInterface (Proxy :: Proxy WithTuple))
+    testSumInterface "SumWithRecord" (mkOCamlInterface (Proxy :: Proxy SumWithRecord))
     
   describe "Sum Types" $ do
     testSum onOrOff "OnOrOff"

@@ -25,6 +25,7 @@ spec = do
     testProductInterface "OneTypeParameter" (mkOCamlInterface (Proxy :: Proxy (OneTypeParameter TypeParameterRef0)))
     testProductInterface "TwoTypeParameters" (mkOCamlInterface (Proxy :: Proxy (TwoTypeParameters TypeParameterRef0 TypeParameterRef1)))
     testProductInterface "ThreeTypeParameters" (mkOCamlInterface (Proxy :: Proxy (Three TypeParameterRef0 TypeParameterRef1 TypeParameterRef2)))
+    testProductInterface "SubTypeParameter" (mkOCamlInterface (Proxy :: Proxy (SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2)))
 
   describe "Product Types" $ do
     testProduct person "Person"

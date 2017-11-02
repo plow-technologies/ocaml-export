@@ -5,7 +5,7 @@ module OCaml.BuckleScript.Encode
   , toOCamlEncoderRefWith
   , toOCamlEncoderSource
   , toOCamlEncoderSourceWith
-  , toOCamlEncoderVal
+  , toOCamlEncoderInterface
   ) where
 
 import           Control.Monad.Reader
@@ -24,16 +24,16 @@ class HasEncoder a where
 class HasEncoderRef a where
   renderRef :: a -> Reader Options Doc
 
-class HasEncoderTypeRef a where
-  renderTypeRef :: a -> Reader Options Doc
+class HasEncoderInterface a where
+  renderTypeInterface :: a -> Reader Options Doc
 
-instance HasEncoderTypeRef OCamlDatatype where
-  renderTypeRef d@(OCamlDatatype typeName constructors) = do
+instance HasEncoderInterface OCamlDatatype where
+  renderTypeInterface d@(OCamlDatatype typeName constructors) = do
     fnName <- renderRef d
     let (tps,ex) = renderTypeParameterVals constructors
     pure $ "val" <+> fnName <+> ":" <+> tps <+> ex <> (stext . textLowercaseFirst $ typeName) <+> "->" <+> "Js_json.t"
 
-  renderTypeRef _ = pure ""
+  renderTypeInterface _ = pure ""
 
 instance HasEncoder OCamlDatatype where
   -- handle case where SumWithRecords exists
@@ -256,9 +256,9 @@ instance HasEncoderRef OCamlPrimitive where
     dv <- renderRef v
     return . parens $ "Js.Encode.dict" <+> dk <+> dv
 
-toOCamlEncoderVal :: OCamlType a => a -> T.Text
-toOCamlEncoderVal x =
-  pprinter $ runReader (renderTypeRef (toOCamlType x)) defaultOptions
+toOCamlEncoderInterface :: OCamlType a => a -> T.Text
+toOCamlEncoderInterface x =
+  pprinter $ runReader (renderTypeInterface (toOCamlType x)) defaultOptions
 
 toOCamlEncoderRefWith :: OCamlType a => Options -> a -> T.Text
 toOCamlEncoderRefWith options x =

@@ -4,6 +4,7 @@
 
 module Product (spec) where
 
+import Data.Monoid ((<>))
 import Data.Proxy
 import Data.Time
 import GHC.Generics
@@ -19,9 +20,11 @@ spec :: Spec
 spec = do
   describe "Product Types" $ do
     testProduct person "Person"
-    testProductInt personInterface "Person"
+    testProductInt "Person" (mkOCamlInterface (Proxy :: Proxy Person))
+    -- testProductInt personInterface "Person"
     testProduct company "Company"
-    testProductInt companyInterface "Company"
+    -- testProductInt companyInterface "Company"
+    testProductInt "Company" (mkOCamlInterface (Proxy :: Proxy Person) <> (mkOCamlInterface (Proxy :: Proxy Company)))
     testProduct card "Card"
     testProduct oneTypeParameter "OneTypeParameter"
     testProduct twoTypeParameters "TwoTypeParameters"
@@ -90,6 +93,7 @@ person =
     , toOCamlDecoderSource (Proxy :: Proxy Person)
     ]
 
+{-
 personInterface :: OCamlInterface
 personInterface =
   OCamlInterface
@@ -101,10 +105,10 @@ personInterface =
       ]
     )
     [ toOCamlTypeSource (Proxy :: Proxy Person)
-    , toOCamlEncoderVal (Proxy :: Proxy Person)
+    , toOCamlEncoderInterface (Proxy :: Proxy Person)
     , toOCamlDecoderInterface (Proxy :: Proxy Person)
     ]
-
+-}
 company :: OCamlFile
 company =
   OCamlFile
@@ -116,7 +120,7 @@ company =
     , toOCamlEncoderSource (Proxy :: Proxy Company)
     , toOCamlDecoderSource (Proxy :: Proxy Company)
     ]
-
+{-
 companyInterface :: OCamlInterface
 companyInterface =
   OCamlInterface
@@ -131,13 +135,13 @@ companyInterface =
       ]
     )
     [ toOCamlTypeSource (Proxy :: Proxy Person)
-    , toOCamlEncoderVal (Proxy :: Proxy Person)
+    , toOCamlEncoderInterface (Proxy :: Proxy Person)
     , toOCamlDecoderInterface (Proxy :: Proxy Person)
     , toOCamlTypeSource (Proxy :: Proxy Company)
-    , toOCamlEncoderVal (Proxy :: Proxy Company)
+    , toOCamlEncoderInterface (Proxy :: Proxy Company)
     , toOCamlDecoderInterface (Proxy :: Proxy Company)
     ]
-
+-}
 card :: OCamlFile
 card =
   OCamlFile

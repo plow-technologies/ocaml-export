@@ -14,20 +14,23 @@ import Util
 
 testProduct = testOCamlType Product
 
-testProductInt = testOCamlTypeWithInterface Product
+testProductInterface = testOCamlTypeWithInterface Product
 
 spec :: Spec
 spec = do
+  describe "OCaml Declaration with Interface: Product Types" $ do
+    testProductInterface "Person" (mkOCamlInterface (Proxy :: Proxy Person))
+    testProductInterface "Company" (mkOCamlInterface (Proxy :: Proxy Person) <> (mkOCamlInterface (Proxy :: Proxy Company)))
+    testProductInterface "Card" (mkOCamlInterface (Proxy :: Proxy Suit) <> (mkOCamlInterface (Proxy :: Proxy Card)))
+    testProductInterface "OneTypeParameter" (mkOCamlInterface (Proxy :: Proxy (OneTypeParameter TypeParameterRef0)))
+    testProductInterface "TwoTypeParameters" (mkOCamlInterface (Proxy :: Proxy (TwoTypeParameters TypeParameterRef0 TypeParameterRef1)))
+    testProductInterface "ThreeTypeParameters" (mkOCamlInterface (Proxy :: Proxy (Three TypeParameterRef0 TypeParameterRef1 TypeParameterRef2)))
+
   describe "Product Types" $ do
     testProduct person "Person"
-    testProductInt "Person" (mkOCamlInterface (Proxy :: Proxy Person))
-    -- testProductInt personInterface "Person"
     testProduct company "Company"
-    -- testProductInt companyInterface "Company"
-    testProductInt "Company" (mkOCamlInterface (Proxy :: Proxy Person) <> (mkOCamlInterface (Proxy :: Proxy Company)))
     testProduct card "Card"
     testProduct oneTypeParameter "OneTypeParameter"
-    testProductInt "OneTypeParameter" (mkOCamlInterface (Proxy :: Proxy (OneTypeParameter TypeParameterRef0)))
     testProduct twoTypeParameters "TwoTypeParameters"
     testProduct three "ThreeTypeParameters"
     testProduct subTypeParameter "SubTypeParameter"

@@ -1,3 +1,12 @@
+{-|
+Module      : OCaml.BuckleScript.Encode
+Description : Produce a JSON encoder for an OCamlDatatype that matches Generic aeson ToJSON
+Copyright   : Plow Technologies, 2017
+License     : BSD3
+Maintainer  : mchaver@gmail.com
+Stability   : experimental
+-}
+
 {-# LANGUAGE OverloadedStrings #-}
 
 module OCaml.BuckleScript.Encode 
@@ -8,98 +17,115 @@ module OCaml.BuckleScript.Encode
   , toOCamlEncoderInterface
   ) where
 
+-- base
 import           Control.Monad.Reader
 import qualified Data.List as L
 import           Data.Maybe (catMaybes)
 import           Data.Monoid
+
+-- text
 import           Data.Text (Text)
 import qualified Data.Text as T
-import           OCaml.Common
-import           OCaml.Type
+
+-- wl-pprint
 import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
 
+-- ocaml-export
+import           OCaml.Common
+import           OCaml.Type
+
+-- | Render the encoder function
 class HasEncoder a where
   render :: a -> Reader Options Doc
 
+-- | Render the encode type signature
 class HasEncoderRef a where
   renderRef :: a -> Reader Options Doc
 
+-- | Render the encoder interface
 class HasEncoderInterface a where
   renderTypeInterface :: a -> Reader Options Doc
 
--- render the type signature for an OCaml Encoder for an interface file (.mli)
--- let encodePerson x , val encodePerson : person -> Js_json.t
--- let encodeList encodeA0 x, val encodeList : ('a0 -> Js_json.t) -> 'a0 list -> Js_json.t
+
 instance HasEncoderInterface OCamlDatatype where
-  renderTypeInterface d@(OCamlDatatype typeName c@(OCamlSumOfRecordConstructor _ (MultipleConstructors constrs))) = do
-    fnName <- renderRef d
-    let (tps,ex) = renderTypeParameterVals c
-    let docs = catMaybes (renderSumRecordInterface typeName . OCamlValueConstructor <$> constrs)
-    let vs = linesBetween docs
-    pure $ vs <$$> "val" <+> fnName <+> ":" <+> tps <+> ex <> (stext . textLowercaseFirst $ typeName) <+> "->" <+> "Js_json.t"
+  -- sum that has at least one record type
+  renderTypeInterface datatype@(OCamlDatatype typeName constructor@(OCamlSumOfRecordConstructor _ (MultipleConstructors constructors))) = do
+    fnName <- renderRef datatype
+    let (typeParameterSignatures,typeParameters) = renderTypeParameterVals constructor
+        sumRecordDeclarations = linesBetween $ catMaybes (renderSumRecordInterface typeName . OCamlValueConstructor <$> constructors)
+        encodeFnName = stext . textLowercaseFirst $ typeName
+    pure $ sumRecordDeclarations
+      <$$> "val" <+> fnName <+> ":" <+> typeParameterSignatures <+> typeParameters <> encodeFnName <+> "->" <+> "Js_json.t"
     
+  -- other data types
+  renderTypeInterface datatype@(OCamlDatatype typeName constructor) = do
+    fnName <- renderRef datatype
+    let (typeParameterSignatures,typeParameters) = renderTypeParameterVals constructor
+        encodeFnName = stext . textLowercaseFirst $ typeName
+    pure $ "val" <+> fnName <+> ":" <+> typeParameterSignatures <+> typeParameters <> encodeFnName <+> "->" <+> "Js_json.t"
 
-  renderTypeInterface d@(OCamlDatatype typeName constructors) = do
-    fnName <- renderRef d
-    let (tps,ex) = renderTypeParameterVals constructors
-    pure $ "val" <+> fnName <+> ":" <+> tps <+> ex <> (stext . textLowercaseFirst $ typeName) <+> "->" <+> "Js_json.t"
-
+  -- no need to render for primitives
   renderTypeInterface _ = pure ""
 
 instance HasEncoder OCamlDatatype where
   -- sum that has at least one record constructor
-  render d@(OCamlDatatype typeName c@(OCamlSumOfRecordConstructor _ (MultipleConstructors constrs))) = do
+  render datatype@(OCamlDatatype typeName constructor@(OCamlSumOfRecordConstructor _ (MultipleConstructors constructors))) = do
     ocamlInterface <- asks includeOCamlInterface
-    fnName <- renderRef d
-    docs <- catMaybes <$> sequence (renderSumRecord typeName . OCamlValueConstructor <$> constrs)
-    let vs = linesBetween docs
-    dc <- mapM renderSum (OCamlSumOfRecordConstructor typeName <$> constrs)
+    fnName <- renderRef datatype
+    vs <- linesBetween <$> catMaybes <$> sequence (renderSumRecord typeName . OCamlValueConstructor <$> constructors)
+    dc <- mapM renderSum (OCamlSumOfRecordConstructor typeName <$> constructors)
     
     if ocamlInterface
       then do
-       let renderedTPS = renderEncodeTypeParameters c
-       return $ vs <$$>
-         ("let" <+> fnName <+> renderedTPS <+> "x =") <$$>
-         (indent 2 ("match x with" <$$> foldl1 (<$$>) dc))
+       let typeParameters = renderEncodeTypeParameters constructor
+       pure $ vs
+         <$$> ("let" <+> fnName <+> typeParameters <+> "x =")
+         <$$> (indent 2 ("match x with" <$$> foldl1 (<$$>) dc))
       else do
-        let (tps,aps) = renderTypeParameters c
-        return $ vs <$$>
-          ("let" <+> fnName <+> tps <+> "(x :" <+> aps <> stext (textLowercaseFirst typeName) <> ") :Js_json.t =") <$$>
-          (indent 2 ("match x with" <$$> foldl1 (<$$>) dc))
-    
-  render d@(OCamlDatatype typeName c@(OCamlValueConstructor (MultipleConstructors constrs))) = do
+        let (typeParameterSignatures,typeParameters) = renderTypeParameters constructor
+            encodeFnName = stext $ textLowercaseFirst typeName
+        pure $ vs
+          <$$> ("let" <+> fnName <+> typeParameterSignatures <+> "(x :" <+> typeParameters <> encodeFnName <> ") :Js_json.t =")
+          <$$> (indent 2 ("match x with" <$$> foldl1 (<$$>) dc))
+
+  -- sum
+  render datatype@(OCamlDatatype typeName constructor@(OCamlValueConstructor (MultipleConstructors constructors))) = do
     ocamlInterface <- asks includeOCamlInterface
-    fnName <- renderRef d
-    dc <- mapM renderSum (OCamlValueConstructor <$> constrs)
+    fnName <- renderRef datatype
+    dc <- mapM renderSum (OCamlValueConstructor <$> constructors)
     if ocamlInterface
       then do
-        let encodeTypeParameters = renderEncodeTypeParameters c
+        let encodeTypeParameters = renderEncodeTypeParameters constructor
         pure $
           ("let" <+> fnName <+> encodeTypeParameters <+> "x =") <$$>
           (indent 2 ("match x with" <$$> foldl1 (<$$>) dc))
       else do
-        let (tps,aps) = renderTypeParameters c
+        let (typeParameterSignatures,typeParameters) = renderTypeParameters constructor
+            encodeFnName = stext $ textLowercaseFirst typeName
         pure $
-          ("let" <+> fnName <+> tps <+> "(x :" <+> aps <> stext (textLowercaseFirst typeName) <> ") :Js_json.t =") <$$>
+          ("let" <+> fnName <+> typeParameterSignatures <+> "(x :" <+> typeParameters <> encodeFnName <> ") :Js_json.t =") <$$>
           (indent 2 ("match x with" <$$> foldl1 (<$$>) dc))
 
-  render d@(OCamlDatatype name constructor) = do
+  -- product or record
+  render datatype@(OCamlDatatype typeName constructor) = do
     ocamlInterface <- asks includeOCamlInterface
-    fnName <- renderRef d
+    fnName <- renderRef datatype
     renderedConstructor <- render constructor
     if ocamlInterface
       then do
-        let renderedTypeParameters = renderEncodeTypeParameters constructor
-        return $
-          ("let" <+> fnName <+> renderedTypeParameters <+> "x =" <$$> (indent 2 renderedConstructor))
+        let typeParameters = renderEncodeTypeParameters constructor
+        pure $
+          "let" <+> fnName <+> typeParameters <+> "x =" <$$> (indent 2 renderedConstructor)
       else do
-        let (tps,aps) = renderTypeParameters constructor
-        return $
-          ("let" <+> fnName <+> tps <+> "(x :" <+> aps <> stext (textLowercaseFirst name) <> ") :Js_json.t =") <$$>
-          (indent 2 renderedConstructor)
+        let (typeParameterSignatures,typeParameters) = renderTypeParameters constructor
+            encodeFnName = stext $ textLowercaseFirst typeName
+        pure $ "let" <+> fnName <+> typeParameterSignatures <+> "(x :" <+> typeParameters <> encodeFnName <> ") :Js_json.t ="
+          <$$> indent 2 renderedConstructor
 
+  -- primitive
   render (OCamlPrimitive primitive) = renderRef primitive
-    
+
+-- | produce encode function name for data types and primitives
 instance HasEncoderRef OCamlDatatype where
   renderRef (OCamlDatatype name _) = pure $ "encode" <> (stext . textUppercaseFirst $ name)
   renderRef (OCamlPrimitive primitive) = renderRef primitive
@@ -107,108 +133,129 @@ instance HasEncoderRef OCamlDatatype where
 instance HasEncoder OCamlConstructor where
   -- Single constructor, no values: empty array
   render (OCamlValueConstructor (NamedConstructor _name OCamlEmpty)) =
-    return $ "Json.Encode.list []"
+    pure $ "Json.Encode.list []"
 
   -- Single constructor, multiple values: create array with values
   render (OCamlValueConstructor (NamedConstructor name value)) = do
-    let ps = constructorParameters 0 value
+    let constructorParams = constructorParameters 0 value
+    (encoders, _) <- renderVariable constructorParams value
+    
+    let encoders' =
+          if length constructorParams > 1
+          then "Json.Encode.array" <+> arraybrackets encoders
+          else encoders
+        constructorParams' =
+          if length constructorParams > 1
+          then ["("] <> (L.intersperse "," constructorParams) <> [")"]
+          else (L.intersperse "," constructorParams)
 
-    (dc, _) <- renderVariable ps value
-    let dc' = if length ps > 1 then "Json.Encode.array" <+> arraybrackets dc else dc
-        ps' = if length ps > 1 then ["("] <> (L.intersperse "," ps) <> [")"] else (L.intersperse "," ps)
+    pure $ "match x with" <$$>
+      "|" <+> stext name <+> foldl1 (<>) constructorParams' <+> "->" <$$> indent 3 encoders'
 
-    return $ "match x with" <$$>
-      "|" <+> stext name <+> foldl1 (<>) ps' <+> "->" <$$> "   " <> dc'
-  
+  -- Record constructor
   render (OCamlValueConstructor (RecordConstructor _ value)) = do
-    dv <- render value
-    return . nest 2 $ "Json.Encode.object_" <$$> "[" <+> dv <$$> "]"
+    recordValue <- render value
+    pure . nest 2 $ "Json.Encode.object_" <$$> "[" <+> recordValue <$$> "]"
 
+  -- Sum
   render (OCamlValueConstructor (MultipleConstructors constrs)) = do
-    dc <- mapM renderSum (OCamlValueConstructor <$> constrs)
-    return $ "match x with" <$$> foldl1 (<$$>) dc
+    sums <- mapM renderSum (OCamlValueConstructor <$> constrs)
+    pure $ "match x with" <$$> foldl1 (<$$>) sums
 
-  render ec@(OCamlEnumeratorConstructor _constructors) = do
-    dv <- renderSum ec
-    return $ "match x with" <$$> dv
+  -- Enumerator
+  render ec@(OCamlEnumeratorConstructor _constructors) =
+    (<$$>) "match x with" <$> renderSum ec
 
   render _  = return ""
 
+
+-- | special rendering function for sum with record types
 renderSumRecord :: Text -> OCamlConstructor -> Reader Options (Maybe Doc)
 renderSumRecord typeName (OCamlValueConstructor (RecordConstructor name value)) = do
   ocamlInterface <- asks includeOCamlInterface
-  s <- render (OCamlValueConstructor $ RecordConstructor (typeName <> name) value)
+  let sumRecordName = typeName <> name
+  sumRecordBody <- render (OCamlValueConstructor $ RecordConstructor sumRecordName value)
   if ocamlInterface
     then
-      pure $ Just $ "let encode" <> stext newName <+> "x =" <$$> (indent 2 s)
+      pure $ Just $ "let encode" <> stext sumRecordName <+> "x ="
+        <$$> indent 2 sumRecordBody
     else
-      pure $ Just $ "let encode" <> (stext newName) <> " (x : " <> (stext $ textLowercaseFirst newName) <> ") :Js_json.t =" <$$> (indent 2 s)
-  where
-    newName = typeName <> name
+      pure $ Just $ "let encode" <> stext sumRecordName <+> "(x : " <> (stext $ textLowercaseFirst sumRecordName) <> ") :Js_json.t ="
+        <$$> indent 2 sumRecordBody
+
 renderSumRecord _ _ = return Nothing
 
+-- | special rendering function for an encoders interface
 renderSumRecordInterface :: Text -> OCamlConstructor -> Maybe Doc
 renderSumRecordInterface typeName (OCamlValueConstructor (RecordConstructor name _value)) =
-  Just $ "val encode" <> (stext $ typeName <> name) <+> ":" <+> (stext (textLowercaseFirst $ typeName <> name)) <+> "->" <+> "Js_json.t"
+  let sumRecordName = typeName <> name 
+  in Just $ "val encode" <> stext sumRecordName <+> ":" <+> (stext . textLowercaseFirst $ sumRecordName) <+> "->" <+> "Js_json.t"
 renderSumRecordInterface _ _ = Nothing
 
-jsonEncodeObject :: Doc -> Doc -> Maybe Doc -> Doc
-jsonEncodeObject constructor tag mContents =
-  case mContents of
-    Nothing -> constructor <$$> nest 5 ("   Json.Encode.object_" <$$> ("[" <+> tag <$$> "]"))
-    Just contents -> constructor <$$> nest 5 ("   Json.Encode.object_" <$$> ("[" <+> tag <$$> contents <$$> "]"))
-
-renderOutsideEncoder :: Text -> Text -> Reader Options Doc
-renderOutsideEncoder typeName name =  
-   return $
-         "|" <+> (stext name) <+> "y0 ->"
-    <$$> "   (match (Js.Json.decodeObject (encode" <> (stext . textUppercaseFirst $ typeName) <> (stext name) <+> "y0)) with"
+-- |
+renderSumOfRecordEncoder :: Text -> Text -> Reader Options Doc
+renderSumOfRecordEncoder typeName name =  
+  pure $
+         "|" <+> stext name <+> "y0 ->"
+    <$$> "   (match (Js.Json.decodeObject (encode" <> (stext . textUppercaseFirst $ typeName) <> stext name <+> "y0)) with"
     <$$> "    | Some dict ->"
-    <$$> "       Js.Dict.set dict \"tag\" (Js.Json.string \"" <> (stext name) <> "\");"
+    <$$> "       Js.Dict.set dict \"tag\" (Js.Json.string \"" <> stext name <> "\");"
     <$$> "       Js.Json.object_ dict"
     <$$> "    | None ->"
     <$$> "       Json.Encode.object_ []"
     <$$> "   )"
-    
-  
+
+-- | render product values
+jsonEncodeObject :: Doc -> Doc -> Maybe Doc -> Doc
+jsonEncodeObject constructor tag mContents =
+  case mContents of
+    Nothing -> constructor <$$> indent 3 ("Json.Encode.object_" <$$> indent 2 ("[" <+> tag <$$> "]"))
+    Just contents -> constructor <$$> indent 3 ("Json.Encode.object_" <$$> indent 2 ("[" <+> tag <$$> contents <$$> "]"))
+
+-- | render body rules for sum types
 renderSum :: OCamlConstructor -> Reader Options Doc
 renderSum (OCamlValueConstructor (NamedConstructor name OCamlEmpty)) = do
-  let cs = "|" <+> stext name <+> "->"
-  let tag = pair (dquotes "tag") ("Json.Encode.string" <+> dquotes (stext name))
-  return $ jsonEncodeObject cs tag Nothing
+  let constructorMatchCase = "|" <+> stext name <+> "->"
+      encodeTag = pair (dquotes "tag") ("Json.Encode.string" <+> dquotes (stext name))
+  pure $ jsonEncodeObject constructorMatchCase encodeTag Nothing
 
 renderSum (OCamlValueConstructor (NamedConstructor name value)) = do
-  let ps = constructorParameters 0 value
+  let constructorParams = constructorParameters 0 value
+  (encoders, _) <- renderVariable constructorParams value
+  let encoders' =
+        if length constructorParams > 1
+        then "Json.Encode.array" <+> arraybrackets encoders
+        else encoders
+      constructorParams' =
+        if length constructorParams > 1
+        then ["("] <> (L.intersperse "," constructorParams) <> [")"]
+        else (L.intersperse "," constructorParams)
+      constructorMatchCase  = "|" <+> stext name <+> foldl1 (<>) constructorParams' <+> "->"
+      encodeTag = pair (dquotes "tag") ("Json.Encode.string" <+> dquotes (stext name))
+      encodeContents  = ";" <+> pair (dquotes "contents") encoders'
 
-  (dc, _) <- renderVariable ps value
-  let dc' = if length ps > 1 then "Json.Encode.array" <+> arraybrackets dc else dc
-      ps' = if length ps > 1 then ["("] <> (L.intersperse "," ps) <> [")"] else (L.intersperse "," ps)
-      cs  = "|" <+> stext name <+> foldl1 (<>) ps' <+> "->"
-      tag = pair (dquotes "tag") ("Json.Encode.string" <+> dquotes (stext name))
-      ct  = ";" <+> pair (dquotes "contents") dc'
-
-  return $ jsonEncodeObject cs tag (Just ct)
+  pure $ jsonEncodeObject constructorMatchCase encodeTag (Just encodeContents)
 
 renderSum (OCamlValueConstructor (RecordConstructor name value)) = do
-  dv <- render value
-  let cs = "|" <+> stext name <+> "->"
-  let tag = pair (dquotes "tag") (dquotes $ stext name)
-  let ct = comma <+> dv
-  return $ jsonEncodeObject cs tag (Just ct)
+  encoder <- render value
+  let constructorMatchCase = "|" <+> stext name <+> "->"
+      encodeTag = pair (dquotes "tag") (dquotes $ stext name)
+      encodeContents = comma <+> encoder
+  pure $ jsonEncodeObject constructorMatchCase encodeTag (Just encodeContents)
 
-renderSum (OCamlValueConstructor (MultipleConstructors constrs)) = do
-  dc <- mapM renderSum (OCamlValueConstructor <$> constrs)
-  return $ foldl1 (<$$>) dc
+renderSum (OCamlValueConstructor (MultipleConstructors constructors)) = do
+  encoders <- mapM renderSum (OCamlValueConstructor <$> constructors)
+  pure $ foldl1 (<$$>) encoders
 
 renderSum (OCamlSumOfRecordConstructor typeName (RecordConstructor name _value)) = do
-  renderOutsideEncoder typeName name
+  renderSumOfRecordEncoder typeName name
   
-renderSum (OCamlSumOfRecordConstructor typeName (MultipleConstructors constrs)) = do
-  dc <- mapM renderSum (OCamlSumOfRecordConstructor typeName <$> constrs)
-  return $ foldl1 (<$$>) dc  
+renderSum (OCamlSumOfRecordConstructor typeName (MultipleConstructors constructors)) = do
+  encoders <- mapM renderSum (OCamlSumOfRecordConstructor typeName <$> constructors)
+  pure $ foldl1 (<$$>) encoders
 
 renderSum (OCamlEnumeratorConstructor constructors) =
-  return $ foldl1 (<$$>) $ (\(EnumeratorConstructor name) -> "|" <+> stext name <+> "->" <$$> "   Json.Encode.string" <+> dquotes (stext name)) <$> constructors
+  pure $ foldl1 (<$$>) $ (\(EnumeratorConstructor name) -> "|" <+> stext name <+> "->" <$$> "   Json.Encode.string" <+> dquotes (stext name)) <$> constructors
 
 renderSum _ = return ""
 
@@ -302,7 +349,7 @@ toOCamlEncoderSource :: OCamlType a => a -> T.Text
 toOCamlEncoderSource = toOCamlEncoderSourceWith defaultOptions
 
 -- | Variable names for the members of constructors
--- Used in pattern matches
+--   Used in pattern matches
 constructorParameters :: Int -> OCamlValue -> [Doc]
 constructorParameters _ OCamlEmpty = [ empty ]
 constructorParameters i (Values l r) =
@@ -313,7 +360,9 @@ constructorParameters i (Values l r) =
 constructorParameters i _ = [ "y" <> int i ]
 
 
--- | Encode variables following the recipe of an OCamlValue
+-- | render JSON encoders for OCamlValues. It runs recersively on Values.
+--   [Doc] helps build encoders for arrays and tuples
+--   should only use fst of return type, snd [Doc] is to help with recursion
 renderVariable :: [Doc] -> OCamlValue -> Reader Options (Doc, [Doc])
 renderVariable (d : ds) v@(OCamlRef {}) = do
   v' <- render v
@@ -338,6 +387,19 @@ renderVariable [] _ = error "Amount of variables does not match variables."
 
 -- Util
 
+-- | For an OCamlConstructor, get its OCamlValues as a list, if it has
+--   type parameters, render the encoder type signatures for each type parameter
+--   as `('a0 -> Js_json.t)` and `'a0`. This is for the interface.
+--   fst Doc is type parameter encoder signature
+--   snd Doc is list of type parameters which will be rendered as part of the main
+--   type's values.
+--   For `Either a b`: `("('a0 -> Js_json.t) ('a1 -> Js_json.t)","('a0, 'a1)")`
+renderTypeParameterVals :: OCamlConstructor -> (Doc,Doc)
+renderTypeParameterVals (OCamlValueConstructor vc) = renderTypeParameterValsAux $ getOCamlValues vc
+renderTypeParameterVals (OCamlSumOfRecordConstructor _ vc) = renderTypeParameterValsAux $ getOCamlValues vc
+renderTypeParameterVals _ = ("","")
+
+-- | Helper function for renderTypeParameterVals
 renderTypeParameterValsAux :: [OCamlValue] -> (Doc,Doc)
 renderTypeParameterValsAux ocamlValues =
   let typeParameterNames = (<>) "'" <$> getTypeParameterRefNames ocamlValues
@@ -355,11 +417,15 @@ renderTypeParameterValsAux ocamlValues =
         in ((foldl (<>) "" $  (L.intersperse " -> " typeDecs)) <> " ->", ts)
       else ("","")
 
-renderTypeParameterVals :: OCamlConstructor -> (Doc,Doc)
-renderTypeParameterVals (OCamlValueConstructor vc) = renderTypeParameterValsAux $ getOCamlValues vc
-renderTypeParameterVals (OCamlSumOfRecordConstructor _ vc) = renderTypeParameterValsAux $ getOCamlValues vc
-renderTypeParameterVals _ = ("","")
+-- | Render type parameters as encode functions. This is for a let declaration that has
+--   a complete type signature.
+--   `Either a b` : `("(encodeA0 : 'a0 -> Js_json.t) (encodeA0 : 'a1 -> Js_json.t)", "('a0, 'a1)")`
+renderTypeParameters :: OCamlConstructor -> (Doc,Doc)
+renderTypeParameters (OCamlValueConstructor vc) = renderTypeParametersAux $ getOCamlValues vc
+renderTypeParameters (OCamlSumOfRecordConstructor _ vc) = renderTypeParametersAux $ getOCamlValues vc
+renderTypeParameters _ = ("","")
 
+-- | Helper function for renderTypeParameters
 renderTypeParametersAux :: [OCamlValue] -> (Doc,Doc)
 renderTypeParametersAux ocamlValues = do
   let typeParameterNames = getTypeParameterRefNames ocamlValues
@@ -368,12 +434,8 @@ renderTypeParametersAux ocamlValues = do
       typeParams = foldl (<>) "" $ if length typeParameterNames > 1 then  ["("] <> (L.intersperse ", " $ stext <$> typeParameterNames) <> [") "] else ((\x -> stext $ x <> " ") <$> typeParameterNames) :: [Doc]
   (foldl (<+>) "" (typeDecs ++ parserDecs), typeParams )
 
-renderTypeParameters :: OCamlConstructor -> (Doc,Doc)
-renderTypeParameters (OCamlValueConstructor vc) = renderTypeParametersAux $ getOCamlValues vc
-renderTypeParameters (OCamlSumOfRecordConstructor _ vc) = renderTypeParametersAux $ getOCamlValues vc
-renderTypeParameters _ = ("","")
-
-
+-- | render type parameter encoder names for all of a constructors type parameters
+--   `Either a b`: `"encodeA0 encodeA1"`
 renderEncodeTypeParameters :: OCamlConstructor -> Doc
 renderEncodeTypeParameters constructor =
   foldl (<>) "" $ stext <$> L.intersperse " " ((\t -> "encode" <> (textUppercaseFirst t)) <$> getTypeParameters constructor)

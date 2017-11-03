@@ -1,3 +1,14 @@
+{-|
+Module      : OCaml.Common
+Description : Internal utility functions
+Copyright   : Plow Technologies, 2017
+License     : BSD3
+Maintainer  : mchaver@gmail.com
+Stability   : experimental
+
+-}
+
+
 {-# LANGUAGE OverloadedStrings #-}
 
 module OCaml.Common where

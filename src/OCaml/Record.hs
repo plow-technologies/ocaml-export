@@ -1,3 +1,14 @@
+{-|
+Module      : OCaml.Record
+Description : Create OCaml data types from Haskell data types
+Copyright   : Plow Technologies, 2017
+License     : BSD3
+Maintainer  : mchaver@gmail.com
+Stability   : experimental
+
+-}
+
+
 {-# LANGUAGE OverloadedStrings #-}
 
 module OCaml.Record

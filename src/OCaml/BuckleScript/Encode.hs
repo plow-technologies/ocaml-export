@@ -1,6 +1,6 @@
 {-|
 Module      : OCaml.BuckleScript.Encode
-Description : Produce a JSON encoder for an OCamlDatatype that matches Generic aeson ToJSON
+Description : Make a JSON encoder for an OCamlDatatype that matches Generic aeson ToJSON
 Copyright   : Plow Technologies, 2017
 License     : BSD3
 Maintainer  : mchaver@gmail.com
@@ -72,21 +72,21 @@ instance HasEncoder OCamlDatatype where
   render datatype@(OCamlDatatype typeName constructor@(OCamlSumOfRecordConstructor _ (MultipleConstructors constructors))) = do
     ocamlInterface <- asks includeOCamlInterface
     fnName <- renderRef datatype
-    vs <- linesBetween <$> catMaybes <$> sequence (renderSumRecord typeName . OCamlValueConstructor <$> constructors)
-    dc <- mapM renderSum (OCamlSumOfRecordConstructor typeName <$> constructors)
+    typeParameterDeclarations <- linesBetween <$> catMaybes <$> sequence (renderSumRecord typeName . OCamlValueConstructor <$> constructors)
+    fnBody <- mapM renderSum (OCamlSumOfRecordConstructor typeName <$> constructors)
     
     if ocamlInterface
       then do
        let typeParameters = renderEncodeTypeParameters constructor
-       pure $ vs
+       pure $ typeParameterDeclarations
          <$$> ("let" <+> fnName <+> typeParameters <+> "x =")
-         <$$> (indent 2 ("match x with" <$$> foldl1 (<$$>) dc))
+         <$$> (indent 2 ("match x with" <$$> foldl1 (<$$>) fnBody))
       else do
         let (typeParameterSignatures,typeParameters) = renderTypeParameters constructor
             encodeFnName = stext $ textLowercaseFirst typeName
-        pure $ vs
+        pure $ typeParameterDeclarations
           <$$> ("let" <+> fnName <+> typeParameterSignatures <+> "(x :" <+> typeParameters <> encodeFnName <> ") :Js_json.t =")
-          <$$> (indent 2 ("match x with" <$$> foldl1 (<$$>) dc))
+          <$$> (indent 2 ("match x with" <$$> foldl1 (<$$>) fnBody))
 
   -- sum
   render datatype@(OCamlDatatype typeName constructor@(OCamlValueConstructor (MultipleConstructors constructors))) = do

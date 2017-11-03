@@ -17,6 +17,7 @@ import           OCaml.Common
 import           OCaml.Type
 import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
 
+-- | render a Haskell data type in OCaml
 class HasType a where
   render :: a -> Reader Options Doc
 
@@ -27,39 +28,33 @@ class HasTypeRef a where
   renderRef :: a -> Reader Options Doc
 
 instance HasType OCamlDatatype where
-  render d@(OCamlDatatype typeName constructor@(OCamlSumOfRecordConstructor _ (MultipleConstructors css))) = do
+  render datatype@(OCamlDatatype typeName constructor@(OCamlSumOfRecordConstructor _ (MultipleConstructors constructors))) = do
     -- For each constructor, if it is a record constructor, declare a type for that record
     -- before and separate form the main sum type.
-    vs' <- catMaybes <$> sequence (makeAuxTypeDef typeName <$> css)
-    let vs = msuffix (line <> line) (fst <$> vs')
-        cs' = replaceRecordConstructors (snd <$> vs') <$> css
+    sumRecordsData <- catMaybes <$> sequence (renderSumRecord typeName <$> constructors)
+    let sumRecords = msuffix (line <> line) (fst <$> sumRecordsData)
+        newConstructors = replaceRecordConstructors (snd <$> sumRecordsData) <$> constructors
         typeParameters = renderTypeParameters constructor
-    name <- renderRef d
-    ctor <- render (OCamlValueConstructor $ MultipleConstructors cs')
-    return $ vs <> (nest 2 $ "type" <+> typeParameters <+> name <+> "=" <$$> "|" <+> ctor)
+    fnName <- renderRef datatype
+    fnBody <- render (OCamlValueConstructor $ MultipleConstructors newConstructors)
+    pure $ sumRecords <> ("type" <+> typeParameters <+> fnName <+> "=" <$$> indent 2 ("|" <+> fnBody))
 
-  render d@(OCamlDatatype _ constructor@(OCamlValueConstructor (RecordConstructor _ _))) = do
+  render datatype@(OCamlDatatype _ constructor@(OCamlValueConstructor (RecordConstructor _ _))) = do
     let typeParameters = renderTypeParameters constructor
-    name <- renderRef d
-    ctor <- render constructor
-    return . nest 2 $ "type" <+> typeParameters <+> name <+> "=" <$$> ctor
+    fnName <- renderRef datatype
+    fnBody <- render constructor
+    pure $ "type" <+> typeParameters <+> fnName <+> "=" <$$> indent 2 fnBody
 
-  render d@(OCamlDatatype _typeName cs@(OCamlValueConstructor (MultipleConstructors _css))) = do
-    let typeParameters = renderTypeParameters cs
-    name <- renderRef d
-    ctor <- render cs
-    return . nest 2 $ "type" <+> typeParameters <+> name <+> "=" <$$> "|" <+> ctor
-
-  render d@(OCamlDatatype _ constructor) = do
+  render datatype@(OCamlDatatype _ constructor) = do
     let typeParameters = renderTypeParameters constructor
-    name <- renderRef d
-    ctor <- render constructor
-    return . nest 2 $ "type" <+> typeParameters <+> name <+> "=" <$$> "|" <+> ctor
+    fnName <- renderRef datatype
+    fnBody <- render constructor
+    pure $ "type" <+> typeParameters <+> fnName <+> "=" <$$> indent 2 ("|" <+> fnBody)
 
   render (OCamlPrimitive primitive) = renderRef primitive
 
 instance HasTypeRef OCamlDatatype where
-  renderRef d@(OCamlDatatype typeName _) = pure (stext $ (if isTypeParameterRef d then "'" else "") <> textLowercaseFirst typeName)
+  renderRef datatype@(OCamlDatatype typeName _) = pure $ stext $ (if isTypeParameterRef datatype then "'" else "") <> textLowercaseFirst typeName
   renderRef (OCamlPrimitive primitive) = renderRef primitive
 
 instance HasType OCamlConstructor where
@@ -69,15 +64,21 @@ instance HasType OCamlConstructor where
     mintercalate (line <> "|" <> space) <$> sequence (render <$> constructors)
 
 instance HasType ValueConstructor where
+  -- record
   render (RecordConstructor _ value) = do
-    dv <- renderRecord value
-    return $ "{" <+> dv <$$> "}"
+    fields <- renderRecord value
+    pure $ "{" <+> fields <$$> "}"
+
+  -- enumerator
   render (NamedConstructor constructorName (OCamlEmpty)) = do
-    dv <- render OCamlEmpty
-    return $ stext constructorName <+> dv
+    pure $ stext constructorName
+
+  -- product
   render (NamedConstructor constructorName value) = do
-    dv <- render value
-    return $ stext constructorName <+> "of" <+> dv
+    types <- render value
+    pure $ stext constructorName <+> "of" <+> types
+
+  -- sum
   render (MultipleConstructors constructors) = do
     mintercalate (line <> "|" <> space) <$> sequence (render <$> constructors)
 
@@ -156,8 +157,7 @@ instance HasTypeRef OCamlPrimitive where
   renderRef OFloat  = pure "float"
 --  'a Js.Dict.t
 
--- render val signature
--- render render type signature
+
 toOCamlTypeRefWith :: OCamlType a => Options -> a -> T.Text
 toOCamlTypeRefWith options x =
   pprinter $ runReader (renderRef (toOCamlType x)) options
@@ -178,15 +178,16 @@ toOCamlTypeSource = toOCamlTypeSourceWith defaultOptions
 -- | A Haskell Sum of Records needs to be transformed into OCaml record types
 --   and a sum type. Replace RecordConstructor with NamedConstructor.
 replaceRecordConstructors :: [(Text,ValueConstructor)] -> ValueConstructor -> ValueConstructor
-replaceRecordConstructors newConstructors rc@(RecordConstructor oldName _) = 
-  case length mrc > 0 of
-    False -> rc
-    True  -> head mrc
+replaceRecordConstructors newConstructors recordConstructor@(RecordConstructor oldName _) = 
+  case length newRecordConstructor > 0 of
+    False -> recordConstructor
+    True  -> head newRecordConstructor
   where
-    rplc (oldName', (RecordConstructor newName _rValue)) =
+    replace (oldName', (RecordConstructor newName _value)) =
       if oldName == oldName' then (Just $ NamedConstructor oldName' (OCamlRef newName)) else Nothing
-    rplc _ = Nothing
-    mrc = catMaybes $ rplc <$> newConstructors
+    replace _ = Nothing
+    newRecordConstructor = catMaybes $ replace <$> newConstructors
+
 replaceRecordConstructors _ rc = rc
 
 -- | Given a constructor, output a list of type parameters.
@@ -195,13 +196,13 @@ replaceRecordConstructors _ rc = rc
 renderTypeParameters :: OCamlConstructor -> Doc
 renderTypeParameters constructor = mkDocList $ stext . (<>) "'" <$> (nub $ getTypeParameters constructor)
 
--- | For Haskell Sum of Records, create OCaml record types of each RecordConstructorn
-makeAuxTypeDef :: Text -> ValueConstructor -> Reader Options (Maybe (Doc,(Text,ValueConstructor)))
-makeAuxTypeDef typeName c@(RecordConstructor rName _rValue) = do
-  let newName = (stext $ textLowercaseFirst typeName) <> (stext rName)
-  ctor <- render c
-  return $ Just ((nest 2 $ "type" <+> newName <+> "=" <$$> ctor), (rName, (RecordConstructor (typeName <> rName) _rValue)))
-makeAuxTypeDef _ _ = return Nothing
+-- | For Haskell Sum of Records, create OCaml record types of each RecordConstructor
+renderSumRecord :: Text -> ValueConstructor -> Reader Options (Maybe (Doc,(Text,ValueConstructor)))
+renderSumRecord typeName constructor@(RecordConstructor name value) = do
+  let sumRecordName = typeName <> name
+  functionBody <- render constructor
+  pure $ Just (("type" <+> (stext (textLowercaseFirst sumRecordName)) <+> "=" <$$> indent 2 functionBody), (name, (RecordConstructor sumRecordName value)))
+renderSumRecord _ _ = return Nothing
 
 
 -- | Puts parentheses around the doc of an OCaml ref if it contains spaces.

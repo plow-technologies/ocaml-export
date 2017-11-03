@@ -31,6 +31,14 @@ class HasDecoderInterface a where
   renderInterface :: a -> Reader Options Doc
 
 instance HasDecoderInterface OCamlDatatype where
+  renderInterface d@(OCamlDatatype typeName c@(OCamlSumOfRecordConstructor _ (MultipleConstructors constrs))) = do
+    fnName <- renderRef d
+    let docs = catMaybes (renderSumRecordInterface typeName . OCamlValueConstructor <$> constrs)
+    let vs = linesBetween docs
+    let (typeParameterEncoders, typeParameters) = renderTypeParameterVals c
+    pure $ vs <$$> "val" <+> fnName <+> ":" <+> typeParameterEncoders <> "Js_json.t ->" <+> "(" <> typeParameters <> (stext . textLowercaseFirst $ typeName) <> ", string)" <+> "Js_result.t"
+    
+
   renderInterface d@(OCamlDatatype typeName constructors) = do
     fnName <- renderRef d
     let (typeParameterEncoders, typeParameters) = renderTypeParameterVals constructors
@@ -47,7 +55,7 @@ renderSumRecord typeName (OCamlValueConstructor (RecordConstructor name value)) 
     then
       pure $ Just $ "let decode" <> stext newName <+> "json =" <$$> s
     else
-      pure $ Just $ "let decode" <> stext newName <+> (parens "x :" <+> (stext $ textLowercaseFirst newName)) <+> ":Js_json.t =" <$$> (indent 2 s)
+      pure $ Just $ "let decode" <> stext newName <+> "(json : Js_json.t)" <+> ":(" <> (stext $ textLowercaseFirst newName) <> ", string)" <+> "Js_result.t =" <$$> s
   where
     newName = typeName <> name
 renderSumRecord _ _ = return Nothing
@@ -70,8 +78,8 @@ instance HasDecoder OCamlDatatype where
       else do
         let (tps,aps) = renderTypeParameters c
         pure $ vs <$$>
-          ("let" <+> fnName <+> tps <+> "(x :" <+> aps <> stext (textLowercaseFirst typeName) <> ") :Js_json.t =") <$$>
-          (indent 2 ("match x with" <$$> foldl1 (<$$>) dc))
+          ("let" <+> fnName <+> tps <+> "(json : Js_json.t)" <+> aps <> ":(" <> stext (textLowercaseFirst typeName) <> ", string) Js_result.t =") <$$>
+          (indent 2 ("match Json.Decode.(field \"tag\" string json) with" <$$> foldl1 (<$$>) dc <$$> footer))
     where
       footer =
          "| err -> Js_result.Error (\"Unknown tag value found '\" ^ err ^ \"'.\")"
@@ -392,3 +400,9 @@ renderTypeParameters :: OCamlConstructor -> (Doc,Doc)
 renderTypeParameters (OCamlValueConstructor vc) = renderTypeParametersAux $ getOCamlValues vc
 renderTypeParameters (OCamlSumOfRecordConstructor _ vc) = renderTypeParametersAux $ getOCamlValues vc
 renderTypeParameters _ = ("","")
+
+-- | Render an OCaml val interface for a record constructor in a sum of records
+renderSumRecordInterface :: Text -> OCamlConstructor -> Maybe Doc
+renderSumRecordInterface typeName (OCamlValueConstructor (RecordConstructor name _value)) =
+  Just $ "val decode" <> (stext $ typeName <> name) <+> ":" <+> "Js_json.t" <+> "->" <+> parens (stext (textLowercaseFirst $ typeName <> name) <> comma <+> "string") <+> "Js_result.t"
+renderSumRecordInterface _ _ = Nothing

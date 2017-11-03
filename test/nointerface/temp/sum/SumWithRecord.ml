@@ -40,3 +40,35 @@ let encodeSumWithRecord (x : sumWithRecord) :Js_json.t =
       | None ->
          Json.Encode.object_ []
      )
+
+let decodeSumWithRecordA1 (json : Js_json.t) :(sumWithRecordA1, string) Js_result.t =
+  match Json.Decode.
+    { a1 = field "a1" int json
+    }
+  with
+  | v -> Js_result.Ok v
+  | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumWithRecordA1: " ^ message)
+
+let decodeSumWithRecordB2 (json : Js_json.t) :(sumWithRecordB2, string) Js_result.t =
+  match Json.Decode.
+    { b2 = field "b2" string json
+    ; b3 = field "b3" int json
+    }
+  with
+  | v -> Js_result.Ok v
+  | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumWithRecordB2: " ^ message)
+
+let decodeSumWithRecord (json : Js_json.t) :(sumWithRecord, string) Js_result.t =
+  match Json.Decode.(field "tag" string json) with
+  | "A1" ->
+     (match decodeSumWithRecordA1 json with
+      | Js_result.Ok v -> Js_result.Ok (A1 v)
+      | Js_result.Error message -> Js_result.Error ("decodeSumWithRecord: " ^ message)
+     )
+  | "B2" ->
+     (match decodeSumWithRecordB2 json with
+      | Js_result.Ok v -> Js_result.Ok (B2 v)
+      | Js_result.Error message -> Js_result.Error ("decodeSumWithRecord: " ^ message)
+     )
+  | err -> Js_result.Error ("Unknown tag value found '" ^ err ^ "'.")
+  | exception Json.Decode.DecodeError message -> Js_result.Error message

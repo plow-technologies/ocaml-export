@@ -31,6 +31,14 @@ class HasEncoderInterface a where
 -- let encodePerson x , val encodePerson : person -> Js_json.t
 -- let encodeList encodeA0 x, val encodeList : ('a0 -> Js_json.t) -> 'a0 list -> Js_json.t
 instance HasEncoderInterface OCamlDatatype where
+  renderTypeInterface d@(OCamlDatatype typeName c@(OCamlSumOfRecordConstructor _ (MultipleConstructors constrs))) = do
+    fnName <- renderRef d
+    let (tps,ex) = renderTypeParameterVals c
+    let docs = catMaybes (renderSumRecordInterface typeName . OCamlValueConstructor <$> constrs)
+    let vs = linesBetween docs
+    pure $ vs <$$> "val" <+> fnName <+> ":" <+> tps <+> ex <> (stext . textLowercaseFirst $ typeName) <+> "->" <+> "Js_json.t"
+    
+
   renderTypeInterface d@(OCamlDatatype typeName constructors) = do
     fnName <- renderRef d
     let (tps,ex) = renderTypeParameterVals constructors
@@ -138,6 +146,11 @@ renderSumRecord typeName (OCamlValueConstructor (RecordConstructor name value)) 
   where
     newName = typeName <> name
 renderSumRecord _ _ = return Nothing
+
+renderSumRecordInterface :: Text -> OCamlConstructor -> Maybe Doc
+renderSumRecordInterface typeName (OCamlValueConstructor (RecordConstructor name _value)) =
+  Just $ "val encode" <> (stext $ typeName <> name) <+> ":" <+> (stext (textLowercaseFirst $ typeName <> name)) <+> "->" <+> "Js_json.t"
+renderSumRecordInterface _ _ = Nothing
 
 jsonEncodeObject :: Doc -> Doc -> Maybe Doc -> Doc
 jsonEncodeObject constructor tag mContents =

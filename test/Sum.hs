@@ -117,6 +117,7 @@ sumWithRecord =
     "SumWithRecord"
     [ toOCamlTypeSource (Proxy :: Proxy SumWithRecord)
     , toOCamlEncoderSource (Proxy :: Proxy SumWithRecord)
+    , toOCamlDecoderSource (Proxy :: Proxy SumWithRecord)
     ]
 
 resultRecord :: OCamlFile

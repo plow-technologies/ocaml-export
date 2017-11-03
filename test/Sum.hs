@@ -21,6 +21,7 @@ spec = do
     testSumInterface "SumVariant" (mkOCamlInterface (Proxy :: Proxy SumVariant))
     testSumInterface "WithTuple" (mkOCamlInterface (Proxy :: Proxy WithTuple))
     testSumInterface "SumWithRecord" (mkOCamlInterface (Proxy :: Proxy SumWithRecord))
+    testSumInterface "Result" (mkOCamlInterface (Proxy :: Proxy (Result TypeParameterRef0 TypeParameterRef1)))
     
   describe "Sum Types" $ do
     testSum onOrOff "OnOrOff"

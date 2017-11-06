@@ -186,6 +186,13 @@ instance HasDecoder OCamlValue where
     dy <- render y
     return $ dx <$$> ";" <+> dy
 
+  -- renderRef has separate rules for type parameters and non primitive types
+  -- however in the case of OOption, they should be rendered the same way
+  -- to remove Js_result.t
+  render (OCamlField name (OCamlPrimitiveRef (OOption (OCamlDatatype datatypeName _)))) =
+    pure $ (stext name) <+> "=" <+> "optional (field" <+> dquotes (stext name)
+      <+> "(fun a -> unwrapResult (decode" <> (stext . textUppercaseFirst $ datatypeName) <+> "a)))" <+> "json"
+
   render (OCamlField name (OCamlPrimitiveRef (OOption datatype))) = do
     dv <- renderRef datatype
     return $ (stext name) <+> "=" <+> "optional (field" <+> dquotes (stext name) <+> dv <> ")" <+> "json"

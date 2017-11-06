@@ -31,12 +31,16 @@ import           OCaml.Common
 import           OCaml.Type hiding (getOCamlValues)
 import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
 
+
+-- | Render OCamlDatatype into an OCaml declaration
 class HasDecoder a where
   render :: a -> Reader Options Doc
 
+-- | Render OCamlPrimitive decoders and type parameters
 class HasDecoderRef a where
   renderRef :: a -> Reader Options Doc
 
+-- | Render OCamlDataype into an OCaml interface
 class HasDecoderInterface a where
   renderInterface :: a -> Reader Options Doc
 

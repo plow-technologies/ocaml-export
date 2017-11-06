@@ -21,6 +21,7 @@ spec = do
   describe "OCaml Declaration with Interface: Product Types" $ do
     testProductInterface "Person" (mkOCamlInterface (Proxy :: Proxy Person))
     testProductInterface "Company" (mkOCamlInterface (Proxy :: Proxy Person) <> (mkOCamlInterface (Proxy :: Proxy Company)))
+    testProductInterface "CustomOption" (mkOCamlInterface (Proxy :: Proxy Person) <> (mkOCamlInterface (Proxy :: Proxy Company2)))
     testProductInterface "Card" (mkOCamlInterface (Proxy :: Proxy Suit) <> (mkOCamlInterface (Proxy :: Proxy Card)))
     testProductInterface "OneTypeParameter" (mkOCamlInterface (Proxy :: Proxy (OneTypeParameter TypeParameterRef0)))
     testProductInterface "TwoTypeParameters" (mkOCamlInterface (Proxy :: Proxy (TwoTypeParameters TypeParameterRef0 TypeParameterRef1)))
@@ -45,6 +46,11 @@ data Person = Person
 data Company = Company
   { address   :: String
   , employees :: [Person]
+  } deriving (Show, Eq, Generic, OCamlType)
+
+data Company2 = Company2
+  { address2   :: String
+  , boss :: Maybe Person
   } deriving (Show, Eq, Generic, OCamlType)
 
 data Suit

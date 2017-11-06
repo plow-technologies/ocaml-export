@@ -4,7 +4,9 @@
 
 module Product (spec) where
 
+import Data.Monoid ((<>))
 import Data.Proxy
+import Data.Time
 import GHC.Generics
 import OCaml.Export
 import Test.Hspec
@@ -12,8 +14,19 @@ import Util
 
 testProduct = testOCamlType Product
 
+testProductInterface = testOCamlTypeWithInterface Product
+
 spec :: Spec
 spec = do
+  describe "OCaml Declaration with Interface: Product Types" $ do
+    testProductInterface "Person" (mkOCamlInterface (Proxy :: Proxy Person))
+    testProductInterface "Company" (mkOCamlInterface (Proxy :: Proxy Person) <> (mkOCamlInterface (Proxy :: Proxy Company)))
+    testProductInterface "Card" (mkOCamlInterface (Proxy :: Proxy Suit) <> (mkOCamlInterface (Proxy :: Proxy Card)))
+    testProductInterface "OneTypeParameter" (mkOCamlInterface (Proxy :: Proxy (OneTypeParameter TypeParameterRef0)))
+    testProductInterface "TwoTypeParameters" (mkOCamlInterface (Proxy :: Proxy (TwoTypeParameters TypeParameterRef0 TypeParameterRef1)))
+    testProductInterface "ThreeTypeParameters" (mkOCamlInterface (Proxy :: Proxy (Three TypeParameterRef0 TypeParameterRef1 TypeParameterRef2)))
+    testProductInterface "SubTypeParameter" (mkOCamlInterface (Proxy :: Proxy (SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2)))
+
   describe "Product Types" $ do
     testProduct person "Person"
     testProduct company "Company"
@@ -23,10 +36,10 @@ spec = do
     testProduct three "ThreeTypeParameters"
     testProduct subTypeParameter "SubTypeParameter"
 
-
 data Person = Person
   { id :: Int
   , name :: Maybe String
+  , created :: UTCTime
   } deriving (Show, Eq, Generic, OCamlType)
 
 data Company = Company
@@ -69,9 +82,11 @@ data Three a b c =
     , threeString :: String
     } deriving (Eq,Show,Generic,OCamlType)
 
-data SubTypeParameter a =
+data SubTypeParameter a b c =
   SubTypeParameter
-    { as :: [a]
+    { listA :: [a]
+    , maybeB :: Maybe b
+    , tupleC :: (c,b)
     } deriving (Eq,Show,Generic,OCamlType)
 
 person :: OCamlFile
@@ -80,6 +95,7 @@ person =
     "Person"
     [ toOCamlTypeSource (Proxy :: Proxy Person)
     , toOCamlEncoderSource (Proxy :: Proxy Person)
+    , toOCamlDecoderSource (Proxy :: Proxy Person)
     ]
 
 company :: OCamlFile
@@ -88,8 +104,10 @@ company =
     "Company"
     [ toOCamlTypeSource (Proxy :: Proxy Person)
     , toOCamlEncoderSource (Proxy :: Proxy Person)
+    , toOCamlDecoderSource (Proxy :: Proxy Person)
     , toOCamlTypeSource (Proxy :: Proxy Company)
     , toOCamlEncoderSource (Proxy :: Proxy Company)
+    , toOCamlDecoderSource (Proxy :: Proxy Company)
     ]
 
 card :: OCamlFile
@@ -98,8 +116,10 @@ card =
     "Card"
     [ toOCamlTypeSource (Proxy :: Proxy Suit)
     , toOCamlEncoderSource (Proxy :: Proxy Suit)
+    , toOCamlDecoderSource (Proxy :: Proxy Suit)
     , toOCamlTypeSource (Proxy :: Proxy Card)
     , toOCamlEncoderSource (Proxy :: Proxy Card)
+    , toOCamlDecoderSource (Proxy :: Proxy Card)
     ]
 
 oneTypeParameter :: OCamlFile
@@ -108,6 +128,7 @@ oneTypeParameter =
     "OneTypeParameter"
     [ toOCamlTypeSource (Proxy :: Proxy (OneTypeParameter TypeParameterRef0))
     , toOCamlEncoderSource (Proxy :: Proxy (OneTypeParameter TypeParameterRef0))
+    , toOCamlDecoderSource (Proxy :: Proxy (OneTypeParameter TypeParameterRef0))
     ]
 
 twoTypeParameters :: OCamlFile
@@ -116,6 +137,7 @@ twoTypeParameters =
     "TwoTypeParameters"
     [ toOCamlTypeSource (Proxy :: Proxy (TwoTypeParameters TypeParameterRef0 TypeParameterRef1))
     , toOCamlEncoderSource (Proxy :: Proxy (TwoTypeParameters TypeParameterRef0 TypeParameterRef1))
+    , toOCamlDecoderSource (Proxy :: Proxy (TwoTypeParameters TypeParameterRef0 TypeParameterRef1))
     ]
 
 three :: OCamlFile
@@ -124,12 +146,14 @@ three =
     "ThreeTypeParameters"
     [ toOCamlTypeSource (Proxy :: Proxy (Three TypeParameterRef0 TypeParameterRef1 TypeParameterRef2))
     , toOCamlEncoderSource (Proxy :: Proxy (Three TypeParameterRef0 TypeParameterRef1 TypeParameterRef2))
+    , toOCamlDecoderSource (Proxy :: Proxy (Three TypeParameterRef0 TypeParameterRef1 TypeParameterRef2))
     ]
 
 subTypeParameter :: OCamlFile
 subTypeParameter =
   OCamlFile
     "SubTypeParameter"
-    [ toOCamlTypeSource (Proxy :: Proxy (SubTypeParameter TypeParameterRef0))
-    , toOCamlEncoderSource (Proxy :: Proxy (SubTypeParameter TypeParameterRef0))
+    [ toOCamlTypeSource (Proxy :: Proxy (SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2))
+    , toOCamlEncoderSource (Proxy :: Proxy (SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2))
+    , toOCamlDecoderSource (Proxy :: Proxy (SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2))
     ]

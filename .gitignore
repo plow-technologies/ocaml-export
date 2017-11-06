@@ -1,8 +1,14 @@
 .stack-work
 playground/lib
 playground/node_modules
+test/golden/lib
+test/golden/node_modules
+node_modules
+lib
 .merlin
 \#*#
 .#*
 *.log
-test/temp
+test/nointerface/temp
+test/interface/temp
+*.cabal

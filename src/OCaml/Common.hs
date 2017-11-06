@@ -1,3 +1,14 @@
+{-|
+Module      : OCaml.Common
+Description : Internal utility functions
+Copyright   : Plow Technologies, 2017
+License     : BSD3
+Maintainer  : mchaver@gmail.com
+Stability   : experimental
+
+-}
+
+
 {-# LANGUAGE OverloadedStrings #-}
 
 module OCaml.Common where
@@ -8,15 +19,15 @@ import           Data.Monoid
 import           Data.Text  (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as LT
-import           Formatting hiding (text)
+import           Formatting hiding (stext, text)
 import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
 
 data Options = Options
-  { fieldLabelModifier :: Text -> Text
+  { includeOCamlInterface :: Bool
   }
 
 defaultOptions :: Options
-defaultOptions = Options {fieldLabelModifier = id}
+defaultOptions = Options {includeOCamlInterface = False}
 
 cr :: Format r r
 cr = now "\n"
@@ -63,6 +74,11 @@ emptyline = nest minBound linebreak
 (<$+$>) :: Doc -> Doc -> Doc
 l <$+$> r = l <> emptyline <$$> r
 
+linesBetween :: [Doc] -> Doc
+linesBetween docs =
+  let extra = if length docs > 0 then line else ""
+  in foldl (<>) "" $ (L.intersperse (line <> line) docs) <> [extra]
+
 squarebracks :: Doc -> Doc
 squarebracks doc = "[" <+> doc <+> "]"
 
@@ -92,5 +108,3 @@ mkDocList ds =
     if length ds > 1
       then ["("] <> (L.intersperse ", " ds) <> [")"]
       else ds
-
---      return $ foldl (<>) "" $ if length vc' > 1 then  ["("] <> (L.intersperse ", " vc') <> [")"] else (vc')

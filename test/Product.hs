@@ -2,8 +2,13 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Product (spec) where
+module Product
+  ( spec
+  , Person (..)
+  , Company (..)
+  ) where
 
+import Data.Aeson (FromJSON, ToJSON)
 import Data.Monoid ((<>))
 import Data.Proxy
 import Data.Time
@@ -41,12 +46,12 @@ data Person = Person
   { id :: Int
   , name :: Maybe String
   , created :: UTCTime
-  } deriving (Show, Eq, Generic, OCamlType)
+  } deriving (Show, Eq, Generic, OCamlType, FromJSON, ToJSON)
 
 data Company = Company
   { address   :: String
   , employees :: [Person]
-  } deriving (Show, Eq, Generic, OCamlType)
+  } deriving (Show, Eq, Generic, OCamlType, FromJSON, ToJSON)
 
 data Company2 = Company2
   { address2   :: String

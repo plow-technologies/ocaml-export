@@ -2,8 +2,17 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Sum (spec) where
+module Sum
+  ( spec
+  , OnOrOff (..)
+  , NameOrIdNumber (..)
+  , SumVariant (..)
+  , WithTuple (..)
+  , SumWithRecord (..)
+  , NewType (..)
+  ) where
 
+import Data.Aeson (FromJSON, ToJSON)
 import Data.Proxy
 import GHC.Generics
 import OCaml.Export
@@ -34,15 +43,15 @@ spec = do
     testSum newTypeRecord "NewType"
     
 data OnOrOff = On | Off
-  deriving (Show,Eq,Generic, OCamlType)
+  deriving (Show,Eq,Generic,OCamlType,ToJSON,FromJSON)
 
 data NameOrIdNumber = Name String | IdNumber Int
-  deriving (Show, Eq, Generic, OCamlType)
+  deriving (Show, Eq, Generic, OCamlType,ToJSON,FromJSON)
 
 data Result a b
   = Success a
   | Error b
-  deriving (Show, Eq, Generic, OCamlType)
+  deriving (Show, Eq, Generic, OCamlType, ToJSON, FromJSON)
 
 data SumVariant
   = HasNothing
@@ -51,22 +60,22 @@ data SumVariant
   | HasMultipleInts Int Int
   | HasMultipleTuples (Int,Int) (Int,Int)
   | HasMixed Int String Double
-  deriving (Show,Eq,Generic, OCamlType)  
+  deriving (Show,Eq,Generic, OCamlType, ToJSON, FromJSON)
 
 type Tuple
   = (Int,Int)
 
 data WithTuple = WithTuple Tuple
-  deriving (Show,Eq,Generic, OCamlType)
+  deriving (Show,Eq,Generic, OCamlType, ToJSON, FromJSON)
 
 data SumWithRecord
   = A1 {a1 :: Int}
   | B2 {b2 :: String, b3 :: Int}
-  deriving (Show,Eq,Generic, OCamlType)
+  deriving (Show,Eq,Generic, OCamlType, ToJSON, FromJSON)
 
 newtype NewType
   = NewType Int
-  deriving (Show,Eq,Generic,OCamlType)
+  deriving (Show,Eq,Generic,OCamlType, ToJSON, FromJSON)
 
 onOrOff :: OCamlFile
 onOrOff =

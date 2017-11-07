@@ -2,6 +2,13 @@ resolver: lts-9.6
 
 packages:
 - .
+- location:
+    git: git@github.com:plow-technologies/servant-in-and-out.git
+    commit: 3b5851bac526d5152064a9f28c5ea9c3c3ea6644
+  extra-dep: true
+
+  
+
 
 extra-deps: []
 

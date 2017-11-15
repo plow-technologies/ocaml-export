@@ -86,16 +86,16 @@ instance HasDecoder OCamlDatatype where
       then do
        pure $ typeParameterDeclarations <$$>
          ("let" <+> fnName <+> "json =") <$$>
-         (indent 2 ("match Json.Decode.(field \"tag\" string json) with" <$$> foldl1 (<$$>) fnBody <$$> fnFooter))
+         (indent 2 ("match Aeson.Decode.(field \"tag\" string json) with" <$$> foldl1 (<$$>) fnBody <$$> fnFooter))
       else do
         let (typeParameterSignatures,typeParameters) = renderTypeParameters constructor
         pure $ typeParameterDeclarations <$$>
           ("let" <+> fnName <+> typeParameterSignatures <+> "(json : Js_json.t)" <+> typeParameters <> ":(" <> stext (textLowercaseFirst typeName) <> ", string) Js_result.t =") <$$>
-          (indent 2 ("match Json.Decode.(field \"tag\" string json) with" <$$> foldl1 (<$$>) fnBody <$$> fnFooter))
+          (indent 2 ("match Aeson.Decode.(field \"tag\" string json) with" <$$> foldl1 (<$$>) fnBody <$$> fnFooter))
     where
       fnFooter =
               "| err -> Js_result.Error (\"Unknown tag value found '\" ^ err ^ \"'.\")"
-         <$$> "| exception Json.Decode.DecodeError message -> Js_result.Error message"
+         <$$> "| exception Aeson.Decode.DecodeError message -> Js_result.Error message"
 
 
   render datatype@(OCamlDatatype name constructor@(OCamlEnumeratorConstructor constructors)) = do
@@ -148,27 +148,27 @@ instance HasDecoderRef OCamlDatatype where
 instance HasDecoder OCamlConstructor where
   render (OCamlValueConstructor (NamedConstructor name value)) = do
     decoder <- render value
-    return $ indent 2 $ "match Json.Decode." <> decoder <+> "json" <+> "with"
+    return $ indent 2 $ "match Aeson.Decode." <> decoder <+> "json" <+> "with"
         <$$> "| v -> Js_result.Ok" <+> parens (stext name <+> "v")
-        <$$> "| exception Json.Decode.DecodeError msg -> Js_result.Error (\"decode" <> (stext . textUppercaseFirst $ name) <> ": \" ^ msg)"
+        <$$> "| exception Aeson.Decode.DecodeError msg -> Js_result.Error (\"decode" <> (stext . textUppercaseFirst $ name) <> ": \" ^ msg)"
            
   render (OCamlValueConstructor (RecordConstructor name value)) = do
     decoders <- render value
     pure
-         $ "  match Json.Decode."
+         $ "  match Aeson.Decode."
       <$$> (indent 4 ("{" <+> decoders <$$> "}"))
       <$$> "  with"
       <$$> "  | v -> Js_result.Ok v"
-      <$$> "  | exception Json.Decode.DecodeError message -> Js_result.Error (\"decode" <> (stext . textUppercaseFirst $ name) <> ": \" ^ message)"
+      <$$> "  | exception Aeson.Decode.DecodeError message -> Js_result.Error (\"decode" <> (stext . textUppercaseFirst $ name) <> ": \" ^ message)"
 
   render (OCamlValueConstructor (MultipleConstructors constructors)) = do
     decoders <- mapM (renderSum . OCamlValueConstructor) constructors
-    pure $ indent 2 "match Json.Decode.(field \"tag\" string json) with"
+    pure $ indent 2 "match Aeson.Decode.(field \"tag\" string json) with"
       <$$> indent 2 (foldl (<$$>) "" decoders)
       <$$> indent 2 fnFooter
     where
       fnFooter = "| err -> Js_result.Error (\"Unknown tag value found '\" ^ err ^ \"'.\")"
-            <$$> "| exception Json.Decode.DecodeError message -> Js_result.Error message"
+            <$$> "| exception Aeson.Decode.DecodeError message -> Js_result.Error message"
 
   render _ = pure ""
 
@@ -303,11 +303,11 @@ renderSum (OCamlValueConstructor (NamedConstructor name v@(Values _ _))) = do
 renderSum (OCamlValueConstructor (NamedConstructor name value)) = do
   val <- render value
   renderSumCondition name $ parens
-    ("match Json.Decode." <> parens ("field \"contents\"" <+> val <+> "json") <+> "with"
+    ("match Aeson.Decode." <> parens ("field \"contents\"" <+> val <+> "json") <+> "with"
       <$$>
         indent 1
           (    "| v -> Js_result.Ok (" <> (stext name) <+> "v)"
-          <$$> "| exception Json.Decode.DecodeError message -> Js_result.Error (\"" <> (stext name) <> ": \" ^ message)"
+          <$$> "| exception Aeson.Decode.DecodeError message -> Js_result.Error (\"" <> (stext name) <> ": \" ^ message)"
           )           <> line
     )
 
@@ -348,7 +348,7 @@ rArgs :: Text -> OCamlValue -> Reader Options Doc
 rArgs name vals = do
   v <- mk name 0 $ (Just <$> flattenOCamlValue vals) ++ [Nothing]
   pure $
-    parens $ "match Json.Decode.(field \"contents\" Js.Json.decodeArray json) with"
+    parens $ "match Aeson.Decode.(field \"contents\" Js.Json.decodeArray json) with"
     <$$> (indent 1 "| Some v ->"
     <$$> (indent 3 v)
     <$$> (indent 1 "| None -> Js_result.Error (\"" <> (stext name) <+> "expected an array.\")" )) <> line
@@ -367,11 +367,11 @@ mk name i (x:xs) =
       renderedVal <- render x'
       renderedInternal <- mk name (i+1) xs
       let iDoc = (stext . T.pack . show $ i)
-      pure $ indent 1 $ "(match Json.Decode." <> renderedVal <+> ("v." <> parens iDoc) <+> "with"
+      pure $ indent 1 $ "(match Aeson.Decode." <> renderedVal <+> ("v." <> parens iDoc) <+> "with"
         <$$>
           indent 1
             ("| v" <> iDoc <+> "->" <$$> (indent 2 renderedInternal)
-            <$$> "| exception Json.Decode.DecodeError message -> Js_result.Error (\"" <> (stext name) <> ": \" ^ message)"
+            <$$> "| exception Aeson.Decode.DecodeError message -> Js_result.Error (\"" <> (stext name) <> ": \" ^ message)"
             )
         <$$> ")"
 

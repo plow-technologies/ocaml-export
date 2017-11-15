@@ -9,98 +9,98 @@ type sumVariant =
 let encodeSumVariant (x : sumVariant) :Js_json.t =
   match x with
   | HasNothing ->
-     Json.Encode.object_
-       [ ( "tag", Json.Encode.string "HasNothing" )
+     Aeson.Encode.object_
+       [ ( "tag", Aeson.Encode.string "HasNothing" )
        ]
   | HasSingleInt y0 ->
-     Json.Encode.object_
-       [ ( "tag", Json.Encode.string "HasSingleInt" )
-       ; ( "contents", Json.Encode.int y0 )
+     Aeson.Encode.object_
+       [ ( "tag", Aeson.Encode.string "HasSingleInt" )
+       ; ( "contents", Aeson.Encode.int y0 )
        ]
   | HasSingleTuple y0 ->
-     Json.Encode.object_
-       [ ( "tag", Json.Encode.string "HasSingleTuple" )
-       ; ( "contents", Json.Encode.pair Json.Encode.int Json.Encode.int y0 )
+     Aeson.Encode.object_
+       [ ( "tag", Aeson.Encode.string "HasSingleTuple" )
+       ; ( "contents", Aeson.Encode.pair Aeson.Encode.int Aeson.Encode.int y0 )
        ]
   | HasMultipleInts (y0,y1) ->
-     Json.Encode.object_
-       [ ( "tag", Json.Encode.string "HasMultipleInts" )
-       ; ( "contents", Json.Encode.array [| Json.Encode.int y0 ; Json.Encode.int y1 |] )
+     Aeson.Encode.object_
+       [ ( "tag", Aeson.Encode.string "HasMultipleInts" )
+       ; ( "contents", Aeson.Encode.array [| Aeson.Encode.int y0 ; Aeson.Encode.int y1 |] )
        ]
   | HasMultipleTuples (y0,y1) ->
-     Json.Encode.object_
-       [ ( "tag", Json.Encode.string "HasMultipleTuples" )
-       ; ( "contents", Json.Encode.array [| Json.Encode.pair Json.Encode.int Json.Encode.int y0 ; Json.Encode.pair Json.Encode.int Json.Encode.int y1 |] )
+     Aeson.Encode.object_
+       [ ( "tag", Aeson.Encode.string "HasMultipleTuples" )
+       ; ( "contents", Aeson.Encode.array [| Aeson.Encode.pair Aeson.Encode.int Aeson.Encode.int y0 ; Aeson.Encode.pair Aeson.Encode.int Aeson.Encode.int y1 |] )
        ]
   | HasMixed (y0,y1,y2) ->
-     Json.Encode.object_
-       [ ( "tag", Json.Encode.string "HasMixed" )
-       ; ( "contents", Json.Encode.array [| Json.Encode.int y0 ; Json.Encode.string y1 ; Json.Encode.float y2 |] )
+     Aeson.Encode.object_
+       [ ( "tag", Aeson.Encode.string "HasMixed" )
+       ; ( "contents", Aeson.Encode.array [| Aeson.Encode.int y0 ; Aeson.Encode.string y1 ; Aeson.Encode.float y2 |] )
        ]
 
 let decodeSumVariant (json : Js_json.t) :(sumVariant, string) Js_result.t =
-  match Json.Decode.(field "tag" string json) with
+  match Aeson.Decode.(field "tag" string json) with
   | "HasNothing" ->
      Js_result.Ok HasNothing
 
   | "HasSingleInt" ->
-     (match Json.Decode.(field "contents" int json) with
+     (match Aeson.Decode.(field "contents" int json) with
       | v -> Js_result.Ok (HasSingleInt v)
-      | exception Json.Decode.DecodeError message -> Js_result.Error ("HasSingleInt: " ^ message)
+      | exception Aeson.Decode.DecodeError message -> Js_result.Error ("HasSingleInt: " ^ message)
      )
 
   | "HasSingleTuple" ->
-     (match Json.Decode.(field "contents" (pair int int) json) with
+     (match Aeson.Decode.(field "contents" (pair int int) json) with
       | v -> Js_result.Ok (HasSingleTuple v)
-      | exception Json.Decode.DecodeError message -> Js_result.Error ("HasSingleTuple: " ^ message)
+      | exception Aeson.Decode.DecodeError message -> Js_result.Error ("HasSingleTuple: " ^ message)
      )
   | "HasMultipleInts" ->
-     (match Json.Decode.(field "contents" Js.Json.decodeArray json) with
+     (match Aeson.Decode.(field "contents" Js.Json.decodeArray json) with
       | Some v ->
-         (match Json.Decode.int v.(0) with
+         (match Aeson.Decode.int v.(0) with
           | v0 ->
-             (match Json.Decode.int v.(1) with
+             (match Aeson.Decode.int v.(1) with
               | v1 ->
                  Js_result.Ok (HasMultipleInts (v0, v1))
-              | exception Json.Decode.DecodeError message -> Js_result.Error ("HasMultipleInts: " ^ message)
+              | exception Aeson.Decode.DecodeError message -> Js_result.Error ("HasMultipleInts: " ^ message)
              )
-          | exception Json.Decode.DecodeError message -> Js_result.Error ("HasMultipleInts: " ^ message)
+          | exception Aeson.Decode.DecodeError message -> Js_result.Error ("HasMultipleInts: " ^ message)
          )
       | None -> Js_result.Error ("HasMultipleInts expected an array.")
      )
 
   | "HasMultipleTuples" ->
-     (match Json.Decode.(field "contents" Js.Json.decodeArray json) with
+     (match Aeson.Decode.(field "contents" Js.Json.decodeArray json) with
       | Some v ->
-         (match Json.Decode.(pair int int) v.(0) with
+         (match Aeson.Decode.(pair int int) v.(0) with
           | v0 ->
-             (match Json.Decode.(pair int int) v.(1) with
+             (match Aeson.Decode.(pair int int) v.(1) with
               | v1 ->
                  Js_result.Ok (HasMultipleTuples (v0, v1))
-              | exception Json.Decode.DecodeError message -> Js_result.Error ("HasMultipleTuples: " ^ message)
+              | exception Aeson.Decode.DecodeError message -> Js_result.Error ("HasMultipleTuples: " ^ message)
              )
-          | exception Json.Decode.DecodeError message -> Js_result.Error ("HasMultipleTuples: " ^ message)
+          | exception Aeson.Decode.DecodeError message -> Js_result.Error ("HasMultipleTuples: " ^ message)
          )
       | None -> Js_result.Error ("HasMultipleTuples expected an array.")
      )
 
   | "HasMixed" ->
-     (match Json.Decode.(field "contents" Js.Json.decodeArray json) with
+     (match Aeson.Decode.(field "contents" Js.Json.decodeArray json) with
       | Some v ->
-         (match Json.Decode.int v.(0) with
+         (match Aeson.Decode.int v.(0) with
           | v0 ->
-             (match Json.Decode.string v.(1) with
+             (match Aeson.Decode.string v.(1) with
               | v1 ->
-                 (match Json.Decode.float v.(2) with
+                 (match Aeson.Decode.float v.(2) with
                   | v2 ->
                      Js_result.Ok (HasMixed (v0, v1, v2))
-                  | exception Json.Decode.DecodeError message -> Js_result.Error ("HasMixed: " ^ message)
+                  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("HasMixed: " ^ message)
                  )
-              | exception Json.Decode.DecodeError message -> Js_result.Error ("HasMixed: " ^ message)
+              | exception Aeson.Decode.DecodeError message -> Js_result.Error ("HasMixed: " ^ message)
              )
-          | exception Json.Decode.DecodeError message -> Js_result.Error ("HasMixed: " ^ message)
+          | exception Aeson.Decode.DecodeError message -> Js_result.Error ("HasMixed: " ^ message)
          )
       | None -> Js_result.Error ("HasMixed expected an array.")
      )
   | err -> Js_result.Error ("Unknown tag value found '" ^ err ^ "'.")
-  | exception Json.Decode.DecodeError message -> Js_result.Error message
+  | exception Aeson.Decode.DecodeError message -> Js_result.Error message

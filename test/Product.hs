@@ -47,11 +47,11 @@ spec = do
     testProduct twoTypeParameters "TwoTypeParameters"
     testProduct three "ThreeTypeParameters"
     testProduct subTypeParameter "SubTypeParameter"
-
+{-
   describe "" $ it "" $ do
     print $ toOCamlSpec (Proxy :: Proxy Person) "http://localhost:8081/person" "../../golden/"
     shouldBe True False
-
+-}
 data Person = Person
   { id :: Int
   , name :: Maybe String
@@ -87,6 +87,7 @@ data Suit
 
 instance Arbitrary Suit where
   arbitrary = elements [Clubs, Diamonds, Hearts, Spades]
+
 instance ToADTArbitrary Suit
 
 data Card =

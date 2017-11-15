@@ -6,16 +6,22 @@ module Product
   ( spec
   , Person (..)
   , Company (..)
+  , Suit (..)
+  , Card (..)
   ) where
 
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Monoid ((<>))
 import Data.Proxy
 import Data.Time
+import Data.Time.Clock.POSIX
 import GHC.Generics
 import OCaml.Export
 import Test.Hspec
+import Test.QuickCheck
+import Test.QuickCheck.Arbitrary.ADT
 import Util
+
 
 testProduct = testOCamlType Product
 
@@ -42,11 +48,25 @@ spec = do
     testProduct three "ThreeTypeParameters"
     testProduct subTypeParameter "SubTypeParameter"
 
+  describe "" $ it "" $ do
+    print $ toOCamlSpec (Proxy :: Proxy Person) "http://localhost:8081/person" "../../golden/"
+    shouldBe True False
+
 data Person = Person
   { id :: Int
   , name :: Maybe String
   , created :: UTCTime
   } deriving (Show, Eq, Generic, OCamlType, FromJSON, ToJSON)
+
+
+instance Arbitrary UTCTime where
+  arbitrary = posixSecondsToUTCTime . fromIntegral <$> (arbitrary :: Gen Integer)
+
+instance Arbitrary Person where
+  arbitrary = Person <$> arbitrary <*> arbitrary <*> arbitrary
+
+instance ToADTArbitrary Person
+
 
 data Company = Company
   { address   :: String
@@ -63,13 +83,22 @@ data Suit
   | Diamonds
   | Hearts
   | Spades
-  deriving (Eq,Show,Generic,OCamlType)
+  deriving (Eq,Show,Generic,OCamlType,FromJSON, ToJSON)
+
+instance Arbitrary Suit where
+  arbitrary = elements [Clubs, Diamonds, Hearts, Spades]
+instance ToADTArbitrary Suit
 
 data Card =
   Card
     { cardSuit  :: Suit
     , cardValue :: Int
-    } deriving (Eq,Show,Generic,OCamlType)
+    } deriving (Eq,Show,Generic,OCamlType, FromJSON, ToJSON)
+
+instance Arbitrary Card where
+  arbitrary = Card <$> arbitrary <*> arbitrary
+
+instance ToADTArbitrary Card
 
 data OneTypeParameter a =
   OneTypeParameter

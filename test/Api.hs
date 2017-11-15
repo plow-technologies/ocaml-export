@@ -33,7 +33,7 @@ import Servant.InAndOut
 import Product
 import Sum
 
-type ProductAPI = InAndOutWithRouteNamesAPI '[Person, Company] ["person", "company"]
+type ProductAPI = InAndOutListWithRouteNamesAPI '[Person, Company, Card] ["person", "company", "card"]
 
 productServer :: Server ProductAPI
 productServer =
@@ -44,6 +44,10 @@ productServer =
   (\company -> do
       liftIO $ print "got company"
       return company)
+  :<|>
+  (\card -> do
+      liftIO $ print "got card"
+      return card)
 
 productAPI :: Proxy ProductAPI
 productAPI = Proxy

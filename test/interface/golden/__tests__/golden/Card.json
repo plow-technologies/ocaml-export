@@ -1,0 +1,13 @@
+{
+    "seed": -4565155011317703878,
+    "samples": [
+        {
+            "cardValue": -14,
+            "cardSuit": "Spades"
+        },
+        {
+            "cardValue": 1,
+            "cardSuit": "Clubs"
+        }
+    ]
+}

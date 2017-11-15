@@ -5,10 +5,13 @@ import qualified Sum as Sum
 
 import qualified Api as Api
 
+import Data.Proxy
+
 import Network.Wai.Handler.Warp
 import Network.Wai
 import Network.Wai.Middleware.RequestLogger (logStdout)
 import Data.ByteString (unpack)
+import Test.Aeson.GenericSpecs
 {-
 Haskell Algebraic Data Types
 
@@ -35,8 +38,10 @@ logAllMiddleware app req respond = do
 
 main :: IO ()
 main = do
+  mkGoldenFileForType 2 (Proxy :: Proxy Product.Person) "test/interface/golden/__tests__/golden"
+  mkGoldenFileForType 2 (Proxy :: Proxy Product.Card) "test/interface/golden/__tests__/golden"
   run 8081 Api.productApp
   -- run 8081 (logStdout Api.productApp)
   --run 8081 (logAllMiddleware Api.productApp)
-  hspec Product.spec
-  hspec Sum.spec
+  -- hspec Product.spec
+  -- hspec Sum.spec

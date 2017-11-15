@@ -1,6 +1,9 @@
-external toJsObject : 'a Js.Dict.t -> < .. > Js.t = "%identity"
+(* external toJsObject : 'a Js.Dict.t -> < .. > Js.t = "%identity" *)
 
-(*
+(* Json.Spec.roundtrip "person.json" Person.decodePerson Person.encodePerson; *)
+
+  (*assert (decode x = (Js_result.Ok x))*)
+  (*
 let p  : Person.person = { id = 0; name = Some "James" ; created = Js_date.fromFloat (Js_date.now ()) } in
 let p2 : Person.person = { id = 1; name = Some "James" ; created = Js_date.fromFloat (Js_date.now ()) } in
 Js.log (p);
@@ -33,14 +36,13 @@ curl -i -d '{"id":0,"name":"James","created":"2017-11-07T07:00:46.316346Z"}' -H 
                                             (*
     let headers = Bs_node_fetch.HeadersInit.makeWithArray [| ( "Content-Type", "application/json" ) |] in
      *)
-
+(*
 let () =
 let p  : Person.person = { id = 0; name = Some "James" ; created = Js_date.fromFloat (Js_date.now ()) } in
 
 
 let headerDict = toJsObject (Js_dict.fromList [("Content-Type", Js_json.string "application/json")]) in
-let hs = Js_dict.fromList [("Content-Type" , "application/json")] in
-let headers = Bs_node_fetch.HeadersInit.make headerDict in
+let headers = Bs_node_fetch.HeadersInit.make [%bs.obj { contentType = "application/json" }] in
 
 let fetchthing () =
   Js.log "fetchthing";
@@ -67,7 +69,7 @@ setTimeout(function() {
     console.log('Blah blah blah blah extra-blah');
 }, 3000);
           |}]
-
+ *)
 
 
 

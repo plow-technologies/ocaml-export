@@ -4,13 +4,12 @@ packages:
 - .
 - location:
     git: git@github.com:plow-technologies/servant-in-and-out.git
-    commit: 3b5851bac526d5152064a9f28c5ea9c3c3ea6644
+    commit: 8ddf51f18aa2ec369a17ec2ed8b19c38671d83b6
   extra-dep: true
 
-  
-
-
-extra-deps: []
+extra-deps:
+- hspec-golden-aeson-0.3.0.0
+- quickcheck-arbitrary-adt-0.2.0.0
 
 flags: {}
 

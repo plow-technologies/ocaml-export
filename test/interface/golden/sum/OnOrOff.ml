@@ -5,9 +5,9 @@ type onOrOff =
 let encodeOnOrOff x =
   match x with
   | On ->
-     Json.Encode.string "On"
+     Aeson.Encode.string "On"
   | Off ->
-     Json.Encode.string "Off"
+     Aeson.Encode.string "Off"
 
 let decodeOnOrOff json =
   match Js_json.decodeString json with

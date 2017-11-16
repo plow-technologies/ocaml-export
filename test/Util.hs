@@ -2,7 +2,7 @@ module Util where
 
 import Data.Monoid ((<>))
 import qualified Data.Text.IO as T
-import OCaml.Export
+import OCaml.Export hiding (Options)
 import System.Directory (doesFileExist)
 import Test.Hspec
 
@@ -11,12 +11,14 @@ data ADT
   | Sum
   | Primitive
   | Complex
+  | Options
 
 adtToPath :: ADT -> FilePath
 adtToPath Product = "product"
 adtToPath Sum = "sum"
 adtToPath Primitive = "primitive"
 adtToPath Complex = "complex"
+adtToPath Options = "options"
 
 testOCamlType :: ADT -> OCamlFile -> FilePath -> SpecWith ()
 testOCamlType adt ocamlFile typeName =

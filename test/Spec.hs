@@ -1,5 +1,6 @@
 import           Test.Hspec
 
+import qualified Options as Options
 import qualified Product as Product
 import qualified Sum as Sum
 
@@ -47,4 +48,5 @@ main = do
   --run 8081 (logAllMiddleware Api.productApp)
   Product.mkGoldenFiles
   hspec Product.spec
+  hspec Options.spec
   --hspec Sum.spec

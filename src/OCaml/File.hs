@@ -49,6 +49,14 @@ instance Monoid OCamlInterface where
   mappend a b = OCamlInterface (declars a <> declars b) (inters a <> inters b) (specs a <> specs b)
   mempty = OCamlInterface [] [] []
 
+mkOCamlInterfaceWithOptions :: OCamlType a => Options -> a -> OCamlInterface
+mkOCamlInterfaceWithOptions options a =
+  OCamlInterface
+    [toOCamlTypeSource a, toOCamlEncoderSourceWith (options {includeOCamlInterface = True}) a, toOCamlDecoderSourceWith (options {includeOCamlInterface = True}) a]
+    [toOCamlTypeSource a, toOCamlEncoderInterface a, toOCamlDecoderInterface a]
+    []
+
+
 mkOCamlInterface :: OCamlType a => a -> OCamlInterface
 mkOCamlInterface a =
   OCamlInterface

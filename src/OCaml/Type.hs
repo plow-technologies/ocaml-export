@@ -44,13 +44,8 @@ module OCaml.Type
   , getOCamlValues
   , getTypeParameters
   , isTypeParameterRef
-
-  -- re-export
---  , Options (..)
---  , defaultOptions
   ) where
 
--- import           Data.Aeson (Options(..), defaultOptions)
 import           Data.Int     (Int16, Int32, Int64, Int8)
 import           Data.IntMap
 import           Data.List (nub)
@@ -95,7 +90,7 @@ data OCamlPrimitive
 data OCamlConstructor 
   = OCamlValueConstructor ValueConstructor -- ^ Sum, record (product with named fields) or product without named fields
   | OCamlEnumeratorConstructor [EnumeratorConstructor] -- ^ Sum of enumerations only. If a sum contains enumerators and at least one constructor with a value then it is an OCamlValueConstructor
-  | OCamlSumOfRecordConstructor Text ValueConstructor -- ^ Sum that contains at least one record. This construction is unique to Haskell. It has special Encoding and Decoding rules in order to output a valid OCaml program. i.e. `data A = A {a :: Int} | B {b :: String}`
+  | OCamlSumOfRecordConstructor Text ValueConstructor -- ^ Sum that contains at least one record. This construction is unique to Haskell. pIt has special Encoding and Decoding rules in order to output a valid OCaml program. i.e. `data A = A {a :: Int} | B {b :: String}`
   deriving (Show, Eq)
 
 -- | OCamlConstructor of one RecordConstructor is a record type.

@@ -23,6 +23,9 @@ import qualified Data.List as L
 import           Data.Maybe (catMaybes)
 import           Data.Monoid
 
+-- aeson
+import qualified Data.Aeson.Types as Aeson (Options(..))
+
 -- text
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -262,8 +265,10 @@ renderSum _ = return ""
 instance HasEncoder OCamlValue where
   render (OCamlField name value) = do
     valueBody <- render value
+    ao <- asks aesonOptions
+    let jsonFieldname = T.pack . Aeson.fieldLabelModifier ao . T.unpack $ name
     return . spaceparens $
-      dquotes (stext name) <> comma <+>
+      dquotes (stext jsonFieldname) <> comma <+>
       (valueBody <+> "x." <> stext name)
   render (OCamlTypeParameterRef name) =
     pure $ "encode" <> (stext . textUppercaseFirst $ name)

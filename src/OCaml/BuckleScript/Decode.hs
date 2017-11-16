@@ -21,16 +21,25 @@ module OCaml.BuckleScript.Decode
   , toOCamlDecoderInterface
   ) where
 
+-- base
 import           Control.Monad.Reader
 import qualified Data.List as L
 import           Data.Maybe (catMaybes)
 import           Data.Monoid
+
+-- aeson
+import qualified Data.Aeson.Types as Aeson (Options(..))
+
+-- text
 import           Data.Text (Text)
 import qualified Data.Text as T
-import           OCaml.Common
-import           OCaml.Type hiding (getOCamlValues)
+
+-- wl-pprint
 import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
 
+-- ocaml-export
+import           OCaml.Common
+import           OCaml.Type hiding (getOCamlValues)
 
 -- | Render OCamlDatatype into an OCaml declaration
 class HasDecoder a where
@@ -189,17 +198,23 @@ instance HasDecoder OCamlValue where
   -- renderRef has separate rules for type parameters and non primitive types
   -- however in the case of OOption, they should be rendered the same way
   -- to remove Js_result.t
-  render (OCamlField name (OCamlPrimitiveRef (OOption (OCamlDatatype datatypeName _)))) =
-    pure $ (stext name) <+> "=" <+> "optional (field" <+> dquotes (stext name)
+  render (OCamlField name (OCamlPrimitiveRef (OOption (OCamlDatatype datatypeName _)))) = do
+    ao <- asks aesonOptions
+    let jsonFieldname = T.pack . Aeson.fieldLabelModifier ao . T.unpack $ name
+    pure $ (stext name) <+> "=" <+> "optional (field" <+> dquotes (stext jsonFieldname)
       <+> "(fun a -> unwrapResult (decode" <> (stext . textUppercaseFirst $ datatypeName) <+> "a)))" <+> "json"
 
   render (OCamlField name (OCamlPrimitiveRef (OOption datatype))) = do
+    ao <- asks aesonOptions
+    let jsonFieldname = T.pack . Aeson.fieldLabelModifier ao . T.unpack $ name
     dv <- renderRef datatype
-    return $ (stext name) <+> "=" <+> "optional (field" <+> dquotes (stext name) <+> dv <> ")" <+> "json"
+    return $ (stext name) <+> "=" <+> "optional (field" <+> dquotes (stext jsonFieldname) <+> dv <> ")" <+> "json"
 
   render (OCamlField name value) = do
+    ao <- asks aesonOptions
+    let jsonFieldname = T.pack . Aeson.fieldLabelModifier ao . T.unpack $ name    
     dv <- render value
-    return $ (stext name) <+> "=" <+> "field" <+> dquotes (stext name) <+> dv <+> "json"
+    return $ (stext name) <+> "=" <+> "field" <+> dquotes (stext jsonFieldname) <+> dv <+> "json"
 
   render OCamlEmpty = pure (stext "")
 

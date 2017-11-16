@@ -21,13 +21,18 @@ import qualified Data.Text as T
 import qualified Data.Text.Lazy as LT
 import           Formatting hiding (stext, text)
 import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
+  -- re-export
+--  , Options (..)
+--  , defaultOptions
+import qualified Data.Aeson.Types as Aeson (Options(..), defaultOptions)
 
 data Options = Options
   { includeOCamlInterface :: Bool
+  , aesonOptions :: Aeson.Options
   }
 
 defaultOptions :: Options
-defaultOptions = Options {includeOCamlInterface = False}
+defaultOptions = Options {includeOCamlInterface = False, aesonOptions = Aeson.defaultOptions}
 
 cr :: Format r r
 cr = now "\n"

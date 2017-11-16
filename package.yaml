@@ -21,6 +21,7 @@ library:
   - OCaml.BuckleScript.Encode
   dependencies:
   - base >= 4.7 && < 5
+  - aeson
   - bytestring
   - containers
   - directory

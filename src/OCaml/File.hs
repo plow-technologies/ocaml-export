@@ -56,12 +56,12 @@ mkOCamlInterface a =
     [toOCamlTypeSource a, toOCamlEncoderInterface a, toOCamlDecoderInterface a]
     []
 
-mkOCamlInterfaceWithSpec :: OCamlType a => Text -> Text -> a -> OCamlInterface
-mkOCamlInterfaceWithSpec url goldenDir a =
+mkOCamlInterfaceWithSpec :: OCamlType a => Text -> Text -> Text -> a -> OCamlInterface
+mkOCamlInterfaceWithSpec url goldenDir modul a =
   OCamlInterface
     [toOCamlTypeSource a, toOCamlEncoderSourceWith (defaultOptions {includeOCamlInterface = True}) a, toOCamlDecoderSourceWith (defaultOptions {includeOCamlInterface = True}) a]
     [toOCamlTypeSource a, toOCamlEncoderInterface a, toOCamlDecoderInterface a]
-    [toOCamlSpec a url goldenDir]
+    [toOCamlSpec a modul url goldenDir]
 
 
 createOCamlFile :: FilePath -> OCamlFile -> IO ()

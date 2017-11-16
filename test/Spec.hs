@@ -45,5 +45,6 @@ main = do
   -}
   -- run 8081 (logStdout Api.productApp)
   --run 8081 (logAllMiddleware Api.productApp)
+  Product.mkGoldenFiles
   hspec Product.spec
-  hspec Sum.spec
+  --hspec Sum.spec

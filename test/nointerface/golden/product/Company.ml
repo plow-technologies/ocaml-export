@@ -5,21 +5,21 @@ type person =
   }
 
 let encodePerson (x : person) :Js_json.t =
-  Json.Encode.object_
-    [ ( "id", Json.Encode.int x.id )
-    ; ( "name", Json.Encode.optional Json.Encode.string x.name )
-    ; ( "created", Json.Encode.date x.created )
+  Aeson.Encode.object_
+    [ ( "id", Aeson.Encode.int x.id )
+    ; ( "name", Aeson.Encode.optional Aeson.Encode.string x.name )
+    ; ( "created", Aeson.Encode.date x.created )
     ]
 
 let decodePerson (json : Js_json.t) :(person, string) Js_result.t =
-  match Json.Decode.
+  match Aeson.Decode.
     { id = field "id" int json
     ; name = optional (field "name" string) json
     ; created = field "created" date json
     }
   with
   | v -> Js_result.Ok v
-  | exception Json.Decode.DecodeError message -> Js_result.Error ("decodePerson: " ^ message)
+  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodePerson: " ^ message)
 
 type company =
   { address : string
@@ -27,16 +27,16 @@ type company =
   }
 
 let encodeCompany (x : company) :Js_json.t =
-  Json.Encode.object_
-    [ ( "address", Json.Encode.string x.address )
-    ; ( "employees", (Json.Encode.list encodePerson) x.employees )
+  Aeson.Encode.object_
+    [ ( "address", Aeson.Encode.string x.address )
+    ; ( "employees", (Aeson.Encode.list encodePerson) x.employees )
     ]
 
 let decodeCompany (json : Js_json.t) :(company, string) Js_result.t =
-  match Json.Decode.
+  match Aeson.Decode.
     { address = field "address" string json
     ; employees = field "employees" (list (fun a -> unwrapResult (decodePerson a))) json
     }
   with
   | v -> Js_result.Ok v
-  | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeCompany: " ^ message)
+  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeCompany: " ^ message)

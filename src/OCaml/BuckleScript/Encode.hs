@@ -133,7 +133,7 @@ instance HasEncoderRef OCamlDatatype where
 instance HasEncoder OCamlConstructor where
   -- Single constructor, no values: empty array
   render (OCamlValueConstructor (NamedConstructor _name OCamlEmpty)) =
-    pure $ "Json.Encode.list []"
+    pure $ "Aeson.Encode.list []"
 
   -- Single constructor, multiple values: create array with values
   render (OCamlValueConstructor (NamedConstructor name value)) = do
@@ -142,7 +142,7 @@ instance HasEncoder OCamlConstructor where
     
     let encoders' =
           if length constructorParams > 1
-          then "Json.Encode.array" <+> arraybrackets encoders
+          then "Aeson.Encode.array" <+> arraybrackets encoders
           else encoders
         constructorParams' =
           if length constructorParams > 1
@@ -155,7 +155,7 @@ instance HasEncoder OCamlConstructor where
   -- Record constructor
   render (OCamlValueConstructor (RecordConstructor _ value)) = do
     recordValue <- render value
-    pure . nest 2 $ "Json.Encode.object_" <$$> "[" <+> recordValue <$$> "]"
+    pure . nest 2 $ "Aeson.Encode.object_" <$$> "[" <+> recordValue <$$> "]"
 
   -- Sum
   render (OCamlValueConstructor (MultipleConstructors constrs)) = do
@@ -202,21 +202,21 @@ renderSumOfRecordEncoder typeName name =
     <$$> "       Js.Dict.set dict \"tag\" (Js.Json.string \"" <> stext name <> "\");"
     <$$> "       Js.Json.object_ dict"
     <$$> "    | None ->"
-    <$$> "       Json.Encode.object_ []"
+    <$$> "       Aeson.Encode.object_ []"
     <$$> "   )"
 
 -- | render product values
 jsonEncodeObject :: Doc -> Doc -> Maybe Doc -> Doc
 jsonEncodeObject constructor tag mContents =
   case mContents of
-    Nothing -> constructor <$$> indent 3 ("Json.Encode.object_" <$$> indent 2 ("[" <+> tag <$$> "]"))
-    Just contents -> constructor <$$> indent 3 ("Json.Encode.object_" <$$> indent 2 ("[" <+> tag <$$> contents <$$> "]"))
+    Nothing -> constructor <$$> indent 3 ("Aeson.Encode.object_" <$$> indent 2 ("[" <+> tag <$$> "]"))
+    Just contents -> constructor <$$> indent 3 ("Aeson.Encode.object_" <$$> indent 2 ("[" <+> tag <$$> contents <$$> "]"))
 
 -- | render body rules for sum types
 renderSum :: OCamlConstructor -> Reader Options Doc
 renderSum (OCamlValueConstructor (NamedConstructor name OCamlEmpty)) = do
   let constructorMatchCase = "|" <+> stext name <+> "->"
-      encodeTag = pair (dquotes "tag") ("Json.Encode.string" <+> dquotes (stext name))
+      encodeTag = pair (dquotes "tag") ("Aeson.Encode.string" <+> dquotes (stext name))
   pure $ jsonEncodeObject constructorMatchCase encodeTag Nothing
 
 renderSum (OCamlValueConstructor (NamedConstructor name value)) = do
@@ -224,14 +224,14 @@ renderSum (OCamlValueConstructor (NamedConstructor name value)) = do
   (encoders, _) <- renderVariable constructorParams value
   let encoders' =
         if length constructorParams > 1
-        then "Json.Encode.array" <+> arraybrackets encoders
+        then "Aeson.Encode.array" <+> arraybrackets encoders
         else encoders
       constructorParams' =
         if length constructorParams > 1
         then ["("] <> (L.intersperse "," constructorParams) <> [")"]
         else (L.intersperse "," constructorParams)
       constructorMatchCase  = "|" <+> stext name <+> foldl1 (<>) constructorParams' <+> "->"
-      encodeTag = pair (dquotes "tag") ("Json.Encode.string" <+> dquotes (stext name))
+      encodeTag = pair (dquotes "tag") ("Aeson.Encode.string" <+> dquotes (stext name))
       encodeContents  = ";" <+> pair (dquotes "contents") encoders'
 
   pure $ jsonEncodeObject constructorMatchCase encodeTag (Just encodeContents)
@@ -255,7 +255,7 @@ renderSum (OCamlSumOfRecordConstructor typeName (MultipleConstructors constructo
   pure $ foldl1 (<$$>) encoders
 
 renderSum (OCamlEnumeratorConstructor constructors) =
-  pure $ foldl1 (<$$>) $ (\(EnumeratorConstructor name) -> "|" <+> stext name <+> "->" <$$> "   Json.Encode.string" <+> dquotes (stext name)) <$> constructors
+  pure $ foldl1 (<$$>) $ (\(EnumeratorConstructor name) -> "|" <+> stext name <+> "->" <$$> "   Aeson.Encode.string" <+> dquotes (stext name)) <$> constructors
 
 renderSum _ = return ""
 
@@ -276,37 +276,37 @@ instance HasEncoder OCamlValue where
   render _ = error "HasEncoderRef OCamlValue: should not happen"
 
 instance HasEncoderRef OCamlPrimitive where
-  renderRef ODate   = pure "Json.Encode.date"
-  renderRef OUnit   = pure "Json.Encode.null"
-  renderRef OInt    = pure "Json.Encode.int"
-  renderRef OChar   = pure "Json.Encode.string"
-  renderRef OBool   = pure "Json.Encode.boolean"
-  renderRef OFloat  = pure "Json.Encode.float"
-  renderRef OString = pure "Json.Encode.string"
-  renderRef (OList (OCamlPrimitive OChar)) = pure "Json.Encode.string"
+  renderRef ODate   = pure "Aeson.Encode.date"
+  renderRef OUnit   = pure "Aeson.Encode.null"
+  renderRef OInt    = pure "Aeson.Encode.int"
+  renderRef OChar   = pure "Aeson.Encode.string"
+  renderRef OBool   = pure "Aeson.Encode.boolean"
+  renderRef OFloat  = pure "Aeson.Encode.float"
+  renderRef OString = pure "Aeson.Encode.string"
+  renderRef (OList (OCamlPrimitive OChar)) = pure "Aeson.Encode.string"
   renderRef (OList datatype) = do
     dd <- renderRef datatype
-    return . parens $ "Json.Encode.list" <+> dd
+    return . parens $ "Aeson.Encode.list" <+> dd
   renderRef (OOption datatype) = do
     dd <- renderRef datatype
-    return $ "Json.Encode.optional" <+> dd
+    return $ "Aeson.Encode.optional" <+> dd
   renderRef (OTuple2 t0 t1) = do
     dt0 <- renderRef t0
     dt1 <- renderRef t1
-    return $ "Json.Encode.pair" <+> dt0 <+> dt1
+    return $ "Aeson.Encode.pair" <+> dt0 <+> dt1
 
   renderRef (OTuple3 t0 t1 t2) = do
     dt0 <- renderRef t0
     dt1 <- renderRef t1
     dt2 <- renderRef t2
-    return $ "Json.Encode.tuple3" <+> dt0 <+> dt1 <+> dt2
+    return $ "Aeson.Encode.tuple3" <+> dt0 <+> dt1 <+> dt2
 
   renderRef (OTuple4 t0 t1 t2 t3) = do
     dt0 <- renderRef t0
     dt1 <- renderRef t1
     dt2 <- renderRef t2
     dt3 <- renderRef t3
-    return $ "Json.Encode.tuple4" <+> dt0 <+> dt1 <+> dt2 <+> dt3
+    return $ "Aeson.Encode.tuple4" <+> dt0 <+> dt1 <+> dt2 <+> dt3
     
   renderRef (OTuple5 t0 t1 t2 t3 t4) = do
     dt0 <- renderRef t0
@@ -314,7 +314,7 @@ instance HasEncoderRef OCamlPrimitive where
     dt2 <- renderRef t2
     dt3 <- renderRef t3
     dt4 <- renderRef t4
-    return $ "Json.Encode.tuple5" <+> dt0 <+> dt1 <+> dt2 <+> dt3 <+> dt4
+    return $ "Aeson.Encode.tuple5" <+> dt0 <+> dt1 <+> dt2 <+> dt3 <+> dt4
 
   renderRef (OTuple6 t0 t1 t2 t3 t4 t5) = do
     dt0 <- renderRef t0
@@ -323,7 +323,7 @@ instance HasEncoderRef OCamlPrimitive where
     dt3 <- renderRef t3
     dt4 <- renderRef t4
     dt5 <- renderRef t5
-    return $ "Json.Encode.tuple6" <+> dt0 <+> dt1 <+> dt2 <+> dt3 <+> dt4 <+> dt5
+    return $ "Aeson.Encode.tuple6" <+> dt0 <+> dt1 <+> dt2 <+> dt3 <+> dt4 <+> dt5
 
   renderRef (ODict k v) = do
     dk <- renderRef k
@@ -369,7 +369,7 @@ renderVariable (d : ds) v@(OCamlRef {}) = do
   return (v' <+> d, ds)
 renderVariable ds OCamlEmpty = return (empty, ds)
 renderVariable (_ : ds) (OCamlPrimitiveRef OUnit) =
-  return ("Json.Encode.null", ds)
+  return ("Aeson.Encode.null", ds)
 renderVariable (d : ds) (OCamlPrimitiveRef ref) = do
   r <- renderRef ref
   return (r <+> d, ds)

@@ -39,7 +39,19 @@ tests:
     source-dirs: test
     dependencies:
     - base
+    - aeson
+    - bytestring
+    - directory
     - hspec
+    - hspec-golden-aeson
     - ocaml-export
+    - QuickCheck
+    - quickcheck-arbitrary-adt
+    - servant
+    - servant-server
+    - servant-in-and-out
     - text
     - time
+    - wai
+    - wai-extra
+    - warp

@@ -4,6 +4,22 @@ Export Haskell types to OCaml.
 
 Export aeson serializations to OCaml BuckleScript.
 
+## Test
+
+```
+stack build
+
+cd test/interface/golden
+npm install
+npm run build
+
+stack test
+
+stack exec server
+
+npm run test
+```
+
 ## Goal
 
 Encode Haskell types into OCaml/BuckleScript from an aeson perspective. 

@@ -12,14 +12,14 @@ type sumWithRecord =
   | B2 of sumWithRecordB2
 
 let encodeSumWithRecordA1 (x : sumWithRecordA1) :Js_json.t =
-  Json.Encode.object_
-    [ ( "a1", Json.Encode.int x.a1 )
+  Aeson.Encode.object_
+    [ ( "a1", Aeson.Encode.int x.a1 )
     ]
 
 let encodeSumWithRecordB2 (x : sumWithRecordB2) :Js_json.t =
-  Json.Encode.object_
-    [ ( "b2", Json.Encode.string x.b2 )
-    ; ( "b3", Json.Encode.int x.b3 )
+  Aeson.Encode.object_
+    [ ( "b2", Aeson.Encode.string x.b2 )
+    ; ( "b3", Aeson.Encode.int x.b3 )
     ]
 
 let encodeSumWithRecord (x : sumWithRecord) :Js_json.t =
@@ -30,7 +30,7 @@ let encodeSumWithRecord (x : sumWithRecord) :Js_json.t =
          Js.Dict.set dict "tag" (Js.Json.string "A1");
          Js.Json.object_ dict
       | None ->
-         Json.Encode.object_ []
+         Aeson.Encode.object_ []
      )
   | B2 y0 ->
      (match (Js.Json.decodeObject (encodeSumWithRecordB2 y0)) with
@@ -38,28 +38,28 @@ let encodeSumWithRecord (x : sumWithRecord) :Js_json.t =
          Js.Dict.set dict "tag" (Js.Json.string "B2");
          Js.Json.object_ dict
       | None ->
-         Json.Encode.object_ []
+         Aeson.Encode.object_ []
      )
 
 let decodeSumWithRecordA1 (json : Js_json.t) :(sumWithRecordA1, string) Js_result.t =
-  match Json.Decode.
+  match Aeson.Decode.
     { a1 = field "a1" int json
     }
   with
   | v -> Js_result.Ok v
-  | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumWithRecordA1: " ^ message)
+  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeSumWithRecordA1: " ^ message)
 
 let decodeSumWithRecordB2 (json : Js_json.t) :(sumWithRecordB2, string) Js_result.t =
-  match Json.Decode.
+  match Aeson.Decode.
     { b2 = field "b2" string json
     ; b3 = field "b3" int json
     }
   with
   | v -> Js_result.Ok v
-  | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeSumWithRecordB2: " ^ message)
+  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeSumWithRecordB2: " ^ message)
 
 let decodeSumWithRecord (json : Js_json.t) :(sumWithRecord, string) Js_result.t =
-  match Json.Decode.(field "tag" string json) with
+  match Aeson.Decode.(field "tag" string json) with
   | "A1" ->
      (match decodeSumWithRecordA1 json with
       | Js_result.Ok v -> Js_result.Ok (A1 v)
@@ -71,4 +71,4 @@ let decodeSumWithRecord (json : Js_json.t) :(sumWithRecord, string) Js_result.t 
       | Js_result.Error message -> Js_result.Error ("decodeSumWithRecord: " ^ message)
      )
   | err -> Js_result.Error ("Unknown tag value found '" ^ err ^ "'.")
-  | exception Json.Decode.DecodeError message -> Js_result.Error message
+  | exception Aeson.Decode.DecodeError message -> Js_result.Error message

@@ -7,13 +7,13 @@ type suit =
 let encodeSuit x =
   match x with
   | Clubs ->
-     Json.Encode.string "Clubs"
+     Aeson.Encode.string "Clubs"
   | Diamonds ->
-     Json.Encode.string "Diamonds"
+     Aeson.Encode.string "Diamonds"
   | Hearts ->
-     Json.Encode.string "Hearts"
+     Aeson.Encode.string "Hearts"
   | Spades ->
-     Json.Encode.string "Spades"
+     Aeson.Encode.string "Spades"
 
 let decodeSuit json =
   match Js_json.decodeString json with
@@ -30,16 +30,16 @@ type card =
   }
 
 let encodeCard x =
-  Json.Encode.object_
+  Aeson.Encode.object_
     [ ( "cardSuit", encodeSuit x.cardSuit )
-    ; ( "cardValue", Json.Encode.int x.cardValue )
+    ; ( "cardValue", Aeson.Encode.int x.cardValue )
     ]
 
 let decodeCard json =
-  match Json.Decode.
+  match Aeson.Decode.
     { cardSuit = field "cardSuit" (fun a -> unwrapResult (decodeSuit a)) json
     ; cardValue = field "cardValue" int json
     }
   with
   | v -> Js_result.Ok v
-  | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeCard: " ^ message)
+  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeCard: " ^ message)

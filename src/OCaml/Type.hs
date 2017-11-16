@@ -44,8 +44,13 @@ module OCaml.Type
   , getOCamlValues
   , getTypeParameters
   , isTypeParameterRef
+
+  -- re-export
+--  , Options (..)
+--  , defaultOptions
   ) where
 
+-- import           Data.Aeson (Options(..), defaultOptions)
 import           Data.Int     (Int16, Int32, Int64, Int8)
 import           Data.IntMap
 import           Data.List (nub)
@@ -314,6 +319,8 @@ instance OCamlType Bool where
   toOCamlType _ = OCamlPrimitive OBool
 
 {-
+should support String, Int, Text maps, but nothing else at the moment
+
 ToJSON and FromJSON instances are provided for the following types in aeson
 -- not currently defined here
 -- Word, LocalTime, ZonedTime, IntSet, CTime, Version, Natural

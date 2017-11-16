@@ -7,16 +7,16 @@ type ('a0, 'a1, 'a2) three =
   }
 
 let encodeThree encodeA0 encodeA1 encodeA2 x =
-  Json.Encode.object_
-    [ ( "threeId", Json.Encode.int x.threeId )
+  Aeson.Encode.object_
+    [ ( "threeId", Aeson.Encode.int x.threeId )
     ; ( "threeFirst", encodeA0 x.threeFirst )
     ; ( "threeSecond", encodeA1 x.threeSecond )
     ; ( "threeThird", encodeA2 x.threeThird )
-    ; ( "threeString", Json.Encode.string x.threeString )
+    ; ( "threeString", Aeson.Encode.string x.threeString )
     ]
 
 let decodeThree decodeA0 decodeA1 decodeA2 json =
-  match Json.Decode.
+  match Aeson.Decode.
     { threeId = field "threeId" int json
     ; threeFirst = field "threeFirst" (fun a -> unwrapResult (decodeA0 a)) json
     ; threeSecond = field "threeSecond" (fun a -> unwrapResult (decodeA1 a)) json
@@ -25,4 +25,4 @@ let decodeThree decodeA0 decodeA1 decodeA2 json =
     }
   with
   | v -> Js_result.Ok v
-  | exception Json.Decode.DecodeError message -> Js_result.Error ("decodeThree: " ^ message)
+  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeThree: " ^ message)

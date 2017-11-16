@@ -7,16 +7,25 @@
   "scripts": {
     "build": "bsb -make-world",
     "start": "bsb -make-world -w",
-    "clean": "bsb -clean-world"
+    "clean": "bsb -clean-world",
+    "test": "npm run build && jest",
+    "watch:bsb": "bsb -make-world -w",
+    "watch:jest": "jest --watchAll",
+    "watch:screen": "screen -c .screenrc"
   },
   "keywords": [],
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "bs-json": "git+ssh://git@github.com/plow-technologies/bs-json.git#c84cd837f460131a8499ea827d6d3d8df4167d63"
+    "bs-fetch": "git+ssh://git@github.com/plow-technologies/bs-fetch.git#01202669fb57a2e179e327bd816c2aa1db3dfdc3",
+    "bs-aeson": "git+ssh://git@github.com/plow-technologies/bs-aeson.git#c95183fb0488323bf787f938241658313aa865d0",
+    "bs-aeson-spec": "git+ssh://git@github.com/plow-technologies/bs-aeson-spec.git#f4d7b23a86bc37689258504b19ea25f37cb4438a",
+    "bs-node": "github:buckletypes/bs-node",
+    "bs-node-fetch": "^0.1.2"
   },
   "devDependencies": {
     "bs-platform": "^2.0.0",
+    "bs-jest": "reasonml-community/bs-jest",
     "concurrently": "^3.5.0"
   }
 }

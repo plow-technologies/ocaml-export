@@ -27,10 +27,12 @@ testProduct = testOCamlType Product
 
 testProductInterface = testOCamlTypeWithInterface Product
 
+mkTestOCaml = mkOCamlInterfaceWithSpec "http://localhost:8081" "__tests__/golden/"
+
 spec :: Spec
 spec = do
   describe "OCaml Declaration with Interface: Product Types" $ do
-    testProductInterface "Person" (mkOCamlInterface (Proxy :: Proxy Person))
+    testProductInterface "Person" (mkTestOCaml (Proxy :: Proxy Person))
     testProductInterface "Company" (mkOCamlInterface (Proxy :: Proxy Person) <> (mkOCamlInterface (Proxy :: Proxy Company)))
     testProductInterface "CustomOption" (mkOCamlInterface (Proxy :: Proxy Person) <> (mkOCamlInterface (Proxy :: Proxy Company2)))
     testProductInterface "Card" (mkOCamlInterface (Proxy :: Proxy Suit) <> (mkOCamlInterface (Proxy :: Proxy Card)))

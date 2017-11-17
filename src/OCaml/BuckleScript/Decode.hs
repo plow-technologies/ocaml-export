@@ -303,8 +303,10 @@ toOCamlDecoderSource = toOCamlDecoderSourceWith defaultOptions
     
 -- | "<name>" -> decode <name>
 renderSumCondition :: T.Text -> Doc -> Reader Options Doc
-renderSumCondition name contents =
-  pure $ "|" <+> dquotes (stext name) <+> "->" <$$>
+renderSumCondition name contents = do
+  ao <- asks aesonOptions
+  let jsonConstructorName = T.pack . Aeson.constructorTagModifier ao . T.unpack $ name
+  pure $ "|" <+> dquotes (stext jsonConstructorName) <+> "->" <$$>
     indent 3 contents
 
 -- | Render a sum type constructor in context of a data type with multiple
@@ -316,13 +318,15 @@ renderSum (OCamlValueConstructor (NamedConstructor name v@(Values _ _))) = do
   renderSumCondition name val
 
 renderSum (OCamlValueConstructor (NamedConstructor name value)) = do
+  ao <- asks aesonOptions
+  let jsonConstructorName = T.pack . Aeson.constructorTagModifier ao . T.unpack $ name
   val <- render value
   renderSumCondition name $ parens
     ("match Aeson.Decode." <> parens ("field \"contents\"" <+> val <+> "json") <+> "with"
       <$$>
         indent 1
           (    "| v -> Js_result.Ok (" <> (stext name) <+> "v)"
-          <$$> "| exception Aeson.Decode.DecodeError message -> Js_result.Error (\"" <> (stext name) <> ": \" ^ message)"
+          <$$> "| exception Aeson.Decode.DecodeError message -> Js_result.Error (\"" <> (stext jsonConstructorName) <> ": \" ^ message)"
           )           <> line
     )
 
@@ -343,13 +347,13 @@ renderSum (OCamlEnumeratorConstructor _) = pure "" -- handled elsewhere
 renderSum _ = pure ""
 
 renderOutsideEncoder :: Text -> Text -> Reader Options Doc
-renderOutsideEncoder typeName name =  
-   return $
-         "|" <+> (dquotes . stext $ name) <+> "->"
-    <$$> indent 3 ("(match" <+> "decode" <> (stext $ typeName <> textUppercaseFirst name) <+> "json" <+> "with"
-    <$$> indent 1 ("| Js_result.Ok v -> Js_result.Ok" <+> (parens ((stext $ textUppercaseFirst name) <+> "v"))
-    <$$> "| Js_result.Error message -> Js_result.Error" <+> (parens $ (dquotes $ "decode" <> stext typeName <> ": ") <+> "^ message"))
-    <$$> ")")
+renderOutsideEncoder typeName name =
+  pure $
+        "|" <+> (dquotes . stext $ name) <+> "->"
+   <$$> indent 3 ("(match" <+> "decode" <> (stext $ typeName <> textUppercaseFirst name) <+> "json" <+> "with"
+   <$$> indent 1 ("| Js_result.Ok v -> Js_result.Ok" <+> (parens ((stext $ textUppercaseFirst name) <+> "v"))
+   <$$> "| Js_result.Error message -> Js_result.Error" <+> (parens $ (dquotes $ "decode" <> stext typeName <> ": ") <+> "^ message"))
+   <$$> ")")
 
 
 flattenOCamlValue :: OCamlValue -> [OCamlValue]

@@ -197,12 +197,14 @@ renderSumRecordInterface _ _ = Nothing
 
 -- |
 renderSumOfRecordEncoder :: Text -> Text -> Reader Options Doc
-renderSumOfRecordEncoder typeName name =  
+renderSumOfRecordEncoder typeName name = do
+  ao <- asks aesonOptions
+  let jsonConstructorName = T.pack . Aeson.constructorTagModifier ao . T.unpack $ name
   pure $
          "|" <+> stext name <+> "y0 ->"
     <$$> "   (match (Js.Json.decodeObject (encode" <> (stext . textUppercaseFirst $ typeName) <> stext name <+> "y0)) with"
     <$$> "    | Some dict ->"
-    <$$> "       Js.Dict.set dict \"tag\" (Js.Json.string \"" <> stext name <> "\");"
+    <$$> "       Js.Dict.set dict \"tag\" (Js.Json.string \"" <> stext jsonConstructorName <> "\");"
     <$$> "       Js.Json.object_ dict"
     <$$> "    | None ->"
     <$$> "       Aeson.Encode.object_ []"
@@ -218,12 +220,16 @@ jsonEncodeObject constructor tag mContents =
 -- | render body rules for sum types
 renderSum :: OCamlConstructor -> Reader Options Doc
 renderSum (OCamlValueConstructor (NamedConstructor name OCamlEmpty)) = do
-  let constructorMatchCase = "|" <+> stext name <+> "->"
-      encodeTag = pair (dquotes "tag") ("Aeson.Encode.string" <+> dquotes (stext name))
+  ao <- asks aesonOptions
+  let jsonConstructorName = T.pack . Aeson.constructorTagModifier ao . T.unpack $ name
+      constructorMatchCase = "|" <+> stext name <+> "->"
+      encodeTag = pair (dquotes "tag") ("Aeson.Encode.string" <+> dquotes (stext jsonConstructorName))
   pure $ jsonEncodeObject constructorMatchCase encodeTag Nothing
 
 renderSum (OCamlValueConstructor (NamedConstructor name value)) = do
   let constructorParams = constructorParameters 0 value
+  ao <- asks aesonOptions
+  let jsonConstructorName = T.pack . Aeson.constructorTagModifier ao . T.unpack $ name
   (encoders, _) <- renderVariable constructorParams value
   let encoders' =
         if length constructorParams > 1
@@ -234,15 +240,17 @@ renderSum (OCamlValueConstructor (NamedConstructor name value)) = do
         then ["("] <> (L.intersperse "," constructorParams) <> [")"]
         else (L.intersperse "," constructorParams)
       constructorMatchCase  = "|" <+> stext name <+> foldl1 (<>) constructorParams' <+> "->"
-      encodeTag = pair (dquotes "tag") ("Aeson.Encode.string" <+> dquotes (stext name))
+      encodeTag = pair (dquotes "tag") ("Aeson.Encode.string" <+> dquotes (stext jsonConstructorName))
       encodeContents  = ";" <+> pair (dquotes "contents") encoders'
 
   pure $ jsonEncodeObject constructorMatchCase encodeTag (Just encodeContents)
 
 renderSum (OCamlValueConstructor (RecordConstructor name value)) = do
+  ao <- asks aesonOptions
+  let jsonConstructorName = T.pack . Aeson.constructorTagModifier ao . T.unpack $ name
   encoder <- render value
   let constructorMatchCase = "|" <+> stext name <+> "->"
-      encodeTag = pair (dquotes "tag") (dquotes $ stext name)
+      encodeTag = pair (dquotes "tag") (dquotes $ stext jsonConstructorName)
       encodeContents = comma <+> encoder
   pure $ jsonEncodeObject constructorMatchCase encodeTag (Just encodeContents)
 

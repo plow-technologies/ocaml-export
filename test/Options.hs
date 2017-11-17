@@ -6,7 +6,7 @@ module Options where
 
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Aeson.Types hiding (Options)
-import Data.Char (toUpper)
+import Data.Char (toUpper,toLower)
 import Data.Monoid ((<>))
 import Data.Proxy
 import Data.Text (Text)
@@ -29,21 +29,24 @@ testOptionsInterface = testOCamlTypeWithInterface Options
 mkTestOCaml :: OCamlType a => Text -> a -> OCamlInterface
 mkTestOCaml modul = mkOCamlInterfaceWithSpec "http://localhost:8081" "__tests__/golden/" modul
 
-upperOptions = defaultOptions { fieldLabelModifier = map toUpper }
+fieldUpperOptions = defaultOptions { fieldLabelModifier = map toUpper }
 
-oo = OCaml.defaultOptions {aesonOptions = upperOptions }
+constructorLowerOptions = defaultOptions { constructorTagModifier = map toLower }
+
+oo = OCaml.defaultOptions {aesonOptions = fieldUpperOptions }
+ii = OCaml.defaultOptions {aesonOptions = constructorLowerOptions }
 
 spec :: Spec
 spec = do
   describe "OCaml Declaration with Interface: Types with Aeson Options" $ do
     testOptionsInterface "Person" (mkOCamlInterfaceWithOptions oo (Proxy :: Proxy Person))
+    testOptionsInterface "NameOrIdNumber" (mkOCamlInterfaceWithOptions ii (Proxy :: Proxy NameOrIdNumber))
 
 data Person = Person
   { id :: Int
   , name :: Maybe String
   , created :: UTCTime
   } deriving (Show, Eq, Generic, OCamlType)
-
 
 instance Arbitrary UTCTime where
   arbitrary = posixSecondsToUTCTime . fromIntegral <$> (arbitrary :: Gen Integer)
@@ -54,7 +57,21 @@ instance Arbitrary Person where
 instance ToADTArbitrary Person
 
 instance ToJSON Person where
-  toJSON = genericToJSON upperOptions
+  toJSON = genericToJSON fieldUpperOptions
 
 instance FromJSON Person where
-  parseJSON = genericParseJSON upperOptions
+  parseJSON = genericParseJSON fieldUpperOptions
+
+data NameOrIdNumber = Name String | IdNumber Int
+  deriving (Show, Eq, Generic, OCamlType)
+
+--instance Arbitrary GoodOrBad where
+--  arbitrary = Person <$> arbitrary <*> arbitrary <*> arbitrary
+
+-- instance ToADTArbitrary GoodOrBad
+
+instance ToJSON NameOrIdNumber where
+  toJSON = genericToJSON constructorLowerOptions
+
+instance FromJSON NameOrIdNumber where
+  parseJSON = genericParseJSON constructorLowerOptions

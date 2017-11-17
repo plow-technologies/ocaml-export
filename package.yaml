@@ -46,6 +46,7 @@ tests:
     - hspec
     - hspec-golden-aeson
     - ocaml-export
+    - process
     - QuickCheck
     - quickcheck-arbitrary-adt
     - servant

@@ -24,7 +24,7 @@ testProduct = testOCamlType Product
 testProductInterface = testOCamlTypeWithInterface Product
 
 mkTestOCaml :: OCamlType a => Text -> a -> OCamlInterface
-mkTestOCaml modul = mkOCamlInterfaceWithSpec "http://localhost:8081" "__tests__/golden/" modul
+mkTestOCaml modul = mkOCamlInterfaceWithSpec "http://localhost:8081" "__tests__/golden/product/" modul
 
 mkGoldenFiles :: IO ()
 mkGoldenFiles = do

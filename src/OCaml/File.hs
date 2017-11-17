@@ -95,7 +95,7 @@ createOCamlFileWithInterface rootDir specRootDir fileName ocamlInterface = do
     then do
       let specfp = specRootDir <> "/" <> fileName
           specBody = "let () =\n" <> (T.intercalate "\n\n" (specs ocamlInterface) <> "\n")
-      T.writeFile (specfp <> ".ml") specBody
+      T.writeFile (specfp <> "_spec.ml") specBody
     else pure ()
   
 createOCamlSpecFile :: FilePath -> FilePath -> Text -> IO ()
@@ -103,7 +103,7 @@ createOCamlSpecFile rootDir fileName ocamlSpec = do
   createDirectoryIfMissing True rootDir
   let fp = rootDir <> "/" <> fileName
       body = "let () =\n" <> ocamlSpec
-  T.writeFile (fp <> ".ml") body
+  T.writeFile (fp <> "_spec.ml") body
 {-
 createOCamlSpecFile :: FilePath -> FilePath -> [(OCamlDatatype,Text,Text)] -> IO ()
 createOCamlSpecFile rootDir fileName typs = do

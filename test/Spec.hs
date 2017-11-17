@@ -13,6 +13,10 @@ import Network.Wai
 import Network.Wai.Middleware.RequestLogger (logStdout)
 import Data.ByteString (unpack)
 import Test.Aeson.GenericSpecs
+
+import Control.Concurrent (forkIO, killThread, threadDelay)
+
+import System.Process
 {-
 Haskell Algebraic Data Types
 
@@ -37,15 +41,24 @@ logAllMiddleware app req respond = do
     print $ d
     app req respond
 
+-- npm start --prefix path/to/your/app
+
 main :: IO ()
 main = do
-
-  Product.mkGoldenFiles
-  run 8081 Api.productApp
-
-  -- run 8081 (logStdout Api.productApp)
-  -- run 8081 (logAllMiddleware Api.productApp)
+--  run 8081 Api.productApp 
   Product.mkGoldenFiles
   hspec Product.spec
+  hspec Sum.spec
   hspec Options.spec
-  --hspec Sum.spec
+
+{-
+  servantThread <- forkIO $ run 8081 Api.productApp
+
+  threadDelay 10000
+
+  -- callCommand "npm install --prefix test/interface/golden"
+  callCommand "npm run build --prefix test/interface/golden"
+  callCommand "npm run test --prefix test/interface/golden"
+
+  killThread servantThread
+-}

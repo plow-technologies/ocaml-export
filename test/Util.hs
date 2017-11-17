@@ -45,11 +45,11 @@ testOCamlTypeWithInterface adt typeName ocamlFile =
     automated `shouldBe` handWritten
     automated2 `shouldBe` handWritten2
 
-    fe <- doesFileExist (specGoldenPath <> "/" <> typeName <> ".ml")
+    fe <- doesFileExist (specGoldenPath <> "/" <> typeName <> "_spec.ml")
     if fe
       then do
-        automated3   <- T.readFile (specPath   <> "/" <> typeName <> ".ml")
-        handWritten3 <- T.readFile (specGoldenPath <> "/" <> typeName <> ".ml")
+        automated3   <- T.readFile (specPath <> "/" <> typeName <> "_spec.ml")
+        handWritten3 <- T.readFile (specGoldenPath <> "/" <> typeName <> "_spec.ml")
         automated3 `shouldBe` handWritten3
       else pure ()
   where

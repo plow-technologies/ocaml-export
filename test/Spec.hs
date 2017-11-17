@@ -45,19 +45,20 @@ logAllMiddleware app req respond = do
 
 main :: IO ()
 main = do
---  run 8081 Api.productApp 
+  run 8081 Api.productApp
+{-
   Product.mkGoldenFiles
   hspec Product.spec
   hspec Sum.spec
   hspec Options.spec
-
+-}
 {-
   servantThread <- forkIO $ run 8081 Api.productApp
 
-  threadDelay 10000
+  threadDelay 1000000
 
   -- callCommand "npm install --prefix test/interface/golden"
-  callCommand "npm run build --prefix test/interface/golden"
+  -- callCommand "npm run build --prefix test/interface/golden"
   callCommand "npm run test --prefix test/interface/golden"
 
   killThread servantThread

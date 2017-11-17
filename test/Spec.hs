@@ -39,13 +39,12 @@ logAllMiddleware app req respond = do
 
 main :: IO ()
 main = do
-  {-
-  mkGoldenFileForType 2 (Proxy :: Proxy Product.Person) "test/interface/golden/__tests__/golden"
-  mkGoldenFileForType 2 (Proxy :: Proxy Product.Card) "test/interface/golden/__tests__/golden"
+
+  Product.mkGoldenFiles
   run 8081 Api.productApp
-  -}
+
   -- run 8081 (logStdout Api.productApp)
-  --run 8081 (logAllMiddleware Api.productApp)
+  -- run 8081 (logAllMiddleware Api.productApp)
   Product.mkGoldenFiles
   hspec Product.spec
   hspec Options.spec

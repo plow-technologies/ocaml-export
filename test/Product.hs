@@ -30,6 +30,7 @@ mkGoldenFiles :: IO ()
 mkGoldenFiles = do
   mkGoldenFileForType 2 (Proxy :: Proxy Person) "test/interface/golden/__tests__/golden/product"
   mkGoldenFileForType 2 (Proxy :: Proxy Company) "test/interface/golden/__tests__/golden/product"
+  mkGoldenFileForType 2 (Proxy :: Proxy Suit) "test/interface/golden/__tests__/golden/product"
   mkGoldenFileForType 2 (Proxy :: Proxy Card) "test/interface/golden/__tests__/golden/product"
 
 
@@ -82,9 +83,9 @@ data Company = Company
 
 instance Arbitrary Company where
   arbitrary = do
-    k <- choose (1,3)
-    v <- vector k
-    Company <$> arbitrary <*> pure v
+    --k <- choose (0,1)
+    --v <- vector k
+    Company <$> arbitrary <*> pure []
 
 instance ToADTArbitrary Company
 

@@ -14,7 +14,8 @@
       "subdirs": true
     },
     {
-      "dir": "__tests__",
+      "dir": "__tests__/product",
+      "subdirs": true,
       "type": "dev"
     }
   ]

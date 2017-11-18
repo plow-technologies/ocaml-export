@@ -17,3 +17,5 @@ import OCaml.Common              as X
 import OCaml.File                as X
 import OCaml.Record              as X
 import OCaml.Type                as X
+
+import OCaml.HList as X

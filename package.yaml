@@ -34,7 +34,7 @@ library:
   - wl-pprint-text
   ghc-options:
   - -Wall
-  - -Werror
+#  - -Werror
 
 tests:
   spec:

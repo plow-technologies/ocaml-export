@@ -62,6 +62,9 @@ type Yo = OCamlModule ["Here", "goodbye"] '[] ::> SampleModule
 
 type Next = OCamlModule '["Next"] '[] ::> Product.Person :> Product.Company
 
+type Following = OCamlModule '["Following"] '[] ::> (OCamlTypeInFile "Person" "test/input")
+
+
 main :: IO ()
 main = do
 --  print $ mkType (Proxy :: Proxy SampleModule)
@@ -70,7 +73,9 @@ main = do
 --  print "Hello"
 --  print $ mkType (Proxy :: Proxy Next)
 --  mkModule (Proxy :: Proxy Yo) "test/output"  
-  mkModule (Proxy :: Proxy Next) "test/output"
+--  mkModule (Proxy :: Proxy Next) "test/output"
+--  mkModuleWithSpec (Proxy :: Proxy Next) "test/output" "__tests__" "test/output/__tests__/golden" "localhost:8081"
+  mkModuleWithSpec (Proxy :: Proxy Following) "test/output" "__tests__" "test/output/__tests__/golden" "localhost:8081"
   fail "adsf"
   
   -- run 8081 Api.productApp

@@ -1,3 +1,9 @@
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE TypeOperators #-}
+
 import           Test.Hspec
 
 import qualified Options as Options
@@ -14,9 +20,9 @@ import Network.Wai.Middleware.RequestLogger (logStdout)
 import Data.ByteString (unpack)
 import Test.Aeson.GenericSpecs
 
-import Control.Concurrent (forkIO, killThread, threadDelay)
-
 import System.Process
+
+import OCaml.Export
 {-
 Haskell Algebraic Data Types
 
@@ -43,23 +49,34 @@ logAllMiddleware app req respond = do
 
 -- npm start --prefix path/to/your/app
 
+--test :: (forall (i :: k2). f0 i -> g0 i)
+--                     -> HList (Map f0 as000) -> HList (Map g0 as000)
+--test = hmap show
+
+type SampleModule = Char :> Int -- :<|> String :<|> Int
+
+
+type Dub = "Dubya" ::> SampleModule
+
+type Yo = OCamlModule ["Here", "goodbye"] '[] ::> SampleModule
+
+type Next = OCamlModule '["Next"] '[] ::> Product.Person :> Product.Company
+
 main :: IO ()
 main = do
-  run 8081 Api.productApp
+--  print $ mkType (Proxy :: Proxy SampleModule)
+--  print $ mkModule (Proxy :: Proxy Dub)
+--  print $ mkType (Proxy :: Proxy Yo)
+--  print "Hello"
+--  print $ mkType (Proxy :: Proxy Next)
+--  mkModule (Proxy :: Proxy Yo) "test/output"  
+  mkModule (Proxy :: Proxy Next) "test/output"
+  fail "adsf"
+  
+  -- run 8081 Api.productApp
 {-
   Product.mkGoldenFiles
   hspec Product.spec
   hspec Sum.spec
   hspec Options.spec
--}
-{-
-  servantThread <- forkIO $ run 8081 Api.productApp
-
-  threadDelay 1000000
-
-  -- callCommand "npm install --prefix test/interface/golden"
-  -- callCommand "npm run build --prefix test/interface/golden"
-  callCommand "npm run test --prefix test/interface/golden"
-
-  killThread servantThread
 -}

@@ -25,10 +25,12 @@ library:
   - bytestring
   - containers
   - directory
+  - filepath
   - formatting
   - mtl
   - text
   - time
+  - typelits-witnesses
   - wl-pprint-text
   ghc-options:
   - -Wall

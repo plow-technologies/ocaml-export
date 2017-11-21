@@ -4,6 +4,8 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TypeOperators #-}
 
+{-# LANGUAGE OverloadedStrings #-}
+
 import           Test.Hspec
 
 import qualified Options as Options
@@ -23,6 +25,10 @@ import Test.Aeson.GenericSpecs
 import System.Process
 
 import OCaml.Export
+
+import qualified Servant.API as S
+import qualified Servant as S
+import Data.Text (Text)
 {-
 Haskell Algebraic Data Types
 
@@ -49,22 +55,34 @@ logAllMiddleware app req respond = do
 
 -- npm start --prefix path/to/your/app
 
---test :: (forall (i :: k2). f0 i -> g0 i)
---                     -> HList (Map f0 as000) -> HList (Map g0 as000)
---test = hmap show
+-- type SampleModule = Char :> Int
 
-type SampleModule = Char :> Int -- :<|> String :<|> Int
+-- type Dub = "Dubya" :> SampleModule
 
+-- type Yo = OCamlModule ["Here", "goodbye"] '[] :> SampleModule
 
-type Dub = "Dubya" ::> SampleModule
+-- type Next = OCamlModule '["Next"] '[] :> Product.Person :> Product.Company
 
-type Yo = OCamlModule ["Here", "goodbye"] '[] ::> SampleModule
-
-type Next = OCamlModule '["Next"] '[] ::> Product.Person :> Product.Company
-
-type Following = OCamlModule '["Following"] '[] ::> (OCamlTypeInFile "Person" "test/input")
+type Following = OCamlModule '["Following"] '[] :> (OCamlTypeInFile "Person" "test/input") :> Product.Company
 
 
+-- type X = (ConcatSymbols '["a"]) S.:> S.Get '[S.JSON] Text
+-- type X = "a" S.:> '[] S.:> S.Get '[S.JSON] Text
+-- type X = "a" S.:> S.EmptyAPI S.:> S.Get '[S.JSON] Text
+
+-- type X = (S.:>) ("a" S.:> "") S.Get '[S.JSON] Text
+
+-- type X = ("a" S.:> "" S.:>) S.Get '[S.JSON] Text
+{-
+xServer :: S.Server X
+xServer = pure "It worked"
+
+xAPI :: Proxy X
+xAPI = Proxy
+
+xApp :: Application
+xApp = S.serve xAPI xServer
+-}
 main :: IO ()
 main = do
 --  print $ mkType (Proxy :: Proxy SampleModule)
@@ -76,8 +94,8 @@ main = do
 --  mkModule (Proxy :: Proxy Next) "test/output"
 --  mkModuleWithSpec (Proxy :: Proxy Next) "test/output" "__tests__" "test/output/__tests__/golden" "localhost:8081"
   mkModuleWithSpec (Proxy :: Proxy Following) "test/output" "__tests__" "test/output/__tests__/golden" "localhost:8081"
-  fail "adsf"
-  
+  -- fail "adsf"
+--  run 8081 xApp
   -- run 8081 Api.productApp
 {-
   Product.mkGoldenFiles

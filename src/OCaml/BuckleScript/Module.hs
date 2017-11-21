@@ -1,3 +1,13 @@
+{-|
+Module      : OCaml.BuckleScript.Module
+Description : Build OCaml Modules from Haskell Types
+Copyright   : Plow Technologies, 2017
+License     : BSD3
+Maintainer  : mchaver@gmail.com
+Stability   : experimental
+
+-}
+
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveFunctor      #-}
@@ -15,10 +25,8 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 
-module OCaml.HList
+module OCaml.BuckleScript.Module
   ( (:>)
-  , (::>)
-  , (:<|>)(..)
 
   , HasOCamlType (..)
 --  , HasGenericOCamlType (..)
@@ -27,10 +35,11 @@ module OCaml.HList
   , HasOCamlModule (..)
   , OCamlModule
   , OCamlTypeInFile
+
+  , ConcatSymbols
   ) where
 
 -- base
-import Data.Monoid (Monoid (..))
 import Data.Proxy
 import Data.Semigroup (Semigroup (..))
 import Data.Typeable
@@ -39,11 +48,11 @@ import Data.Typeable
 import System.FilePath.Posix ((</>), (<.>))
 
 -- ocaml-export
+import OCaml.BuckleScript.Types
+import OCaml.BuckleScript.Record
 import OCaml.BuckleScript.Encode
 import OCaml.BuckleScript.Decode
 import OCaml.BuckleScript.Spec
-import OCaml.Record
-import OCaml.Type
 
 -- text
 import Data.Text (Text)
@@ -51,33 +60,22 @@ import qualified Data.Text as T
 import qualified Data.Text.IO     as T
 
 -- type level
+-- turn type Symbol into String
 import GHC.TypeLits
 import GHC.TypeLits.List
+import Data.Type.Bool
+import Data.Type.Equality
 
+-- servant
+import qualified Servant.API as S
+import Servant.API
+import GHC.Generics
 
-
-
+{-
 data (path :: k) :> a
     deriving (Typeable)
 infixr 4 :>
-
-data (path :: k) ::> a
-    deriving (Typeable)
-infixr 2 ::>
-
-  
-data a :<|> b = a :<|> b
-    deriving (Typeable, Eq, Show, Functor, Traversable, Foldable, Bounded)
-
-infixr 3 :<|>
-
-instance (Semigroup a, Semigroup b) => Semigroup (a :<|> b) where
-  (a :<|> b) <> (a' :<|> b') = (a <> a') :<|> (b <> b')
-
-instance (Monoid a, Monoid b) => Monoid (a :<|> b) where
-  mempty = mempty :<|> mempty
-  (a :<|> b) `mappend` (a' :<|> b') = (a `mappend` a') :<|> (b `mappend` b')
-
+-}
 
 -- represent an OCamlModule as a Haskell type
 data OCamlModule (filePath :: [Symbol]) (moduleName :: [Symbol])
@@ -91,7 +89,6 @@ data OCamlTypeInFile (a :: Symbol) (filePath :: Symbol)
 -- Type with definition and interface
 -- either with Spec and Golden File
 -- Type with Manual Definintion (with and without interface)
-
 -- 
 -- data OCamlPackage list of modules and specs
 
@@ -100,13 +97,13 @@ class HasOCamlModule a where
   mkModule :: Proxy a -> FilePath -> IO ()
   mkModuleWithSpec :: Proxy a -> FilePath -> FilePath -> FilePath -> String -> IO ()
   
-instance (KnownSymbols a, KnownSymbols b, HasOCamlType api) => HasOCamlModule ((OCamlModule a b) ::> api) where
+instance (KnownSymbols a, KnownSymbols b, HasOCamlType api) => HasOCamlModule ((OCamlModule a b) :> api) where
   mkModule Proxy rootdir = do
     if (length $ symbolsVal (Proxy :: Proxy a)) == 0
       then fail "OCamlModule filePath needs at least one file name"
       else do
-        typF <- mkkType (Proxy :: Proxy api)
-        intF <- mkkInterface (Proxy :: Proxy api)
+        typF <- mkType (Proxy :: Proxy api)
+        intF <- mkInterface (Proxy :: Proxy api)
 
         T.writeFile (fp <.> "ml")  typF
         T.writeFile (fp <.> "mli") intF
@@ -115,8 +112,9 @@ instance (KnownSymbols a, KnownSymbols b, HasOCamlType api) => HasOCamlModule ((
 
   mkModuleWithSpec p rootdir specdir goldendir url = do
     mkModule p rootdir
-    specF <- mkkSpec (Proxy :: Proxy api) (T.pack localModule) (T.pack url) (T.pack goldendir)  
-    T.writeFile (fp <.> "ml")  ("let () =\n" <> specF)
+    specF <- mkSpec (Proxy :: Proxy api) (T.pack localModule) (T.pack url) (T.pack goldendir)
+    let specBody = if specF /= "" then ("let () =\n" <> specF) else ""
+    T.writeFile (fp <.> "ml") specBody
     
     where
       fp = rootdir </> specdir </> (foldl (</>) "" $ symbolsVal (Proxy :: Proxy a))
@@ -127,19 +125,105 @@ instance (KnownSymbols a, KnownSymbols b, HasOCamlType api) => HasOCamlModule ((
 
 -- | Combine `HasGenericOCamlType` and `HasOCamlTypeInFile`
 class HasOCamlType api where
-  mkkType :: Proxy api -> IO Text
-  mkkInterface :: Proxy api -> IO Text
-  mkkSpec :: Proxy api -> Text -> Text -> Text -> IO Text
+  mkType :: Proxy api -> IO Text
+  mkInterface :: Proxy api -> IO Text
+  mkSpec :: Proxy api -> Text -> Text -> Text -> IO Text
 
 instance (HasOCamlType a, HasOCamlType b) => HasOCamlType (a :> b) where
-  mkkType Proxy = (<>) <$> (mkkType (Proxy :: Proxy a)) <*> (mkkType (Proxy :: Proxy b))
-  mkkInterface Proxy = (<>) <$> (mkkInterface (Proxy :: Proxy a)) <*> (mkkInterface (Proxy :: Proxy b))
-  mkkSpec Proxy modul url goldendir = (<>) <$> (mkkSpec (Proxy :: Proxy a) modul url goldendir) <*> (mkkSpec (Proxy :: Proxy b) modul url goldendir)
+  mkType Proxy = (<>) <$> (mkType (Proxy :: Proxy a)) <*> (mkType (Proxy :: Proxy b))
+  mkInterface Proxy = (<>) <$> (mkInterface (Proxy :: Proxy a)) <*> (mkInterface (Proxy :: Proxy b))
+  mkSpec Proxy modul url goldendir = (<>) <$> (mkSpec (Proxy :: Proxy a) modul url goldendir) <*> (mkSpec (Proxy :: Proxy b) modul url goldendir)
 
 instance (KnownSymbol a, KnownSymbol b) => HasOCamlType (OCamlTypeInFile a b) where
-  mkkType Proxy = T.readFile $ symbolVal (Proxy :: Proxy b) </> symbolVal (Proxy :: Proxy a) <.> "ml"
-  mkkInterface Proxy = T.readFile $ symbolVal (Proxy :: Proxy b) </> symbolVal (Proxy :: Proxy a) <.> "mli"
-  mkkSpec _ _ _ _ = pure ""
+  mkType Proxy = T.readFile $ symbolVal (Proxy :: Proxy b) </> symbolVal (Proxy :: Proxy a) <.> "ml"
+  mkInterface Proxy = T.readFile $ symbolVal (Proxy :: Proxy b) </> symbolVal (Proxy :: Proxy a) <.> "mli"
+  mkSpec _ _ _ _ = pure ""
+
+instance {-# OVERLAPPABLE #-} OCamlType a => HasOCamlType a where
+  mkType a = pure $ toOCamlTypeSource a <> "\n\n" <> toOCamlEncoderSource a <> "\n\n" <> toOCamlDecoderSource a <> "\n"
+  mkInterface a = pure $ toOCamlTypeSource a <> "\n\n" <> toOCamlEncoderInterface a <> "\n\n" <> toOCamlDecoderInterface a <> "\n"
+  mkSpec a modul url goldendir = pure $ toOCamlSpec a modul url goldendir <> "\n"
+
+
+-- build servant spec server
+
+type family TypeName a :: Symbol where
+  -- Types which don't have a Generic instance
+  TypeName Double = "Double"
+  TypeName Int    = "Int"
+  TypeName String = "String"
+  TypeName Text   = "Text"
+
+  -- Generic instances
+  TypeName (M1 D ('MetaData name _ _ _) f ()) = name
+  TypeName a = TypeName (Rep a ())
+
+type family TypeNames a :: [Symbol] where
+  TypeNames (a ': '[]) = '[TypeName a]
+  TypeNames (a ': as) = TypeName a ': TypeNames as
+
+type InAndOut a = (TypeName a) S.:> S.ReqBody '[S.JSON] a S.:> S.Post '[S.JSON] a
+
+type family InAndOutAPI a :: * where
+  InAndOutAPI (a :> b) = InAndOutAPI a S.:<|> InAndOutAPI b
+  InAndOutAPI a = InAndOut a
+
+type family Intersperse (sep :: *) (xs :: [*]) where
+  Intersperse _  '[] = '[]
+  Intersperse sep (x ': xs) = x ': PrependToAll sep xs
+
+type family PrependToAll (sep :: *) (as :: [*]) where
+  PrependToAll _ '[] = '[]
+  PrependToAll sep (x ': xs) = sep ': x ': PrependToAll sep xs
+
+type family Length xs where
+   Length '[]       = 0
+   Length (x ': xs) = 1 + Length xs
+                   
+type family ConcatSymbols xs where
+  -- ConcatSymbols (x ': '[]) = x
+  ConcatSymbols (x ': xs) = If ((Length xs) == 0) (x S.:> "") (x S.:> ConcatSymbols xs)
+  {-
+     case ((Length xs) == 0) of
+       True -> x
+       False -> x :> ConcatSymbols xs
+
+  ConcatSymbols (x ': xs) = x :> "x" -- (ConcatSymbols xs)
+ConcatSymbols (x ': xs) =
+                case ((Length xs) == 0) of
+                  True -> x else
+                  False -> x :> ConcatSymbols xs
+-}
+--  ConcatSymbols (x ': xs) = x :> PrependToAllSymbols xs
+ --x :> ConcatSymbols xs
+--type family PrependToAllSymbols as :: * where
+--  PrependToAllSymbols (x ': xs) = (S.:>) x S.:> PrependToAllSymbols xs
+
+{-
+intersperse             :: a -> [a] -> [a]
+intersperse _   []      = []
+intersperse sep (x:xs)  = x : prependToAll sep xs
+
+prependToAll            :: a -> [a] -> [a]
+prependToAll _   []     = []
+prependToAll sep (x:xs) = sep : x : prependToAll sep xs
+-}
+
+                  
+{-
+type family UnMaybe a :: * where
+  UnMaybe (Maybe a) = a
+  UnMaybe a         = a
+-}
+
+-- type family InAndOutListWithRouteNamesAPI
+-- type instance InAndOutListWithRouteNamesAPI [Int]              = Int         -- OK!
+-- type instance InAndOutListWithRouteNamesAPI String             = Char        -- OK!
+{-
+type family InAndOutListWithRouteNamesAPI (xs :: [*]) (ys :: [Symbol]) where
+  InAndOutListWithRouteNamesAPI (a ': '[]) (b ': '[]) = InAndOutListWithRouteNames a b
+  InAndOutListWithRouteNamesAPI (a ': as)  (b ': bs)  = (InAndOutListWithRouteNames a b) :<|> InAndOutListWithRouteNamesAPI as bs
+-}
 
 {-
 instance {-# OVERLAPPABLE #-} OCamlType a => HasOCamlType a where

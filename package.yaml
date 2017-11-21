@@ -15,10 +15,11 @@ library:
   - OCaml.Common
   - OCaml.Export
   - OCaml.File
-  - OCaml.Record
-  - OCaml.Type
   - OCaml.BuckleScript.Decode
   - OCaml.BuckleScript.Encode
+  - OCaml.BuckleScript.Record  
+  - OCaml.BuckleScript.Spec
+  - OCaml.BuckleScript.Types
   dependencies:
   - base >= 4.7 && < 5
   - aeson
@@ -28,6 +29,7 @@ library:
   - filepath
   - formatting
   - mtl
+  - servant
   - text
   - time
   - typelits-witnesses

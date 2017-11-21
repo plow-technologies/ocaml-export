@@ -26,10 +26,10 @@ import qualified Data.Text.IO     as T
 -- ocaml-export
 import OCaml.BuckleScript.Decode
 import OCaml.BuckleScript.Encode
+import OCaml.BuckleScript.Record
 import OCaml.BuckleScript.Spec
+import OCaml.BuckleScript.Types
 import OCaml.Common
-import OCaml.Record
-import OCaml.Type
 
 
 data OCamlFile =

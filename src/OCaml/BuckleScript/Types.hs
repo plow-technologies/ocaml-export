@@ -21,7 +21,7 @@ instances.
 {-# LANGUAGE TypeOperators        #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 
-module OCaml.Type
+module OCaml.BuckleScript.Types
   ( OCamlDatatype (..)
   , OCamlPrimitive (..)
   , OCamlConstructor (..)

@@ -34,8 +34,9 @@ import qualified Data.Text as T
 import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
 
 -- ocaml-export
+import           OCaml.BuckleScript.Types
 import           OCaml.Common
-import           OCaml.Type
+
 
 -- | Render the encoder function
 class HasEncoder a where

@@ -38,8 +38,9 @@ import qualified Data.Text as T
 import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
 
 -- ocaml-export
+import           OCaml.BuckleScript.Types hiding (getOCamlValues)
 import           OCaml.Common
-import           OCaml.Type hiding (getOCamlValues)
+
 
 -- | Render OCamlDatatype into an OCaml declaration
 class HasDecoder a where

@@ -1,5 +1,5 @@
 {-|
-Module      : OCaml.Record
+Module      : OCaml.BuckleScript.Record
 Description : Create OCaml data types from Haskell data types
 Copyright   : Plow Technologies, 2017
 License     : BSD3
@@ -11,7 +11,7 @@ Stability   : experimental
 
 {-# LANGUAGE OverloadedStrings #-}
 
-module OCaml.Record
+module OCaml.BuckleScript.Record
   ( toOCamlTypeRef
   , toOCamlTypeRefWith
   , toOCamlTypeSource
@@ -24,9 +24,12 @@ import           Data.Maybe (catMaybes)
 import           Data.Monoid
 import           Data.Text (Text)
 import qualified Data.Text as T
-import           OCaml.Common
-import           OCaml.Type
 import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
+
+-- ocaml-export
+import           OCaml.BuckleScript.Types
+import           OCaml.Common
+
 
 -- | render a Haskell data type in OCaml
 class HasType a where

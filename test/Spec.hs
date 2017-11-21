@@ -31,6 +31,7 @@ import Servant
 import Data.Text (Text)
 
 import GHC.TypeLits
+import Data.Constraint.Symbol (type (++))
 {-
 Haskell Algebraic Data Types
 
@@ -77,7 +78,11 @@ type Following = OCamlModule '["Following"] '[] :> (OCamlTypeInFile "Person" "te
 -- type X = ("a" S.:> "" S.:>) S.Get '[S.JSON] Text
 
 -- type X = AppendSymbols '["a","b"] :> Get '[JSON] Text
-type X = "a" :> Get '[JSON] Text
+-- type X = ("a" ++ "b") :> Get '[JSON] Text
+-- type Y = ("a" ++ "b" ++ "c") :> Get '[JSON] Text
+type X = (ConcatSymbols '["a", "b"] (Get '[JSON] Text))
+
+-- type X = "a" :> (Get '[JSON] Text)
 
 xServer :: Server X
 xServer = pure "It worked"
@@ -100,7 +105,7 @@ main = do
 --  mkModuleWithSpec (Proxy :: Proxy Next) "test/output" "__tests__" "test/output/__tests__/golden" "localhost:8081"
   mkModuleWithSpec (Proxy :: Proxy Following) "test/output" "__tests__" "test/output/__tests__/golden" "localhost:8081"
   -- fail "adsf"
---  run 8081 xApp
+  run 8081 xApp
   -- run 8081 Api.productApp
 {-
   Product.mkGoldenFiles

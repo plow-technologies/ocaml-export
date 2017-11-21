@@ -41,11 +41,6 @@ module OCaml.BuckleScript.Module
   , OCamlModule
   , OCamlTypeInFile
   , ConcatSymbols
-
---  , AppendSymbol
---  , AppendSymbols
-
-  , type (++)
   ) where
 
 -- base
@@ -78,9 +73,6 @@ import Data.Type.Equality
 -- servant
 import Servant.API
 import GHC.Generics
-
-
-import Data.Constraint.Symbol (type (++))
 
 -- represent an OCamlModule as a Haskell type
 data OCamlModule (filePath :: [Symbol]) (moduleName :: [Symbol])
@@ -223,16 +215,21 @@ type family Length xs where
    Length '[]       = 0
    Length (x ': xs) = 1 + Length xs
                    
+type family ConcatSymbols xs rhs :: * where
+  ConcatSymbols (x ': xs) rhs = If ((Length xs) == 0) (x :> rhs) (x :> ConcatSymbols xs rhs)
+
+
+          
+-- infix 5 +++
+{-                
 type family ConcatSymbols xs :: * where
-  -- ConcatSymbols (x ': '[]) = x
   ConcatSymbols (x ': xs) = If ((Length xs) == 0) (x) (x :> ConcatSymbols xs)
 
 type family (s :: Symbol) +++ (t :: Symbol) :: Symbol where
   "" +++ s  = s
   s +++ "" = s
 
--- infix 5 +++
-{-                
+
 type family AppendSymbol (m :: Symbol) (n :: Symbol) :: Symbol where
   --AppendSymbol = someSymbolVal ((symbolVal (Proxy :: Proxy m)) ++ (symbolVal (Proxy :: Proxy n)))
   AppendSymbol = appendSymbol m n                  

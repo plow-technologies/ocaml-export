@@ -26,9 +26,11 @@ import System.Process
 
 import OCaml.Export
 
-import qualified Servant.API as S
-import qualified Servant as S
+import Servant.API
+import Servant
 import Data.Text (Text)
+
+import GHC.TypeLits
 {-
 Haskell Algebraic Data Types
 
@@ -66,23 +68,26 @@ logAllMiddleware app req respond = do
 type Following = OCamlModule '["Following"] '[] :> (OCamlTypeInFile "Person" "test/input") :> Product.Company
 
 
--- type X = (ConcatSymbols '["a"]) S.:> S.Get '[S.JSON] Text
+-- type X = (ConcatSymbols '["a"]) :> Get '[JSON] Text
 -- type X = "a" S.:> '[] S.:> S.Get '[S.JSON] Text
 -- type X = "a" S.:> S.EmptyAPI S.:> S.Get '[S.JSON] Text
 
 -- type X = (S.:>) ("a" S.:> "") S.Get '[S.JSON] Text
 
 -- type X = ("a" S.:> "" S.:>) S.Get '[S.JSON] Text
-{-
-xServer :: S.Server X
+
+-- type X = AppendSymbols '["a","b"] :> Get '[JSON] Text
+type X = "a" :> Get '[JSON] Text
+
+xServer :: Server X
 xServer = pure "It worked"
 
 xAPI :: Proxy X
 xAPI = Proxy
 
 xApp :: Application
-xApp = S.serve xAPI xServer
--}
+xApp = serve xAPI xServer
+
 main :: IO ()
 main = do
 --  print $ mkType (Proxy :: Proxy SampleModule)

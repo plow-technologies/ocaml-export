@@ -26,17 +26,26 @@ Stability   : experimental
 
 
 module OCaml.BuckleScript.Module
-  ( (:>)
+  (
+  -- re-export from Servant
+    (:>)
 
-  , HasOCamlType (..)
---  , HasGenericOCamlType (..)
---  , HasOCamlTypeInFile (..)
-
+  -- type classes
   , HasOCamlModule (..)
+  , HasOCamlType (..)
+  , HasGenericOCamlType (..)
+  , HasOCamlTypeInFile (..)
+
+  -- types without constructors
+  -- used to calculate types
   , OCamlModule
   , OCamlTypeInFile
-
   , ConcatSymbols
+
+--  , AppendSymbol
+--  , AppendSymbols
+
+  , type (++)
   ) where
 
 -- base
@@ -67,15 +76,11 @@ import Data.Type.Bool
 import Data.Type.Equality
 
 -- servant
-import qualified Servant.API as S
 import Servant.API
 import GHC.Generics
 
-{-
-data (path :: k) :> a
-    deriving (Typeable)
-infixr 4 :>
--}
+
+import Data.Constraint.Symbol (type (++))
 
 -- represent an OCamlModule as a Haskell type
 data OCamlModule (filePath :: [Symbol]) (moduleName :: [Symbol])
@@ -134,15 +139,49 @@ instance (HasOCamlType a, HasOCamlType b) => HasOCamlType (a :> b) where
   mkInterface Proxy = (<>) <$> (mkInterface (Proxy :: Proxy a)) <*> (mkInterface (Proxy :: Proxy b))
   mkSpec Proxy modul url goldendir = (<>) <$> (mkSpec (Proxy :: Proxy a) modul url goldendir) <*> (mkSpec (Proxy :: Proxy b) modul url goldendir)
 
-instance (KnownSymbol a, KnownSymbol b) => HasOCamlType (OCamlTypeInFile a b) where
-  mkType Proxy = T.readFile $ symbolVal (Proxy :: Proxy b) </> symbolVal (Proxy :: Proxy a) <.> "ml"
-  mkInterface Proxy = T.readFile $ symbolVal (Proxy :: Proxy b) </> symbolVal (Proxy :: Proxy a) <.> "mli"
+instance {-# OVERLAPPABLE #-} (HasOCamlTypeInFile (OCamlTypeInFile a b)) => HasOCamlType (OCamlTypeInFile a b) where
+  mkType a = readType a
+  mkInterface a = readInterface a
   mkSpec _ _ _ _ = pure ""
 
-instance {-# OVERLAPPABLE #-} OCamlType a => HasOCamlType a where
-  mkType a = pure $ toOCamlTypeSource a <> "\n\n" <> toOCamlEncoderSource a <> "\n\n" <> toOCamlDecoderSource a <> "\n"
-  mkInterface a = pure $ toOCamlTypeSource a <> "\n\n" <> toOCamlEncoderInterface a <> "\n\n" <> toOCamlDecoderInterface a <> "\n"
-  mkSpec a modul url goldendir = pure $ toOCamlSpec a modul url goldendir <> "\n"
+instance {-# OVERLAPPABLE #-} (HasGenericOCamlType a) => HasOCamlType a where
+  mkType a = pure $ mkGType a
+  mkInterface a = pure $ mkGInterface a
+  mkSpec a modul url goldendir = pure $ mkGSpec a modul url goldendir
+
+
+-- | Read OCaml type declarations and interfaces from `ml` and `mli` files
+class HasOCamlTypeInFile api where
+  readType :: Proxy api -> IO Text
+  readInterface :: Proxy api -> IO Text
+
+instance (HasOCamlTypeInFile a, HasOCamlTypeInFile b) => HasOCamlTypeInFile (a :> b) where
+  readType Proxy = (<>) <$> (readType (Proxy :: Proxy a)) <*> (readType (Proxy :: Proxy b))
+  readInterface Proxy = (<>) <$> (readInterface (Proxy :: Proxy a)) <*> (readInterface (Proxy :: Proxy b))
+
+instance (KnownSymbol a, KnownSymbol b) => HasOCamlTypeInFile (OCamlTypeInFile a b) where
+  readType Proxy = T.readFile $ symbolVal (Proxy :: Proxy b) </> symbolVal (Proxy :: Proxy a) <.> "ml"
+  readInterface Proxy = T.readFile $ symbolVal (Proxy :: Proxy b) </> symbolVal (Proxy :: Proxy a) <.> "mli"
+
+
+-- | Produce OCaml files for types that have OCamlType derived via GHC.Generics
+class HasGenericOCamlType api where
+  mkGType :: Proxy api -> Text
+  mkGInterface :: Proxy api -> Text
+  mkGSpec :: Proxy api -> Text -> Text -> Text -> Text
+
+instance (HasGenericOCamlType a, HasGenericOCamlType b) => HasGenericOCamlType (a :> b) where
+  mkGType Proxy = mkGType (Proxy :: Proxy a) <> mkGType (Proxy :: Proxy b)
+  mkGInterface Proxy = mkGInterface (Proxy :: Proxy a) <> mkGInterface (Proxy :: Proxy b)
+  mkGSpec Proxy modul url goldendir = (mkGSpec (Proxy :: Proxy a) modul url goldendir) <> (mkGSpec (Proxy :: Proxy b) modul url goldendir)
+
+instance {-# OVERLAPPABLE #-} OCamlType a => HasGenericOCamlType a where
+  mkGType a = toOCamlTypeSource a <> "\n\n" <> toOCamlEncoderSource a <> "\n\n" <> toOCamlDecoderSource a <> "\n"
+  mkGInterface a = toOCamlTypeSource a <> "\n\n" <> toOCamlEncoderInterface a <> "\n\n" <> toOCamlDecoderInterface a <> "\n"
+  mkGSpec a modul url goldendir = toOCamlSpec a modul url goldendir <> "\n"
+
+
+
 
 
 -- build servant spec server
@@ -162,12 +201,16 @@ type family TypeNames a :: [Symbol] where
   TypeNames (a ': '[]) = '[TypeName a]
   TypeNames (a ': as) = TypeName a ': TypeNames as
 
-type InAndOut a = (TypeName a) S.:> S.ReqBody '[S.JSON] a S.:> S.Post '[S.JSON] a
+
+
+type InAndOut a = (TypeName a) :> ReqBody '[JSON] a :> Post '[JSON] a
 
 type family InAndOutAPI a :: * where
-  InAndOutAPI (a :> b) = InAndOutAPI a S.:<|> InAndOutAPI b
+  InAndOutAPI (a :> b) = InAndOutAPI a :<|> InAndOutAPI b
   InAndOutAPI a = InAndOut a
 
+
+  
 type family Intersperse (sep :: *) (xs :: [*]) where
   Intersperse _  '[] = '[]
   Intersperse sep (x ': xs) = x ': PrependToAll sep xs
@@ -180,10 +223,44 @@ type family Length xs where
    Length '[]       = 0
    Length (x ': xs) = 1 + Length xs
                    
-type family ConcatSymbols xs where
+type family ConcatSymbols xs :: * where
   -- ConcatSymbols (x ': '[]) = x
-  ConcatSymbols (x ': xs) = If ((Length xs) == 0) (x S.:> "") (x S.:> ConcatSymbols xs)
-  {-
+  ConcatSymbols (x ': xs) = If ((Length xs) == 0) (x) (x :> ConcatSymbols xs)
+
+type family (s :: Symbol) +++ (t :: Symbol) :: Symbol where
+  "" +++ s  = s
+  s +++ "" = s
+
+-- infix 5 +++
+{-                
+type family AppendSymbol (m :: Symbol) (n :: Symbol) :: Symbol where
+  --AppendSymbol = someSymbolVal ((symbolVal (Proxy :: Proxy m)) ++ (symbolVal (Proxy :: Proxy n)))
+  AppendSymbol = appendSymbol m n                  
+                
+type family AppendSymbols (ss :: [Symbol]) :: Symbol where
+  AppendSymbols (s ': '[]) = s
+  AppendSymbols (s ': ss) = AppendSymbol s (AppendSymbols ss)
+-}
+{-
+
+
+appendSymbol :: (KnownSymbol a, KnownSymbol b) :- KnownSymbol (a ++ b)
+appendSymbol = magicSSS (++)
+
+class KnownSymbols (ss :: [Symbol]) where
+    symbolsVal  :: p ss -> [String]
+    symbolsList :: SymbolList ss
+
+instance KnownSymbols '[] where
+    symbolsVal  _ = []
+    symbolsList    = ØSL
+
+instance (KnownSymbol s, KnownSymbols ss) => KnownSymbols (s ': ss) where
+    symbolsVal  _ = symbolVal (Proxy :: Proxy s) : symbolsVal (Proxy :: Proxy ss)
+    symbolsList   = Proxy :<$ symbolsList
+
+
+
      case ((Length xs) == 0) of
        True -> x
        False -> x :> ConcatSymbols xs
@@ -230,37 +307,4 @@ instance {-# OVERLAPPABLE #-} OCamlType a => HasOCamlType a where
   mkkType a = pure $ toOCamlTypeSource a <> "\n\n" <> toOCamlEncoderSource a <> "\n\n" <> toOCamlDecoderSource a <> "\n"
   mkkInterface a = pure $ toOCamlTypeSource a <> "\n\n" <> toOCamlEncoderInterface a <> "\n\n" <> toOCamlDecoderInterface a <> "\n"
   mkkSpec a modul url goldendir = pure $ toOCamlSpec a modul url goldendir <> "\n"
--}
-
-
-{-
--- | Read OCaml type declarations and interfaces from `ml` and `mli` files
-class HasOCamlTypeInFile api where
-  readType :: Proxy api -> IO Text
-  readInterface :: Proxy api -> IO Text
-
-instance (HasOCamlTypeInFile a, HasOCamlTypeInFile b) => HasOCamlTypeInFile (a :> b) where
-  readType Proxy = (<>) <$> (readType (Proxy :: Proxy a)) <*> (readType (Proxy :: Proxy b))
-  readInterface Proxy = (<>) <$> (readInterface (Proxy :: Proxy a)) <*> (readInterface (Proxy :: Proxy b))
-
-instance (KnownSymbol b) => HasOCamlTypeInFile (OCamlTypeInFile a b) where
-  readType Proxy = T.readFile $ symbolVal (Proxy :: Proxy b)
-  readInterface Proxy = T.readFile $ symbolVal (Proxy :: Proxy b)
-
-
--- | Produce OCaml files for types that have OCamlType derived via GHC.Generics
-class HasGenericOCamlType api where
-  mkType :: Proxy api -> Text
-  mkInterface :: Proxy api -> Text
-  mkSpec :: Proxy api -> Text -> Text -> Text -> Text
-
-instance (HasGenericOCamlType a, HasGenericOCamlType b) => HasGenericOCamlType (a :> b) where
-  mkType Proxy = mkType (Proxy :: Proxy a) <> mkType (Proxy :: Proxy b)
-  mkInterface Proxy = mkInterface (Proxy :: Proxy a) <> mkInterface (Proxy :: Proxy b)
-  mkSpec Proxy modul url goldendir = (mkSpec (Proxy :: Proxy a) modul url goldendir) <> (mkSpec (Proxy :: Proxy b) modul url goldendir)
-
-instance {-# OVERLAPPABLE #-} OCamlType a => HasGenericOCamlType a where
-  mkType a = toOCamlTypeSource a <> "\n\n" <> toOCamlEncoderSource a <> "\n\n" <> toOCamlDecoderSource a <> "\n"
-  mkInterface a = toOCamlTypeSource a <> "\n\n" <> toOCamlEncoderInterface a <> "\n\n" <> toOCamlDecoderInterface a <> "\n"
-  mkSpec a modul url goldendir = toOCamlSpec a modul url goldendir <> "\n"
 -}

@@ -41,6 +41,8 @@ module OCaml.BuckleScript.Module
   , OCamlModule
   , OCamlTypeInFile
   , ConcatSymbols
+  , InAndOut2
+  , InAndOut2API
   ) where
 
 -- base
@@ -195,14 +197,35 @@ type family TypeNames a :: [Symbol] where
 
 
 
-type InAndOut a = (TypeName a) :> ReqBody '[JSON] a :> Post '[JSON] a
+type InAndOut a = (TypeName a) :> ReqBody '[JSON] [a] :> Post '[JSON] [a]
 
 type family InAndOutAPI a :: * where
   InAndOutAPI (a :> b) = InAndOutAPI a :<|> InAndOutAPI b
   InAndOutAPI a = InAndOut a
 
+type InAndOut2 (modul :: [Symbol]) typ = ConcatSymbols (Insert (TypeName typ) modul) (ReqBody '[JSON] [typ] :> Post '[JSON] [typ])
 
-  
+type family InAndOut2API modul a :: * where
+  InAndOut2API modul (a :> b) = InAndOut2API modul a :<|> InAndOut2API modul b
+  InAndOut2API modul a = InAndOut2 modul a  
+
+type family Insert a xs where
+   Insert a '[]       = (a ': '[])
+   Insert a (a ': xs) = (a ': xs)
+   Insert a (x ': xs) = x ': (Insert a xs)
+
+type family Length xs where
+   Length '[]       = 0
+   Length (x ': xs) = 1 + Length xs
+                   
+type family ConcatSymbols xs rhs :: * where
+  ConcatSymbols '[] rhs = rhs            
+  ConcatSymbols (x ': xs) rhs = If ((Length xs) == 0) (x :> rhs) (x :> ConcatSymbols xs rhs)
+
+
+          
+-- infix 5 +++
+{-                
 type family Intersperse (sep :: *) (xs :: [*]) where
   Intersperse _  '[] = '[]
   Intersperse sep (x ': xs) = x ': PrependToAll sep xs
@@ -211,17 +234,7 @@ type family PrependToAll (sep :: *) (as :: [*]) where
   PrependToAll _ '[] = '[]
   PrependToAll sep (x ': xs) = sep ': x ': PrependToAll sep xs
 
-type family Length xs where
-   Length '[]       = 0
-   Length (x ': xs) = 1 + Length xs
-                   
-type family ConcatSymbols xs rhs :: * where
-  ConcatSymbols (x ': xs) rhs = If ((Length xs) == 0) (x :> rhs) (x :> ConcatSymbols xs rhs)
 
-
-          
--- infix 5 +++
-{-                
 type family ConcatSymbols xs :: * where
   ConcatSymbols (x ': xs) = If ((Length xs) == 0) (x) (x :> ConcatSymbols xs)
 

@@ -80,12 +80,16 @@ type Following = OCamlModule '["Following"] '[] :> (OCamlTypeInFile "Person" "te
 -- type X = AppendSymbols '["a","b"] :> Get '[JSON] Text
 -- type X = ("a" ++ "b") :> Get '[JSON] Text
 -- type Y = ("a" ++ "b" ++ "c") :> Get '[JSON] Text
-type X = (ConcatSymbols '["a", "b"] (Get '[JSON] Text))
+
+-- type X = (ConcatSymbols '["a", "b"] (Get '[JSON] Text))
+type X = InAndOut2API '["Onping", "Core"] Text
+
+-- curl -i -d '["hello"]' -H 'Content-type: application/json' -X POST http://localhost:8081/Onping/Core/Text
 
 -- type X = "a" :> (Get '[JSON] Text)
 
 xServer :: Server X
-xServer = pure "It worked"
+xServer = pure
 
 xAPI :: Proxy X
 xAPI = Proxy

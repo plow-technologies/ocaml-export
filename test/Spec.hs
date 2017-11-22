@@ -1,10 +1,10 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeOperators #-}
-
-{-# LANGUAGE OverloadedStrings #-}
 
 import           Test.Hspec
 
@@ -32,6 +32,8 @@ import Data.Text (Text)
 
 import GHC.TypeLits
 import Data.Constraint.Symbol (type (++))
+
+import GHC.TypeLits
 {-
 Haskell Algebraic Data Types
 
@@ -63,11 +65,21 @@ logAllMiddleware app req respond = do
 -- type Dub = "Dubya" :> SampleModule
 
 -- type Yo = OCamlModule ["Here", "goodbye"] '[] :> SampleModule
+type Tesst = Product.Person
+type Next = Product.Person :> Product.Company
+type NextModule = OCamlModule '[] '["Next"] :> Next
+type NextAPI = MkInAndOut2API NextModule
+{-
+$(mkServer "nextServer" "Next" (apiLength (Proxy :: Proxy Next)))
 
--- type Next = OCamlModule '["Next"] '[] :> Product.Person :> Product.Company
+nextAPI :: Proxy (InAndOutAPI Next)
+nextAPI = Proxy
+
+nextApp :: Application
+nextApp = serve nextAPI nextServer
+-}
 
 type Following = OCamlModule '["Following"] '[] :> (OCamlTypeInFile "Person" "test/input") :> Product.Company
-
 
 -- type X = (ConcatSymbols '["a"]) :> Get '[JSON] Text
 -- type X = "a" S.:> '[] S.:> S.Get '[S.JSON] Text
@@ -99,6 +111,9 @@ xApp = serve xAPI xServer
 
 main :: IO ()
 main = do
+  -- print $ natVal (Proxy :: Proxy (Length2 Following))
+  -- print $ natVal (Proxy :: Proxy (Length2 (Product.Person :> Product.Company)))
+  print $ apiLength (Proxy :: Proxy Following)
 --  print $ mkType (Proxy :: Proxy SampleModule)
 --  print $ mkModule (Proxy :: Proxy Dub)
 --  print $ mkType (Proxy :: Proxy Yo)

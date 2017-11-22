@@ -24,7 +24,6 @@ Stability   : experimental
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-
 module OCaml.BuckleScript.Module
   (
   -- re-export from Servant
@@ -41,14 +40,25 @@ module OCaml.BuckleScript.Module
   , OCamlModule
   , OCamlTypeInFile
   , ConcatSymbols
+
+  , InAndOut
+  , InAndOutAPI
   , InAndOut2
   , InAndOut2API
+  , MkInAndOut2API
+  , Length2
+
+  , APILength (..)
+  , mkServer
   ) where
 
 -- base
 import Data.Proxy
 import Data.Semigroup (Semigroup (..))
 import Data.Typeable
+
+-- template-haskell
+import Language.Haskell.TH
 
 -- filepath
 import System.FilePath.Posix ((</>), (<.>))
@@ -196,125 +206,172 @@ type family TypeNames a :: [Symbol] where
   TypeNames (a ': as) = TypeName a ': TypeNames as
 
 
-
+-- |
 type InAndOut a = (TypeName a) :> ReqBody '[JSON] [a] :> Post '[JSON] [a]
 
 type family InAndOutAPI a :: * where
   InAndOutAPI (a :> b) = InAndOutAPI a :<|> InAndOutAPI b
   InAndOutAPI a = InAndOut a
 
+-- |
 type InAndOut2 (modul :: [Symbol]) typ = ConcatSymbols (Insert (TypeName typ) modul) (ReqBody '[JSON] [typ] :> Post '[JSON] [typ])
 
 type family InAndOut2API modul a :: * where
   InAndOut2API modul (a :> b) = InAndOut2API modul a :<|> InAndOut2API modul b
   InAndOut2API modul a = InAndOut2 modul a  
 
+type family MkInAndOut2API a :: * where
+  MkInAndOut2API (OCamlModule a b :> api) = InAndOut2API b api
+
+
+
+-- | Insert type into type level list
 type family Insert a xs where
    Insert a '[]       = (a ': '[])
    Insert a (a ': xs) = (a ': xs)
    Insert a (x ': xs) = x ': (Insert a xs)
 
+-- | Get the length of a type level list
 type family Length xs where
    Length '[]       = 0
    Length (x ': xs) = 1 + Length xs
-                   
+
+type family Length2 xs where
+   --Length2 (OCamlModule a b :> xs) = 0 + Length xs
+   Length2 (x :> xs) = 1 + Length xs
+   Length2 a       = 1
+
+
+type family (F a) :: Bool where
+  F (a :> b)  = 'True
+  F (OCamlModule a b)  = 'True
+  F a     = 'False
+
+class APILength api where
+  apiLength :: Proxy api -> Int
+    
+instance (F a ~ flag, APILength' flag (a :: *)) => APILength a where
+  apiLength = apiLength' (Proxy :: Proxy flag)
+
+class APILength' (flag :: Bool) a where
+  apiLength' :: Proxy flag -> Proxy a -> Int
+
+instance APILength' 'True (OCamlModule a b) where
+  apiLength' _ Proxy = 0
+
+instance (APILength a, APILength b) => APILength' 'True (a :> b) where
+  apiLength' _ Proxy = (apiLength (Proxy :: Proxy a)) + (apiLength (Proxy :: Proxy b))
+
+instance APILength' 'False a where
+  apiLength' _ Proxy = 1
+
+
+-- | Get the number of types in an OCaml Module
+{-
+class APILength api where
+  apiLength :: Proxy api -> Int
+  apiLength Proxy = 1
+
+instance (APILength a, APILength b) => APILength (a :> b) where
+  apiLength Proxy = (apiLength (Proxy :: Proxy a)) + (apiLength (Proxy :: Proxy b))
+
+instance APILength a
+
+instance APILength (OCamlModule a b) where
+  apiLength Proxy = 0
+-}
+
+{-
+class APILength api where
+  apiLength :: Proxy api -> Int
+
+instance {-# OVERLAPPABLE #-} (APILength a, APILength b) => APILength (a :> b) where
+  apiLength Proxy = (apiLength (Proxy :: Proxy a)) + (apiLength (Proxy :: Proxy b))
+
+instance APILength (OCamlModule a b) where
+  apiLength Proxy = 0
+
+instance {-# OVERLAPPING #-} (HasOCamlType a) => APILength a where
+  apiLength Proxy = 1
+
+-}
+
+{-
+class CountRS a where
+    countRS :: a -> Int
+    countRS _ = 1
+    countRSList :: [a] -> Int
+    countRSList = countListDefault 
+
+instance CountRS Char where
+    countRSList = length . words
+
+instance CountRS a => CountRS [a] where
+    countRS = countRSList
+
+instance CountRS Bool
+
+-}
+
+   
+ -- natVal            
 type family ConcatSymbols xs rhs :: * where
   ConcatSymbols '[] rhs = rhs            
   ConcatSymbols (x ': xs) rhs = If ((Length xs) == 0) (x :> rhs) (x :> ConcatSymbols xs rhs)
 
 
-          
--- infix 5 +++
+mkServer :: forall api. (APILength api, HasOCamlModule api) => String -> String -> Proxy api -> Q [Dec]
+mkServer fn apiName Proxy = do
+  let size = apiLength (Proxy :: Proxy api)
+  if size < 1
+    then fail "size must be at least one"
+    else do
+      let fnName = mkName fn
+      let args = foldl (\l r -> UInfixE l (ConE $ mkName ":<|>") r) (VarE $ mkName "pure") (replicate (size-1) (VarE $ mkName "pure"))
+
+      return $
+        [ SigD fnName (AppT (ConT $ mkName "Server") $ AppT (ConT $ mkName "InAndOutAPI") (ConT $ mkName apiName))
+        , FunD fnName [Clause [] (NormalB args ) [] ]
+        ]
+
+
 {-                
-type family Intersperse (sep :: *) (xs :: [*]) where
-  Intersperse _  '[] = '[]
-  Intersperse sep (x ': xs) = x ': PrependToAll sep xs
+-- mkServer :: (APILength a) => String -> String -> Proxy a -> Q [Dec]
+mkServer :: String -> String -> Int -> Q [Dec]
+mkServer fn apiName size = do
+--mkServer fn apiName Proxy = do
+--  let size = apiLength (Proxy :: Proxy a)
+  if size < 1
+    then fail "size must be at least one"
+    else do
+      let fnName = mkName fn
+      let args = foldl (\l r -> UInfixE l (ConE $ mkName ":<|>") r) (VarE $ mkName "pure") (replicate (size-1) (VarE $ mkName "pure"))
 
-type family PrependToAll (sep :: *) (as :: [*]) where
-  PrependToAll _ '[] = '[]
-  PrependToAll sep (x ': xs) = sep ': x ': PrependToAll sep xs
-
-
-type family ConcatSymbols xs :: * where
-  ConcatSymbols (x ': xs) = If ((Length xs) == 0) (x) (x :> ConcatSymbols xs)
-
-type family (s :: Symbol) +++ (t :: Symbol) :: Symbol where
-  "" +++ s  = s
-  s +++ "" = s
-
-
-type family AppendSymbol (m :: Symbol) (n :: Symbol) :: Symbol where
-  --AppendSymbol = someSymbolVal ((symbolVal (Proxy :: Proxy m)) ++ (symbolVal (Proxy :: Proxy n)))
-  AppendSymbol = appendSymbol m n                  
-                
-type family AppendSymbols (ss :: [Symbol]) :: Symbol where
-  AppendSymbols (s ': '[]) = s
-  AppendSymbols (s ': ss) = AppendSymbol s (AppendSymbols ss)
+      return $
+        [ SigD fnName (AppT (ConT $ mkName "Server") $ AppT (ConT $ mkName "InAndOutAPI") (ConT $ mkName apiName))
+        , FunD fnName [Clause [] (NormalB args ) [] ]
+        ]
 -}
-{-
+mkAPIProxy :: String -> Q [Dec]
+mkAPIProxy moduleName =
+  return $
+    [ SigD fnName (AppT (ConT $ mkName "Proxy") $ AppT (ConT $ mkName "InAndOutAPI") (ConT $ mkName moduleName))
+    , FunD fnName [Clause [] (NormalB $ VarE $ mkName "Proxy") [] ]
+    ]
+  where
+    fnName = mkName $ moduleName ++ "API"
+
+mkApp :: String -> Q [Dec]
+mkApp moduleName =
+  return $
+    [ SigD appName (AppT (ConT $ mkName "Proxy") $ AppT (ConT $ mkName "InAndOutAPI") (ConT $ mkName moduleName))
+    , FunD appName [Clause [] (NormalB $ (AppE (VarE $ mkName "serve") $ AppE (VarE apiName) (VarE appName))) []]
+    ]
+  where
+    appName = mkName $ moduleName ++ "API"
+    apiName = mkName $ moduleName ++ "App"
+    serverName = mkName $ moduleName ++ "Server"
 
 
-appendSymbol :: (KnownSymbol a, KnownSymbol b) :- KnownSymbol (a ++ b)
-appendSymbol = magicSSS (++)
 
-class KnownSymbols (ss :: [Symbol]) where
-    symbolsVal  :: p ss -> [String]
-    symbolsList :: SymbolList ss
-
-instance KnownSymbols '[] where
-    symbolsVal  _ = []
-    symbolsList    = ØSL
-
-instance (KnownSymbol s, KnownSymbols ss) => KnownSymbols (s ': ss) where
-    symbolsVal  _ = symbolVal (Proxy :: Proxy s) : symbolsVal (Proxy :: Proxy ss)
-    symbolsList   = Proxy :<$ symbolsList
-
-
-
-     case ((Length xs) == 0) of
-       True -> x
-       False -> x :> ConcatSymbols xs
-
-  ConcatSymbols (x ': xs) = x :> "x" -- (ConcatSymbols xs)
-ConcatSymbols (x ': xs) =
-                case ((Length xs) == 0) of
-                  True -> x else
-                  False -> x :> ConcatSymbols xs
--}
---  ConcatSymbols (x ': xs) = x :> PrependToAllSymbols xs
- --x :> ConcatSymbols xs
---type family PrependToAllSymbols as :: * where
---  PrependToAllSymbols (x ': xs) = (S.:>) x S.:> PrependToAllSymbols xs
-
-{-
-intersperse             :: a -> [a] -> [a]
-intersperse _   []      = []
-intersperse sep (x:xs)  = x : prependToAll sep xs
-
-prependToAll            :: a -> [a] -> [a]
-prependToAll _   []     = []
-prependToAll sep (x:xs) = sep : x : prependToAll sep xs
--}
-
-                  
-{-
-type family UnMaybe a :: * where
-  UnMaybe (Maybe a) = a
-  UnMaybe a         = a
--}
-
--- type family InAndOutListWithRouteNamesAPI
--- type instance InAndOutListWithRouteNamesAPI [Int]              = Int         -- OK!
--- type instance InAndOutListWithRouteNamesAPI String             = Char        -- OK!
-{-
-type family InAndOutListWithRouteNamesAPI (xs :: [*]) (ys :: [Symbol]) where
-  InAndOutListWithRouteNamesAPI (a ': '[]) (b ': '[]) = InAndOutListWithRouteNames a b
-  InAndOutListWithRouteNamesAPI (a ': as)  (b ': bs)  = (InAndOutListWithRouteNames a b) :<|> InAndOutListWithRouteNamesAPI as bs
--}
-
-{-
-instance {-# OVERLAPPABLE #-} OCamlType a => HasOCamlType a where
-  mkkType a = pure $ toOCamlTypeSource a <> "\n\n" <> toOCamlEncoderSource a <> "\n\n" <> toOCamlDecoderSource a <> "\n"
-  mkkInterface a = pure $ toOCamlTypeSource a <> "\n\n" <> toOCamlEncoderInterface a <> "\n\n" <> toOCamlDecoderInterface a <> "\n"
-  mkkSpec a modul url goldendir = pure $ toOCamlSpec a modul url goldendir <> "\n"
--}
+  -- ParensE

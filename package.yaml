@@ -31,13 +31,14 @@ library:
   - mtl
   - servant
   - text
+  - template-haskell
   - time
   - typelits-witnesses
   - wl-pprint-text
   ghc-options:
   - -Wall
 #  - -Werror
-
+  - -fprint-potential-instances
 tests:
   spec:
     main: Spec.hs
@@ -57,6 +58,7 @@ tests:
     - servant
     - servant-server
     - servant-in-and-out
+    - template-haskell
     - text
     - time
     - wai

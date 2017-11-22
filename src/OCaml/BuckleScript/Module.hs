@@ -53,6 +53,7 @@ module OCaml.BuckleScript.Module
   ) where
 
 -- base
+import Data.Char (toUpper, toLower)
 import Data.Proxy
 import Data.Semigroup (Semigroup (..))
 import Data.Typeable
@@ -320,38 +321,38 @@ type family ConcatSymbols xs rhs :: * where
   ConcatSymbols (x ': xs) rhs = If ((Length xs) == 0) (x :> rhs) (x :> ConcatSymbols xs rhs)
 
 
-mkServer :: forall api. (APILength api, HasOCamlModule api) => String -> String -> Proxy api -> Q [Dec]
-mkServer fn apiName Proxy = do
+lowercaseFirst :: String -> String
+lowercaseFirst [] = []
+lowercaseFirst (x : xs) = toLower x : xs
+
+uppercaseFirst :: String -> String
+uppercaseFirst [] = []
+uppercaseFirst (x : xs) = toUpper x : xs
+                
+mkServer :: forall api. (APILength api, HasOCamlModule api) => String -> Proxy api -> Q [Dec]
+mkServer typeName Proxy = do
   let size = apiLength (Proxy :: Proxy api)
   if size < 1
     then fail "size must be at least one"
     else do
-      let fnName = mkName fn
       let args = foldl (\l r -> UInfixE l (ConE $ mkName ":<|>") r) (VarE $ mkName "pure") (replicate (size-1) (VarE $ mkName "pure"))
 
       return $
-        [ SigD fnName (AppT (ConT $ mkName "Server") $ AppT (ConT $ mkName "InAndOutAPI") (ConT $ mkName apiName))
-        , FunD fnName [Clause [] (NormalB args ) [] ]
+        [ SigD serverName (AppT (ConT $ mkName "Server") $ AppT (ConT $ mkName "MkInAndOut2API") (ConT $ apiName))
+        , FunD serverName [Clause [] (NormalB args ) [] ]
+
+        , SigD apiProxy (AppT (ConT $ mkName "Proxy") $ AppT (ConT $ mkName "MkInAndOut2API") (ConT $ apiName))
+        , FunD apiProxy [Clause [] (NormalB $ ConE $ mkName "Proxy") []]
+
+        , SigD appName (ConT $ mkName "Application")
+        , FunD appName [Clause [] (NormalB $ AppE (AppE (VarE $ mkName "serve") (VarE apiProxy)) (VarE serverName)) []]
         ]
+   where
+     serverName = mkName $ lowercaseFirst typeName ++ "Server"
+     apiName = mkName $ uppercaseFirst typeName
+     apiProxy = mkName $ lowercaseFirst typeName ++ "API"
+     appName = mkName $ lowercaseFirst typeName ++ "App"
 
-
-{-                
--- mkServer :: (APILength a) => String -> String -> Proxy a -> Q [Dec]
-mkServer :: String -> String -> Int -> Q [Dec]
-mkServer fn apiName size = do
---mkServer fn apiName Proxy = do
---  let size = apiLength (Proxy :: Proxy a)
-  if size < 1
-    then fail "size must be at least one"
-    else do
-      let fnName = mkName fn
-      let args = foldl (\l r -> UInfixE l (ConE $ mkName ":<|>") r) (VarE $ mkName "pure") (replicate (size-1) (VarE $ mkName "pure"))
-
-      return $
-        [ SigD fnName (AppT (ConT $ mkName "Server") $ AppT (ConT $ mkName "InAndOutAPI") (ConT $ mkName apiName))
-        , FunD fnName [Clause [] (NormalB args ) [] ]
-        ]
--}
 mkAPIProxy :: String -> Q [Dec]
 mkAPIProxy moduleName =
   return $

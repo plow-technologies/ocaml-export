@@ -66,18 +66,18 @@ logAllMiddleware app req respond = do
 
 -- type Yo = OCamlModule ["Here", "goodbye"] '[] :> SampleModule
 type Tesst = Product.Person
-type Next = Product.Person :> Product.Company
-type NextModule = OCamlModule '[] '["Next"] :> Next
-type NextAPI = MkInAndOut2API NextModule
-{-
-$(mkServer "nextServer" "Next" (apiLength (Proxy :: Proxy Next)))
+-- type Next = Product.Person :> Product.Company
+--type NextModule = OCamlModule '[] '["Next"] :> Next
+type Next = OCamlModule '[] '["Next"] :> Product.Person :> Product.Company
+-- type NextAPI = MkInAndOut2API NextModule
 
-nextAPI :: Proxy (InAndOutAPI Next)
-nextAPI = Proxy
+$(mkServer "Next" (Proxy :: Proxy Next))
 
-nextApp :: Application
-nextApp = serve nextAPI nextServer
--}
+-- nextAPI :: Proxy (InAndOutAPI Next)
+-- nextAPI = Proxy
+
+-- nextApp :: Application
+-- nextApp = serve nextAPI nextServer
 
 type Following = OCamlModule '["Following"] '[] :> (OCamlTypeInFile "Person" "test/input") :> Product.Company
 
@@ -124,7 +124,8 @@ main = do
 --  mkModuleWithSpec (Proxy :: Proxy Next) "test/output" "__tests__" "test/output/__tests__/golden" "localhost:8081"
   mkModuleWithSpec (Proxy :: Proxy Following) "test/output" "__tests__" "test/output/__tests__/golden" "localhost:8081"
   -- fail "adsf"
-  run 8081 xApp
+  -- run 8081 xApp
+  run 8081 nextApp
   -- run 8081 Api.productApp
 {-
   Product.mkGoldenFiles
@@ -132,3 +133,4 @@ main = do
   hspec Sum.spec
   hspec Options.spec
 -}
+-- curl -i -d '[{"name":"Javier","id":35,"created":"2017-11-22T12:40:55.797664Z"}]' -H 'Content-type: application/json' -X POST http://localhost:8081/Next/Person

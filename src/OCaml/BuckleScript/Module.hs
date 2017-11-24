@@ -41,14 +41,10 @@ module OCaml.BuckleScript.Module
   , OCamlTypeInFile
   , ConcatSymbols
 
-  , InAndOut
-  , InAndOutAPI
-  , InAndOut2
-  , InAndOut2API
-  , MkInAndOut2API
-  , Length2
-
-  , APILength (..)
+  -- automatically build a servant OCamlSpec Serve
+  , OCamlTypeCount (..)
+  , OCamlSpecAPI
+  , MkOCamlSpecAPI
   , mkServer
   ) where
 
@@ -57,6 +53,7 @@ import Data.Char (toUpper, toLower)
 import Data.Proxy
 import Data.Semigroup (Semigroup (..))
 import Data.Typeable
+import GHC.Generics
 
 -- template-haskell
 import Language.Haskell.TH
@@ -65,11 +62,12 @@ import Language.Haskell.TH
 import System.FilePath.Posix ((</>), (<.>))
 
 -- ocaml-export
-import OCaml.BuckleScript.Types
-import OCaml.BuckleScript.Record
-import OCaml.BuckleScript.Encode
+import OCaml.Common hiding (lowercaseFirst, uppercaseFirst)
 import OCaml.BuckleScript.Decode
+import OCaml.BuckleScript.Encode
+import OCaml.BuckleScript.Record
 import OCaml.BuckleScript.Spec
+import OCaml.BuckleScript.Types
 
 -- text
 import Data.Text (Text)
@@ -85,11 +83,28 @@ import Data.Type.Equality
 
 -- servant
 import Servant.API
-import GHC.Generics
 
--- represent an OCamlModule as a Haskell type
+-- wl-pprint
+import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>), (</>))
+
+
+-- | an OCamlModule as a Haskell type
+--   filePath is dir where to store OCamlModule
+--   each symbol in moduleName is expanded into "module Symbol = struct ... end"
 data OCamlModule (filePath :: [Symbol]) (moduleName :: [Symbol])
   deriving Typeable
+
+
+--data OCamlModz (filePath :: [Symbol]) (moduleName :: OCamlSubModule)
+--  deriving Typeable
+
+--data OCamlModz' (name :: Symbol) (modz :: OCamlSubModule)
+--  deriving Typeable
+
+--data OCamlSubModule c
+--  = OCamlSubModule (name :: Symbol) (modz :: OCamlSubModule (Proxy :: Proxy c))
+--  | OCamlSubModuleOCamlType c
+  
 
 -- represent a handwritten OCaml type, encoder and decoder as a Haskell type
 data OCamlTypeInFile (a :: Symbol) (filePath :: Symbol)
@@ -107,19 +122,20 @@ class HasOCamlModule a where
   mkModule :: Proxy a -> FilePath -> IO ()
   mkModuleWithSpec :: Proxy a -> FilePath -> FilePath -> FilePath -> String -> IO ()
   
-instance (KnownSymbols a, KnownSymbols b, HasOCamlType api) => HasOCamlModule ((OCamlModule a b) :> api) where
+instance (KnownSymbols filePath, KnownSymbols moduleName, HasOCamlType api) => HasOCamlModule ((OCamlModule filePath moduleName) :> api) where
   mkModule Proxy rootdir = do
-    if (length $ symbolsVal (Proxy :: Proxy a)) == 0
+    if (length $ symbolsVal (Proxy :: Proxy filePath)) == 0
       then fail "OCamlModule filePath needs at least one file name"
       else do
-        typF <- mkType (Proxy :: Proxy api)
-        intF <- mkInterface (Proxy :: Proxy api)
-
+        typF <- localModuleDoc <$> mkType (Proxy :: Proxy api)
+        intF <- localModuleDoc <$> mkInterface (Proxy :: Proxy api)
         T.writeFile (fp <.> "ml")  typF
         T.writeFile (fp <.> "mli") intF
+        
     where
-      fp = rootdir </> (foldl (</>) "" $ symbolsVal (Proxy :: Proxy a))
-
+      fp = rootdir </> (foldl (</>) "" $ symbolsVal (Proxy :: Proxy filePath))
+      localModuleDoc body = pprinter $ foldr (\l r -> "module" <+> l <+> "= struct" <$$> indent 2 r <$$> "end") (stext body) (stext . T.pack <$> symbolsVal (Proxy :: Proxy moduleName))
+      
   mkModuleWithSpec p rootdir specdir goldendir url = do
     mkModule p rootdir
     specF <- mkSpec (Proxy :: Proxy api) (T.pack localModule) (T.pack url) (T.pack goldendir)
@@ -127,8 +143,8 @@ instance (KnownSymbols a, KnownSymbols b, HasOCamlType api) => HasOCamlModule ((
     T.writeFile (fp <.> "ml") specBody
     
     where
-      fp = rootdir </> specdir </> (foldl (</>) "" $ symbolsVal (Proxy :: Proxy a))
-      localModule = (foldl (<.>) "" $ symbolsVal (Proxy :: Proxy b))
+      fp = rootdir </> specdir </> (foldl (</>) "" $ symbolsVal (Proxy :: Proxy filePath))
+      localModule = (foldl (<.>) "" $ symbolsVal (Proxy :: Proxy moduleName))
 
 -- module Hello = struct
 -- end
@@ -191,6 +207,7 @@ instance {-# OVERLAPPABLE #-} OCamlType a => HasGenericOCamlType a where
 
 -- build servant spec server
 
+-- | Symbol for Proxy types
 type family TypeName a :: Symbol where
   -- Types which don't have a Generic instance
   TypeName Double = "Double"
@@ -207,6 +224,19 @@ type family TypeNames a :: [Symbol] where
   TypeNames (a ': as) = TypeName a ': TypeNames as
 
 
+
+-- | Insert type into type level list
+type family Insert a xs where
+   Insert a '[]       = (a ': '[])
+   Insert a (a ': xs) = (a ': xs)
+   Insert a (x ': xs) = x ': (Insert a xs)
+
+{-            
+type family Length2 xs where
+   Length2 (x :> xs) = 1 + Length xs
+   Length2 a       = 1
+-}
+            
 -- |
 type InAndOut a = (TypeName a) :> ReqBody '[JSON] [a] :> Post '[JSON] [a]
 
@@ -224,98 +254,68 @@ type family InAndOut2API modul a :: * where
 type family MkInAndOut2API a :: * where
   MkInAndOut2API (OCamlModule a b :> api) = InAndOut2API b api
 
+-- | OCamlSpecAPI is a servant type that repesents and OCamlModule
+--   and its OCamlTypes. It automatically creates path names based on the
+--   name of the OCamlModule and the name of each OCamlType
+--   OCamlModule '[] '["Core"] :> User :> Profile
+--   /Core/User
+--   /Core/Profile
+type OCamlSpecAPI (modul :: [Symbol]) typ = ConcatSymbols (Insert (TypeName typ) modul) (ReqBody '[JSON] [typ] :> Post '[JSON] [typ])
+
+type family MkOCamlSpecAPI' modul a :: * where
+  MkOCamlSpecAPI' modul (a :> b) = MkOCamlSpecAPI' modul a :<|> MkOCamlSpecAPI' modul b
+  MkOCamlSpecAPI' modul a = OCamlSpecAPI modul a  
+
+type family MkOCamlSpecAPI a :: * where
+  MkOCamlSpecAPI (OCamlModule a b :> api) = MkOCamlSpecAPI' b api
 
 
--- | Insert type into type level list
-type family Insert a xs where
-   Insert a '[]       = (a ': '[])
-   Insert a (a ': xs) = (a ': xs)
-   Insert a (x ': xs) = x ': (Insert a xs)
 
+
+-- | Get the number of declared types in an OCaml Module
+--   Internal helper function.
+type family (Flag a) :: Bool where
+  Flag (a :> b)  = 'True -- case 0
+  Flag (OCamlModule a b)  = 'True -- case 1
+  Flag a     = 'False -- case 2
+
+
+-- | Exposed type level function
+class OCamlTypeCount api where
+  ocamlTypeCount :: Proxy api -> Int
+    
+instance (Flag a ~ flag, OCamlTypeCount' flag (a :: *)) => OCamlTypeCount a where
+  ocamlTypeCount = ocamlTypeCount' (Proxy :: Proxy flag)
+
+
+-- | Internal helper function
+class OCamlTypeCount' (flag :: Bool) a where
+  ocamlTypeCount' :: Proxy flag -> Proxy a -> Int
+
+-- case 0
+instance (OCamlTypeCount a, OCamlTypeCount b) => OCamlTypeCount' 'True (a :> b) where
+  ocamlTypeCount' _ Proxy = (ocamlTypeCount (Proxy :: Proxy a)) + (ocamlTypeCount (Proxy :: Proxy b))
+
+-- case 1
+-- do not count anything wrapped in OCamlModule
+instance OCamlTypeCount' 'True (OCamlModule a b) where
+  ocamlTypeCount' _ Proxy = 0
+
+-- case 2
+-- everything else should count as one
+instance OCamlTypeCount' 'False a where
+  ocamlTypeCount' _ Proxy = 1
+
+
+
+   
+-- natVal
 -- | Get the length of a type level list
 type family Length xs where
    Length '[]       = 0
    Length (x ': xs) = 1 + Length xs
 
-type family Length2 xs where
-   --Length2 (OCamlModule a b :> xs) = 0 + Length xs
-   Length2 (x :> xs) = 1 + Length xs
-   Length2 a       = 1
 
-
-type family (F a) :: Bool where
-  F (a :> b)  = 'True
-  F (OCamlModule a b)  = 'True
-  F a     = 'False
-
-class APILength api where
-  apiLength :: Proxy api -> Int
-    
-instance (F a ~ flag, APILength' flag (a :: *)) => APILength a where
-  apiLength = apiLength' (Proxy :: Proxy flag)
-
-class APILength' (flag :: Bool) a where
-  apiLength' :: Proxy flag -> Proxy a -> Int
-
-instance APILength' 'True (OCamlModule a b) where
-  apiLength' _ Proxy = 0
-
-instance (APILength a, APILength b) => APILength' 'True (a :> b) where
-  apiLength' _ Proxy = (apiLength (Proxy :: Proxy a)) + (apiLength (Proxy :: Proxy b))
-
-instance APILength' 'False a where
-  apiLength' _ Proxy = 1
-
-
--- | Get the number of types in an OCaml Module
-{-
-class APILength api where
-  apiLength :: Proxy api -> Int
-  apiLength Proxy = 1
-
-instance (APILength a, APILength b) => APILength (a :> b) where
-  apiLength Proxy = (apiLength (Proxy :: Proxy a)) + (apiLength (Proxy :: Proxy b))
-
-instance APILength a
-
-instance APILength (OCamlModule a b) where
-  apiLength Proxy = 0
--}
-
-{-
-class APILength api where
-  apiLength :: Proxy api -> Int
-
-instance {-# OVERLAPPABLE #-} (APILength a, APILength b) => APILength (a :> b) where
-  apiLength Proxy = (apiLength (Proxy :: Proxy a)) + (apiLength (Proxy :: Proxy b))
-
-instance APILength (OCamlModule a b) where
-  apiLength Proxy = 0
-
-instance {-# OVERLAPPING #-} (HasOCamlType a) => APILength a where
-  apiLength Proxy = 1
-
--}
-
-{-
-class CountRS a where
-    countRS :: a -> Int
-    countRS _ = 1
-    countRSList :: [a] -> Int
-    countRSList = countListDefault 
-
-instance CountRS Char where
-    countRSList = length . words
-
-instance CountRS a => CountRS [a] where
-    countRS = countRSList
-
-instance CountRS Bool
-
--}
-
-   
- -- natVal            
 type family ConcatSymbols xs rhs :: * where
   ConcatSymbols '[] rhs = rhs            
   ConcatSymbols (x ': xs) rhs = If ((Length xs) == 0) (x :> rhs) (x :> ConcatSymbols xs rhs)
@@ -329,19 +329,19 @@ uppercaseFirst :: String -> String
 uppercaseFirst [] = []
 uppercaseFirst (x : xs) = toUpper x : xs
                 
-mkServer :: forall api. (APILength api, HasOCamlModule api) => String -> Proxy api -> Q [Dec]
+mkServer :: forall ocamlTypes. (OCamlTypeCount ocamlTypes, HasOCamlModule ocamlTypes) => String -> Proxy ocamlTypes -> Q [Dec]
 mkServer typeName Proxy = do
-  let size = apiLength (Proxy :: Proxy api)
+  let size = ocamlTypeCount (Proxy :: Proxy ocamlTypes)
   if size < 1
     then fail "size must be at least one"
     else do
       let args = foldl (\l r -> UInfixE l (ConE $ mkName ":<|>") r) (VarE $ mkName "pure") (replicate (size-1) (VarE $ mkName "pure"))
 
       return $
-        [ SigD serverName (AppT (ConT $ mkName "Server") $ AppT (ConT $ mkName "MkInAndOut2API") (ConT $ apiName))
+        [ SigD serverName (AppT (ConT $ mkName "Server") $ AppT (ConT $ mkName "MkOCamlSpecAPI") (ConT $ apiName))
         , FunD serverName [Clause [] (NormalB args ) [] ]
 
-        , SigD apiProxy (AppT (ConT $ mkName "Proxy") $ AppT (ConT $ mkName "MkInAndOut2API") (ConT $ apiName))
+        , SigD apiProxy (AppT (ConT $ mkName "Proxy") $ AppT (ConT $ mkName "MkOCamlSpecAPI") (ConT $ apiName))
         , FunD apiProxy [Clause [] (NormalB $ ConE $ mkName "Proxy") []]
 
         , SigD appName (ConT $ mkName "Application")
@@ -352,27 +352,3 @@ mkServer typeName Proxy = do
      apiName = mkName $ uppercaseFirst typeName
      apiProxy = mkName $ lowercaseFirst typeName ++ "API"
      appName = mkName $ lowercaseFirst typeName ++ "App"
-
-mkAPIProxy :: String -> Q [Dec]
-mkAPIProxy moduleName =
-  return $
-    [ SigD fnName (AppT (ConT $ mkName "Proxy") $ AppT (ConT $ mkName "InAndOutAPI") (ConT $ mkName moduleName))
-    , FunD fnName [Clause [] (NormalB $ VarE $ mkName "Proxy") [] ]
-    ]
-  where
-    fnName = mkName $ moduleName ++ "API"
-
-mkApp :: String -> Q [Dec]
-mkApp moduleName =
-  return $
-    [ SigD appName (AppT (ConT $ mkName "Proxy") $ AppT (ConT $ mkName "InAndOutAPI") (ConT $ mkName moduleName))
-    , FunD appName [Clause [] (NormalB $ (AppE (VarE $ mkName "serve") $ AppE (VarE apiName) (VarE appName))) []]
-    ]
-  where
-    appName = mkName $ moduleName ++ "API"
-    apiName = mkName $ moduleName ++ "App"
-    serverName = mkName $ moduleName ++ "Server"
-
-
-
-  -- ParensE

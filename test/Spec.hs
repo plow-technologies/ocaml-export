@@ -60,71 +60,16 @@ logAllMiddleware app req respond = do
 
 -- npm start --prefix path/to/your/app
 
--- type SampleModule = Char :> Int
-
--- type Dub = "Dubya" :> SampleModule
-
--- type Yo = OCamlModule ["Here", "goodbye"] '[] :> SampleModule
-type Tesst = Product.Person
--- type Next = Product.Person :> Product.Company
---type NextModule = OCamlModule '[] '["Next"] :> Next
 type Next = OCamlModule '[] '["Next"] :> Product.Person :> Product.Company
--- type NextAPI = MkInAndOut2API NextModule
 
 $(mkServer "Next" (Proxy :: Proxy Next))
 
--- nextAPI :: Proxy (InAndOutAPI Next)
--- nextAPI = Proxy
-
--- nextApp :: Application
--- nextApp = serve nextAPI nextServer
-
-type Following = OCamlModule '["Following"] '[] :> (OCamlTypeInFile "Person" "test/input") :> Product.Company
-
--- type X = (ConcatSymbols '["a"]) :> Get '[JSON] Text
--- type X = "a" S.:> '[] S.:> S.Get '[S.JSON] Text
--- type X = "a" S.:> S.EmptyAPI S.:> S.Get '[S.JSON] Text
-
--- type X = (S.:>) ("a" S.:> "") S.Get '[S.JSON] Text
-
--- type X = ("a" S.:> "" S.:>) S.Get '[S.JSON] Text
-
--- type X = AppendSymbols '["a","b"] :> Get '[JSON] Text
--- type X = ("a" ++ "b") :> Get '[JSON] Text
--- type Y = ("a" ++ "b" ++ "c") :> Get '[JSON] Text
-
--- type X = (ConcatSymbols '["a", "b"] (Get '[JSON] Text))
-type X = InAndOut2API '["Onping", "Core"] Text
-
--- curl -i -d '["hello"]' -H 'Content-type: application/json' -X POST http://localhost:8081/Onping/Core/Text
-
--- type X = "a" :> (Get '[JSON] Text)
-
-xServer :: Server X
-xServer = pure
-
-xAPI :: Proxy X
-xAPI = Proxy
-
-xApp :: Application
-xApp = serve xAPI xServer
+type Following = OCamlModule '["Following"] '["First","Second"] :> (OCamlTypeInFile "Person" "test/input") :> Product.Company
 
 main :: IO ()
 main = do
-  -- print $ natVal (Proxy :: Proxy (Length2 Following))
-  -- print $ natVal (Proxy :: Proxy (Length2 (Product.Person :> Product.Company)))
-  print $ apiLength (Proxy :: Proxy Following)
---  print $ mkType (Proxy :: Proxy SampleModule)
---  print $ mkModule (Proxy :: Proxy Dub)
---  print $ mkType (Proxy :: Proxy Yo)
---  print "Hello"
---  print $ mkType (Proxy :: Proxy Next)
---  mkModule (Proxy :: Proxy Yo) "test/output"  
---  mkModule (Proxy :: Proxy Next) "test/output"
---  mkModuleWithSpec (Proxy :: Proxy Next) "test/output" "__tests__" "test/output/__tests__/golden" "localhost:8081"
+  print $ ocamlTypeCount (Proxy :: Proxy Following)
   mkModuleWithSpec (Proxy :: Proxy Following) "test/output" "__tests__" "test/output/__tests__/golden" "localhost:8081"
-  -- fail "adsf"
-  -- run 8081 xApp
   run 8081 nextApp
   -- run 8081 Api.productApp
 {-

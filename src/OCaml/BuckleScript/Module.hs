@@ -28,8 +28,10 @@ module OCaml.BuckleScript.Module
   (
   -- re-export from Servant
     (:>)
-
+  , (:<|>)
+  
   -- type classes
+  , HasOCamlPackage (..)
   , HasOCamlModule (..)
   , HasOCamlType (..)
   , HasGenericOCamlType (..)
@@ -37,6 +39,7 @@ module OCaml.BuckleScript.Module
 
   -- types without constructors
   -- used to calculate types
+  , OCamlPackage
   , OCamlModule
   , OCamlTypeInFile
   , ConcatSymbols
@@ -88,6 +91,9 @@ import Servant.API
 import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>), (</>))
 
 
+data OCamlPackage (rootDir :: Symbol)
+  deriving Typeable
+
 -- | an OCamlModule as a Haskell type
 --   filePath is dir where to store OCamlModule
 --   each symbol in moduleName is expanded into "module Symbol = struct ... end"
@@ -116,6 +122,40 @@ data OCamlTypeInFile (a :: Symbol) (filePath :: Symbol)
 -- Type with Manual Definintion (with and without interface)
 -- 
 -- data OCamlPackage list of modules and specs
+
+
+class HasOCamlPackage a where
+  mkPackage :: Proxy a -> IO ()
+  mkPackageWith :: Proxy a -> FilePath -> IO ()
+  
+instance (KnownSymbol rootDir, HasOCamlPackage next) => HasOCamlPackage ((OCamlPackage rootDir) :> next) where
+  mkPackage Proxy = do
+    print "top level"
+    mkPackageWith (Proxy :: Proxy next) (symbolVal (Proxy :: Proxy rootDir))
+  mkPackageWith _ _ = pure ()
+
+instance (HasOCamlPackage this, HasOCamlPackage next) => HasOCamlPackage (this :<|> next) where
+  mkPackage Proxy = do
+    print "mkPackage :<|>"
+  mkPackageWith Proxy rootdir = do
+    print ":<|>"
+    mkPackageWith (Proxy :: Proxy this) rootdir
+    --mkModule (Proxy :: Proxy this) rootdir
+    mkPackageWith (Proxy :: Proxy next) rootdir
+
+{-
+instance (HasOCamlModule this, HasOCamlPackage next) => HasOCamlPackage (this :<|> next) where
+  mkPackage Proxy = pure ()
+  mkPackageWith Proxy rootdir = do
+    -- mkPackageWith (Proxy :: Proxy this) rootdir
+    mkModule (Proxy :: Proxy this) rootdir
+    mkPackageWith (Proxy :: Proxy next) rootdir
+-}
+    
+instance {-# OVERLAPPABLE #-} (HasOCamlModule a) => HasOCamlPackage a where
+  mkPackage Proxy = do
+    print "mkPackage :<|>"
+  mkPackageWith Proxy rootdir = mkModule (Proxy :: Proxy a) rootdir
 
 
 class HasOCamlModule a where
@@ -168,8 +208,7 @@ instance {-# OVERLAPPABLE #-} (HasOCamlTypeInFile (OCamlTypeInFile a b)) => HasO
 instance {-# OVERLAPPABLE #-} (HasGenericOCamlType a) => HasOCamlType a where
   mkType a = pure $ mkGType a
   mkInterface a = pure $ mkGInterface a
-  mkSpec a modul url goldendir = pure $ mkGSpec a modul url goldendir
-
+  mkSpec a modul url goldendir = pure $ mkGSpec a modul url goldendir  
 
 -- | Read OCaml type declarations and interfaces from `ml` and `mli` files
 class HasOCamlTypeInFile api where

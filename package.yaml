@@ -64,5 +64,5 @@ tests:
     - wai
     - wai-extra
     - warp
-#  ghc-options:
-#  - -fprint-potential-instances
+    ghc-options:
+    - -fprint-potential-instances

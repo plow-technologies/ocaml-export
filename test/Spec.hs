@@ -60,16 +60,20 @@ logAllMiddleware app req respond = do
 
 -- npm start --prefix path/to/your/app
 
-type Next = OCamlModule '[] '["Next"] :> Product.Person :> Product.Company
+type Next = OCamlModule '["Next"] '[] :> Product.Person :> Product.Company
 
 $(mkServer "Next" (Proxy :: Proxy Next))
 
 type Following = OCamlModule '["Following"] '["First","Second"] :> (OCamlTypeInFile "Person" "test/input") :> Product.Company
 
+type Pckage = OCamlPackage "test/output2" :> (Next :<|> Following)
+
 main :: IO ()
 main = do
   print $ ocamlTypeCount (Proxy :: Proxy Following)
-  mkModuleWithSpec (Proxy :: Proxy Following) "test/output" "__tests__" "test/output/__tests__/golden" "localhost:8081"
+  -- mkModuleWithSpec (Proxy :: Proxy Following) "test/output" "__tests__" "test/output/__tests__/golden" "localhost:8081"
+  mkPackage (Proxy :: Proxy Pckage)
+  print "after mkPackage"
   run 8081 nextApp
   -- run 8081 Api.productApp
 {-

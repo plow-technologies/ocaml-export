@@ -66,7 +66,7 @@ $(mkServer "Next" (Proxy :: Proxy Next))
 
 type Following = OCamlModule '["Following"] '["First","Second"] :> (OCamlTypeInFile "Person" "test/input") :> Product.Company
 
-type Pckage = OCamlPackage "test/output2" :> (Next :<|> Following)
+type Pckage = OCamlPackage "test/output2" ::> Next :<|> Following
 
 main :: IO ()
 main = do

@@ -29,7 +29,9 @@ module OCaml.BuckleScript.Module
   -- re-export from Servant
     (:>)
   , (:<|>)
-  
+
+
+  , (::>)  
   -- type classes
   , HasOCamlPackage (..)
   , HasOCamlModule (..)
@@ -91,26 +93,19 @@ import Servant.API
 import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>), (</>))
 
 
+data (path :: k) ::> a
+  deriving (Typeable)
+infixr 2 ::>
+
 data OCamlPackage (rootDir :: Symbol)
-  deriving Typeable
+  deriving (Typeable)
+
 
 -- | an OCamlModule as a Haskell type
 --   filePath is dir where to store OCamlModule
 --   each symbol in moduleName is expanded into "module Symbol = struct ... end"
 data OCamlModule (filePath :: [Symbol]) (moduleName :: [Symbol])
   deriving Typeable
-
-
---data OCamlModz (filePath :: [Symbol]) (moduleName :: OCamlSubModule)
---  deriving Typeable
-
---data OCamlModz' (name :: Symbol) (modz :: OCamlSubModule)
---  deriving Typeable
-
---data OCamlSubModule c
---  = OCamlSubModule (name :: Symbol) (modz :: OCamlSubModule (Proxy :: Proxy c))
---  | OCamlSubModuleOCamlType c
-  
 
 -- represent a handwritten OCaml type, encoder and decoder as a Haskell type
 data OCamlTypeInFile (a :: Symbol) (filePath :: Symbol)
@@ -126,41 +121,25 @@ data OCamlTypeInFile (a :: Symbol) (filePath :: Symbol)
 
 class HasOCamlPackage a where
   mkPackage :: Proxy a -> IO ()
-  mkPackageWith :: Proxy a -> FilePath -> IO ()
   
-instance (KnownSymbol rootDir, HasOCamlPackage next) => HasOCamlPackage ((OCamlPackage rootDir) :> next) where
-  mkPackage Proxy = do
-    print "top level"
-    mkPackageWith (Proxy :: Proxy next) (symbolVal (Proxy :: Proxy rootDir))
-  mkPackageWith _ _ = pure ()
+instance (KnownSymbol rootDir, HasOCamlModule next) => HasOCamlPackage ((OCamlPackage rootDir) ::> next) where
+  mkPackage Proxy = mkModule (Proxy :: Proxy next) (symbolVal (Proxy :: Proxy rootDir))
 
-instance (HasOCamlPackage this, HasOCamlPackage next) => HasOCamlPackage (this :<|> next) where
-  mkPackage Proxy = do
-    print "mkPackage :<|>"
-  mkPackageWith Proxy rootdir = do
-    print ":<|>"
-    mkPackageWith (Proxy :: Proxy this) rootdir
-    --mkModule (Proxy :: Proxy this) rootdir
-    mkPackageWith (Proxy :: Proxy next) rootdir
-
-{-
-instance (HasOCamlModule this, HasOCamlPackage next) => HasOCamlPackage (this :<|> next) where
-  mkPackage Proxy = pure ()
-  mkPackageWith Proxy rootdir = do
-    -- mkPackageWith (Proxy :: Proxy this) rootdir
-    mkModule (Proxy :: Proxy this) rootdir
-    mkPackageWith (Proxy :: Proxy next) rootdir
--}
-    
-instance {-# OVERLAPPABLE #-} (HasOCamlModule a) => HasOCamlPackage a where
-  mkPackage Proxy = do
-    print "mkPackage :<|>"
-  mkPackageWith Proxy rootdir = mkModule (Proxy :: Proxy a) rootdir
 
 
 class HasOCamlModule a where
   mkModule :: Proxy a -> FilePath -> IO ()
   mkModuleWithSpec :: Proxy a -> FilePath -> FilePath -> FilePath -> String -> IO ()
+
+instance (HasOCamlModule this, HasOCamlModule next) => HasOCamlModule (this :<|> next) where
+  mkModule Proxy rootdir = do
+    mkModule (Proxy :: Proxy this) rootdir
+    mkModule (Proxy :: Proxy next) rootdir
+
+  mkModuleWithSpec Proxy rootdir specdir goldendir url = do
+    mkModuleWithSpec (Proxy :: Proxy this) rootdir specdir goldendir url
+    mkModuleWithSpec (Proxy :: Proxy next) rootdir specdir goldendir url
+
   
 instance (KnownSymbols filePath, KnownSymbols moduleName, HasOCamlType api) => HasOCamlModule ((OCamlModule filePath moduleName) :> api) where
   mkModule Proxy rootdir = do

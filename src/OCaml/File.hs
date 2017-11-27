@@ -9,10 +9,12 @@ Stability   : experimental
 -}
 
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module OCaml.File where
 
 -- base
+import Data.ByteString (ByteString)
 import Data.Monoid
 
 -- directory
@@ -31,6 +33,18 @@ import OCaml.BuckleScript.Spec
 import OCaml.BuckleScript.Types
 import OCaml.Common
 
+-- file-embed
+import Data.FileEmbed (embedFile)
+
+
+bsConfigFile :: ByteString
+bsConfigFile = $(embedFile "bs-src/bsconfig.json")
+
+packageFile :: ByteString
+packageFile = $(embedFile "bs-src/package.json")
+
+webpackConfigFile :: ByteString
+webpackConfigFile = $(embedFile "bs-src/webpack.config.js")
 
 data OCamlFile =
   OCamlFile

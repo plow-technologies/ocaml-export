@@ -30,8 +30,12 @@ module OCaml.BuckleScript.Module
     (:>)
   , (:<|>)
 
+  -- options
+  , PackageOptions (..)
+  , defaultPackageOptions
+  , SpecOptions (..)
+  , defaultSpecOptions
 
-  , (::>)  
   -- type classes
   , HasOCamlPackage (..)
   , HasOCamlModule (..)
@@ -40,8 +44,7 @@ module OCaml.BuckleScript.Module
   , HasOCamlTypeInFile (..)
 
   -- types without constructors
-  -- used to calculate types
-  , OCamlPackage
+  -- used to calculate types at the type level
   , OCamlModule
   , OCamlTypeInFile
   , ConcatSymbols
@@ -54,7 +57,7 @@ module OCaml.BuckleScript.Module
   ) where
 
 -- base
-import Data.Char (toUpper, toLower)
+import qualified Data.List as L (intercalate)
 import Data.Proxy
 import Data.Semigroup (Semigroup (..))
 import Data.Typeable
@@ -63,11 +66,14 @@ import GHC.Generics
 -- template-haskell
 import Language.Haskell.TH
 
+-- directory
+import System.Directory (createDirectoryIfMissing)
+
 -- filepath
 import System.FilePath.Posix ((</>), (<.>))
 
 -- ocaml-export
-import OCaml.Common hiding (lowercaseFirst, uppercaseFirst)
+import OCaml.Common hiding ((</>))
 import OCaml.BuckleScript.Decode
 import OCaml.BuckleScript.Encode
 import OCaml.BuckleScript.Record
@@ -93,13 +99,33 @@ import Servant.API
 import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>), (</>))
 
 
-data (path :: k) ::> a
-  deriving (Typeable)
-infixr 2 ::>
+data PackageOptions
+  = PackageOptions
+    { packageRootDir :: FilePath
+    , mSpecOptions :: Maybe SpecOptions
+    }
 
-data OCamlPackage (rootDir :: Symbol)
-  deriving (Typeable)
+defaultPackageOptions :: PackageOptions
+defaultPackageOptions = PackageOptions "./" (Just defaultSpecOptions)
 
+data SpecOptions
+  = SpecOptions
+    { specDir :: FilePath
+    , goldenDir :: FilePath
+    , servantURL :: String
+    }
+
+defaultSpecOptions :: SpecOptions
+defaultSpecOptions = SpecOptions "" "" ""
+
+--data (path :: k) ::> a
+--  deriving (Typeable)
+--infixr 2 ::>
+
+--data OCamlPackage (rootDir :: Symbol)
+--  deriving (Typeable)
+
+-- data OCamlPackageWithSpec (rootDir :: Symbol) (specDir :: Symbol) (goldenDir :: Symbol) (url :: Symbol)
 
 -- | an OCamlModule as a Haskell type
 --   filePath is dir where to store OCamlModule
@@ -111,62 +137,49 @@ data OCamlModule (filePath :: [Symbol]) (moduleName :: [Symbol])
 data OCamlTypeInFile (a :: Symbol) (filePath :: Symbol)
   deriving Typeable
 
--- Type with definition only
--- Type with definition and interface
--- either with Spec and Golden File
--- Type with Manual Definintion (with and without interface)
--- 
--- data OCamlPackage list of modules and specs
-
-
+-- | Iterate over OCamlModule types, create files based on the types and PackageOptions.
 class HasOCamlPackage a where
-  mkPackage :: Proxy a -> IO ()
-  
-instance (KnownSymbol rootDir, HasOCamlModule next) => HasOCamlPackage ((OCamlPackage rootDir) ::> next) where
-  mkPackage Proxy = mkModule (Proxy :: Proxy next) (symbolVal (Proxy :: Proxy rootDir))
+  mkPackage :: Proxy a -> PackageOptions -> IO ()
 
+instance (HasOCamlPackage modul, HasOCamlPackage rest) => HasOCamlPackage (modul :<|> rest) where
+  mkPackage Proxy packageOptions = do
+    mkPackage (Proxy :: Proxy modul) packageOptions
+    mkPackage (Proxy :: Proxy rest) packageOptions
+
+instance {-# OVERLAPPABLE #-} (HasOCamlModule a) => HasOCamlPackage a where
+  mkPackage Proxy packageOptions = mkModule (Proxy :: Proxy a) packageOptions
 
 
 class HasOCamlModule a where
-  mkModule :: Proxy a -> FilePath -> IO ()
-  mkModuleWithSpec :: Proxy a -> FilePath -> FilePath -> FilePath -> String -> IO ()
-
-instance (HasOCamlModule this, HasOCamlModule next) => HasOCamlModule (this :<|> next) where
-  mkModule Proxy rootdir = do
-    mkModule (Proxy :: Proxy this) rootdir
-    mkModule (Proxy :: Proxy next) rootdir
-
-  mkModuleWithSpec Proxy rootdir specdir goldendir url = do
-    mkModuleWithSpec (Proxy :: Proxy this) rootdir specdir goldendir url
-    mkModuleWithSpec (Proxy :: Proxy next) rootdir specdir goldendir url
-
+  mkModule :: Proxy a -> PackageOptions -> IO ()
   
 instance (KnownSymbols filePath, KnownSymbols moduleName, HasOCamlType api) => HasOCamlModule ((OCamlModule filePath moduleName) :> api) where
-  mkModule Proxy rootdir = do
+  mkModule Proxy packageOptions = do
     if (length $ symbolsVal (Proxy :: Proxy filePath)) == 0
       then fail "OCamlModule filePath needs at least one file name"
       else do
+        createDirectoryIfMissing True rootDir
         typF <- localModuleDoc <$> mkType (Proxy :: Proxy api)
         intF <- localModuleDoc <$> mkInterface (Proxy :: Proxy api)
         T.writeFile (fp <.> "ml")  typF
         T.writeFile (fp <.> "mli") intF
+        case mSpecOptions packageOptions of
+          Nothing -> pure ()
+          Just specOptions -> do
+            specF <- mkSpec (Proxy :: Proxy api) (T.pack localModule) (T.pack $ servantURL specOptions) (T.pack $ goldenDir specOptions)
+            let specBody = if specF /= "" then ("let () =\n" <> specF) else ""
+            createDirectoryIfMissing True (rootDir </> (specDir specOptions))
+            T.writeFile (specFp <.> "ml") specBody
+    
+            where
+              specFp = rootDir </> (specDir specOptions) </> (foldl (</>) "" $ symbolsVal (Proxy :: Proxy filePath))
+              localModule = (L.intercalate "." $ symbolsVal (Proxy :: Proxy moduleName))
         
     where
-      fp = rootdir </> (foldl (</>) "" $ symbolsVal (Proxy :: Proxy filePath))
+      rootDir = packageRootDir packageOptions
+      fp = rootDir </> (foldl (</>) "" $ symbolsVal (Proxy :: Proxy filePath))
       localModuleDoc body = pprinter $ foldr (\l r -> "module" <+> l <+> "= struct" <$$> indent 2 r <$$> "end") (stext body) (stext . T.pack <$> symbolsVal (Proxy :: Proxy moduleName))
-      
-  mkModuleWithSpec p rootdir specdir goldendir url = do
-    mkModule p rootdir
-    specF <- mkSpec (Proxy :: Proxy api) (T.pack localModule) (T.pack url) (T.pack goldendir)
-    let specBody = if specF /= "" then ("let () =\n" <> specF) else ""
-    T.writeFile (fp <.> "ml") specBody
-    
-    where
-      fp = rootdir </> specdir </> (foldl (</>) "" $ symbolsVal (Proxy :: Proxy filePath))
-      localModule = (foldl (<.>) "" $ symbolsVal (Proxy :: Proxy moduleName))
 
--- module Hello = struct
--- end
 
 -- | Combine `HasGenericOCamlType` and `HasOCamlTypeInFile`
 class HasOCamlType api where
@@ -188,6 +201,7 @@ instance {-# OVERLAPPABLE #-} (HasGenericOCamlType a) => HasOCamlType a where
   mkType a = pure $ mkGType a
   mkInterface a = pure $ mkGInterface a
   mkSpec a modul url goldendir = pure $ mkGSpec a modul url goldendir  
+
 
 -- | Read OCaml type declarations and interfaces from `ml` and `mli` files
 class HasOCamlTypeInFile api where
@@ -337,15 +351,6 @@ type family Length xs where
 type family ConcatSymbols xs rhs :: * where
   ConcatSymbols '[] rhs = rhs            
   ConcatSymbols (x ': xs) rhs = If ((Length xs) == 0) (x :> rhs) (x :> ConcatSymbols xs rhs)
-
-
-lowercaseFirst :: String -> String
-lowercaseFirst [] = []
-lowercaseFirst (x : xs) = toLower x : xs
-
-uppercaseFirst :: String -> String
-uppercaseFirst [] = []
-uppercaseFirst (x : xs) = toUpper x : xs
                 
 mkServer :: forall ocamlTypes. (OCamlTypeCount ocamlTypes, HasOCamlModule ocamlTypes) => String -> Proxy ocamlTypes -> Q [Dec]
 mkServer typeName Proxy = do

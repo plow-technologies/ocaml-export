@@ -26,6 +26,7 @@ library:
   - bytestring
   - containers
   - directory
+  - file-embed
   - filepath
   - formatting
   - mtl

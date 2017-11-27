@@ -1,0 +1,22 @@
+{
+  "name": "generic",
+  "bsc-flags": ["-bs-no-version-header", "-bs-super-errors"],
+  "reason": {"react-jsx" : 2},
+  "bs-dependencies": ["bs-node-fetch", "bs-aeson", "bs-node"],
+  "bs-dev-dependencies": ["bs-aeson", "bs-aeson-spec", "bs-node-fetch", "bs-jest"],
+  "sources": [
+    {
+      "dir":    "product",
+      "subdirs": true
+    },
+    {
+      "dir":    "sum",
+      "subdirs": true
+    },
+    {
+      "dir": "__tests__/product",
+      "subdirs": true,
+      "type": "dev"
+    }
+  ]
+}

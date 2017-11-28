@@ -15,6 +15,9 @@ module OCaml.BuckleScript.Encode
   , toOCamlEncoderSource
   , toOCamlEncoderSourceWith
   , toOCamlEncoderInterface
+
+  , toOCamlEncoderSourceWith'
+  , toOCamlEncoderInterface'
   ) where
 
 -- base
@@ -36,7 +39,6 @@ import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
 -- ocaml-export
 import           OCaml.BuckleScript.Types
 import           OCaml.Common
-
 
 -- | Render the encoder function
 class HasEncoder a where
@@ -348,6 +350,9 @@ toOCamlEncoderInterface :: OCamlType a => a -> T.Text
 toOCamlEncoderInterface x =
   pprinter $ runReader (renderTypeInterface (toOCamlType x)) defaultOptions
 
+toOCamlEncoderInterface' :: OCamlType a => a -> Doc
+toOCamlEncoderInterface' x = runReader (renderTypeInterface (toOCamlType x)) defaultOptions
+
 toOCamlEncoderRefWith :: OCamlType a => Options -> a -> T.Text
 toOCamlEncoderRefWith options x =
   pprinter $ runReader (renderRef (toOCamlType x)) options
@@ -358,6 +363,10 @@ toOCamlEncoderRef = toOCamlEncoderRefWith defaultOptions
 toOCamlEncoderSourceWith :: OCamlType a => Options -> a -> T.Text
 toOCamlEncoderSourceWith options x =
   pprinter $ runReader (render (toOCamlType x)) options
+
+toOCamlEncoderSourceWith' :: OCamlType a => a -> Doc
+toOCamlEncoderSourceWith' x = runReader (render (toOCamlType x)) defaultOptions
+
 
 toOCamlEncoderSource :: OCamlType a => a -> T.Text
 toOCamlEncoderSource = toOCamlEncoderSourceWith defaultOptions

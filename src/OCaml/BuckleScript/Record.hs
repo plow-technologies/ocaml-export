@@ -16,6 +16,8 @@ module OCaml.BuckleScript.Record
   , toOCamlTypeRefWith
   , toOCamlTypeSource
   , toOCamlTypeSourceWith
+
+  , toOCamlTypeSourceWith'
   ) where
 
 import           Control.Monad.Reader
@@ -182,6 +184,10 @@ toOCamlTypeRef = toOCamlTypeRefWith defaultOptions
 toOCamlTypeSourceWith :: OCamlType a => Options -> a -> T.Text
 toOCamlTypeSourceWith options x =
   pprinter $ runReader (render (toOCamlType x)) options
+
+toOCamlTypeSourceWith' :: OCamlType a => a -> Doc
+toOCamlTypeSourceWith' x = runReader (render (toOCamlType x)) defaultOptions
+
 
 toOCamlTypeSource :: OCamlType a => a -> T.Text
 toOCamlTypeSource = toOCamlTypeSourceWith defaultOptions

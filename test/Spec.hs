@@ -66,13 +66,12 @@ $(mkServer "Next" (Proxy :: Proxy Next))
 
 type Following = OCamlModule '["Following"] '["First","Second"] :> (OCamlTypeInFile "Person" "test/input") :> Product.Company
 
-type Pckage = Next :<|> Following
+type Pckage = Next :<|> Following  
 
 main :: IO ()
 main = do
-  print $ ocamlTypeCount (Proxy :: Proxy Following)
-  -- mkModuleWithSpec (Proxy :: Proxy Following) "test/output" "__tests__" "test/output/__tests__/golden" "localhost:8081"
-  mkPackage (Proxy :: Proxy Pckage) (PackageOptions "test/output2" $ Just $ SpecOptions "ocaml/__tests__" "test/golden_files" "localhost:8081")
+  --mkPackage (Proxy :: Proxy Pckage) (PackageOptions "test/output2" $ Just $ SpecOptions "ocaml/__tests__" "test/golden_files" "localhost:8081")
+  mkPackage (Proxy :: Proxy Product.ProductPackage) (PackageOptions "test/product-output" $ Just $ SpecOptions "ocaml/__tests__" "test/golden_files" "localhost:8081")
   run 8081 nextApp
   -- run 8081 Api.productApp
 {-

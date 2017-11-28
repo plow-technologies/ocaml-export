@@ -19,6 +19,9 @@ module OCaml.BuckleScript.Decode
   , toOCamlDecoderSource
   , toOCamlDecoderSourceWith
   , toOCamlDecoderInterface
+
+  , toOCamlDecoderSourceWith'
+  , toOCamlDecoderInterface'  
   ) where
 
 -- base
@@ -287,6 +290,9 @@ instance HasDecoderRef OCamlPrimitive where
 toOCamlDecoderInterface :: OCamlType a => a -> T.Text
 toOCamlDecoderInterface x =
   pprinter $ runReader (renderInterface (toOCamlType x)) defaultOptions
+
+toOCamlDecoderInterface' :: OCamlType a => a -> Doc
+toOCamlDecoderInterface' x = runReader (renderInterface (toOCamlType x)) defaultOptions
   
 toOCamlDecoderRefWith :: OCamlType a => Options -> a -> T.Text
 toOCamlDecoderRefWith options x = pprinter $ runReader (renderRef (toOCamlType x)) options
@@ -296,6 +302,10 @@ toOCamlDecoderRef = toOCamlDecoderRefWith defaultOptions
 
 toOCamlDecoderSourceWith :: OCamlType a => Options -> a -> T.Text
 toOCamlDecoderSourceWith options x = pprinter $ runReader (render (toOCamlType x)) options
+
+toOCamlDecoderSourceWith' :: OCamlType a => a -> Doc
+toOCamlDecoderSourceWith' x = runReader (render (toOCamlType x)) defaultOptions
+
 
 toOCamlDecoderSource :: OCamlType a => a -> T.Text
 toOCamlDecoderSource = toOCamlDecoderSourceWith defaultOptions

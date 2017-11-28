@@ -26,12 +26,8 @@ Stability   : experimental
 
 module OCaml.BuckleScript.Module
   (
-  -- re-export from Servant
-    (:>)
-  , (:<|>)
-
   -- options
-  , PackageOptions (..)
+    PackageOptions (..)
   , defaultPackageOptions
   , SpecOptions (..)
   , defaultSpecOptions
@@ -49,11 +45,17 @@ module OCaml.BuckleScript.Module
   , OCamlTypeInFile
   , ConcatSymbols
 
+  -- servant functions
   -- automatically build a servant OCamlSpec Serve
   , OCamlTypeCount (..)
   , OCamlSpecAPI
   , MkOCamlSpecAPI
   , mkServer
+
+    -- re-export from Servant
+  , (:>)
+  , (:<|>)
+
   ) where
 
 -- base
@@ -99,45 +101,41 @@ import Servant.API
 import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>), (</>))
 
 
+-- | Options for creating an OCaml package based on Haskell types.
 data PackageOptions
   = PackageOptions
-    { packageRootDir :: FilePath
-    , mSpecOptions :: Maybe SpecOptions
+    { packageRootDir :: FilePath -- ^ root directory where the output OCaml code will be placed.
+    , mSpecOptions :: Maybe SpecOptions -- ^ produce OCaml spec file if 'Just'.
     }
 
+-- | Default 'PackageOptions'.
 defaultPackageOptions :: PackageOptions
-defaultPackageOptions = PackageOptions "./" (Just defaultSpecOptions)
+defaultPackageOptions = PackageOptions "./ocaml-generic-package" (Just defaultSpecOptions)
 
+-- | Details for OCaml spec.
 data SpecOptions
   = SpecOptions
-    { specDir :: FilePath
-    , goldenDir :: FilePath
-    , servantURL :: String
+    { specDir :: FilePath -- ^ Directory in which to store the OCaml spec, relative to 'packageRootDir'.
+    , goldenDir :: FilePath -- ^ Location of golden JSON files produced by Haskell, relative to 'packageRootDir'.
+    , servantURL :: String -- ^ The URL of the automated Servant spec server to run OCaml specs against.
     }
 
+-- | Default 'SpecOptions'.
 defaultSpecOptions :: SpecOptions
-defaultSpecOptions = SpecOptions "" "" ""
+defaultSpecOptions = SpecOptions "/__tests__" "/__tests__/golden" "localhost:8081"
 
---data (path :: k) ::> a
---  deriving (Typeable)
---infixr 2 ::>
-
---data OCamlPackage (rootDir :: Symbol)
---  deriving (Typeable)
-
--- data OCamlPackageWithSpec (rootDir :: Symbol) (specDir :: Symbol) (goldenDir :: Symbol) (url :: Symbol)
-
--- | an OCamlModule as a Haskell type
---   filePath is dir where to store OCamlModule
---   each symbol in moduleName is expanded into "module Symbol = struct ... end"
+-- | An OCamlModule as a Haskell type. 'filePath' is relative to a
+--   root directory prvoiided in the 'mkPackage' function. Each symbol in
+--   moduleName will is expanded into "module SymbolName = struct ... end".
 data OCamlModule (filePath :: [Symbol]) (moduleName :: [Symbol])
   deriving Typeable
 
--- represent a handwritten OCaml type, encoder and decoder as a Haskell type
+-- | A handwritten OCaml type, encoder and decoder from a file.
 data OCamlTypeInFile (a :: Symbol) (filePath :: Symbol)
   deriving Typeable
 
--- | Iterate over OCamlModule types, create files based on the types and PackageOptions.
+-- | Iterate over a list of OCamlModule types that are concated with '(:<|>)',
+--   to create a package.
 class HasOCamlPackage a where
   mkPackage :: Proxy a -> PackageOptions -> IO ()
 
@@ -149,7 +147,10 @@ instance (HasOCamlPackage modul, HasOCamlPackage rest) => HasOCamlPackage (modul
 instance {-# OVERLAPPABLE #-} (HasOCamlModule a) => HasOCamlPackage a where
   mkPackage Proxy packageOptions = mkModule (Proxy :: Proxy a) packageOptions
 
-
+-- | Depending on 'PackageOptions' settings, 'mkModule' can
+--   - make a declaration file containing encoders and decoders
+--   - make an OCaml interface file
+--   - make a Spec file that tests the encoders and decoders against a golden file and a servant server
 class HasOCamlModule a where
   mkModule :: Proxy a -> PackageOptions -> IO ()
   
@@ -159,14 +160,15 @@ instance (KnownSymbols filePath, KnownSymbols moduleName, HasOCamlType api) => H
       then fail "OCamlModule filePath needs at least one file name"
       else do
         createDirectoryIfMissing True rootDir
-        typF <- localModuleDoc <$> mkType (Proxy :: Proxy api)
-        intF <- localModuleDoc <$> mkInterface (Proxy :: Proxy api)
+        -- T.intercalate "\n\n" (ocamlDeclarations ocamlFile) <> "\n"    
+        typF <- localModuleDoc . (<> "\n") . T.intercalate "\n\n" <$> mkType (Proxy :: Proxy api)
+        intF <- localModuleDoc . (<> "\n") . T.intercalate "\n\n" <$> mkInterface (Proxy :: Proxy api)
         T.writeFile (fp <.> "ml")  typF
         T.writeFile (fp <.> "mli") intF
         case mSpecOptions packageOptions of
           Nothing -> pure ()
           Just specOptions -> do
-            specF <- mkSpec (Proxy :: Proxy api) (T.pack localModule) (T.pack $ servantURL specOptions) (T.pack $ goldenDir specOptions)
+            specF <- (<> "\n") . T.intercalate "\n\n" <$> mkSpec (Proxy :: Proxy api) (T.pack localModule) (T.pack $ servantURL specOptions) (T.pack $ goldenDir specOptions)
             let specBody = if specF /= "" then ("let () =\n" <> specF) else ""
             createDirectoryIfMissing True (rootDir </> (specDir specOptions))
             T.writeFile (specFp <.> "ml") specBody
@@ -183,9 +185,9 @@ instance (KnownSymbols filePath, KnownSymbols moduleName, HasOCamlType api) => H
 
 -- | Combine `HasGenericOCamlType` and `HasOCamlTypeInFile`
 class HasOCamlType api where
-  mkType :: Proxy api -> IO Text
-  mkInterface :: Proxy api -> IO Text
-  mkSpec :: Proxy api -> Text -> Text -> Text -> IO Text
+  mkType :: Proxy api -> IO [Text]
+  mkInterface :: Proxy api -> IO [Text]
+  mkSpec :: Proxy api -> Text -> Text -> Text -> IO [Text]
 
 instance (HasOCamlType a, HasOCamlType b) => HasOCamlType (a :> b) where
   mkType Proxy = (<>) <$> (mkType (Proxy :: Proxy a)) <*> (mkType (Proxy :: Proxy b))
@@ -193,9 +195,9 @@ instance (HasOCamlType a, HasOCamlType b) => HasOCamlType (a :> b) where
   mkSpec Proxy modul url goldendir = (<>) <$> (mkSpec (Proxy :: Proxy a) modul url goldendir) <*> (mkSpec (Proxy :: Proxy b) modul url goldendir)
 
 instance {-# OVERLAPPABLE #-} (HasOCamlTypeInFile (OCamlTypeInFile a b)) => HasOCamlType (OCamlTypeInFile a b) where
-  mkType a = readType a
-  mkInterface a = readInterface a
-  mkSpec _ _ _ _ = pure ""
+  mkType a = (:[]) <$> readType a
+  mkInterface a = (:[]) <$> readInterface a
+  mkSpec _ _ _ _ = pure []
 
 instance {-# OVERLAPPABLE #-} (HasGenericOCamlType a) => HasOCamlType a where
   mkType a = pure $ mkGType a
@@ -219,9 +221,9 @@ instance (KnownSymbol a, KnownSymbol b) => HasOCamlTypeInFile (OCamlTypeInFile a
 
 -- | Produce OCaml files for types that have OCamlType derived via GHC.Generics
 class HasGenericOCamlType api where
-  mkGType :: Proxy api -> Text
-  mkGInterface :: Proxy api -> Text
-  mkGSpec :: Proxy api -> Text -> Text -> Text -> Text
+  mkGType :: Proxy api -> [Text]
+  mkGInterface :: Proxy api -> [Text]
+  mkGSpec :: Proxy api -> Text -> Text -> Text -> [Text]
 
 instance (HasGenericOCamlType a, HasGenericOCamlType b) => HasGenericOCamlType (a :> b) where
   mkGType Proxy = mkGType (Proxy :: Proxy a) <> mkGType (Proxy :: Proxy b)
@@ -229,9 +231,9 @@ instance (HasGenericOCamlType a, HasGenericOCamlType b) => HasGenericOCamlType (
   mkGSpec Proxy modul url goldendir = (mkGSpec (Proxy :: Proxy a) modul url goldendir) <> (mkGSpec (Proxy :: Proxy b) modul url goldendir)
 
 instance {-# OVERLAPPABLE #-} OCamlType a => HasGenericOCamlType a where
-  mkGType a = toOCamlTypeSource a <> "\n\n" <> toOCamlEncoderSource a <> "\n\n" <> toOCamlDecoderSource a <> "\n"
-  mkGInterface a = toOCamlTypeSource a <> "\n\n" <> toOCamlEncoderInterface a <> "\n\n" <> toOCamlDecoderInterface a <> "\n"
-  mkGSpec a modul url goldendir = toOCamlSpec a modul url goldendir <> "\n"
+  mkGType a = [toOCamlTypeSource a, toOCamlEncoderSource a, toOCamlDecoderSource a]
+  mkGInterface a = [toOCamlTypeSource a, toOCamlEncoderInterface a, toOCamlDecoderInterface a]
+  mkGSpec a modul url goldendir = [toOCamlSpec a modul url goldendir]
 
 
 
@@ -239,70 +241,18 @@ instance {-# OVERLAPPABLE #-} OCamlType a => HasGenericOCamlType a where
 
 -- build servant spec server
 
--- | Symbol for Proxy types
-type family TypeName a :: Symbol where
-  -- Types which don't have a Generic instance
-  TypeName Double = "Double"
-  TypeName Int    = "Int"
-  TypeName String = "String"
-  TypeName Text   = "Text"
+-- type level utility functions
 
-  -- Generic instances
-  TypeName (M1 D ('MetaData name _ _ _) f ()) = name
-  TypeName a = TypeName (Rep a ())
-
-type family TypeNames a :: [Symbol] where
-  TypeNames (a ': '[]) = '[TypeName a]
-  TypeNames (a ': as) = TypeName a ': TypeNames as
-
-
+-- | Get the length of a type level list
+type family Length xs where
+   Length '[]       = 0
+   Length (x ': xs) = 1 + Length xs
 
 -- | Insert type into type level list
 type family Insert a xs where
    Insert a '[]       = (a ': '[])
    Insert a (a ': xs) = (a ': xs)
    Insert a (x ': xs) = x ': (Insert a xs)
-
-{-            
-type family Length2 xs where
-   Length2 (x :> xs) = 1 + Length xs
-   Length2 a       = 1
--}
-            
--- |
-type InAndOut a = (TypeName a) :> ReqBody '[JSON] [a] :> Post '[JSON] [a]
-
-type family InAndOutAPI a :: * where
-  InAndOutAPI (a :> b) = InAndOutAPI a :<|> InAndOutAPI b
-  InAndOutAPI a = InAndOut a
-
--- |
-type InAndOut2 (modul :: [Symbol]) typ = ConcatSymbols (Insert (TypeName typ) modul) (ReqBody '[JSON] [typ] :> Post '[JSON] [typ])
-
-type family InAndOut2API modul a :: * where
-  InAndOut2API modul (a :> b) = InAndOut2API modul a :<|> InAndOut2API modul b
-  InAndOut2API modul a = InAndOut2 modul a  
-
-type family MkInAndOut2API a :: * where
-  MkInAndOut2API (OCamlModule a b :> api) = InAndOut2API b api
-
--- | OCamlSpecAPI is a servant type that repesents and OCamlModule
---   and its OCamlTypes. It automatically creates path names based on the
---   name of the OCamlModule and the name of each OCamlType
---   OCamlModule '[] '["Core"] :> User :> Profile
---   /Core/User
---   /Core/Profile
-type OCamlSpecAPI (modul :: [Symbol]) typ = ConcatSymbols (Insert (TypeName typ) modul) (ReqBody '[JSON] [typ] :> Post '[JSON] [typ])
-
-type family MkOCamlSpecAPI' modul a :: * where
-  MkOCamlSpecAPI' modul (a :> b) = MkOCamlSpecAPI' modul a :<|> MkOCamlSpecAPI' modul b
-  MkOCamlSpecAPI' modul a = OCamlSpecAPI modul a  
-
-type family MkOCamlSpecAPI a :: * where
-  MkOCamlSpecAPI (OCamlModule a b :> api) = MkOCamlSpecAPI' b api
-
-
-
 
 -- | Get the number of declared types in an OCaml Module
 --   Internal helper function.
@@ -311,7 +261,11 @@ type family (Flag a) :: Bool where
   Flag (OCamlModule a b)  = 'True -- case 1
   Flag a     = 'False -- case 2
 
-
+type family ConcatSymbols xs rhs :: * where
+  ConcatSymbols '[] rhs = rhs            
+  ConcatSymbols (x ': xs) rhs = If ((Length xs) == 0) (x :> rhs) (x :> ConcatSymbols xs rhs)
+                
+  
 -- | Exposed type level function
 class OCamlTypeCount api where
   ocamlTypeCount :: Proxy api -> Int
@@ -340,18 +294,42 @@ instance OCamlTypeCount' 'False a where
 
 
 
-   
--- natVal
--- | Get the length of a type level list
-type family Length xs where
-   Length '[]       = 0
-   Length (x ': xs) = 1 + Length xs
+
+-- | Symbol for Proxy types
+type family TypeName a :: Symbol where
+  -- Types which don't have a Generic instance
+  TypeName Double = "Double"
+  TypeName Int    = "Int"
+  TypeName String = "String"
+  TypeName Text   = "Text"
+
+  -- Generic instances
+  TypeName (M1 D ('MetaData name _ _ _) f ()) = name
+  TypeName a = TypeName (Rep a ())
+
+type family TypeNames a :: [Symbol] where
+  TypeNames (a ': '[]) = '[TypeName a]
+  TypeNames (a ': as) = TypeName a ': TypeNames as
 
 
-type family ConcatSymbols xs rhs :: * where
-  ConcatSymbols '[] rhs = rhs            
-  ConcatSymbols (x ': xs) rhs = If ((Length xs) == 0) (x :> rhs) (x :> ConcatSymbols xs rhs)
-                
+-- | OCamlSpecAPI is a servant type that repesents and OCamlModule and its
+--   OCamlTypes. It automatically creates path names based on the name of the
+--   OCamlModule and the name of each OCamlType.
+--   OCamlModule '[] '["Core"] :> User :> Profile
+--   /Core/User
+--   /Core/Profile
+type OCamlSpecAPI (modul :: [Symbol]) typ = ConcatSymbols (Insert (TypeName typ) modul) (ReqBody '[JSON] [typ] :> Post '[JSON] [typ])
+
+type family MkOCamlSpecAPI' modul a :: * where
+  MkOCamlSpecAPI' modul (a :> b) = MkOCamlSpecAPI' modul a :<|> MkOCamlSpecAPI' modul b
+  MkOCamlSpecAPI' modul a = OCamlSpecAPI modul a  
+
+type family MkOCamlSpecAPI a :: * where
+  MkOCamlSpecAPI (OCamlModule a b :> api) = MkOCamlSpecAPI' b api
+
+
+
+
 mkServer :: forall ocamlTypes. (OCamlTypeCount ocamlTypes, HasOCamlModule ocamlTypes) => String -> Proxy ocamlTypes -> Q [Dec]
 mkServer typeName Proxy = do
   let size = ocamlTypeCount (Proxy :: Proxy ocamlTypes)

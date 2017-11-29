@@ -44,6 +44,9 @@ module OCaml.BuckleScript.Module
   , OCamlModule
   , OCamlTypeInFile
   , ConcatSymbols
+  , Insert
+  , Append
+  , TypeName
 
   -- servant functions
   -- automatically build a servant OCamlSpec Serve
@@ -256,15 +259,21 @@ instance {-# OVERLAPPABLE #-} OCamlType a => HasGenericOCamlType a where
 
 -- | Get the length of a type level list
 type family Length xs where
-   Length '[]       = 0
-   Length (x ': xs) = 1 + Length xs
+  Length '[]       = 0
+  Length (x ': xs) = 1 + Length xs
 
 -- | Insert type into type level list
 type family Insert a xs where
-   Insert a '[]       = (a ': '[])
-   Insert a (a ': xs) = (a ': xs)
-   Insert a (x ': xs) = x ': (Insert a xs)
+  Insert a '[]       = (a ': '[])
+--  Insert a (a ': xs) = (a ': xs)
+  Insert a (x ': xs) = x ': (Insert a xs)
 
+-- | Append two type level lists           
+type family Append xy ys where
+  Append '[] ys = ys
+  Append (x ': xs) ys = x ': (Append xs ys)
+
+            
 -- module flag
 -- | Get the number of declared types in an OCaml Module
 --   Internal helper function.
@@ -349,38 +358,25 @@ type family TypeNames a :: [Symbol] where
 --   OCamlModule '[] '["Core"] :> User :> Profile
 --   /Core/User
 --   /Core/Profile
-
---type OCamlPackageSpecAPI 
-
-{-
-type OCamlSpecAPI (modul :: [Symbol]) typ = ConcatSymbols (Insert (TypeName typ) modul) (ReqBody '[JSON] [typ] :> Post '[JSON] [typ])
-
-type family MkOCamlSpecAPI'' modul a :: * where
-  MkOCamlSpecAPI'' modul (a :> b) = MkOCamlSpecAPI'' modul a :<|> MkOCamlSpecAPI'' modul b
-  MkOCamlSpecAPI'' modul a = OCamlSpecAPI modul a  
-
-type family MkOCamlSpecAPI' a :: * where
-  MkOCamlSpecAPI' (OCamlModule a b :> api) = MkOCamlSpecAPI'' b api
-
-type family MkOCamlSpecAPI a :: * where
-  MkOCamlSpecAPI ((OCamlModule (a b) :> api) :<|> rest) = MkOCamlSpecAPI'' b api :<|> MkOCamlSpecAPI rest
-  MkOCamlSpecAPI (OCamlModule (a b) :> api) = MkOCamlSpecAPI'' b api
--}
-
+--   OCamlModule '["Source"] '["Core"] :> User :> Profile
+--   /Source/Core/User
+--   /Source/Core/Profile
 
 type family ConcatSymbols xs rhs :: * where
-  ConcatSymbols '[] rhs = rhs            
-  ConcatSymbols (x ': xs) rhs = If ((Length xs) == 0) (x :> rhs) (x :> ConcatSymbols xs rhs)
+  ConcatSymbols '[] rhs = rhs
+  ConcatSymbols (x ': xs) rhs = x :> ConcatSymbols xs rhs
+  
+type OCamlSpecAPI (filePath :: [Symbol]) (modul :: [Symbol]) typ = ConcatSymbols (Insert (TypeName typ) (Append filePath modul)) (ReqBody '[JSON] [typ] :> Post '[JSON] [typ])
 
-type OCamlSpecAPI (modul :: [Symbol]) typ = ConcatSymbols (Insert (TypeName typ) modul) (ReqBody '[JSON] [typ] :> Post '[JSON] [typ])
+-- | abc
+type family MkOCamlSpecAPI' filePath modul api :: * where
+  MkOCamlSpecAPI' filePath modul (a :> b) = MkOCamlSpecAPI' filePath modul a :<|> MkOCamlSpecAPI' filePath modul b
+  MkOCamlSpecAPI' filePath modul api = OCamlSpecAPI filePath modul api
 
-type family MkOCamlSpecAPI' modul a :: * where
-  MkOCamlSpecAPI' modul (a :> b) = MkOCamlSpecAPI' modul a :<|> MkOCamlSpecAPI' modul b
-  MkOCamlSpecAPI' modul a = OCamlSpecAPI modul a  
-
+-- | ff
 type family MkOCamlSpecAPI a :: * where
-  MkOCamlSpecAPI ((OCamlModule a b :> api) :<|> rest) = MkOCamlSpecAPI' b api :<|> MkOCamlSpecAPI rest
-  MkOCamlSpecAPI (OCamlModule a b :> api) = MkOCamlSpecAPI' b api
+  MkOCamlSpecAPI ((OCamlModule filePath modul :> api) :<|> rest) = MkOCamlSpecAPI' filePath modul api :<|> MkOCamlSpecAPI rest
+  MkOCamlSpecAPI (OCamlModule filePath modul :> api) = MkOCamlSpecAPI' filePath modul api
 
 
 -- | 

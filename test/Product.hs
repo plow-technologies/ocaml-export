@@ -30,7 +30,7 @@ import Test.Aeson.Internal.ADT.GoldenSpecs
 import Util
 
 type ProductPackage
-  =    OCamlModule '["Person"] '[] :> Person  
+  =    OCamlModule '["Person"] '[] :> Person
   :<|> OCamlModule '["Company"] '[] :> Person :> Company
   :<|> OCamlModule '["Card"] '[] :> Suit :> Card
   :<|> OCamlModule '["CustomOption"] '[] :> Person :> Company2

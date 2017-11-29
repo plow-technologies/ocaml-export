@@ -29,7 +29,8 @@ import Test.Aeson.Internal.ADT.GoldenSpecs
 instance Arbitrary UTCTime where
   arbitrary =
     UTCTime <$> (ModifiedJulianDay <$> (2000 +) <$> arbitrary)
-            <*> (fromRational . toRational <$> choose (0:: Double, 86400))
+            <*> pure 1.011
+--            <*> (fromRational . toRational . (\f -> fromInteger $ round $ f * (10^2) / (10.0^^2)) <$> choose (0:: Double, 86400))
 
 data ADT
   = Options

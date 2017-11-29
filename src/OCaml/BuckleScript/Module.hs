@@ -167,7 +167,7 @@ instance (KnownSymbols filePath, KnownSymbols moduleName, HasOCamlType api) => H
 
         if createInterfaceFile packageOptions
           then do
-            intF <- localModuleDoc . (<> "\n") . T.intercalate "\n\n" <$> mkInterface (Proxy :: Proxy api)
+            intF <- localModuleSigDoc . (<> "\n") . T.intercalate "\n\n" <$> mkInterface (Proxy :: Proxy api)
             T.writeFile (fp <.> "mli") intF
           else pure ()
         
@@ -187,6 +187,7 @@ instance (KnownSymbols filePath, KnownSymbols moduleName, HasOCamlType api) => H
       rootDir = packageRootDir packageOptions
       fp = rootDir </> (packageSrcDir packageOptions) </> (foldl (</>) "" $ symbolsVal (Proxy :: Proxy filePath))
       localModuleDoc body = pprinter $ foldr (\l r -> "module" <+> l <+> "= struct" <$$> indent 2 r <$$> "end") (stext body) (stext . T.pack <$> symbolsVal (Proxy :: Proxy moduleName))
+      localModuleSigDoc body = pprinter $ foldr (\l r -> "module" <+> l <+> ": sig" <$$> indent 2 r <$$> "end") (stext body) (stext . T.pack <$> symbolsVal (Proxy :: Proxy moduleName))
 
 
 -- | Combine `HasGenericOCamlType` and `HasOCamlTypeInFile`

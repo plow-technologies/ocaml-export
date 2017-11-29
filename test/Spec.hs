@@ -9,8 +9,9 @@
 import           Test.Hspec
 
 import qualified Options as Options
-import qualified Product as Product
+-- import qualified Product as Product
 import qualified Sum as Sum
+import Product
 
 import Data.Proxy
 
@@ -32,23 +33,7 @@ import GHC.TypeLits
 import Data.Constraint.Symbol (type (++))
 
 import GHC.TypeLits
-{-
-Haskell Algebraic Data Types
 
-data : product/record, sum
-newtype : compiler optimized type wrapper
-type : type synonym
-
-single sum no parameter : top level string
-multiple sum, no parameter : top level string
-single sum, one or more parameters : top level array
-one or more sums, one or more parameters: tag string, contents top level or array
-
-when the sum type has no parameters, it is always top level
-data OnOrOff = On | Off
-when there is at least one parameter it uses the tag system
-data OnOrOff = On Int | Off
--}
 logAllMiddleware :: Application -> Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived
 logAllMiddleware app req respond = do
     d <- requestBody req
@@ -57,26 +42,23 @@ logAllMiddleware app req respond = do
     app req respond
 
 -- npm start --prefix path/to/your/app
+-- $(mkServer "ProductPackage" (Proxy :: Proxy ProductPackage))
 
-type Next = OCamlModule '["Next"] '[] :> Product.Person :> Product.Company
-
-$(mkServer "Next" (Proxy :: Proxy Next))
-
-type Following = OCamlModule '["Following"] '["First","Second"] :> (OCamlTypeInFile "Person" "test/input") :> Product.Company
-
-type Pckage = Next :<|> Following  
+-- server3 :: Server (MkOCamlSpecAPI ProductPackage)
+-- server3 = (pure :<|> pure) :<|> pure :<|> pure
+-- put each module of pures in parens
+server3 :: Server (MkOCamlSpecAPI ProductPackage)
+server3 = (pure :<|> pure) :<|> (pure :<|> pure) :<|> (pure :<|> pure)
 
 main :: IO ()
 main = do
-  hspec Product.spec
+  print $ ocamlTypeCount (Proxy :: Proxy ProductPackage)
+  hspec spec
   hspec Sum.spec
-  
-  --mkPackage (Proxy :: Proxy Pckage) (PackageOptions "test/output2" $ Just $ SpecOptions "ocaml/__tests__" "test/golden_files" "localhost:8081")
-  -- mkPackage (Proxy :: Proxy Product.ProductPackage) (PackageOptions "test/product-output" True $ Just $ SpecOptions "ocaml/__tests__" "test/golden_files" "localhost:8081")
+  hspec Options.spec
+
+  -- run 8081 productApp
   -- run 8081 nextApp
   -- run 8081 Api.productApp
-{-
-  Product.mkGoldenFiles
-  hspec Options.spec
--}
+
 -- curl -i -d '[{"name":"Javier","id":35,"created":"2017-11-22T12:40:55.797664Z"}]' -H 'Content-type: application/json' -X POST http://localhost:8081/Next/Person

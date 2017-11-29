@@ -21,9 +21,6 @@ import Test.QuickCheck.Arbitrary.ADT
 import Test.Aeson.Internal.ADT.GoldenSpecs
 import Util
 
-
-testOptions = testOCamlType Options
-
 testOptionsInterface = testOCamlTypeWithInterface Options
 
 mkTestOCaml :: OCamlType a => Text -> a -> OCamlInterface
@@ -48,9 +45,6 @@ data Person = Person
   , created :: UTCTime
   } deriving (Show, Eq, Generic, OCamlType)
 
-instance Arbitrary UTCTime where
-  arbitrary = posixSecondsToUTCTime . fromIntegral <$> (arbitrary :: Gen Integer)
-
 instance Arbitrary Person where
   arbitrary = Person <$> arbitrary <*> arbitrary <*> arbitrary
 
@@ -64,11 +58,6 @@ instance FromJSON Person where
 
 data NameOrIdNumber = Name String | IdNumber Int
   deriving (Show, Eq, Generic, OCamlType)
-
---instance Arbitrary GoodOrBad where
---  arbitrary = Person <$> arbitrary <*> arbitrary <*> arbitrary
-
--- instance ToADTArbitrary GoodOrBad
 
 instance ToJSON NameOrIdNumber where
   toJSON = genericToJSON constructorLowerOptions

@@ -1,24 +1,40 @@
 module Util where
 
+-- base
 import Data.Monoid ((<>))
+import Data.Time
+
+-- text
 import qualified Data.Text.IO as T
+
+-- ocaml-export
 import OCaml.Export hiding (Options, (</>))
+
+
 import System.Directory (doesFileExist)
+
+-- filepath
 import System.FilePath.Posix ((</>))
+
+-- hspec
 import Test.Hspec
 
+-- QuickCheck
+import Test.QuickCheck
+
+-- quickcheck-arbitrary-adt
+import Test.QuickCheck.Arbitrary.ADT
+import Test.Aeson.Internal.ADT.GoldenSpecs
+
+instance Arbitrary UTCTime where
+  arbitrary =
+    UTCTime <$> (ModifiedJulianDay <$> (2000 +) <$> arbitrary)
+            <*> (fromRational . toRational <$> choose (0:: Double, 86400))
+
 data ADT
-  = Product
-  | Sum
-  | Primitive
-  | Complex
-  | Options
+  = Options
 
 adtToPath :: ADT -> FilePath
-adtToPath Product = "product"
-adtToPath Sum = "sum"
-adtToPath Primitive = "primitive"
-adtToPath Complex = "complex"
 adtToPath Options = "options"
 
 
@@ -32,19 +48,6 @@ compareFiles rootDir categoryDir typeName =
     testPath   = rootDir </> "temp" </> categoryDir
     goldenPath = rootDir </> "golden" </> categoryDir
 
-
-
-testOCamlType :: ADT -> OCamlFile -> FilePath -> SpecWith ()
-testOCamlType adt ocamlFile typeName =
-  it typeName $ do
-    createOCamlFile testPath ocamlFile
-    automated   <- T.readFile (testPath   <> "/" <> typeName <> ".ml")
-    handWritten <- T.readFile (goldenPath <> "/" <> typeName <> ".ml")
-    automated `shouldBe` handWritten
-  where
-    adtPath    = adtToPath adt
-    testPath   = "test/nointerface/temp/" <> adtPath
-    goldenPath = "test/nointerface/golden/" <> adtPath
 
 testOCamlTypeWithInterface :: ADT -> FilePath -> OCamlInterface -> SpecWith ()
 testOCamlTypeWithInterface adt typeName ocamlFile =
@@ -72,4 +75,3 @@ testOCamlTypeWithInterface adt typeName ocamlFile =
     goldenPath = "test/interface/golden/" <> adtPath
     specPath  = "test/interface/temp/__tests__/" <> adtPath
     specGoldenPath  = "test/interface/golden/__tests__/" <> adtPath
-

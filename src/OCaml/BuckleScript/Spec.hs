@@ -15,7 +15,7 @@ mkSampleServerAndGoldenSpec (OCamlDatatype typeName _) modul url goldenDir =
   "  AesonSpec.sampleGoldenAndServerSpec" <+> (smodul <> "decode" <> up)
                          <+> (smodul <> "encode" <> up)
                          <+> (dquotes down)
-                         <+> (dquotes . stext $ (url </> (textLowercaseFirst typeName)))
+                         <+> (dquotes . stext $ (url </> (textUppercaseFirst typeName)))
                          <+> (dquotes (stext $ goldenDir </> (textUppercaseFirst typeName) <> ".json")) <> ";"
   where
     up = stext . textUppercaseFirst $ typeName

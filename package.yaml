@@ -30,6 +30,8 @@ library:
   - filepath
   - formatting
   - mtl
+  - QuickCheck
+  - quickcheck-arbitrary-adt
   - servant
   - text
   - template-haskell

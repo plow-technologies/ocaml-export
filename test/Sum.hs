@@ -5,6 +5,8 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
 
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Sum
   ( spec
@@ -16,6 +18,14 @@ import GHC.Generics
 import OCaml.Export
 import Test.Hspec
 import Util
+
+-- QuickCheck
+import Test.QuickCheck hiding (Result, Success)
+
+-- quickcheck-arbitrary-adt
+import Test.QuickCheck.Arbitrary.ADT
+import Test.Aeson.Internal.ADT.GoldenSpecs
+
 
 type SumPackage
   =    OCamlModule '["OnOrOff"] '[] :> OnOrOff
@@ -30,12 +40,25 @@ compareInterfaceFiles = compareFiles "test/interface" "sum"
 
 compareNoInterfaceFiles = compareFiles "test/nointerface" "sum"
 
+mkGolden :: forall a. (ToADTArbitrary a, ToJSON a) => Proxy a -> IO ()
+mkGolden Proxy = mkGoldenFileForType 10 (Proxy :: Proxy a) "test/interface/golden/golden/sum"
+
+mkGoldenFiles :: IO ()
+mkGoldenFiles = do
+  mkGolden (Proxy :: Proxy OnOrOff)
+  mkGolden (Proxy :: Proxy NameOrIdNumber)
+  mkGolden (Proxy :: Proxy SumVariant)
+  mkGolden (Proxy :: Proxy WithTuple)
+  mkGolden (Proxy :: Proxy SumWithRecord)
+  mkGolden (Proxy :: Proxy (Result Int String))
+  mkGolden (Proxy :: Proxy NewType) 
+
 spec :: Spec
 spec = do
+  runIO mkGoldenFiles
   let dir = "test/interface/temp"
   runIO $ mkPackage (Proxy :: Proxy SumPackage) (PackageOptions dir "sum" True $ Just $ SpecOptions "__tests__" "test/golden_files" "localhost:8081")
 
-  
   describe "OCaml Declaration with Interface: Sum Types" $ do
     compareInterfaceFiles "OnOrOff"
     compareInterfaceFiles "NameOrIdNumber"
@@ -60,13 +83,28 @@ spec = do
 data OnOrOff = On | Off
   deriving (Show,Eq,Generic,OCamlType,ToJSON,FromJSON)
 
+instance Arbitrary OnOrOff where
+  arbitrary = elements [On, Off]
+
+instance ToADTArbitrary OnOrOff
+
 data NameOrIdNumber = Name String | IdNumber Int
   deriving (Show, Eq, Generic, OCamlType,ToJSON,FromJSON)
+
+instance Arbitrary NameOrIdNumber where
+  arbitrary = oneof [Name <$> arbitrary, IdNumber <$> arbitrary]
+
+instance ToADTArbitrary NameOrIdNumber
 
 data Result a b
   = Success a
   | Error b
   deriving (Show, Eq, Generic, OCamlType, ToJSON, FromJSON)
+
+instance Arbitrary (Result Int String) where
+  arbitrary = oneof [Success <$> arbitrary, Error <$> arbitrary]
+
+instance ToADTArbitrary (Result Int String)
 
 data SumVariant
   = HasNothing
@@ -77,89 +115,50 @@ data SumVariant
   | HasMixed Int String Double
   deriving (Show,Eq,Generic, OCamlType, ToJSON, FromJSON)
 
+instance Arbitrary SumVariant where
+  arbitrary =
+    oneof
+      [ pure HasNothing
+      , HasSingleInt <$> arbitrary
+      , HasSingleTuple <$> arbitrary
+      , HasMultipleInts <$> arbitrary <*> arbitrary
+      , HasMultipleTuples <$> arbitrary <*> arbitrary
+      , HasMixed <$> arbitrary <*> arbitrary <*> arbitrary
+      ]
+
+instance ToADTArbitrary SumVariant
+
+
 type Tuple
   = (Int,Int)
 
 data WithTuple = WithTuple Tuple
   deriving (Show,Eq,Generic, OCamlType, ToJSON, FromJSON)
 
+instance Arbitrary WithTuple where
+  arbitrary = WithTuple <$> arbitrary
+
+instance ToADTArbitrary WithTuple
+
 data SumWithRecord
   = A1 {a1 :: Int}
   | B2 {b2 :: String, b3 :: Int}
   deriving (Show,Eq,Generic, OCamlType, ToJSON, FromJSON)
 
+instance Arbitrary SumWithRecord where
+  arbitrary =
+    oneof
+      [ A1 <$> arbitrary
+      , B2 <$> arbitrary <*> arbitrary
+      ]
+
+instance ToADTArbitrary SumWithRecord
+
 newtype NewType
   = NewType Int
   deriving (Show,Eq,Generic,OCamlType, ToJSON, FromJSON)
 
-onOrOff :: OCamlFile
-onOrOff =
-  OCamlFile
-    "OnOrOff"
-    [ toOCamlTypeSource (Proxy :: Proxy OnOrOff)
-    , toOCamlEncoderSource (Proxy :: Proxy OnOrOff)
-    , toOCamlDecoderSource (Proxy :: Proxy OnOrOff)
-    ]    
+instance Arbitrary NewType where
+  arbitrary = NewType <$> arbitrary
 
-nameOrIdNumber :: OCamlFile
-nameOrIdNumber =
-  OCamlFile
-    "NameOrIdNumber"
-    [ toOCamlTypeSource (Proxy :: Proxy NameOrIdNumber)
-    , toOCamlEncoderSource (Proxy :: Proxy NameOrIdNumber)
-    , toOCamlDecoderSource (Proxy :: Proxy NameOrIdNumber)
-    ]
-
-sumVariant :: OCamlFile
-sumVariant =
-  OCamlFile
-    "SumVariant"
-    [ toOCamlTypeSource (Proxy :: Proxy SumVariant)
-    , toOCamlEncoderSource (Proxy :: Proxy SumVariant)
-    , toOCamlDecoderSource (Proxy :: Proxy SumVariant)
-    ]
-
-tuple :: OCamlFile
-tuple =
-  OCamlFile
-    "Tuple"
-    [ toOCamlTypeSource (Proxy :: Proxy Tuple)
-    , toOCamlEncoderSource (Proxy :: Proxy Tuple)
-    , toOCamlDecoderSource (Proxy :: Proxy Tuple)
-    ]
-
-withTuple :: OCamlFile
-withTuple =
-  OCamlFile
-    "WithTuple"
-    [ toOCamlTypeSource (Proxy :: Proxy WithTuple)
-    , toOCamlEncoderSource (Proxy :: Proxy WithTuple)
-    , toOCamlDecoderSource (Proxy :: Proxy WithTuple)
-    ]
-
-sumWithRecord :: OCamlFile
-sumWithRecord =
-  OCamlFile
-    "SumWithRecord"
-    [ toOCamlTypeSource (Proxy :: Proxy SumWithRecord)
-    , toOCamlEncoderSource (Proxy :: Proxy SumWithRecord)
-    , toOCamlDecoderSource (Proxy :: Proxy SumWithRecord)
-    ]
-
-resultRecord :: OCamlFile
-resultRecord =
-  OCamlFile
-    "Result"
-    [ toOCamlTypeSource (Proxy :: Proxy (Result TypeParameterRef0 TypeParameterRef1))
-    , toOCamlEncoderSource (Proxy :: Proxy (Result TypeParameterRef0 TypeParameterRef1))
-    , toOCamlDecoderSource (Proxy :: Proxy (Result TypeParameterRef0 TypeParameterRef1))
-    ]
-
-newTypeRecord :: OCamlFile
-newTypeRecord =
-  OCamlFile
-    "NewType"
-    [ toOCamlTypeSource (Proxy :: Proxy NewType)
-    , toOCamlEncoderSource (Proxy :: Proxy NewType)
-    , toOCamlDecoderSource (Proxy :: Proxy NewType)
-    ]
+instance ToADTArbitrary NewType

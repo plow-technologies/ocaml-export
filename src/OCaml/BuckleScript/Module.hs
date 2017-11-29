@@ -332,6 +332,25 @@ type family TypeNames a :: [Symbol] where
 --   OCamlModule '[] '["Core"] :> User :> Profile
 --   /Core/User
 --   /Core/Profile
+
+--type OCamlPackageSpecAPI 
+
+{-
+type OCamlSpecAPI (modul :: [Symbol]) typ = ConcatSymbols (Insert (TypeName typ) modul) (ReqBody '[JSON] [typ] :> Post '[JSON] [typ])
+
+type family MkOCamlSpecAPI'' modul a :: * where
+  MkOCamlSpecAPI'' modul (a :> b) = MkOCamlSpecAPI'' modul a :<|> MkOCamlSpecAPI'' modul b
+  MkOCamlSpecAPI'' modul a = OCamlSpecAPI modul a  
+
+type family MkOCamlSpecAPI' a :: * where
+  MkOCamlSpecAPI' (OCamlModule a b :> api) = MkOCamlSpecAPI'' b api
+
+type family MkOCamlSpecAPI a :: * where
+  MkOCamlSpecAPI ((OCamlModule (a b) :> api) :<|> rest) = MkOCamlSpecAPI'' b api :<|> MkOCamlSpecAPI rest
+  MkOCamlSpecAPI (OCamlModule (a b) :> api) = MkOCamlSpecAPI'' b api
+-}
+
+
 type OCamlSpecAPI (modul :: [Symbol]) typ = ConcatSymbols (Insert (TypeName typ) modul) (ReqBody '[JSON] [typ] :> Post '[JSON] [typ])
 
 type family MkOCamlSpecAPI' modul a :: * where
@@ -339,12 +358,14 @@ type family MkOCamlSpecAPI' modul a :: * where
   MkOCamlSpecAPI' modul a = OCamlSpecAPI modul a  
 
 type family MkOCamlSpecAPI a :: * where
+  MkOCamlSpecAPI ((OCamlModule a b :> api) :<|> rest) = MkOCamlSpecAPI' b api :<|> MkOCamlSpecAPI rest
   MkOCamlSpecAPI (OCamlModule a b :> api) = MkOCamlSpecAPI' b api
 
+-- let args = UInfixE (VarE $ mkName "pure") (ConE $ mkName ":<|>") (ParensE $ UInfixE (VarE $ mkName "pure") (ConE $ mkName ":<|>") (VarE $ mkName "pure"))
 -- | 
-mkServer :: forall ocamlTypes. (OCamlTypeCount ocamlTypes, HasOCamlModule ocamlTypes) => String -> Proxy ocamlTypes -> Q [Dec]
+mkServer :: forall ocamlPackage. (OCamlTypeCount ocamlPackage, HasOCamlPackage ocamlPackage) => String -> Proxy ocamlPackage -> Q [Dec]
 mkServer typeName Proxy = do
-  let size = ocamlTypeCount (Proxy :: Proxy ocamlTypes)
+  let size = ocamlTypeCount (Proxy :: Proxy ocamlPackage)
   if size < 1
     then fail "size must be at least one"
     else do
@@ -365,3 +386,4 @@ mkServer typeName Proxy = do
      apiName = mkName $ uppercaseFirst typeName
      apiProxy = mkName $ lowercaseFirst typeName ++ "API"
      appName = mkName $ lowercaseFirst typeName ++ "App"
+

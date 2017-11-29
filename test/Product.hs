@@ -1,10 +1,16 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+
+{-# LANGUAGE FlexibleInstances #-}
+
 
 -- for OCaml Module
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
+
+{-# LANGUAGE TemplateHaskell #-}
 
 
 module Product where
@@ -24,6 +30,10 @@ import Test.Aeson.Internal.ADT.GoldenSpecs
 import Util
 
 type ProductPackage
+  =    OCamlModule '["Person"] '[] :> Person :> Company
+  :<|> OCamlModule '["Company"] '[] :> Person :> Company
+  :<|> OCamlModule '["Card"] '[] :> Suit :> Card
+{-
   =    OCamlModule '["Person"] '[] :> Person
   :<|> OCamlModule '["Company"] '[] :> Person :> Company
   :<|> OCamlModule '["Card"] '[] :> Suit :> Card
@@ -32,14 +42,22 @@ type ProductPackage
   :<|> OCamlModule '["TwoTypeParameters"] '[] :> TwoTypeParameters TypeParameterRef0 TypeParameterRef1
   :<|> OCamlModule '["ThreeTypeParameters"] '[] :> Three TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
   :<|> OCamlModule '["SubTypeParameter"] '[] :> SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
+-}
+mkGolden :: forall a. (ToADTArbitrary a, ToJSON a) => Proxy a -> IO ()
+mkGolden Proxy = mkGoldenFileForType 10 (Proxy :: Proxy a) "test/interface/golden/golden/product"
 
 mkGoldenFiles :: IO ()
 mkGoldenFiles = do
-  mkGoldenFileForType 2 (Proxy :: Proxy Person) "test/interface/golden/__tests__/golden/product"
-  mkGoldenFileForType 2 (Proxy :: Proxy Company) "test/interface/golden/__tests__/golden/product"
-  mkGoldenFileForType 2 (Proxy :: Proxy Suit) "test/interface/golden/__tests__/golden/product"
-  mkGoldenFileForType 2 (Proxy :: Proxy Card) "test/interface/golden/__tests__/golden/product"
-
+  mkGolden (Proxy :: Proxy Person)
+  mkGolden (Proxy :: Proxy Company)
+  mkGolden (Proxy :: Proxy Suit)
+  mkGolden (Proxy :: Proxy Card)
+  mkGolden (Proxy :: Proxy Company2)
+  mkGolden (Proxy :: Proxy (OneTypeParameter TypeParameterRef0))
+  mkGolden (Proxy :: Proxy (TwoTypeParameters TypeParameterRef0 TypeParameterRef1))
+  mkGolden (Proxy :: Proxy (Three TypeParameterRef0 TypeParameterRef1 TypeParameterRef2))
+  mkGolden (Proxy :: Proxy (SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2))
+  
 compareInterfaceFiles = compareFiles "test/interface" "product"
 
 compareNoInterfaceFiles = compareFiles "test/nointerface" "product"
@@ -47,8 +65,10 @@ compareNoInterfaceFiles = compareFiles "test/nointerface" "product"
 
 spec :: Spec
 spec = do
+  runIO $ mkGoldenFiles
+  
   let dir = "test/interface/temp"
-  runIO $ mkPackage (Proxy :: Proxy Product.ProductPackage) (PackageOptions dir "product" True $ Just $ SpecOptions "__tests__" "test/golden_files" "localhost:8081")
+  runIO $ mkPackage (Proxy :: Proxy ProductPackage) (PackageOptions dir "product" True $ Just $ SpecOptions "__tests__" "test/golden_files" "localhost:8081")
   
   describe "OCaml Declaration with Interface: Product Types" $ do
     compareInterfaceFiles "Person"
@@ -60,7 +80,7 @@ spec = do
     compareInterfaceFiles "SubTypeParameter"
 
   let dir2 = "test/nointerface/temp"
-  runIO $ mkPackage (Proxy :: Proxy Product.ProductPackage) (PackageOptions dir2 "product" False Nothing)
+  runIO $ mkPackage (Proxy :: Proxy ProductPackage) (PackageOptions dir2 "product" False Nothing)
 
   describe "OCaml Declaration with Interface: Product Types" $ do
     compareNoInterfaceFiles "Person"
@@ -78,15 +98,6 @@ data Person = Person
   , created :: UTCTime
   } deriving (Show, Eq, Generic, OCamlType, FromJSON, ToJSON)
 
-
---instance Arbitrary UTCTime where
---  arbitrary = posixSecondsToUTCTime . fromIntegral <$> (arbitrary :: Gen Integer)
-instance Arbitrary UTCTime where
-  arbitrary =
-    UTCTime <$> (ModifiedJulianDay <$> (2000 +) <$> arbitrary)
-            <*> (fromRational . toRational <$> choose (0:: Double, 86400))
-
-
 instance Arbitrary Person where
   arbitrary = Person <$> arbitrary <*> arbitrary <*> arbitrary
 
@@ -99,9 +110,9 @@ data Company = Company
 
 instance Arbitrary Company where
   arbitrary = do
-    --k <- choose (0,1)
-    --v <- vector k
-    Company <$> arbitrary <*> pure []
+    k <- choose (1,3)
+    v <- vector k
+    Company <$> arbitrary <*> pure v
 
 instance ToADTArbitrary Company
 
@@ -144,12 +155,22 @@ data OneTypeParameter a =
     , otpFirst :: a
     } deriving (Eq,Show,Generic,OCamlType,FromJSON,ToJSON)
 
+instance Arbitrary (OneTypeParameter TypeParameterRef0) where
+  arbitrary = OneTypeParameter <$> arbitrary <*> arbitrary
+
+instance ToADTArbitrary (OneTypeParameter TypeParameterRef0)
+
 data TwoTypeParameters a b =
   TwoTypeParameters
     { ttpId :: Int
     , ttpFirst :: a
     , ttpSecond :: b
     } deriving (Eq,Show,Generic,OCamlType,FromJSON,ToJSON)
+
+instance Arbitrary (TwoTypeParameters TypeParameterRef0 TypeParameterRef1) where
+  arbitrary = TwoTypeParameters <$> arbitrary <*> arbitrary <*> arbitrary
+
+instance ToADTArbitrary (TwoTypeParameters TypeParameterRef0 TypeParameterRef1)
 
 data Three a b c =
   Three
@@ -160,9 +181,23 @@ data Three a b c =
     , threeString :: String
     } deriving (Eq,Show,Generic,OCamlType,FromJSON,ToJSON)
 
+instance Arbitrary (Three TypeParameterRef0 TypeParameterRef1 TypeParameterRef2) where
+  arbitrary = Three <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
+
+instance ToADTArbitrary (Three TypeParameterRef0 TypeParameterRef1 TypeParameterRef2)
+
 data SubTypeParameter a b c =
   SubTypeParameter
     { listA :: [a]
     , maybeB :: Maybe b
     , tupleC :: (c,b)
     } deriving (Eq,Show,Generic,OCamlType,FromJSON,ToJSON)
+
+instance Arbitrary (SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2) where
+  arbitrary = do
+    k <- choose (1,3)
+    v <- vector k
+    SubTypeParameter <$> pure v <*> arbitrary <*> arbitrary
+
+instance ToADTArbitrary (SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2)
+

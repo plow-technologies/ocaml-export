@@ -40,9 +40,9 @@ mkGoldenFiles = do
   mkGoldenFileForType 2 (Proxy :: Proxy Suit) "test/interface/golden/__tests__/golden/product"
   mkGoldenFileForType 2 (Proxy :: Proxy Card) "test/interface/golden/__tests__/golden/product"
 
-compareInterfaceProductFiles = compareFiles "test/interface" "product"
+compareInterfaceFiles = compareFiles "test/interface" "product"
 
-compareNoInterfaceProductFiles = compareFiles "test/nointerface" "product"
+compareNoInterfaceFiles = compareFiles "test/nointerface" "product"
 
 
 spec :: Spec
@@ -51,25 +51,25 @@ spec = do
   runIO $ mkPackage (Proxy :: Proxy Product.ProductPackage) (PackageOptions dir "product" True $ Just $ SpecOptions "__tests__" "test/golden_files" "localhost:8081")
   
   describe "OCaml Declaration with Interface: Product Types" $ do
-    compareInterfaceProductFiles "Person"
-    compareInterfaceProductFiles "Company"
-    compareInterfaceProductFiles "Card"
-    compareInterfaceProductFiles "OneTypeParameter"
-    compareInterfaceProductFiles "TwoTypeParameters"
-    compareInterfaceProductFiles "ThreeTypeParameters"
-    compareInterfaceProductFiles "SubTypeParameter"
+    compareInterfaceFiles "Person"
+    compareInterfaceFiles "Company"
+    compareInterfaceFiles "Card"
+    compareInterfaceFiles "OneTypeParameter"
+    compareInterfaceFiles "TwoTypeParameters"
+    compareInterfaceFiles "ThreeTypeParameters"
+    compareInterfaceFiles "SubTypeParameter"
 
   let dir2 = "test/nointerface/temp"
   runIO $ mkPackage (Proxy :: Proxy Product.ProductPackage) (PackageOptions dir2 "product" False Nothing)
 
   describe "OCaml Declaration with Interface: Product Types" $ do
-    compareNoInterfaceProductFiles "Person"
-    compareNoInterfaceProductFiles "Company"
-    compareNoInterfaceProductFiles "Card"
-    compareNoInterfaceProductFiles "OneTypeParameter"
-    compareNoInterfaceProductFiles "TwoTypeParameters"
-    compareNoInterfaceProductFiles "ThreeTypeParameters"
-    compareNoInterfaceProductFiles "SubTypeParameter"
+    compareNoInterfaceFiles "Person"
+    compareNoInterfaceFiles "Company"
+    compareNoInterfaceFiles "Card"
+    compareNoInterfaceFiles "OneTypeParameter"
+    compareNoInterfaceFiles "TwoTypeParameters"
+    compareNoInterfaceFiles "ThreeTypeParameters"
+    compareNoInterfaceFiles "SubTypeParameter"
 
 
 data Person = Person

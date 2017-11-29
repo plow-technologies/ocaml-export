@@ -2,14 +2,12 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeOperators #-}
+
+
 module Sum
   ( spec
-  , OnOrOff (..)
-  , NameOrIdNumber (..)
-  , SumVariant (..)
-  , WithTuple (..)
-  , SumWithRecord (..)
-  , NewType (..)
   ) where
 
 import Data.Aeson (FromJSON, ToJSON)
@@ -19,28 +17,45 @@ import OCaml.Export
 import Test.Hspec
 import Util
 
-testSum = testOCamlType Sum
-testSumInterface = testOCamlTypeWithInterface Sum
+type SumPackage
+  =    OCamlModule '["OnOrOff"] '[] :> OnOrOff
+  :<|> OCamlModule '["NameOrIdNumber"] '[] :> NameOrIdNumber
+  :<|> OCamlModule '["SumVariant"] '[] :> SumVariant
+  :<|> OCamlModule '["WithTuple"] '[] :> WithTuple
+  :<|> OCamlModule '["SumWithRecord"] '[] :> SumWithRecord
+  :<|> OCamlModule '["Result"] '[] :> Result TypeParameterRef0 TypeParameterRef1
+  :<|> OCamlModule '["NewType"] '[] :> NewType
+
+compareInterfaceFiles = compareFiles "test/interface" "sum"
+
+compareNoInterfaceFiles = compareFiles "test/nointerface" "sum"
 
 spec :: Spec
 spec = do
+  let dir = "test/interface/temp"
+  runIO $ mkPackage (Proxy :: Proxy SumPackage) (PackageOptions dir "sum" True $ Just $ SpecOptions "__tests__" "test/golden_files" "localhost:8081")
+
+  
   describe "OCaml Declaration with Interface: Sum Types" $ do
-    testSumInterface "OnOrOff" (mkOCamlInterface (Proxy :: Proxy OnOrOff))
-    testSumInterface "NameOrIdNumber" (mkOCamlInterface (Proxy :: Proxy NameOrIdNumber))
-    testSumInterface "SumVariant" (mkOCamlInterface (Proxy :: Proxy SumVariant))
-    testSumInterface "WithTuple" (mkOCamlInterface (Proxy :: Proxy WithTuple))
-    testSumInterface "SumWithRecord" (mkOCamlInterface (Proxy :: Proxy SumWithRecord))
-    testSumInterface "Result" (mkOCamlInterface (Proxy :: Proxy (Result TypeParameterRef0 TypeParameterRef1)))
-    testSumInterface "NewType" (mkOCamlInterface (Proxy :: Proxy NewType))
-    
+    compareInterfaceFiles "OnOrOff"
+    compareInterfaceFiles "NameOrIdNumber"
+    compareInterfaceFiles "SumVariant"
+    compareInterfaceFiles "WithTuple"
+    compareInterfaceFiles "SumWithRecord"
+    compareInterfaceFiles "Result"
+    compareInterfaceFiles "NewType"
+
+  let dir2 = "test/nointerface/temp"
+  runIO $ mkPackage (Proxy :: Proxy SumPackage) (PackageOptions dir2 "sum" False Nothing)
+
   describe "Sum Types" $ do
-    testSum onOrOff "OnOrOff"
-    testSum nameOrIdNumber "NameOrIdNumber"
-    testSum sumVariant "SumVariant"
-    testSum withTuple "WithTuple"
-    testSum sumWithRecord "SumWithRecord"
-    testSum resultRecord "Result"
-    testSum newTypeRecord "NewType"
+    compareNoInterfaceFiles "OnOrOff"
+    compareNoInterfaceFiles "NameOrIdNumber"
+    compareNoInterfaceFiles "SumVariant"
+    compareNoInterfaceFiles "WithTuple"
+    compareNoInterfaceFiles "SumWithRecord"
+    compareNoInterfaceFiles "Result"
+    compareNoInterfaceFiles "NewType"
     
 data OnOrOff = On | Off
   deriving (Show,Eq,Generic,OCamlType,ToJSON,FromJSON)

@@ -12,8 +12,6 @@ import qualified Options as Options
 import qualified Product as Product
 import qualified Sum as Sum
 
-import qualified Api as Api
-
 import Data.Proxy
 
 import Network.Wai.Handler.Warp
@@ -71,6 +69,7 @@ type Pckage = Next :<|> Following
 main :: IO ()
 main = do
   hspec Product.spec
+  hspec Sum.spec
   
   --mkPackage (Proxy :: Proxy Pckage) (PackageOptions "test/output2" $ Just $ SpecOptions "ocaml/__tests__" "test/golden_files" "localhost:8081")
   -- mkPackage (Proxy :: Proxy Product.ProductPackage) (PackageOptions "test/product-output" True $ Just $ SpecOptions "ocaml/__tests__" "test/golden_files" "localhost:8081")
@@ -78,8 +77,6 @@ main = do
   -- run 8081 Api.productApp
 {-
   Product.mkGoldenFiles
-  hspec Product.spec
-  hspec Sum.spec
   hspec Options.spec
 -}
 -- curl -i -d '[{"name":"Javier","id":35,"created":"2017-11-22T12:40:55.797664Z"}]' -H 'Content-type: application/json' -X POST http://localhost:8081/Next/Person

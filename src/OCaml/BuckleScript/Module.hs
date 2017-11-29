@@ -47,7 +47,8 @@ module OCaml.BuckleScript.Module
 
   -- servant functions
   -- automatically build a servant OCamlSpec Serve
-  , OCamlTypeCount (..)
+  , OCamlPackageTypeCount (..)
+  , OCamlModuleTypeCount (..)
   , OCamlSpecAPI
   , MkOCamlSpecAPI
   , mkServer
@@ -263,49 +264,64 @@ type family Insert a xs where
    Insert a (a ': xs) = (a ': xs)
    Insert a (x ': xs) = x ': (Insert a xs)
 
+-- module flag
 -- | Get the number of declared types in an OCaml Module
 --   Internal helper function.
 type family (Flag a) :: Bool where
-  Flag (a :<|> b)  = 'True -- case 0
   Flag (a :> b)  = 'True -- case 1
   Flag (OCamlModule a b)  = 'True -- case 2
   Flag a     = 'False -- case 3
 
-type family ConcatSymbols xs rhs :: * where
-  ConcatSymbols '[] rhs = rhs            
-  ConcatSymbols (x ': xs) rhs = If ((Length xs) == 0) (x :> rhs) (x :> ConcatSymbols xs rhs)
-                
-  
 -- | Exposed type level function
-class OCamlTypeCount api where
-  ocamlTypeCount :: Proxy api -> Int
+class OCamlModuleTypeCount api where
+  ocamlModuleTypeCount :: Proxy api -> Int
     
-instance (Flag a ~ flag, OCamlTypeCount' flag (a :: *)) => OCamlTypeCount a where
-  ocamlTypeCount = ocamlTypeCount' (Proxy :: Proxy flag)
+instance (Flag a ~ flag, OCamlModuleTypeCount' flag (a :: *)) => OCamlModuleTypeCount a where
+  ocamlModuleTypeCount = ocamlModuleTypeCount' (Proxy :: Proxy flag)
 
 
 -- | Internal helper function
-class OCamlTypeCount' (flag :: Bool) a where
-  ocamlTypeCount' :: Proxy flag -> Proxy a -> Int
+class OCamlModuleTypeCount' (flag :: Bool) a where
+  ocamlModuleTypeCount' :: Proxy flag -> Proxy a -> Int
 
 -- case 0
-instance (OCamlTypeCount a, OCamlTypeCount b) => OCamlTypeCount' 'True (a :<|> b) where
-  ocamlTypeCount' _ Proxy = (ocamlTypeCount (Proxy :: Proxy a)) + (ocamlTypeCount (Proxy :: Proxy b))
+instance (OCamlModuleTypeCount a, OCamlModuleTypeCount b) => OCamlModuleTypeCount' 'True (a :> b) where
+  ocamlModuleTypeCount' _ Proxy = (ocamlModuleTypeCount (Proxy :: Proxy a)) + (ocamlModuleTypeCount (Proxy :: Proxy b))
 
 -- case 1
-instance (OCamlTypeCount a, OCamlTypeCount b) => OCamlTypeCount' 'True (a :> b) where
-  ocamlTypeCount' _ Proxy = (ocamlTypeCount (Proxy :: Proxy a)) + (ocamlTypeCount (Proxy :: Proxy b))
+-- do not count anything wrapped in OCamlModule
+instance OCamlModuleTypeCount' 'True (OCamlModule a b) where
+  ocamlModuleTypeCount' _ Proxy = 0
 
 -- case 2
--- do not count anything wrapped in OCamlModule
-instance OCamlTypeCount' 'True (OCamlModule a b) where
-  ocamlTypeCount' _ Proxy = 0
-
--- case 3
 -- everything else should count as one
-instance OCamlTypeCount' 'False a where
-  ocamlTypeCount' _ Proxy = 1
+instance OCamlModuleTypeCount' 'False a where
+  ocamlModuleTypeCount' _ Proxy = 1
 
+
+-- package flag
+type family (FFlag a) :: Bool where
+  FFlag (a :<|> b)  = 'True -- case 0
+  FFlag a     = 'False -- case 1
+
+
+class OCamlPackageTypeCount modules where                
+  ocamlPackageTypeCount :: Proxy modules -> [Int]
+
+instance (FFlag a ~ flag, OCamlPackageTypeCount' flag (a :: *)) => OCamlPackageTypeCount a where
+  ocamlPackageTypeCount = ocamlPackageTypeCount' (Proxy :: Proxy flag)
+
+class OCamlPackageTypeCount' (flag :: Bool) a where
+  ocamlPackageTypeCount' :: Proxy flag -> Proxy a -> [Int]
+
+-- case 0
+instance (OCamlModuleTypeCount a, OCamlPackageTypeCount b) => OCamlPackageTypeCount' 'True (a :<|> b) where
+  ocamlPackageTypeCount' _ Proxy = (ocamlModuleTypeCount (Proxy :: Proxy a)) : (ocamlPackageTypeCount (Proxy :: Proxy b))
+
+-- case 1
+-- everything else should count as one
+instance (OCamlModuleTypeCount a) => OCamlPackageTypeCount' 'False a where
+  ocamlPackageTypeCount' _ Proxy = [ocamlModuleTypeCount (Proxy :: Proxy a)]
 
 
 
@@ -351,6 +367,10 @@ type family MkOCamlSpecAPI a :: * where
 -}
 
 
+type family ConcatSymbols xs rhs :: * where
+  ConcatSymbols '[] rhs = rhs            
+  ConcatSymbols (x ': xs) rhs = If ((Length xs) == 0) (x :> rhs) (x :> ConcatSymbols xs rhs)
+
 type OCamlSpecAPI (modul :: [Symbol]) typ = ConcatSymbols (Insert (TypeName typ) modul) (ReqBody '[JSON] [typ] :> Post '[JSON] [typ])
 
 type family MkOCamlSpecAPI' modul a :: * where
@@ -361,16 +381,16 @@ type family MkOCamlSpecAPI a :: * where
   MkOCamlSpecAPI ((OCamlModule a b :> api) :<|> rest) = MkOCamlSpecAPI' b api :<|> MkOCamlSpecAPI rest
   MkOCamlSpecAPI (OCamlModule a b :> api) = MkOCamlSpecAPI' b api
 
--- let args = UInfixE (VarE $ mkName "pure") (ConE $ mkName ":<|>") (ParensE $ UInfixE (VarE $ mkName "pure") (ConE $ mkName ":<|>") (VarE $ mkName "pure"))
--- | 
-mkServer :: forall ocamlPackage. (OCamlTypeCount ocamlPackage, HasOCamlPackage ocamlPackage) => String -> Proxy ocamlPackage -> Q [Dec]
-mkServer typeName Proxy = do
-  let size = ocamlTypeCount (Proxy :: Proxy ocamlPackage)
-  if size < 1
-    then fail "size must be at least one"
-    else do
-      let args = foldl (\l r -> UInfixE l (ConE $ mkName ":<|>") r) (VarE $ mkName "pure") (replicate (size-1) (VarE $ mkName "pure"))
 
+-- | 
+mkServer :: forall ocamlPackage. (OCamlPackageTypeCount ocamlPackage, HasOCamlPackage ocamlPackage) => String -> Proxy ocamlPackage -> Q [Dec]
+mkServer typeName Proxy = do
+  let sizes = ocamlPackageTypeCount (Proxy :: Proxy ocamlPackage)
+  if (length sizes) < 1 || (not . and $ (> 0) <$> sizes)
+    then fail $ "sizes must have at least one element and each element must be greater than zero: " <> show sizes
+    else do
+      let argss = (\size -> foldl (\l r -> ParensE $ UInfixE l (ConE $ mkName ":<|>") r) (VarE $ mkName "pure") (replicate (size-1) (VarE $ mkName "pure"))) <$> sizes
+      let args = foldl (\l r -> UInfixE l (ConE $ mkName ":<|>") r) (head argss) (tail argss)
       return $
         [ SigD serverName (AppT (ConT $ mkName "Server") $ AppT (ConT $ mkName "MkOCamlSpecAPI") (ConT $ apiName))
         , FunD serverName [Clause [] (NormalB args ) [] ]

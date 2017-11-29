@@ -33,6 +33,7 @@ import GHC.TypeLits
 import Data.Constraint.Symbol (type (++))
 
 import GHC.TypeLits
+import GHC.TypeLits.List
 
 logAllMiddleware :: Application -> Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived
 logAllMiddleware app req respond = do
@@ -47,18 +48,22 @@ logAllMiddleware app req respond = do
 -- server3 :: Server (MkOCamlSpecAPI ProductPackage)
 -- server3 = (pure :<|> pure) :<|> pure :<|> pure
 -- put each module of pures in parens
-server3 :: Server (MkOCamlSpecAPI ProductPackage)
-server3 = (pure :<|> pure) :<|> (pure :<|> pure) :<|> (pure :<|> pure)
+--server3 :: Server (MkOCamlSpecAPI ProductPackage)
+--server3 = (pure :<|> pure) :<|> (pure :<|> pure) :<|> (pure :<|> pure)
+
+$(mkServer "ProductPackage" (Proxy :: Proxy ProductPackage))
 
 main :: IO ()
 main = do
-  print $ ocamlTypeCount (Proxy :: Proxy ProductPackage)
+ -- print $ ocamlModuleTypeCount (Proxy :: Proxy ProductPackage)
+  print $ ocamlPackageTypeCount (Proxy :: Proxy ProductPackage)
   hspec spec
   hspec Sum.spec
   hspec Options.spec
 
-  -- run 8081 productApp
+  run 8081 productPackageApp
   -- run 8081 nextApp
   -- run 8081 Api.productApp
 
 -- curl -i -d '[{"name":"Javier","id":35,"created":"2017-11-22T12:40:55.797664Z"}]' -H 'Content-type: application/json' -X POST http://localhost:8081/Next/Person
+-- curl -i -d '[{"name":"Javier","id":35,"created":"2017-11-22T12:40:55.797664Z"}]' -H 'Content-type: application/json' -X POST http://localhost:8081/Person/Person

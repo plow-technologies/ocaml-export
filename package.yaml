@@ -68,5 +68,6 @@ tests:
     - wai
     - wai-extra
     - warp
+    - typelits-witnesses
     ghc-options:
     - -fprint-potential-instances

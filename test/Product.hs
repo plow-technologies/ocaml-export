@@ -30,11 +30,7 @@ import Test.Aeson.Internal.ADT.GoldenSpecs
 import Util
 
 type ProductPackage
-  =    OCamlModule '["Person"] '[] :> Person :> Company
-  :<|> OCamlModule '["Company"] '[] :> Person :> Company
-  :<|> OCamlModule '["Card"] '[] :> Suit :> Card
-{-
-  =    OCamlModule '["Person"] '[] :> Person
+  =    OCamlModule '["Person"] '[] :> Person  
   :<|> OCamlModule '["Company"] '[] :> Person :> Company
   :<|> OCamlModule '["Card"] '[] :> Suit :> Card
   :<|> OCamlModule '["CustomOption"] '[] :> Person :> Company2
@@ -42,7 +38,7 @@ type ProductPackage
   :<|> OCamlModule '["TwoTypeParameters"] '[] :> TwoTypeParameters TypeParameterRef0 TypeParameterRef1
   :<|> OCamlModule '["ThreeTypeParameters"] '[] :> Three TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
   :<|> OCamlModule '["SubTypeParameter"] '[] :> SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
--}
+
 mkGolden :: forall a. (ToADTArbitrary a, ToJSON a) => Proxy a -> IO ()
 mkGolden Proxy = mkGoldenFileForType 10 (Proxy :: Proxy a) "test/interface/golden/golden/product"
 

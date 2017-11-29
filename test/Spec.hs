@@ -70,9 +70,11 @@ type Pckage = Next :<|> Following
 
 main :: IO ()
 main = do
+  hspec Product.spec
+  
   --mkPackage (Proxy :: Proxy Pckage) (PackageOptions "test/output2" $ Just $ SpecOptions "ocaml/__tests__" "test/golden_files" "localhost:8081")
-  mkPackage (Proxy :: Proxy Product.ProductPackage) (PackageOptions "test/product-output" $ Just $ SpecOptions "ocaml/__tests__" "test/golden_files" "localhost:8081")
-  run 8081 nextApp
+  -- mkPackage (Proxy :: Proxy Product.ProductPackage) (PackageOptions "test/product-output" True $ Just $ SpecOptions "ocaml/__tests__" "test/golden_files" "localhost:8081")
+  -- run 8081 nextApp
   -- run 8081 Api.productApp
 {-
   Product.mkGoldenFiles

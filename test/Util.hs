@@ -20,6 +20,20 @@ adtToPath Primitive = "primitive"
 adtToPath Complex = "complex"
 adtToPath Options = "options"
 
+
+compareFiles :: ADT -> FilePath -> SpecWith ()
+compareFiles adt typeName =
+  it typeName $ do
+    automated   <- T.readFile (testPath   <> "/" <> typeName <> ".ml")
+    handWritten <- T.readFile (goldenPath <> "/" <> typeName <> ".ml")
+    automated `shouldBe` handWritten
+  where
+    adtPath    = adtToPath adt
+    testPath   = "test/interface/temp/" <> adtPath
+    goldenPath = "test/interface/golden/" <> adtPath
+
+
+
 testOCamlType :: ADT -> OCamlFile -> FilePath -> SpecWith ()
 testOCamlType adt ocamlFile typeName =
   it typeName $ do

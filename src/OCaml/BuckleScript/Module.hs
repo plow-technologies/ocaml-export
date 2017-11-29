@@ -88,7 +88,6 @@ import qualified Data.Text as T
 import qualified Data.Text.IO     as T
 
 -- type level
--- turn type Symbol into String
 import GHC.TypeLits
 import GHC.TypeLits.List
 import Data.Type.Bool
@@ -104,13 +103,15 @@ import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>), (</>))
 -- | Options for creating an OCaml package based on Haskell types.
 data PackageOptions
   = PackageOptions
-    { packageRootDir :: FilePath -- ^ root directory where the output OCaml code will be placed.
+    { packageRootDir :: FilePath -- ^ root directory where all relatives directories will be placed.
+    , packageSrcDir :: FilePath -- ^ location to place ml and mli files relative to 'packageRootDir'.
+    , createInterfaceFile :: Bool -- ^ create an mli file if 'True'.
     , mSpecOptions :: Maybe SpecOptions -- ^ produce OCaml spec file if 'Just'.
     }
 
 -- | Default 'PackageOptions'.
 defaultPackageOptions :: PackageOptions
-defaultPackageOptions = PackageOptions "./ocaml-generic-package" (Just defaultSpecOptions)
+defaultPackageOptions = PackageOptions "ocaml-generic-package" "src" True (Just defaultSpecOptions)
 
 -- | Details for OCaml spec.
 data SpecOptions
@@ -159,9 +160,8 @@ instance (KnownSymbols filePath, KnownSymbols moduleName, HasOCamlType api) => H
     if (length $ symbolsVal (Proxy :: Proxy filePath)) == 0
       then fail "OCamlModule filePath needs at least one file name"
       else do
-        createDirectoryIfMissing True rootDir
-        -- T.intercalate "\n\n" (ocamlDeclarations ocamlFile) <> "\n"    
-        typF <- localModuleDoc . (<> "\n") . T.intercalate "\n\n" <$> mkType (Proxy :: Proxy api)
+        createDirectoryIfMissing True (rootDir </> packageSrcDir packageOptions)
+        typF <- localModuleDoc . (<> "\n") . T.intercalate "\n\n" <$> mkType (Proxy :: Proxy api) (createInterfaceFile packageOptions)
         intF <- localModuleDoc . (<> "\n") . T.intercalate "\n\n" <$> mkInterface (Proxy :: Proxy api)
         T.writeFile (fp <.> "ml")  typF
         T.writeFile (fp <.> "mli") intF
@@ -179,28 +179,28 @@ instance (KnownSymbols filePath, KnownSymbols moduleName, HasOCamlType api) => H
         
     where
       rootDir = packageRootDir packageOptions
-      fp = rootDir </> (foldl (</>) "" $ symbolsVal (Proxy :: Proxy filePath))
+      fp = rootDir </> (packageSrcDir packageOptions) </> (foldl (</>) "" $ symbolsVal (Proxy :: Proxy filePath))
       localModuleDoc body = pprinter $ foldr (\l r -> "module" <+> l <+> "= struct" <$$> indent 2 r <$$> "end") (stext body) (stext . T.pack <$> symbolsVal (Proxy :: Proxy moduleName))
 
 
 -- | Combine `HasGenericOCamlType` and `HasOCamlTypeInFile`
 class HasOCamlType api where
-  mkType :: Proxy api -> IO [Text]
+  mkType :: Proxy api -> Bool -> IO [Text]
   mkInterface :: Proxy api -> IO [Text]
   mkSpec :: Proxy api -> Text -> Text -> Text -> IO [Text]
 
 instance (HasOCamlType a, HasOCamlType b) => HasOCamlType (a :> b) where
-  mkType Proxy = (<>) <$> (mkType (Proxy :: Proxy a)) <*> (mkType (Proxy :: Proxy b))
+  mkType Proxy interface = (<>) <$> (mkType (Proxy :: Proxy a) interface) <*> (mkType (Proxy :: Proxy b) interface)
   mkInterface Proxy = (<>) <$> (mkInterface (Proxy :: Proxy a)) <*> (mkInterface (Proxy :: Proxy b))
   mkSpec Proxy modul url goldendir = (<>) <$> (mkSpec (Proxy :: Proxy a) modul url goldendir) <*> (mkSpec (Proxy :: Proxy b) modul url goldendir)
 
 instance {-# OVERLAPPABLE #-} (HasOCamlTypeInFile (OCamlTypeInFile a b)) => HasOCamlType (OCamlTypeInFile a b) where
-  mkType a = (:[]) <$> readType a
+  mkType a _ = (:[]) <$> readType a
   mkInterface a = (:[]) <$> readInterface a
   mkSpec _ _ _ _ = pure []
 
 instance {-# OVERLAPPABLE #-} (HasGenericOCamlType a) => HasOCamlType a where
-  mkType a = pure $ mkGType a
+  mkType a interface = pure $ mkGType a interface
   mkInterface a = pure $ mkGInterface a
   mkSpec a modul url goldendir = pure $ mkGSpec a modul url goldendir  
 
@@ -221,17 +221,21 @@ instance (KnownSymbol a, KnownSymbol b) => HasOCamlTypeInFile (OCamlTypeInFile a
 
 -- | Produce OCaml files for types that have OCamlType derived via GHC.Generics
 class HasGenericOCamlType api where
-  mkGType :: Proxy api -> [Text]
+  mkGType :: Proxy api -> Bool -> [Text]
   mkGInterface :: Proxy api -> [Text]
   mkGSpec :: Proxy api -> Text -> Text -> Text -> [Text]
 
 instance (HasGenericOCamlType a, HasGenericOCamlType b) => HasGenericOCamlType (a :> b) where
-  mkGType Proxy = mkGType (Proxy :: Proxy a) <> mkGType (Proxy :: Proxy b)
+  mkGType Proxy interface = mkGType (Proxy :: Proxy a) interface <> mkGType (Proxy :: Proxy b) interface 
   mkGInterface Proxy = mkGInterface (Proxy :: Proxy a) <> mkGInterface (Proxy :: Proxy b)
   mkGSpec Proxy modul url goldendir = (mkGSpec (Proxy :: Proxy a) modul url goldendir) <> (mkGSpec (Proxy :: Proxy b) modul url goldendir)
 
+-- oOCamlEncoderSourceWith (options {includeOCamlInterface = True})
+-- toOCamlDecoderSourceWith (options {includeOCamlInterface = True})
+-- defaultOptions {includeOCamlInterface = }
+
 instance {-# OVERLAPPABLE #-} OCamlType a => HasGenericOCamlType a where
-  mkGType a = [toOCamlTypeSource a, toOCamlEncoderSource a, toOCamlDecoderSource a]
+  mkGType a interface = [toOCamlTypeSource a, toOCamlEncoderSourceWith (defaultOptions {includeOCamlInterface = interface}) a, toOCamlDecoderSourceWith (defaultOptions {includeOCamlInterface = interface}) a]
   mkGInterface a = [toOCamlTypeSource a, toOCamlEncoderInterface a, toOCamlDecoderInterface a]
   mkGSpec a modul url goldendir = [toOCamlSpec a modul url goldendir]
 
@@ -257,9 +261,10 @@ type family Insert a xs where
 -- | Get the number of declared types in an OCaml Module
 --   Internal helper function.
 type family (Flag a) :: Bool where
-  Flag (a :> b)  = 'True -- case 0
-  Flag (OCamlModule a b)  = 'True -- case 1
-  Flag a     = 'False -- case 2
+  Flag (a :<|> b)  = 'True -- case 0
+  Flag (a :> b)  = 'True -- case 1
+  Flag (OCamlModule a b)  = 'True -- case 2
+  Flag a     = 'False -- case 3
 
 type family ConcatSymbols xs rhs :: * where
   ConcatSymbols '[] rhs = rhs            
@@ -279,15 +284,19 @@ class OCamlTypeCount' (flag :: Bool) a where
   ocamlTypeCount' :: Proxy flag -> Proxy a -> Int
 
 -- case 0
-instance (OCamlTypeCount a, OCamlTypeCount b) => OCamlTypeCount' 'True (a :> b) where
+instance (OCamlTypeCount a, OCamlTypeCount b) => OCamlTypeCount' 'True (a :<|> b) where
   ocamlTypeCount' _ Proxy = (ocamlTypeCount (Proxy :: Proxy a)) + (ocamlTypeCount (Proxy :: Proxy b))
 
 -- case 1
+instance (OCamlTypeCount a, OCamlTypeCount b) => OCamlTypeCount' 'True (a :> b) where
+  ocamlTypeCount' _ Proxy = (ocamlTypeCount (Proxy :: Proxy a)) + (ocamlTypeCount (Proxy :: Proxy b))
+
+-- case 2
 -- do not count anything wrapped in OCamlModule
 instance OCamlTypeCount' 'True (OCamlModule a b) where
   ocamlTypeCount' _ Proxy = 0
 
--- case 2
+-- case 3
 -- everything else should count as one
 instance OCamlTypeCount' 'False a where
   ocamlTypeCount' _ Proxy = 1
@@ -327,9 +336,7 @@ type family MkOCamlSpecAPI' modul a :: * where
 type family MkOCamlSpecAPI a :: * where
   MkOCamlSpecAPI (OCamlModule a b :> api) = MkOCamlSpecAPI' b api
 
-
-
-
+-- | 
 mkServer :: forall ocamlTypes. (OCamlTypeCount ocamlTypes, HasOCamlModule ocamlTypes) => String -> Proxy ocamlTypes -> Q [Dec]
 mkServer typeName Proxy = do
   let size = ocamlTypeCount (Proxy :: Proxy ocamlTypes)

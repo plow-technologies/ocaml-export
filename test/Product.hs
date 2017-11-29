@@ -17,7 +17,6 @@ import Data.Time
 import Data.Time.Clock.POSIX
 import GHC.Generics
 import OCaml.Export
--- import OCaml.BuckleScript.Module
 import Test.Hspec
 import Test.QuickCheck
 import Test.QuickCheck.Arbitrary.ADT
@@ -30,8 +29,8 @@ type ProductPackage
   :<|> OCamlModule '["Card"] '[] :> Suit :> Card
   :<|> OCamlModule '["CustomOption"] '[] :> Person :> Company2
   :<|> OCamlModule '["OneTypeParameter"] '[] :> OneTypeParameter TypeParameterRef0
-  :<|> OCamlModule '["TwoTypeParameter"] '[] :> TwoTypeParameters TypeParameterRef0 TypeParameterRef1
-  :<|> OCamlModule '["ThreeTypeParameter"] '[] :> Three TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
+  :<|> OCamlModule '["TwoTypeParameters"] '[] :> TwoTypeParameters TypeParameterRef0 TypeParameterRef1
+  :<|> OCamlModule '["ThreeTypeParameters"] '[] :> Three TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
   :<|> OCamlModule '["SubTypeParameter"] '[] :> SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
 
 testProduct = testOCamlType Product
@@ -51,6 +50,19 @@ mkGoldenFiles = do
 
 spec :: Spec
 spec = do
+  let dir = "test/interface/temp"
+  runIO $ mkPackage (Proxy :: Proxy Product.ProductPackage) (PackageOptions dir "product" True $ Just $ SpecOptions "__tests__" "test/golden_files" "localhost:8081")
+  
+  describe "OCaml Declaration with Interface: Product Types" $ do
+    compareFiles Product "Person"
+    compareFiles Product "Company"
+    compareFiles Product "Card"
+    compareFiles Product "OneTypeParameter"
+    compareFiles Product "TwoTypeParameters"
+    compareFiles Product "ThreeTypeParameters"
+    compareFiles Product "SubTypeParameter"
+
+{-
   describe "OCaml Declaration with Interface: Product Types" $ do
     testProductInterface "Person" (mkTestOCaml "Person" (Proxy :: Proxy Person))
     testProductInterface "Company" (mkTestOCaml "Company" (Proxy :: Proxy Person) <> mkTestOCaml "Company" (Proxy :: Proxy Company))
@@ -70,7 +82,8 @@ spec = do
     testProduct twoTypeParameters "TwoTypeParameters"
     testProduct three "ThreeTypeParameters"
     testProduct subTypeParameter "SubTypeParameter"
-
+-}
+  
 {-
   describe "" $ it "" $ do
     print $ toOCamlSpec (Proxy :: Proxy Person) "http://localhost:8081/person" "../../golden/"

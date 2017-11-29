@@ -2,8 +2,9 @@ module Util where
 
 import Data.Monoid ((<>))
 import qualified Data.Text.IO as T
-import OCaml.Export hiding (Options)
+import OCaml.Export hiding (Options, (</>))
 import System.Directory (doesFileExist)
+import System.FilePath.Posix ((</>))
 import Test.Hspec
 
 data ADT
@@ -21,16 +22,15 @@ adtToPath Complex = "complex"
 adtToPath Options = "options"
 
 
-compareFiles :: ADT -> FilePath -> SpecWith ()
-compareFiles adt typeName =
+compareFiles :: FilePath -> FilePath -> FilePath -> SpecWith ()
+compareFiles rootDir categoryDir typeName =
   it typeName $ do
-    automated   <- T.readFile (testPath   <> "/" <> typeName <> ".ml")
-    handWritten <- T.readFile (goldenPath <> "/" <> typeName <> ".ml")
+    automated   <- T.readFile (testPath   </> typeName <> ".ml")
+    handWritten <- T.readFile (goldenPath </> typeName <> ".ml")
     automated `shouldBe` handWritten
   where
-    adtPath    = adtToPath adt
-    testPath   = "test/interface/temp/" <> adtPath
-    goldenPath = "test/interface/golden/" <> adtPath
+    testPath   = rootDir </> "temp" </> categoryDir
+    goldenPath = rootDir </> "golden" </> categoryDir
 
 
 

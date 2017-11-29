@@ -162,9 +162,14 @@ instance (KnownSymbols filePath, KnownSymbols moduleName, HasOCamlType api) => H
       else do
         createDirectoryIfMissing True (rootDir </> packageSrcDir packageOptions)
         typF <- localModuleDoc . (<> "\n") . T.intercalate "\n\n" <$> mkType (Proxy :: Proxy api) (createInterfaceFile packageOptions)
-        intF <- localModuleDoc . (<> "\n") . T.intercalate "\n\n" <$> mkInterface (Proxy :: Proxy api)
         T.writeFile (fp <.> "ml")  typF
-        T.writeFile (fp <.> "mli") intF
+
+        if createInterfaceFile packageOptions
+          then do
+            intF <- localModuleDoc . (<> "\n") . T.intercalate "\n\n" <$> mkInterface (Proxy :: Proxy api)
+            T.writeFile (fp <.> "mli") intF
+          else pure ()
+        
         case mSpecOptions packageOptions of
           Nothing -> pure ()
           Just specOptions -> do

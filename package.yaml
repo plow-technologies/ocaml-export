@@ -50,6 +50,7 @@ tests:
     - bytestring
     - constraints
     - directory
+    - filepath
     - hspec
     - hspec-golden-aeson
     - ocaml-export

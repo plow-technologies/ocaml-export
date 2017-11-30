@@ -83,7 +83,7 @@ mkOCamlInterfaceWithSpec url goldenDir modul a =
   OCamlInterface
     [toOCamlTypeSource a, toOCamlEncoderSourceWith (defaultOptions {includeOCamlInterface = True}) a, toOCamlDecoderSourceWith (defaultOptions {includeOCamlInterface = True}) a]
     [toOCamlTypeSource a, toOCamlEncoderInterface a, toOCamlDecoderInterface a]
-    [toOCamlSpec a modul url goldenDir]
+    [toOCamlSpec a [modul] url goldenDir]
 
 
 createOCamlFile :: FilePath -> OCamlFile -> IO ()

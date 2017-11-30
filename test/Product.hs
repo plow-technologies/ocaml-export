@@ -54,9 +54,9 @@ mkGoldenFiles = do
   mkGolden (Proxy :: Proxy (Three TypeParameterRef0 TypeParameterRef1 TypeParameterRef2))
   mkGolden (Proxy :: Proxy (SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2))
   
-compareInterfaceFiles = compareFiles "test/interface" "product"
+compareInterfaceFiles = compareFiles "test/interface" "product" True
 
-compareNoInterfaceFiles = compareFiles "test/nointerface" "product"
+compareNoInterfaceFiles = compareFiles "test/nointerface" "product" False
 
 
 spec :: Spec
@@ -64,7 +64,7 @@ spec = do
   runIO $ mkGoldenFiles
   
   let dir = "test/interface/temp"
-  runIO $ mkPackage (Proxy :: Proxy ProductPackage) (PackageOptions dir "product" True $ Just $ SpecOptions "__tests__" "test/golden_files" "localhost:8081")
+  runIO $ mkPackage (Proxy :: Proxy ProductPackage) (PackageOptions dir "product" True $ Just $ SpecOptions "__tests__/product" "golden/product" "http://localhost:8081")
   
   describe "OCaml Declaration with Interface: Product Types" $ do
     compareInterfaceFiles "Person"

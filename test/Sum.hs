@@ -8,9 +8,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Sum
-  ( spec
-  ) where
+module Sum where
 
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Proxy
@@ -36,9 +34,9 @@ type SumPackage
   :<|> OCamlModule '["Result"] '[] :> Result TypeParameterRef0 TypeParameterRef1
   :<|> OCamlModule '["NewType"] '[] :> NewType
 
-compareInterfaceFiles = compareFiles "test/interface" "sum"
+compareInterfaceFiles = compareFiles "test/interface" "sum" True
 
-compareNoInterfaceFiles = compareFiles "test/nointerface" "sum"
+compareNoInterfaceFiles = compareFiles "test/nointerface" "sum" False
 
 mkGolden :: forall a. (ToADTArbitrary a, ToJSON a) => Proxy a -> IO ()
 mkGolden Proxy = mkGoldenFileForType 10 (Proxy :: Proxy a) "test/interface/golden/golden/sum"
@@ -57,7 +55,7 @@ spec :: Spec
 spec = do
   runIO mkGoldenFiles
   let dir = "test/interface/temp"
-  runIO $ mkPackage (Proxy :: Proxy SumPackage) (PackageOptions dir "sum" True $ Just $ SpecOptions "__tests__" "test/golden_files" "localhost:8081")
+  runIO $ mkPackage (Proxy :: Proxy SumPackage) (PackageOptions dir "sum" True $ Just $ SpecOptions "__tests__/sum" "test/golden_files" "http://localhost:8082")
 
   describe "OCaml Declaration with Interface: Sum Types" $ do
     compareInterfaceFiles "OnOrOff"

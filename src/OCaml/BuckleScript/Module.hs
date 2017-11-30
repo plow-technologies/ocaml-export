@@ -177,14 +177,14 @@ instance (KnownSymbols filePath, KnownSymbols moduleName, HasOCamlType api) => H
         case mSpecOptions packageOptions of
           Nothing -> pure ()
           Just specOptions -> do
-            specF <- (<> "\n") . T.intercalate "\n\n" <$> mkSpec (Proxy :: Proxy api) (T.pack localModule) (T.pack $ servantURL specOptions) (T.pack $ goldenDir specOptions)
+            specF <- (<> "\n") . T.intercalate "\n\n" <$> mkSpec (Proxy :: Proxy api) modules (T.pack $ servantURL specOptions) (T.pack $ goldenDir specOptions)
             let specBody = if specF /= "" then ("let () =\n" <> specF) else ""
             createDirectoryIfMissing True (rootDir </> (specDir specOptions))
-            T.writeFile (specFp <.> "ml") specBody
+            T.writeFile (specFp <> "_spec" <.> "ml") specBody
     
             where
               specFp = rootDir </> (specDir specOptions) </> (foldl (</>) "" $ symbolsVal (Proxy :: Proxy filePath))
-              localModule = (L.intercalate "." $ symbolsVal (Proxy :: Proxy moduleName))
+              modules = T.pack <$> (symbolsVal (Proxy :: Proxy filePath) <> symbolsVal (Proxy :: Proxy moduleName))
         
     where
       rootDir = packageRootDir packageOptions
@@ -197,12 +197,12 @@ instance (KnownSymbols filePath, KnownSymbols moduleName, HasOCamlType api) => H
 class HasOCamlType api where
   mkType :: Proxy api -> Bool -> IO [Text]
   mkInterface :: Proxy api -> IO [Text]
-  mkSpec :: Proxy api -> Text -> Text -> Text -> IO [Text]
+  mkSpec :: Proxy api -> [Text] -> Text -> Text -> IO [Text]
 
 instance (HasOCamlType a, HasOCamlType b) => HasOCamlType (a :> b) where
   mkType Proxy interface = (<>) <$> (mkType (Proxy :: Proxy a) interface) <*> (mkType (Proxy :: Proxy b) interface)
   mkInterface Proxy = (<>) <$> (mkInterface (Proxy :: Proxy a)) <*> (mkInterface (Proxy :: Proxy b))
-  mkSpec Proxy modul url goldendir = (<>) <$> (mkSpec (Proxy :: Proxy a) modul url goldendir) <*> (mkSpec (Proxy :: Proxy b) modul url goldendir)
+  mkSpec Proxy modules url goldendir = (<>) <$> (mkSpec (Proxy :: Proxy a) modules url goldendir) <*> (mkSpec (Proxy :: Proxy b) modules url goldendir)
 
 instance {-# OVERLAPPABLE #-} (HasOCamlTypeInFile (OCamlTypeInFile a b)) => HasOCamlType (OCamlTypeInFile a b) where
   mkType a _ = (:[]) <$> readType a
@@ -212,7 +212,7 @@ instance {-# OVERLAPPABLE #-} (HasOCamlTypeInFile (OCamlTypeInFile a b)) => HasO
 instance {-# OVERLAPPABLE #-} (HasGenericOCamlType a) => HasOCamlType a where
   mkType a interface = pure $ mkGType a interface
   mkInterface a = pure $ mkGInterface a
-  mkSpec a modul url goldendir = pure $ mkGSpec a modul url goldendir  
+  mkSpec a modules url goldendir = pure $ mkGSpec a modules url goldendir  
 
 
 -- | Read OCaml type declarations and interfaces from `ml` and `mli` files
@@ -233,12 +233,12 @@ instance (KnownSymbol a, KnownSymbol b) => HasOCamlTypeInFile (OCamlTypeInFile a
 class HasGenericOCamlType api where
   mkGType :: Proxy api -> Bool -> [Text]
   mkGInterface :: Proxy api -> [Text]
-  mkGSpec :: Proxy api -> Text -> Text -> Text -> [Text]
+  mkGSpec :: Proxy api -> [Text] -> Text -> Text -> [Text]
 
 instance (HasGenericOCamlType a, HasGenericOCamlType b) => HasGenericOCamlType (a :> b) where
   mkGType Proxy interface = mkGType (Proxy :: Proxy a) interface <> mkGType (Proxy :: Proxy b) interface 
   mkGInterface Proxy = mkGInterface (Proxy :: Proxy a) <> mkGInterface (Proxy :: Proxy b)
-  mkGSpec Proxy modul url goldendir = (mkGSpec (Proxy :: Proxy a) modul url goldendir) <> (mkGSpec (Proxy :: Proxy b) modul url goldendir)
+  mkGSpec Proxy modules url goldendir = (mkGSpec (Proxy :: Proxy a) modules url goldendir) <> (mkGSpec (Proxy :: Proxy b) modules url goldendir)
 
 -- oOCamlEncoderSourceWith (options {includeOCamlInterface = True})
 -- toOCamlDecoderSourceWith (options {includeOCamlInterface = True})
@@ -247,7 +247,7 @@ instance (HasGenericOCamlType a, HasGenericOCamlType b) => HasGenericOCamlType (
 instance {-# OVERLAPPABLE #-} OCamlType a => HasGenericOCamlType a where
   mkGType a interface = [toOCamlTypeSource a, toOCamlEncoderSourceWith (defaultOptions {includeOCamlInterface = interface}) a, toOCamlDecoderSourceWith (defaultOptions {includeOCamlInterface = interface}) a]
   mkGInterface a = [toOCamlTypeSource a, toOCamlEncoderInterface a, toOCamlDecoderInterface a]
-  mkGSpec a modul url goldendir = [toOCamlSpec a modul url goldendir]
+  mkGSpec a modules url goldendir = [toOCamlSpec a modules url goldendir]
 
 
 

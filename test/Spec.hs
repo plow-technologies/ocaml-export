@@ -22,12 +22,18 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 
+import Control.Concurrent (forkIO)
+
 import           Test.Hspec
 
-import qualified Options as Options
--- import qualified Product as Product
+import qualified Product as Product
+import           ProductApp
+
 import qualified Sum as Sum
-import Product
+import           SumApp
+
+import qualified Options as Options
+
 
 import Data.Proxy
 
@@ -60,27 +66,14 @@ logAllMiddleware app req respond = do
 
 -- npm start --prefix path/to/your/app
 
-$(mkServer "ProductPackage" (Proxy :: Proxy ProductPackage))
-
 main :: IO ()
 main = do
-  print $ symbolsVal (Proxy :: Proxy (Append '["Hi", "GoodBye"] '["Art", "Smart"]))
-  print $ symbolsVal (Proxy :: Proxy (Append '["Hi"] '[]))
-  print $ symbolsVal (Proxy :: Proxy (Insert "Bob" (Append '["Hi"] '[])))
-  print $ symbolsVal (Proxy :: Proxy (Insert "X" (Append '["Hi", "GoodBye"] '["Art", "Smart"])))
-  
-  -- print $ ocamlModuleTypeCount (Proxy :: Proxy ProductPackage)
-  print $ ocamlPackageTypeCount (Proxy :: Proxy ProductPackage)
---  hspec spec
---  hspec Sum.spec
---  hspec Options.spec
-  -- run 8081 appServer3
-  run 8081 productPackageApp
-  -- run 8081 nextApp
-  -- run 8081 Api.productApp
+  -- hspec Product.spec
+  hspec Sum.spec
+  hspec Options.spec
 
--- curl -i -d '[{"name":"Javier","id":35,"created":"2017-11-22T12:40:55.797664Z"}]' -H 'Content-type: application/json' -X POST http://localhost:8081/Next/Person
--- curl -i -d '[{"name":"Javier","id":35,"created":"2017-11-22T12:40:55.797664Z"}]' -H 'Content-type: application/json' -X POST http://localhost:8081/Person/Person
+  _ <- forkIO $ run 8081 productPackageApp
+  run 8082 sumPackageApp
 
 
 -- curl -i -d '"hi"' -H 'Content-type: application/json' -X POST http://localhost:8081/x/y

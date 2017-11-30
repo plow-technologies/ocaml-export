@@ -39,16 +39,27 @@ adtToPath :: ADT -> FilePath
 adtToPath Options = "options"
 
 
-compareFiles :: FilePath -> FilePath -> FilePath -> SpecWith ()
-compareFiles rootDir categoryDir typeName =
+compareFiles :: FilePath -> FilePath -> Bool -> FilePath -> SpecWith ()
+compareFiles rootDir categoryDir compareInterfaceAndSpecFiles typeName =
   it typeName $ do
     automated   <- T.readFile (testPath   </> typeName <> ".ml")
     handWritten <- T.readFile (goldenPath </> typeName <> ".ml")
     automated `shouldBe` handWritten
+    if compareInterfaceAndSpecFiles
+      then do
+        automatedI   <- T.readFile (testPath   </> typeName <> ".mli")
+        handWrittenI <- T.readFile (goldenPath </> typeName <> ".mli")
+        automatedI `shouldBe` handWrittenI
+        
+        automatedS   <- T.readFile (testSpecPath   </> typeName <> "_spec" <> ".ml")
+        handWrittenS <- T.readFile (goldenSpecPath </> typeName <> "_spec" <> ".ml")
+        automatedS `shouldBe` handWrittenS
+      else pure ()
   where
     testPath   = rootDir </> "temp" </> categoryDir
     goldenPath = rootDir </> "golden" </> categoryDir
-
+    testSpecPath   = rootDir </> "temp" </> "__tests__" </> categoryDir
+    goldenSpecPath = rootDir </> "golden" </> "__tests__" </> categoryDir
 
 testOCamlTypeWithInterface :: ADT -> FilePath -> OCamlInterface -> SpecWith ()
 testOCamlTypeWithInterface adt typeName ocamlFile =

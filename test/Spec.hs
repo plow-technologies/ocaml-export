@@ -68,7 +68,7 @@ logAllMiddleware app req respond = do
 
 main :: IO ()
 main = do
-  -- hspec Product.spec
+  hspec Product.spec
   hspec Sum.spec
   hspec Options.spec
 

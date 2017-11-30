@@ -1,0 +1,2 @@
+let () =
+  AesonSpec.sampleGoldenAndServerSpec (SubTypeParameter.decodeSubTypeParameter (Aeson.Decode.wrapResult Aeson.Decode.int) (Aeson.Decode.wrapResult Aeson.Decode.int) (Aeson.Decode.wrapResult Aeson.Decode.int)) (SubTypeParameter.encodeSubTypeParameter Aeson.Encode.int Aeson.Encode.int Aeson.Encode.int) "subTypeParameter" "http://localhost:8081/SubTypeParameter/SubTypeParameter" "golden/product/SubTypeParameter.json";

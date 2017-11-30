@@ -49,10 +49,10 @@ mkGoldenFiles = do
   mkGolden (Proxy :: Proxy Suit)
   mkGolden (Proxy :: Proxy Card)
   mkGolden (Proxy :: Proxy Company2)
-  mkGolden (Proxy :: Proxy (OneTypeParameter TypeParameterRef0))
-  mkGolden (Proxy :: Proxy (TwoTypeParameters TypeParameterRef0 TypeParameterRef1))
-  mkGolden (Proxy :: Proxy (Three TypeParameterRef0 TypeParameterRef1 TypeParameterRef2))
-  mkGolden (Proxy :: Proxy (SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2))
+  mkGolden (Proxy :: Proxy (OneTypeParameter Int))
+  mkGolden (Proxy :: Proxy (TwoTypeParameters Int Int))
+  mkGolden (Proxy :: Proxy (Three Int Int Int))
+  mkGolden (Proxy :: Proxy (SubTypeParameter Int Int Int))
   
 compareInterfaceFiles = compareFiles "test/interface" "product" True
 
@@ -151,10 +151,10 @@ data OneTypeParameter a =
     , otpFirst :: a
     } deriving (Eq,Show,Generic,OCamlType,FromJSON,ToJSON)
 
-instance Arbitrary (OneTypeParameter TypeParameterRef0) where
+instance Arbitrary (OneTypeParameter Int) where
   arbitrary = OneTypeParameter <$> arbitrary <*> arbitrary
 
-instance ToADTArbitrary (OneTypeParameter TypeParameterRef0)
+instance ToADTArbitrary (OneTypeParameter Int)
 
 data TwoTypeParameters a b =
   TwoTypeParameters
@@ -163,10 +163,10 @@ data TwoTypeParameters a b =
     , ttpSecond :: b
     } deriving (Eq,Show,Generic,OCamlType,FromJSON,ToJSON)
 
-instance Arbitrary (TwoTypeParameters TypeParameterRef0 TypeParameterRef1) where
+instance Arbitrary (TwoTypeParameters Int Int) where
   arbitrary = TwoTypeParameters <$> arbitrary <*> arbitrary <*> arbitrary
 
-instance ToADTArbitrary (TwoTypeParameters TypeParameterRef0 TypeParameterRef1)
+instance ToADTArbitrary (TwoTypeParameters Int Int)
 
 data Three a b c =
   Three
@@ -177,10 +177,10 @@ data Three a b c =
     , threeString :: String
     } deriving (Eq,Show,Generic,OCamlType,FromJSON,ToJSON)
 
-instance Arbitrary (Three TypeParameterRef0 TypeParameterRef1 TypeParameterRef2) where
+instance Arbitrary (Three Int Int Int) where
   arbitrary = Three <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
 
-instance ToADTArbitrary (Three TypeParameterRef0 TypeParameterRef1 TypeParameterRef2)
+instance ToADTArbitrary (Three Int Int Int)
 
 data SubTypeParameter a b c =
   SubTypeParameter
@@ -189,11 +189,11 @@ data SubTypeParameter a b c =
     , tupleC :: (c,b)
     } deriving (Eq,Show,Generic,OCamlType,FromJSON,ToJSON)
 
-instance Arbitrary (SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2) where
+instance Arbitrary (SubTypeParameter Int Int Int) where
   arbitrary = do
     k <- choose (1,3)
     v <- vector k
     SubTypeParameter <$> pure v <*> arbitrary <*> arbitrary
 
-instance ToADTArbitrary (SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2)
+instance ToADTArbitrary (SubTypeParameter Int Int Int)
 

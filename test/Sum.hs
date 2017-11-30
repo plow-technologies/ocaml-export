@@ -48,14 +48,14 @@ mkGoldenFiles = do
   mkGolden (Proxy :: Proxy SumVariant)
   mkGolden (Proxy :: Proxy WithTuple)
   mkGolden (Proxy :: Proxy SumWithRecord)
-  mkGolden (Proxy :: Proxy (Result Int String))
+  mkGolden (Proxy :: Proxy (Result Int Int))
   mkGolden (Proxy :: Proxy NewType) 
 
 spec :: Spec
 spec = do
   runIO mkGoldenFiles
   let dir = "test/interface/temp"
-  runIO $ mkPackage (Proxy :: Proxy SumPackage) (PackageOptions dir "sum" True $ Just $ SpecOptions "__tests__/sum" "test/golden_files" "http://localhost:8082")
+  runIO $ mkPackage (Proxy :: Proxy SumPackage) (PackageOptions dir "sum" True $ Just $ SpecOptions "__tests__/sum" "golden/sum" "http://localhost:8082")
 
   describe "OCaml Declaration with Interface: Sum Types" $ do
     compareInterfaceFiles "OnOrOff"
@@ -99,10 +99,10 @@ data Result a b
   | Error b
   deriving (Show, Eq, Generic, OCamlType, ToJSON, FromJSON)
 
-instance Arbitrary (Result Int String) where
+instance Arbitrary (Result Int Int) where
   arbitrary = oneof [Success <$> arbitrary, Error <$> arbitrary]
 
-instance ToADTArbitrary (Result Int String)
+instance ToADTArbitrary (Result Int Int)
 
 data SumVariant
   = HasNothing

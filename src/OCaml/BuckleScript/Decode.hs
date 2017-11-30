@@ -425,7 +425,6 @@ renderTypeParameterVals (OCamlSumOfRecordConstructor _ vc) = renderTypeParameter
 renderTypeParameterVals _ = ("","")
 
 
-
 renderTypeParametersAux :: [OCamlValue] -> (Doc,Doc)
 renderTypeParametersAux ocamlValues = do
   let typeParameterNames = getTypeParameterRefNames ocamlValues

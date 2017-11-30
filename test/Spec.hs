@@ -69,8 +69,8 @@ logAllMiddleware app req respond = do
 main :: IO ()
 main = do
   hspec Product.spec
-  hspec Sum.spec
-  hspec Options.spec
+  --hspec Sum.spec
+  --hspec Options.spec
 
   _ <- forkIO $ run 8081 productPackageApp
   run 8082 sumPackageApp

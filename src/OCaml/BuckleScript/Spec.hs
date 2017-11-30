@@ -40,13 +40,17 @@ renderTypeParameterVals _ = ("","")
 
 renderTypeParameterValsAux :: [OCamlValue] -> (Text, Text)
 renderTypeParameterValsAux ocamlValues =
-  ( T.intercalate " " $ replicate (length typeParameterNames) body
-  , T.intercalate " " $ replicate (length typeParameterNames) body2
+  if size > 0
+  then
+  ( T.intercalate " " $ body <$> [0..(size-1)]
+  , T.intercalate " " $ body2 <$> [0..(size-1)]
   )
+  else
+    ("","")
   where
-    typeParameterNames = getTypeParameterRefNames ocamlValues
-    body = "(" <> "Aeson.Decode.wrapResult Aeson.Decode.int" <> ")"
-    body2 = "Aeson.Encode.int"
+    size = length $ getTypeParameterRefNames ocamlValues
+    body i = "(fun _x -> Aeson.Decode.wrapResult (Aeson.Decode.singleEnumerator) Aeson.Helper.TypeParameterRef" <> (T.pack . show $ i) <> ")"
+    body2 i = "(Aeson.Encode.singleEnumerator Aeson.Helper.TypeParameterRef" <> (T.pack . show $ i) <> ")"
     
 getOCamlValues :: ValueConstructor -> [OCamlValue]
 getOCamlValues (NamedConstructor     _ value) = [value]

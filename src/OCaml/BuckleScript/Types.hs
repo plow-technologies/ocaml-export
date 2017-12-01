@@ -56,6 +56,7 @@ import           Data.Proxy
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           Data.Time
+import           Data.Word (Word, Word8, Word16, Word32, Word64)
 import           GHC.Generics
 import           Prelude
 
@@ -252,6 +253,21 @@ instance OCamlType Int32 where
   toOCamlType _ = OCamlPrimitive OInt
 
 instance OCamlType Int64 where
+  toOCamlType _ = OCamlPrimitive OInt
+
+instance OCamlType Word where
+  toOCamlType _ = OCamlPrimitive OInt
+
+instance OCamlType Word8 where
+  toOCamlType _ = OCamlPrimitive OInt
+
+instance OCamlType Word16 where
+  toOCamlType _ = OCamlPrimitive OInt
+
+instance OCamlType Word32 where
+  toOCamlType _ = OCamlPrimitive OInt
+
+instance OCamlType Word64 where
   toOCamlType _ = OCamlPrimitive OInt
 
 instance (OCamlType a, OCamlType b) => OCamlType (a, b) where

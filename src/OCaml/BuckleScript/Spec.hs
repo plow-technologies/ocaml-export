@@ -49,8 +49,8 @@ renderTypeParameterValsAux ocamlValues =
     ("","")
   where
     size = length $ getTypeParameterRefNames ocamlValues
-    body i = "(fun _x -> Aeson.Decode.wrapResult (Aeson.Decode.singleEnumerator) Aeson.Helper.TypeParameterRef" <> (T.pack . show $ i) <> ")"
-    body2 i = "(Aeson.Encode.singleEnumerator Aeson.Helper.TypeParameterRef" <> (T.pack . show $ i) <> ")"
+    body i = "(fun (x : Js_json.t) -> Aeson.Decode.wrapResult (Aeson.Decode.singleEnumerator Aeson.Helper.TypeParameterRef" <> (T.pack . show $ i) <> ") x)"
+    body2 i = "(fun _x -> Aeson.Encode.singleEnumerator Aeson.Helper.TypeParameterRef" <> (T.pack . show $ i) <> ")"
     
 getOCamlValues :: ValueConstructor -> [OCamlValue]
 getOCamlValues (NamedConstructor     _ value) = [value]

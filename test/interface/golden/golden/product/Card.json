@@ -1,45 +1,45 @@
 {
-    "seed": -7563482193342884554,
+    "seed": 8774933072147361445,
     "samples": [
         {
-            "cardValue": 25,
-            "cardSuit": "Spades"
-        },
-        {
-            "cardValue": -18,
+            "cardValue": -10,
             "cardSuit": "Diamonds"
         },
         {
-            "cardValue": 30,
-            "cardSuit": "Hearts"
-        },
-        {
-            "cardValue": 27,
-            "cardSuit": "Spades"
-        },
-        {
             "cardValue": 1,
+            "cardSuit": "Clubs"
+        },
+        {
+            "cardValue": 2,
             "cardSuit": "Hearts"
+        },
+        {
+            "cardValue": 22,
+            "cardSuit": "Diamonds"
+        },
+        {
+            "cardValue": 17,
+            "cardSuit": "Spades"
         },
         {
             "cardValue": -22,
+            "cardSuit": "Clubs"
+        },
+        {
+            "cardValue": 30,
+            "cardSuit": "Clubs"
+        },
+        {
+            "cardValue": -1,
             "cardSuit": "Hearts"
         },
         {
-            "cardValue": 1,
-            "cardSuit": "Clubs"
-        },
-        {
-            "cardValue": 16,
+            "cardValue": 29,
             "cardSuit": "Spades"
         },
         {
-            "cardValue": -18,
-            "cardSuit": "Spades"
-        },
-        {
-            "cardValue": 4,
-            "cardSuit": "Clubs"
+            "cardValue": -19,
+            "cardSuit": "Diamonds"
         }
     ]
 }

@@ -48,7 +48,7 @@ mkGoldenFiles = do
   mkGolden (Proxy :: Proxy SumVariant)
   mkGolden (Proxy :: Proxy WithTuple)
   mkGolden (Proxy :: Proxy SumWithRecord)
-  mkGolden (Proxy :: Proxy (Result Int Int))
+  mkGolden (Proxy :: Proxy (Result TypeParameterRef0 TypeParameterRef1))
   mkGolden (Proxy :: Proxy NewType) 
 
 spec :: Spec
@@ -99,10 +99,10 @@ data Result a b
   | Error b
   deriving (Show, Eq, Generic, OCamlType, ToJSON, FromJSON)
 
-instance Arbitrary (Result Int Int) where
+instance Arbitrary (Result TypeParameterRef0 TypeParameterRef1) where
   arbitrary = oneof [Success <$> arbitrary, Error <$> arbitrary]
 
-instance ToADTArbitrary (Result Int Int)
+instance ToADTArbitrary (Result TypeParameterRef0 TypeParameterRef1)
 
 data SumVariant
   = HasNothing

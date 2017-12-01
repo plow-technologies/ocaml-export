@@ -1,45 +1,45 @@
 {
-    "seed": -3778991361623851114,
+    "seed": 540924912570507078,
     "samples": [
         {
             "tag": "Success",
-            "contents": -21
+            "contents": []
         },
         {
             "tag": "Success",
-            "contents": -15
+            "contents": []
         },
         {
             "tag": "Success",
-            "contents": 24
+            "contents": []
         },
         {
             "tag": "Success",
-            "contents": -28
+            "contents": []
         },
         {
             "tag": "Success",
-            "contents": -30
+            "contents": []
         },
         {
             "tag": "Success",
-            "contents": 16
+            "contents": []
         },
         {
             "tag": "Success",
-            "contents": 25
+            "contents": []
         },
         {
             "tag": "Success",
-            "contents": -3
+            "contents": []
         },
         {
             "tag": "Success",
-            "contents": 3
+            "contents": []
         },
         {
             "tag": "Success",
-            "contents": 10
+            "contents": []
         }
     ]
 }

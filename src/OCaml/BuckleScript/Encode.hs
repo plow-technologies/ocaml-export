@@ -300,12 +300,20 @@ instance HasEncoderRef OCamlPrimitive where
   renderRef OFloat  = pure "Aeson.Encode.float"
   renderRef OString = pure "Aeson.Encode.string"
   renderRef (OList (OCamlPrimitive OChar)) = pure "Aeson.Encode.string"
+
   renderRef (OList datatype) = do
     dd <- renderRef datatype
     return . parens $ "Aeson.Encode.list" <+> dd
+
   renderRef (OOption datatype) = do
     dd <- renderRef datatype
     return $ "Aeson.Encode.optional" <+> dd
+
+  renderRef (OEither t0 t1) = do
+    dt0 <- renderRef t0
+    dt1 <- renderRef t1
+    return $ "Aeson.Encode.either" <+> dt0 <+> dt1
+
   renderRef (OTuple2 t0 t1) = do
     dt0 <- renderRef t0
     dt1 <- renderRef t1

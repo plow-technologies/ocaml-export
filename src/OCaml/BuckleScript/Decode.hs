@@ -185,6 +185,15 @@ instance HasDecoder OCamlConstructor where
 
   render _ = pure ""
 
+renderResult :: Text -> OCamlDatatype -> Reader Options Doc
+renderResult jsonFieldname (OCamlDatatype datatypeName _constructor) =
+  pure
+    $ "(field" <+> dquotes (stext jsonFieldname)
+    <+> "(fun a -> unwrapResult (decode" <> (stext . textUppercaseFirst $ datatypeName) <+> "a)))"
+renderResult jsonFieldname datatype@(OCamlPrimitive _primitive) = do
+  dv <- renderRef datatype
+  pure $ "(field" <+> dquotes (stext jsonFieldname) <+> dv <> ")"
+
 instance HasDecoder OCamlValue where
   render (OCamlRef name) = do
     pure $ "(fun a -> unwrapResult (decode" <> (stext . textUppercaseFirst $ name) <+> "a))"
@@ -199,6 +208,20 @@ instance HasDecoder OCamlValue where
     dy <- render y
     return $ dx <$$> ";" <+> dy
 
+  render (OCamlField name (OCamlPrimitiveRef (OOption datatype))) = do
+    ao <- asks aesonOptions
+    let jsonFieldname = T.pack . Aeson.fieldLabelModifier ao . T.unpack $ name
+    optional <- renderResult jsonFieldname datatype
+    return $ (stext name) <+> "=" <+> "optional" <+> optional <+> "json"
+
+  render (OCamlField name (OCamlPrimitiveRef (OEither dt0 dt1))) = do
+    ao <- asks aesonOptions
+    let jsonFieldname = T.pack . Aeson.fieldLabelModifier ao . T.unpack $ name
+    rdt0 <- renderResult jsonFieldname dt0
+    rdt1 <- renderResult jsonFieldname dt1
+    return $ (stext name) <+> "=" <+> "either" <+> rdt0 <+> rdt1 <+> "json"
+    
+{-
   -- renderRef has separate rules for type parameters and non primitive types
   -- however in the case of OOption, they should be rendered the same way
   -- to remove Js_result.t
@@ -213,6 +236,7 @@ instance HasDecoder OCamlValue where
     let jsonFieldname = T.pack . Aeson.fieldLabelModifier ao . T.unpack $ name
     dv <- renderRef datatype
     return $ (stext name) <+> "=" <+> "optional (field" <+> dquotes (stext jsonFieldname) <+> dv <> ")" <+> "json"
+-}
 
   render (OCamlField name value) = do
     ao <- asks aesonOptions
@@ -247,9 +271,11 @@ instance HasDecoderRef OCamlPrimitive where
     d <- renderRef (OList (OCamlPrimitive (OTuple2 (OCamlPrimitive key) value)))
     pure . parens $ "map Dict.fromList" <+> d
 
-  renderRef (OOption datatype) = do
-    dt <- renderRef datatype
-    pure . parens $ "maybe" <+> dt
+  renderRef (OOption _) = pure ""
+--    dt <- renderRef datatype
+--    pure . parens $ "maybe" <+> dt
+
+  renderRef (OEither _ _) = pure ""
 
   renderRef (OTuple2 v0 v1) = do
     dv0 <- renderRef v0

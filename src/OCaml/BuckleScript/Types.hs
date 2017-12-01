@@ -76,14 +76,15 @@ data OCamlDatatype
 -- | Smallest unit of computation in OCaml.
 data OCamlPrimitive
   = OInt -- ^ int
-  | OBool -- ^ bool
+  | OBool -- ^ bool, boolean
   | OChar -- ^ char, it gets interpreted as a string because OCaml char does not support UTF-8
   | ODate -- ^ Js_date.t
   | OFloat -- ^ float
   | OString -- ^ string
   | OUnit -- ^ ()
-  | OList OCamlDatatype -- ^ 'a list
+  | OList OCamlDatatype -- ^ 'a list, 'a Js_array.t
   | OOption OCamlDatatype -- ^ 'a option
+  | OEither OCamlDatatype OCamlDatatype -- ^ 'l 'r Aeson.Compatibility.Either.t
   | ODict OCamlPrimitive OCamlDatatype -- ^ 'a Js_dict.t
   | OTuple2 OCamlDatatype OCamlDatatype -- ^ (*)
   | OTuple3 OCamlDatatype OCamlDatatype OCamlDatatype -- ^ (**)
@@ -224,6 +225,9 @@ instance OCamlType a => OCamlType [a] where
 
 instance OCamlType a => OCamlType (Maybe a) where
   toOCamlType _ = OCamlPrimitive (OOption (toOCamlType (Proxy :: Proxy a)))
+
+instance (OCamlType l, OCamlType r) => OCamlType (Either l r) where
+  toOCamlType _ = OCamlPrimitive (OEither (toOCamlType (Proxy :: Proxy l)) (toOCamlType (Proxy :: Proxy r)))
 
 instance OCamlType () where
   toOCamlType _ = OCamlPrimitive OUnit

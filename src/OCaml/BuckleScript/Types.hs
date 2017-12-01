@@ -1,5 +1,5 @@
 {-|
-Module      : OCaml.Type
+Module      : OCaml.BuckleScript.Types
 Description : Tree representation of Haskell datatypes in OCaml
 Copyright   : Plow Technologies, 2017
 License     : BSD3
@@ -21,7 +21,7 @@ instances.
 {-# LANGUAGE TypeOperators        #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 
-module OCaml.Type
+module OCaml.BuckleScript.Types
   ( OCamlDatatype (..)
   , OCamlPrimitive (..)
   , OCamlConstructor (..)
@@ -44,13 +44,9 @@ module OCaml.Type
   , getOCamlValues
   , getTypeParameters
   , isTypeParameterRef
-
-  -- re-export
---  , Options (..)
---  , defaultOptions
   ) where
 
--- import           Data.Aeson (Options(..), defaultOptions)
+import           Data.Aeson (ToJSON, FromJSON)
 import           Data.Int     (Int16, Int32, Int64, Int8)
 import           Data.IntMap
 import           Data.List (nub)
@@ -62,6 +58,10 @@ import qualified Data.Text as T
 import           Data.Time
 import           GHC.Generics
 import           Prelude
+
+import Test.QuickCheck
+-- quicheck-arbitrary-adt
+import Test.QuickCheck.Arbitrary.ADT
 
 -- | Top level of an OCaml datatype. A data type may be composed of
 --   primitives and/or a combination of constructors and primitives.
@@ -95,7 +95,7 @@ data OCamlPrimitive
 data OCamlConstructor 
   = OCamlValueConstructor ValueConstructor -- ^ Sum, record (product with named fields) or product without named fields
   | OCamlEnumeratorConstructor [EnumeratorConstructor] -- ^ Sum of enumerations only. If a sum contains enumerators and at least one constructor with a value then it is an OCamlValueConstructor
-  | OCamlSumOfRecordConstructor Text ValueConstructor -- ^ Sum that contains at least one record. This construction is unique to Haskell. It has special Encoding and Decoding rules in order to output a valid OCaml program. i.e. `data A = A {a :: Int} | B {b :: String}`
+  | OCamlSumOfRecordConstructor Text ValueConstructor -- ^ Sum that contains at least one record. This construction is unique to Haskell. pIt has special Encoding and Decoding rules in order to output a valid OCaml program. i.e. `data A = A {a :: Int} | B {b :: String}`
   deriving (Show, Eq)
 
 -- | OCamlConstructor of one RecordConstructor is a record type.
@@ -331,27 +331,51 @@ ToJSON and FromJSON instances are provided for the following types in aeson
 
 
 -- | Used to fill the type parameters of proxy types. `Proxy :: Proxy (Maybe TypeParameterRef0)`, `Proxy :: Proxy Either TypeParameterRef0 TypeParameterRef1`.
-data TypeParameterRef0 = TypeParameterRef0 deriving (Show, Eq, Generic)
+data TypeParameterRef0 = TypeParameterRef0 deriving (Read, Show, Eq, Generic)
+instance Arbitrary TypeParameterRef0 where arbitrary = pure TypeParameterRef0
+instance ToADTArbitrary TypeParameterRef0
+instance FromJSON TypeParameterRef0
+instance ToJSON TypeParameterRef0
 instance OCamlType TypeParameterRef0 where
   toOCamlType _ = OCamlDatatype "a0" $ OCamlValueConstructor $ NamedConstructor "a0" $ OCamlTypeParameterRef "a0"
 
-data TypeParameterRef1 = TypeParameterRef1 deriving (Show, Eq)
+data TypeParameterRef1 = TypeParameterRef1 deriving (Read, Show, Eq, Generic)
+instance Arbitrary TypeParameterRef1 where arbitrary = pure TypeParameterRef1
+instance ToADTArbitrary TypeParameterRef1
+instance FromJSON TypeParameterRef1
+instance ToJSON TypeParameterRef1
 instance OCamlType TypeParameterRef1 where
   toOCamlType _ = OCamlDatatype "a1" $ OCamlValueConstructor $ NamedConstructor "a1" $ OCamlTypeParameterRef "a1"
 
-data TypeParameterRef2 = TypeParameterRef2 deriving (Show, Eq)
+data TypeParameterRef2 = TypeParameterRef2 deriving (Read, Show, Eq, Generic)
+instance Arbitrary TypeParameterRef2 where arbitrary = pure TypeParameterRef2
+instance ToADTArbitrary TypeParameterRef2
+instance FromJSON TypeParameterRef2
+instance ToJSON TypeParameterRef2
 instance OCamlType TypeParameterRef2 where
   toOCamlType _ = OCamlDatatype "a2" $ OCamlValueConstructor $ NamedConstructor "a2" $ OCamlTypeParameterRef "a2"
 
-data TypeParameterRef3 = TypeParameterRef3 deriving (Show, Eq)
+data TypeParameterRef3 = TypeParameterRef3 deriving (Read, Show, Eq, Generic)
+instance Arbitrary TypeParameterRef3 where arbitrary = pure TypeParameterRef3
+instance ToADTArbitrary TypeParameterRef3
+instance FromJSON TypeParameterRef3
+instance ToJSON TypeParameterRef3
 instance OCamlType TypeParameterRef3 where
   toOCamlType _ = OCamlDatatype "a3" $ OCamlValueConstructor $ NamedConstructor "a3" $ OCamlTypeParameterRef "a3"
 
-data TypeParameterRef4 = TypeParameterRef4 deriving (Show, Eq)
+data TypeParameterRef4 = TypeParameterRef4 deriving (Read, Show, Eq, Generic)
+instance Arbitrary TypeParameterRef4 where arbitrary = pure TypeParameterRef4
+instance ToADTArbitrary TypeParameterRef4
+instance FromJSON TypeParameterRef4
+instance ToJSON TypeParameterRef4
 instance OCamlType TypeParameterRef4 where
   toOCamlType _ = OCamlDatatype "a4" $ OCamlValueConstructor $ NamedConstructor "a4" $ OCamlTypeParameterRef "a4"
 
-data TypeParameterRef5 = TypeParameterRef5 deriving (Show, Eq)
+data TypeParameterRef5 = TypeParameterRef5 deriving (Read, Show, Eq, Generic)
+instance Arbitrary TypeParameterRef5 where arbitrary = pure TypeParameterRef5
+instance ToADTArbitrary TypeParameterRef5
+instance FromJSON TypeParameterRef5
+instance ToJSON TypeParameterRef5
 instance OCamlType TypeParameterRef5 where
   toOCamlType _ = OCamlDatatype "a5" $ OCamlValueConstructor $ NamedConstructor "a5" $ OCamlTypeParameterRef "a5"
 

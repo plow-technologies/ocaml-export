@@ -21,13 +21,44 @@ import qualified Data.Text as T
 import qualified Data.Text.Lazy as LT
 import           Formatting hiding (stext, text)
 import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
+  -- re-export
+--  , Options (..)
+--  , defaultOptions
+import qualified Data.Aeson.Types as Aeson (Options(..), defaultOptions)
+
+
+-- | For URLs and POSIX systems.
+(</>) :: Text -> Text -> Text
+(</>) a b =
+    if hasEndingSeparator sA
+    then
+      if hasLeadingSeparator sB
+      then T.pack $ sA ++ drop 1 sB
+      else T.pack $ sA ++ sB
+    else
+      T.pack $ sA ++ "/" ++ sB
+  where
+    sA = T.unpack a
+    sB = T.unpack b
+    
+    hasEndingSeparator :: String -> Bool
+    hasEndingSeparator lst@(_hd:_tl) = (==) '/' . last $ lst
+    hasEndingSeparator [] = False
+
+    hasLeadingSeparator :: String -> Bool
+    hasLeadingSeparator (hd:_tl) = hd == '/'
+    hasLeadingSeparator [] = False
+
+infix 5 </>
+
 
 data Options = Options
   { includeOCamlInterface :: Bool
+  , aesonOptions :: Aeson.Options
   }
 
 defaultOptions :: Options
-defaultOptions = Options {includeOCamlInterface = False}
+defaultOptions = Options {includeOCamlInterface = False, aesonOptions = Aeson.defaultOptions}
 
 cr :: Format r r
 cr = now "\n"

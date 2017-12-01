@@ -1,5 +1,5 @@
 {
-  "name": "ocaml-export",
+  "name": "generic",
   "bsc-flags": ["-bs-no-version-header", "-bs-super-errors"],
   "reason": {"react-jsx" : 2},
   "bs-dependencies": ["bs-node-fetch", "bs-aeson", "bs-node"],
@@ -15,11 +15,6 @@
     },
     {
       "dir": "__tests__/product",
-      "subdirs": true,
-      "type": "dev"
-    },
-    {
-      "dir": "__tests__/sum",
       "subdirs": true,
       "type": "dev"
     }

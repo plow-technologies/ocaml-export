@@ -9,10 +9,12 @@ Stability   : experimental
 -}
 
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module OCaml.File where
 
 -- base
+import Data.ByteString (ByteString)
 import Data.Monoid
 
 -- directory
@@ -26,11 +28,23 @@ import qualified Data.Text.IO     as T
 -- ocaml-export
 import OCaml.BuckleScript.Decode
 import OCaml.BuckleScript.Encode
+import OCaml.BuckleScript.Record
 import OCaml.BuckleScript.Spec
+import OCaml.BuckleScript.Types
 import OCaml.Common
-import OCaml.Record
-import OCaml.Type
 
+-- file-embed
+import Data.FileEmbed (embedFile)
+
+
+bsConfigFile :: ByteString
+bsConfigFile = $(embedFile "bs-src/bsconfig.json")
+
+packageFile :: ByteString
+packageFile = $(embedFile "bs-src/package.json")
+
+webpackConfigFile :: ByteString
+webpackConfigFile = $(embedFile "bs-src/webpack.config.js")
 
 data OCamlFile =
   OCamlFile
@@ -49,6 +63,14 @@ instance Monoid OCamlInterface where
   mappend a b = OCamlInterface (declars a <> declars b) (inters a <> inters b) (specs a <> specs b)
   mempty = OCamlInterface [] [] []
 
+mkOCamlInterfaceWithOptions :: OCamlType a => Options -> a -> OCamlInterface
+mkOCamlInterfaceWithOptions options a =
+  OCamlInterface
+    [toOCamlTypeSource a, toOCamlEncoderSourceWith (options {includeOCamlInterface = True}) a, toOCamlDecoderSourceWith (options {includeOCamlInterface = True}) a]
+    [toOCamlTypeSource a, toOCamlEncoderInterface a, toOCamlDecoderInterface a]
+    []
+
+
 mkOCamlInterface :: OCamlType a => a -> OCamlInterface
 mkOCamlInterface a =
   OCamlInterface
@@ -61,7 +83,7 @@ mkOCamlInterfaceWithSpec url goldenDir modul a =
   OCamlInterface
     [toOCamlTypeSource a, toOCamlEncoderSourceWith (defaultOptions {includeOCamlInterface = True}) a, toOCamlDecoderSourceWith (defaultOptions {includeOCamlInterface = True}) a]
     [toOCamlTypeSource a, toOCamlEncoderInterface a, toOCamlDecoderInterface a]
-    [toOCamlSpec a modul url goldenDir]
+    [toOCamlSpec a [modul] url goldenDir]
 
 
 createOCamlFile :: FilePath -> OCamlFile -> IO ()
@@ -87,7 +109,7 @@ createOCamlFileWithInterface rootDir specRootDir fileName ocamlInterface = do
     then do
       let specfp = specRootDir <> "/" <> fileName
           specBody = "let () =\n" <> (T.intercalate "\n\n" (specs ocamlInterface) <> "\n")
-      T.writeFile (specfp <> ".ml") specBody
+      T.writeFile (specfp <> "_spec.ml") specBody
     else pure ()
   
 createOCamlSpecFile :: FilePath -> FilePath -> Text -> IO ()
@@ -95,7 +117,7 @@ createOCamlSpecFile rootDir fileName ocamlSpec = do
   createDirectoryIfMissing True rootDir
   let fp = rootDir <> "/" <> fileName
       body = "let () =\n" <> ocamlSpec
-  T.writeFile (fp <> ".ml") body
+  T.writeFile (fp <> "_spec.ml") body
 {-
 createOCamlSpecFile :: FilePath -> FilePath -> [(OCamlDatatype,Text,Text)] -> IO ()
 createOCamlSpecFile rootDir fileName typs = do

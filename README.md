@@ -4,6 +4,19 @@ Export Haskell types to OCaml.
 
 Export aeson serializations to OCaml BuckleScript.
 
+## Todo
+
+- [ ] Use internal modules
+- [ ] Clean up OCaml.BuckleScript.Module
+- [ ] Automate package files, commit bs dependencies to npm
+- [ ] Documentation
+- [ ] Examples
+- [ ] readthedocs
+- [ ] More tests
+- [ ] Haskell list as OCaml array
+- [ ] Support (Map String ..) (Map Text ..) (Map Int ..), must provide one decoder
+- [ ] Support (Map x ..) but two encoders/decoders must be provided
+
 ## Test
 
 ```

@@ -19,17 +19,30 @@ module OCaml.BuckleScript.Decode
   , toOCamlDecoderSource
   , toOCamlDecoderSourceWith
   , toOCamlDecoderInterface
+
+  , toOCamlDecoderSourceWith'
+  , toOCamlDecoderInterface'  
   ) where
 
+-- base
 import           Control.Monad.Reader
 import qualified Data.List as L
 import           Data.Maybe (catMaybes)
 import           Data.Monoid
+
+-- aeson
+import qualified Data.Aeson.Types as Aeson (Options(..))
+
+-- text
 import           Data.Text (Text)
 import qualified Data.Text as T
-import           OCaml.Common
-import           OCaml.Type hiding (getOCamlValues)
+
+-- wl-pprint
 import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
+
+-- ocaml-export
+import           OCaml.BuckleScript.Types hiding (getOCamlValues)
+import           OCaml.Common
 
 
 -- | Render OCamlDatatype into an OCaml declaration
@@ -189,17 +202,23 @@ instance HasDecoder OCamlValue where
   -- renderRef has separate rules for type parameters and non primitive types
   -- however in the case of OOption, they should be rendered the same way
   -- to remove Js_result.t
-  render (OCamlField name (OCamlPrimitiveRef (OOption (OCamlDatatype datatypeName _)))) =
-    pure $ (stext name) <+> "=" <+> "optional (field" <+> dquotes (stext name)
+  render (OCamlField name (OCamlPrimitiveRef (OOption (OCamlDatatype datatypeName _)))) = do
+    ao <- asks aesonOptions
+    let jsonFieldname = T.pack . Aeson.fieldLabelModifier ao . T.unpack $ name
+    pure $ (stext name) <+> "=" <+> "optional (field" <+> dquotes (stext jsonFieldname)
       <+> "(fun a -> unwrapResult (decode" <> (stext . textUppercaseFirst $ datatypeName) <+> "a)))" <+> "json"
 
   render (OCamlField name (OCamlPrimitiveRef (OOption datatype))) = do
+    ao <- asks aesonOptions
+    let jsonFieldname = T.pack . Aeson.fieldLabelModifier ao . T.unpack $ name
     dv <- renderRef datatype
-    return $ (stext name) <+> "=" <+> "optional (field" <+> dquotes (stext name) <+> dv <> ")" <+> "json"
+    return $ (stext name) <+> "=" <+> "optional (field" <+> dquotes (stext jsonFieldname) <+> dv <> ")" <+> "json"
 
   render (OCamlField name value) = do
+    ao <- asks aesonOptions
+    let jsonFieldname = T.pack . Aeson.fieldLabelModifier ao . T.unpack $ name    
     dv <- render value
-    return $ (stext name) <+> "=" <+> "field" <+> dquotes (stext name) <+> dv <+> "json"
+    return $ (stext name) <+> "=" <+> "field" <+> dquotes (stext jsonFieldname) <+> dv <+> "json"
 
   render OCamlEmpty = pure (stext "")
 
@@ -271,6 +290,9 @@ instance HasDecoderRef OCamlPrimitive where
 toOCamlDecoderInterface :: OCamlType a => a -> T.Text
 toOCamlDecoderInterface x =
   pprinter $ runReader (renderInterface (toOCamlType x)) defaultOptions
+
+toOCamlDecoderInterface' :: OCamlType a => a -> Doc
+toOCamlDecoderInterface' x = runReader (renderInterface (toOCamlType x)) defaultOptions
   
 toOCamlDecoderRefWith :: OCamlType a => Options -> a -> T.Text
 toOCamlDecoderRefWith options x = pprinter $ runReader (renderRef (toOCamlType x)) options
@@ -281,6 +303,10 @@ toOCamlDecoderRef = toOCamlDecoderRefWith defaultOptions
 toOCamlDecoderSourceWith :: OCamlType a => Options -> a -> T.Text
 toOCamlDecoderSourceWith options x = pprinter $ runReader (render (toOCamlType x)) options
 
+toOCamlDecoderSourceWith' :: OCamlType a => a -> Doc
+toOCamlDecoderSourceWith' x = runReader (render (toOCamlType x)) defaultOptions
+
+
 toOCamlDecoderSource :: OCamlType a => a -> T.Text
 toOCamlDecoderSource = toOCamlDecoderSourceWith defaultOptions
 
@@ -288,8 +314,10 @@ toOCamlDecoderSource = toOCamlDecoderSourceWith defaultOptions
     
 -- | "<name>" -> decode <name>
 renderSumCondition :: T.Text -> Doc -> Reader Options Doc
-renderSumCondition name contents =
-  pure $ "|" <+> dquotes (stext name) <+> "->" <$$>
+renderSumCondition name contents = do
+  ao <- asks aesonOptions
+  let jsonConstructorName = T.pack . Aeson.constructorTagModifier ao . T.unpack $ name
+  pure $ "|" <+> dquotes (stext jsonConstructorName) <+> "->" <$$>
     indent 3 contents
 
 -- | Render a sum type constructor in context of a data type with multiple
@@ -301,13 +329,15 @@ renderSum (OCamlValueConstructor (NamedConstructor name v@(Values _ _))) = do
   renderSumCondition name val
 
 renderSum (OCamlValueConstructor (NamedConstructor name value)) = do
+  ao <- asks aesonOptions
+  let jsonConstructorName = T.pack . Aeson.constructorTagModifier ao . T.unpack $ name
   val <- render value
   renderSumCondition name $ parens
     ("match Aeson.Decode." <> parens ("field \"contents\"" <+> val <+> "json") <+> "with"
       <$$>
         indent 1
           (    "| v -> Js_result.Ok (" <> (stext name) <+> "v)"
-          <$$> "| exception Aeson.Decode.DecodeError message -> Js_result.Error (\"" <> (stext name) <> ": \" ^ message)"
+          <$$> "| exception Aeson.Decode.DecodeError message -> Js_result.Error (\"" <> (stext jsonConstructorName) <> ": \" ^ message)"
           )           <> line
     )
 
@@ -328,13 +358,13 @@ renderSum (OCamlEnumeratorConstructor _) = pure "" -- handled elsewhere
 renderSum _ = pure ""
 
 renderOutsideEncoder :: Text -> Text -> Reader Options Doc
-renderOutsideEncoder typeName name =  
-   return $
-         "|" <+> (dquotes . stext $ name) <+> "->"
-    <$$> indent 3 ("(match" <+> "decode" <> (stext $ typeName <> textUppercaseFirst name) <+> "json" <+> "with"
-    <$$> indent 1 ("| Js_result.Ok v -> Js_result.Ok" <+> (parens ((stext $ textUppercaseFirst name) <+> "v"))
-    <$$> "| Js_result.Error message -> Js_result.Error" <+> (parens $ (dquotes $ "decode" <> stext typeName <> ": ") <+> "^ message"))
-    <$$> ")")
+renderOutsideEncoder typeName name =
+  pure $
+        "|" <+> (dquotes . stext $ name) <+> "->"
+   <$$> indent 3 ("(match" <+> "decode" <> (stext $ typeName <> textUppercaseFirst name) <+> "json" <+> "with"
+   <$$> indent 1 ("| Js_result.Ok v -> Js_result.Ok" <+> (parens ((stext $ textUppercaseFirst name) <+> "v"))
+   <$$> "| Js_result.Error message -> Js_result.Error" <+> (parens $ (dquotes $ "decode" <> stext typeName <> ": ") <+> "^ message"))
+   <$$> ")")
 
 
 flattenOCamlValue :: OCamlValue -> [OCamlValue]
@@ -393,7 +423,6 @@ renderTypeParameterVals :: OCamlConstructor -> (Doc,Doc)
 renderTypeParameterVals (OCamlValueConstructor vc) = renderTypeParameterValsAux $ getOCamlValues vc
 renderTypeParameterVals (OCamlSumOfRecordConstructor _ vc) = renderTypeParameterValsAux $ getOCamlValues vc
 renderTypeParameterVals _ = ("","")
-
 
 
 renderTypeParametersAux :: [OCamlValue] -> (Doc,Doc)

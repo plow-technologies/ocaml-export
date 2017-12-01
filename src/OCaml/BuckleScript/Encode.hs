@@ -15,6 +15,9 @@ module OCaml.BuckleScript.Encode
   , toOCamlEncoderSource
   , toOCamlEncoderSourceWith
   , toOCamlEncoderInterface
+
+  , toOCamlEncoderSourceWith'
+  , toOCamlEncoderInterface'
   ) where
 
 -- base
@@ -22,6 +25,9 @@ import           Control.Monad.Reader
 import qualified Data.List as L
 import           Data.Maybe (catMaybes)
 import           Data.Monoid
+
+-- aeson
+import qualified Data.Aeson.Types as Aeson (Options(..))
 
 -- text
 import           Data.Text (Text)
@@ -31,8 +37,8 @@ import qualified Data.Text as T
 import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
 
 -- ocaml-export
+import           OCaml.BuckleScript.Types
 import           OCaml.Common
-import           OCaml.Type
 
 -- | Render the encoder function
 class HasEncoder a where
@@ -194,12 +200,14 @@ renderSumRecordInterface _ _ = Nothing
 
 -- |
 renderSumOfRecordEncoder :: Text -> Text -> Reader Options Doc
-renderSumOfRecordEncoder typeName name =  
+renderSumOfRecordEncoder typeName name = do
+  ao <- asks aesonOptions
+  let jsonConstructorName = T.pack . Aeson.constructorTagModifier ao . T.unpack $ name
   pure $
          "|" <+> stext name <+> "y0 ->"
     <$$> "   (match (Js.Json.decodeObject (encode" <> (stext . textUppercaseFirst $ typeName) <> stext name <+> "y0)) with"
     <$$> "    | Some dict ->"
-    <$$> "       Js.Dict.set dict \"tag\" (Js.Json.string \"" <> stext name <> "\");"
+    <$$> "       Js.Dict.set dict \"tag\" (Js.Json.string \"" <> stext jsonConstructorName <> "\");"
     <$$> "       Js.Json.object_ dict"
     <$$> "    | None ->"
     <$$> "       Aeson.Encode.object_ []"
@@ -215,12 +223,16 @@ jsonEncodeObject constructor tag mContents =
 -- | render body rules for sum types
 renderSum :: OCamlConstructor -> Reader Options Doc
 renderSum (OCamlValueConstructor (NamedConstructor name OCamlEmpty)) = do
-  let constructorMatchCase = "|" <+> stext name <+> "->"
-      encodeTag = pair (dquotes "tag") ("Aeson.Encode.string" <+> dquotes (stext name))
+  ao <- asks aesonOptions
+  let jsonConstructorName = T.pack . Aeson.constructorTagModifier ao . T.unpack $ name
+      constructorMatchCase = "|" <+> stext name <+> "->"
+      encodeTag = pair (dquotes "tag") ("Aeson.Encode.string" <+> dquotes (stext jsonConstructorName))
   pure $ jsonEncodeObject constructorMatchCase encodeTag Nothing
 
 renderSum (OCamlValueConstructor (NamedConstructor name value)) = do
   let constructorParams = constructorParameters 0 value
+  ao <- asks aesonOptions
+  let jsonConstructorName = T.pack . Aeson.constructorTagModifier ao . T.unpack $ name
   (encoders, _) <- renderVariable constructorParams value
   let encoders' =
         if length constructorParams > 1
@@ -231,15 +243,17 @@ renderSum (OCamlValueConstructor (NamedConstructor name value)) = do
         then ["("] <> (L.intersperse "," constructorParams) <> [")"]
         else (L.intersperse "," constructorParams)
       constructorMatchCase  = "|" <+> stext name <+> foldl1 (<>) constructorParams' <+> "->"
-      encodeTag = pair (dquotes "tag") ("Aeson.Encode.string" <+> dquotes (stext name))
+      encodeTag = pair (dquotes "tag") ("Aeson.Encode.string" <+> dquotes (stext jsonConstructorName))
       encodeContents  = ";" <+> pair (dquotes "contents") encoders'
 
   pure $ jsonEncodeObject constructorMatchCase encodeTag (Just encodeContents)
 
 renderSum (OCamlValueConstructor (RecordConstructor name value)) = do
+  ao <- asks aesonOptions
+  let jsonConstructorName = T.pack . Aeson.constructorTagModifier ao . T.unpack $ name
   encoder <- render value
   let constructorMatchCase = "|" <+> stext name <+> "->"
-      encodeTag = pair (dquotes "tag") (dquotes $ stext name)
+      encodeTag = pair (dquotes "tag") (dquotes $ stext jsonConstructorName)
       encodeContents = comma <+> encoder
   pure $ jsonEncodeObject constructorMatchCase encodeTag (Just encodeContents)
 
@@ -262,8 +276,10 @@ renderSum _ = return ""
 instance HasEncoder OCamlValue where
   render (OCamlField name value) = do
     valueBody <- render value
+    ao <- asks aesonOptions
+    let jsonFieldname = T.pack . Aeson.fieldLabelModifier ao . T.unpack $ name
     return . spaceparens $
-      dquotes (stext name) <> comma <+>
+      dquotes (stext jsonFieldname) <> comma <+>
       (valueBody <+> "x." <> stext name)
   render (OCamlTypeParameterRef name) =
     pure $ "encode" <> (stext . textUppercaseFirst $ name)
@@ -334,6 +350,9 @@ toOCamlEncoderInterface :: OCamlType a => a -> T.Text
 toOCamlEncoderInterface x =
   pprinter $ runReader (renderTypeInterface (toOCamlType x)) defaultOptions
 
+toOCamlEncoderInterface' :: OCamlType a => a -> Doc
+toOCamlEncoderInterface' x = runReader (renderTypeInterface (toOCamlType x)) defaultOptions
+
 toOCamlEncoderRefWith :: OCamlType a => Options -> a -> T.Text
 toOCamlEncoderRefWith options x =
   pprinter $ runReader (renderRef (toOCamlType x)) options
@@ -344,6 +363,10 @@ toOCamlEncoderRef = toOCamlEncoderRefWith defaultOptions
 toOCamlEncoderSourceWith :: OCamlType a => Options -> a -> T.Text
 toOCamlEncoderSourceWith options x =
   pprinter $ runReader (render (toOCamlType x)) options
+
+toOCamlEncoderSourceWith' :: OCamlType a => a -> Doc
+toOCamlEncoderSourceWith' x = runReader (render (toOCamlType x)) defaultOptions
+
 
 toOCamlEncoderSource :: OCamlType a => a -> T.Text
 toOCamlEncoderSource = toOCamlEncoderSourceWith defaultOptions

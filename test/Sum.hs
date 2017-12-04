@@ -24,15 +24,20 @@ import Test.QuickCheck hiding (Result, Success)
 import Test.QuickCheck.Arbitrary.ADT
 import Test.Aeson.Internal.ADT.GoldenSpecs
 
+import Servant
+import Servant.API
 
 type SumPackage
-  =    OCamlModule '["OnOrOff"] '[] :> OnOrOff
+  =    OCamlModule '["OnOrOff"] '[] :> OnOrOff -- :> NameOrIdNumber :> SumVariant
   :<|> OCamlModule '["NameOrIdNumber"] '[] :> NameOrIdNumber
   :<|> OCamlModule '["SumVariant"] '[] :> SumVariant
   :<|> OCamlModule '["WithTuple"] '[] :> WithTuple
   :<|> OCamlModule '["SumWithRecord"] '[] :> SumWithRecord
   :<|> OCamlModule '["Result"] '[] :> Result TypeParameterRef0 TypeParameterRef1
   :<|> OCamlModule '["NewType"] '[] :> NewType
+
+-- server1 :: Server (MkOCamlSpecAPI SumPackage)
+-- server1 = (pure :<|> (pure :<|> pure))
 
 compareInterfaceFiles = compareFiles "test/interface" "sum" True
 

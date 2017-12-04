@@ -45,7 +45,6 @@ mkGolden Proxy = mkGoldenFileForType 10 (Proxy :: Proxy a) "test/interface/golde
 
 mkGoldenFiles :: IO ()
 mkGoldenFiles = do
-  mkGolden (Proxy :: Proxy SimpleChoice)
   mkGolden (Proxy :: Proxy Person)
   mkGolden (Proxy :: Proxy Company)
   mkGolden (Proxy :: Proxy Suit)
@@ -69,7 +68,6 @@ spec = do
   runIO $ mkPackage (Proxy :: Proxy ProductPackage) (PackageOptions dir "product" True $ Just $ SpecOptions "__tests__/product" "golden/product" "http://localhost:8081")
   
   describe "OCaml Declaration with Interface: Product Types" $ do
-    compareInterfaceFiles "SimpleChoice"
     compareInterfaceFiles "Person"
     compareInterfaceFiles "Company"
     compareInterfaceFiles "Card"

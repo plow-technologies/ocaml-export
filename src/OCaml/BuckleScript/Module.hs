@@ -393,7 +393,7 @@ mkServer typeName Proxy = do
   if (length sizes) < 1 || (not . and $ (> 0) <$> sizes)
     then fail $ "sizes must have at least one element and each element must be greater than zero: " <> show sizes
     else do
-      let argss = (\size -> foldl (\l r -> ParensE $ UInfixE l (ConE $ mkName ":<|>") r) (VarE $ mkName "pure") (replicate (size-1) (VarE $ mkName "pure"))) <$> sizes
+      let argss = (\size -> foldr (\l r -> ParensE $ UInfixE l (ConE $ mkName ":<|>") r) (VarE $ mkName "pure") (replicate (size-1) (VarE $ mkName "pure"))) <$> sizes
       let args = foldl (\l r -> UInfixE l (ConE $ mkName ":<|>") r) (head argss) (tail argss)
       return $
         [ SigD serverName (AppT (ConT $ mkName "Server") $ AppT (ConT $ mkName "MkOCamlSpecAPI") (ConT $ apiName))

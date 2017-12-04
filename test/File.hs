@@ -37,7 +37,6 @@ mkGoldenFiles :: IO ()
 mkGoldenFiles = do
   mkGolden (Proxy :: Proxy Person)
 
-
 spec :: Spec
 spec = do
   runIO $ mkGoldenFiles

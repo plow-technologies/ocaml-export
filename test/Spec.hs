@@ -73,10 +73,11 @@ main :: IO ()
 main = do
   hspec Product.spec
   hspec Sum.spec
+  hspec File.spec
   hspec Options.spec
 
   _ <- forkIO $ run 8081 productPackageApp
-  run 8082 sumPackageApp
-
+  _ <- forkIO $ run 8082 sumPackageApp
+  run 8083 filePackageApp
 
 -- curl -i -d '"hi"' -H 'Content-type: application/json' -X POST http://localhost:8081/x/y

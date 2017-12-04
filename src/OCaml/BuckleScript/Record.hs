@@ -164,6 +164,10 @@ instance HasTypeRef OCamlPrimitive where
     dk <- renderRef k
     dv <- renderRef v
     return $ "Dict" <+> parens dk <+> parens dv
+  renderRef (OEither k v) = do
+    dk <- renderRef k
+    dv <- renderRef v
+    return $ (parens $ dk <> "," <+> dv) <+> "Aeson.Compatibility.Either.t"
   renderRef OInt    = pure "int"
   renderRef ODate   = pure "Js_date.t"
   renderRef OBool   = pure "bool"

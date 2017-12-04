@@ -30,7 +30,8 @@ import Test.Aeson.Internal.ADT.GoldenSpecs
 import Util
 
 type ProductPackage
-  =    OCamlModule '["Person"] '[] :> Person
+  =    OCamlModule '["SimpleChoice"] '[] :> SimpleChoice
+  :<|> OCamlModule '["Person"] '[] :> Person
   :<|> OCamlModule '["Company"] '[] :> Person :> Company
   :<|> OCamlModule '["Card"] '[] :> Suit :> Card
   :<|> OCamlModule '["CustomOption"] '[] :> Person :> Company2
@@ -44,6 +45,7 @@ mkGolden Proxy = mkGoldenFileForType 10 (Proxy :: Proxy a) "test/interface/golde
 
 mkGoldenFiles :: IO ()
 mkGoldenFiles = do
+  mkGolden (Proxy :: Proxy SimpleChoice)
   mkGolden (Proxy :: Proxy Person)
   mkGolden (Proxy :: Proxy Company)
   mkGolden (Proxy :: Proxy Suit)
@@ -67,6 +69,7 @@ spec = do
   runIO $ mkPackage (Proxy :: Proxy ProductPackage) (PackageOptions dir "product" True $ Just $ SpecOptions "__tests__/product" "golden/product" "http://localhost:8081")
   
   describe "OCaml Declaration with Interface: Product Types" $ do
+    compareInterfaceFiles "SimpleChoice"
     compareInterfaceFiles "Person"
     compareInterfaceFiles "Company"
     compareInterfaceFiles "Card"
@@ -87,6 +90,15 @@ spec = do
     compareNoInterfaceFiles "ThreeTypeParameters"
     compareNoInterfaceFiles "SubTypeParameter"
 
+data SimpleChoice =
+  SimpleChoice
+    { choice :: Either String Int
+    } deriving (Show, Eq, Generic, OCamlType, FromJSON, ToJSON)
+
+instance Arbitrary SimpleChoice where
+  arbitrary = SimpleChoice <$> arbitrary
+
+instance ToADTArbitrary SimpleChoice
 
 data Person = Person
   { id :: Int

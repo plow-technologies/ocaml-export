@@ -214,13 +214,14 @@ instance HasDecoder OCamlValue where
     optional <- renderResult jsonFieldname datatype
     return $ (stext name) <+> "=" <+> "optional" <+> optional <+> "json"
 
+{-
   render (OCamlField name (OCamlPrimitiveRef (OEither dt0 dt1))) = do
     ao <- asks aesonOptions
     let jsonFieldname = T.pack . Aeson.fieldLabelModifier ao . T.unpack $ name
     rdt0 <- renderResult jsonFieldname dt0
     rdt1 <- renderResult jsonFieldname dt1
     return $ (stext name) <+> "=" <+> "either" <+> rdt0 <+> rdt1 <+> "json"
-    
+-}    
 {-
   -- renderRef has separate rules for type parameters and non primitive types
   -- however in the case of OOption, they should be rendered the same way
@@ -275,7 +276,10 @@ instance HasDecoderRef OCamlPrimitive where
 --    dt <- renderRef datatype
 --    pure . parens $ "maybe" <+> dt
 
-  renderRef (OEither _ _) = pure ""
+  renderRef (OEither v0 v1) = do
+    dv0 <- renderRef v0
+    dv1 <- renderRef v1
+    pure $ parens $ "either" <+> dv0 <+> dv1
 
   renderRef (OTuple2 v0 v1) = do
     dv0 <- renderRef v0

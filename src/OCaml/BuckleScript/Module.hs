@@ -136,7 +136,7 @@ data OCamlModule (filePath :: [Symbol]) (moduleName :: [Symbol])
   deriving Typeable
 
 -- | A handwritten OCaml type, encoder and decoder from a file.
-data OCamlTypeInFile (a :: Symbol) (filePath :: Symbol)
+data OCamlTypeInFile a (filePath :: Symbol)
   deriving Typeable
 
 -- | Iterate over a list of OCamlModule types that are concated with '(:<|>)',
@@ -224,9 +224,13 @@ instance (HasOCamlTypeInFile a, HasOCamlTypeInFile b) => HasOCamlTypeInFile (a :
   readType Proxy = (<>) <$> (readType (Proxy :: Proxy a)) <*> (readType (Proxy :: Proxy b))
   readInterface Proxy = (<>) <$> (readInterface (Proxy :: Proxy a)) <*> (readInterface (Proxy :: Proxy b))
 
-instance (KnownSymbol a, KnownSymbol b) => HasOCamlTypeInFile (OCamlTypeInFile a b) where
-  readType Proxy = T.readFile $ symbolVal (Proxy :: Proxy b) </> symbolVal (Proxy :: Proxy a) <.> "ml"
-  readInterface Proxy = T.readFile $ symbolVal (Proxy :: Proxy b) </> symbolVal (Proxy :: Proxy a) <.> "mli"
+--instance (KnownSymbol a, KnownSymbol b) => HasOCamlTypeInFile (OCamlTypeInFile a b) where
+--  readType Proxy = T.readFile $ symbolVal (Proxy :: Proxy b) </> symbolVal (Proxy :: Proxy a) <.> "ml"
+--  readInterface Proxy = T.readFile $ symbolVal (Proxy :: Proxy b) </> symbolVal (Proxy :: Proxy a) <.> "mli"
+
+instance (KnownSymbol b) => HasOCamlTypeInFile (OCamlTypeInFile _a b) where
+  readType Proxy = T.readFile $ symbolVal (Proxy :: Proxy b) <.> "ml"
+  readInterface Proxy = T.readFile $ symbolVal (Proxy :: Proxy b) <.> "mli"
 
 
 -- | Produce OCaml files for types that have OCamlType derived via GHC.Generics
@@ -371,8 +375,11 @@ type OCamlSpecAPI (filePath :: [Symbol]) (modul :: [Symbol]) typ = ConcatSymbols
 -- | abc
 type family MkOCamlSpecAPI' filePath modul api :: * where
   MkOCamlSpecAPI' filePath modul (a :> b) = MkOCamlSpecAPI' filePath modul a :<|> MkOCamlSpecAPI' filePath modul b
+  MkOCamlSpecAPI' filePath modul (OCamlTypeInFile api _typeFilePath) = OCamlSpecAPI filePath modul api
   MkOCamlSpecAPI' filePath modul api = OCamlSpecAPI filePath modul api
+-- OCamlTypeInFile (a :: Symbol) (filePath :: Symbol)
 
+  
 -- | ff
 type family MkOCamlSpecAPI a :: * where
   MkOCamlSpecAPI ((OCamlModule filePath modul :> api) :<|> rest) = MkOCamlSpecAPI' filePath modul api :<|> MkOCamlSpecAPI rest

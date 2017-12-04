@@ -26,6 +26,9 @@ import Control.Concurrent (forkIO)
 
 import           Test.Hspec
 
+import qualified File as File
+import           FileApp
+
 import qualified Product as Product
 import           ProductApp
 

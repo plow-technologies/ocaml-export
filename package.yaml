@@ -30,6 +30,7 @@ library:
   - filepath
   - formatting
   - mtl
+  - split
   - QuickCheck
   - quickcheck-arbitrary-adt
   - servant

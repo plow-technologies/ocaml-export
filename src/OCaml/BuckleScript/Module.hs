@@ -8,6 +8,8 @@ Stability   : experimental
 
 -}
 
+-- {-# LANGUAGE AllowAmbiguousTypes #-}
+
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveFunctor      #-}
@@ -56,6 +58,7 @@ module OCaml.BuckleScript.Module
   , MkOCamlSpecAPI
   , mkServer
 
+  , HasEmbeddedFile (..)
     -- re-export from Servant
   , (:>)
   , (:<|>)
@@ -64,16 +67,25 @@ module OCaml.BuckleScript.Module
 
 -- base
 import qualified Data.List as L (intercalate)
+import Data.List.Split (splitOn)
+import qualified Data.Map as Map
+import Data.Maybe (catMaybes)
 import Data.Proxy
 import Data.Semigroup (Semigroup (..))
 import Data.Typeable
 import GHC.Generics
+
+-- bytestring
+import Data.ByteString (ByteString)
 
 -- template-haskell
 import Language.Haskell.TH
 
 -- directory
 import System.Directory (createDirectoryIfMissing)
+
+-- file-embed
+import Data.FileEmbed (embedFile)
 
 -- filepath
 import System.FilePath.Posix ((</>), (<.>))
@@ -207,7 +219,7 @@ instance (HasOCamlType a, HasOCamlType b) => HasOCamlType (a :> b) where
 instance {-# OVERLAPPABLE #-} (HasOCamlTypeInFile (OCamlTypeInFile a b)) => HasOCamlType (OCamlTypeInFile a b) where
   mkType a _ = (:[]) <$> readType a
   mkInterface a = (:[]) <$> readInterface a
-  mkSpec _ _ _ _ = pure []
+  mkSpec a _ _ _ = (:[]) <$> readSpec a
 
 instance {-# OVERLAPPABLE #-} (HasGenericOCamlType a) => HasOCamlType a where
   mkType a interface = pure $ mkGType a interface
@@ -219,19 +231,17 @@ instance {-# OVERLAPPABLE #-} (HasGenericOCamlType a) => HasOCamlType a where
 class HasOCamlTypeInFile api where
   readType :: Proxy api -> IO Text
   readInterface :: Proxy api -> IO Text
+  readSpec :: Proxy api -> IO Text
 
 instance (HasOCamlTypeInFile a, HasOCamlTypeInFile b) => HasOCamlTypeInFile (a :> b) where
   readType Proxy = (<>) <$> (readType (Proxy :: Proxy a)) <*> (readType (Proxy :: Proxy b))
   readInterface Proxy = (<>) <$> (readInterface (Proxy :: Proxy a)) <*> (readInterface (Proxy :: Proxy b))
-
---instance (KnownSymbol a, KnownSymbol b) => HasOCamlTypeInFile (OCamlTypeInFile a b) where
---  readType Proxy = T.readFile $ symbolVal (Proxy :: Proxy b) </> symbolVal (Proxy :: Proxy a) <.> "ml"
---  readInterface Proxy = T.readFile $ symbolVal (Proxy :: Proxy b) </> symbolVal (Proxy :: Proxy a) <.> "mli"
+  readSpec Proxy = (<>) <$> (readSpec (Proxy :: Proxy a)) <*> (readSpec (Proxy :: Proxy b))
 
 instance (KnownSymbol b) => HasOCamlTypeInFile (OCamlTypeInFile _a b) where
   readType Proxy = T.readFile $ symbolVal (Proxy :: Proxy b) <.> "ml"
   readInterface Proxy = T.readFile $ symbolVal (Proxy :: Proxy b) <.> "mli"
-
+  readSpec Proxy = T.readFile $ symbolVal (Proxy :: Proxy b) <> "_spec" <.> "ml"
 
 -- | Produce OCaml files for types that have OCamlType derived via GHC.Generics
 class HasGenericOCamlType api where
@@ -411,3 +421,70 @@ mkServer typeName Proxy = do
      apiProxy = mkName $ lowercaseFirst typeName ++ "API"
      appName = mkName $ lowercaseFirst typeName ++ "App"
 
+-- | $(mkFile (Proxy :: Proxy Package))
+
+class HasEmbeddedFile api where
+--  mkFile :: Proxy a -> Q [Dec]
+--  mkFile :: Proxy a -> Q (Map.Map String Exp)
+  mkFiles :: Bool -> Bool -> Proxy api -> Q Exp
+
+instance (HasEmbeddedFile' api) => HasEmbeddedFile api where
+  mkFiles includeInterface includeSpec Proxy = ListE <$> mkFiles' includeInterface includeSpec (Proxy :: Proxy api)
+
+  {-
+mkFiles
+-}
+
+
+class HasEmbeddedFile' api where
+  mkFiles' :: Bool -> Bool -> Proxy api -> Q [Exp]
+
+instance (HasEmbeddedFile' a, HasEmbeddedFile' b) => HasEmbeddedFile' (a :> b) where
+  mkFiles' includeInterface includeSpec Proxy = (<>) <$> mkFiles' includeInterface includeSpec (Proxy :: Proxy a) <*> mkFiles' includeInterface includeSpec (Proxy :: Proxy b)
+--instance {-# OVERLAPPABLE #-} (KnownSymbol b) => HasEmbeddedFile (OCamlTypeInFile _a b) where
+-- 
+instance (KnownSymbol b) => HasEmbeddedFile' (OCamlTypeInFile _a b) where
+  mkFiles' includeInterface includeSpec Proxy = do
+    let typeFilePath = symbolVal (Proxy :: Proxy b)
+    let typeName = last $ splitOn "/" typeFilePath
+    ml  <- (\ml -> TupE [LitE $ StringL typeName, ml]) <$> embedFile (typeFilePath <.> "ml")
+
+    mMli <- if includeInterface
+      then Just . (\mli -> TupE [LitE $ StringL (typeName <> "_interface"), mli]) <$> embedFile (typeFilePath <.> "mli")
+      else pure Nothing
+
+    mSpec <- if includeSpec
+      then Just . (\spec -> TupE [LitE $ StringL (typeName <> "_spec"), spec]) <$> embedFile (typeFilePath <> "_spec" <.> "ml")
+      else pure Nothing
+
+    pure $ catMaybes [Just ml, mMli, mSpec]
+
+
+instance {-# OVERLAPPABLE #-} HasEmbeddedFile' a where
+  mkFiles' _ _ Proxy = pure []
+-- myFile = $(embedFile "dirName/fileName")
+--class HasEmbeddedFile (a :> b)  where
+--  mkFile Proxy = (<>) <$> mkFile a <*> mkFile b
+
+-- instance (HasOCamlType a, HasOCamlType b) => HasOCamlType (a :> b) where
+--class HasOCamlTypeInFile2 api where
+--  mkkType :: Proxy api -> Q [Dec]
+--  mkkInterface :: Proxy api -> IO Text
+--  mkkSpec :: Proxy api -> IO Text
+  
+{-
+class HasOCamlTypeInFile api where
+  readType :: Proxy api -> IO Text
+  readInterface :: Proxy api -> IO Text
+  readSpec :: Proxy api -> IO Text
+
+instance (HasOCamlTypeInFile a, HasOCamlTypeInFile b) => HasOCamlTypeInFile (a :> b) where
+  readType Proxy = (<>) <$> (readType (Proxy :: Proxy a)) <*> (readType (Proxy :: Proxy b))
+  readInterface Proxy = (<>) <$> (readInterface (Proxy :: Proxy a)) <*> (readInterface (Proxy :: Proxy b))
+  readSpec Proxy = (<>) <$> (readSpec (Proxy :: Proxy a)) <*> (readSpec (Proxy :: Proxy b))
+
+instance (KnownSymbol b) => HasOCamlTypeInFile (OCamlTypeInFile _a b) where
+  readType Proxy = T.readFile $ symbolVal (Proxy :: Proxy b) <.> "ml"
+  readInterface Proxy = T.readFile $ symbolVal (Proxy :: Proxy b) <.> "mli"
+  readSpec Proxy = T.readFile $ symbolVal (Proxy :: Proxy b) <> "_spec" <.> "ml"
+-}

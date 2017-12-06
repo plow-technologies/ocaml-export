@@ -28,6 +28,7 @@ import Test.QuickCheck
 import Test.QuickCheck.Arbitrary.ADT
 import Test.Aeson.Internal.ADT.GoldenSpecs
 import Util
+import qualified Data.Map as Map
 
 type ProductPackage
   =    OCamlModule '["SimpleChoice"] '[] :> SimpleChoice
@@ -65,7 +66,7 @@ spec = do
   runIO $ mkGoldenFiles
   
   let dir = "test/interface/temp"
-  runIO $ mkPackage (Proxy :: Proxy ProductPackage) (PackageOptions dir "product" True $ Just $ SpecOptions "__tests__/product" "golden/product" "http://localhost:8081")
+  runIO $ mkPackage (Proxy :: Proxy ProductPackage) (PackageOptions dir "product" Map.empty True $ Just $ SpecOptions "__tests__/product" "golden/product" "http://localhost:8081")
   
   describe "OCaml Declaration with Interface: Product Types" $ do
     compareInterfaceFiles "Person"
@@ -77,7 +78,7 @@ spec = do
     compareInterfaceFiles "SubTypeParameter"
 
   let dir2 = "test/nointerface/temp"
-  runIO $ mkPackage (Proxy :: Proxy ProductPackage) (PackageOptions dir2 "product" False Nothing)
+  runIO $ mkPackage (Proxy :: Proxy ProductPackage) (PackageOptions dir2 "product" Map.empty False Nothing)
 
   describe "OCaml Declaration with Interface: Product Types" $ do
     compareNoInterfaceFiles "Person"

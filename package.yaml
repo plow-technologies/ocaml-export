@@ -52,6 +52,7 @@ tests:
     - aeson
     - bytestring
     - constraints
+    - containers
     - directory
     - filepath
     - hspec

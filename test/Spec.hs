@@ -27,7 +27,7 @@ import Control.Concurrent (forkIO)
 import           Test.Hspec
 
 import qualified File as File
-import           FileApp
+import qualified FileApp as File
 
 import qualified Product as Product
 import           ProductApp
@@ -78,6 +78,7 @@ main = do
 
   _ <- forkIO $ run 8081 productPackageApp
   _ <- forkIO $ run 8082 sumPackageApp
-  run 8083 filePackageApp
+  run 8083 File.filePackageApp
 
 -- curl -i -d '"hi"' -H 'Content-type: application/json' -X POST http://localhost:8081/x/y
+ 

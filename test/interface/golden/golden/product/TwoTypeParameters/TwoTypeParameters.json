@@ -1,41 +1,6 @@
 {
-    "seed": -4011005448351895192,
+    "seed": 5198708087440874522,
     "samples": [
-        {
-            "ttpFirst": [],
-            "ttpSecond": [],
-            "ttpId": 25
-        },
-        {
-            "ttpFirst": [],
-            "ttpSecond": [],
-            "ttpId": 21
-        },
-        {
-            "ttpFirst": [],
-            "ttpSecond": [],
-            "ttpId": 9
-        },
-        {
-            "ttpFirst": [],
-            "ttpSecond": [],
-            "ttpId": -15
-        },
-        {
-            "ttpFirst": [],
-            "ttpSecond": [],
-            "ttpId": -5
-        },
-        {
-            "ttpFirst": [],
-            "ttpSecond": [],
-            "ttpId": -19
-        },
-        {
-            "ttpFirst": [],
-            "ttpSecond": [],
-            "ttpId": -30
-        },
         {
             "ttpFirst": [],
             "ttpSecond": [],
@@ -44,12 +9,47 @@
         {
             "ttpFirst": [],
             "ttpSecond": [],
-            "ttpId": 3
+            "ttpId": 18
         },
         {
             "ttpFirst": [],
             "ttpSecond": [],
-            "ttpId": -12
+            "ttpId": -28
+        },
+        {
+            "ttpFirst": [],
+            "ttpSecond": [],
+            "ttpId": 13
+        },
+        {
+            "ttpFirst": [],
+            "ttpSecond": [],
+            "ttpId": -18
+        },
+        {
+            "ttpFirst": [],
+            "ttpSecond": [],
+            "ttpId": 17
+        },
+        {
+            "ttpFirst": [],
+            "ttpSecond": [],
+            "ttpId": 24
+        },
+        {
+            "ttpFirst": [],
+            "ttpSecond": [],
+            "ttpId": -26
+        },
+        {
+            "ttpFirst": [],
+            "ttpSecond": [],
+            "ttpId": 1
+        },
+        {
+            "ttpFirst": [],
+            "ttpSecond": [],
+            "ttpId": 16
         }
     ]
 }

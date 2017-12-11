@@ -1,74 +1,74 @@
 {
-    "seed": -300077860210635721,
+    "seed": -7582801472705366288,
     "samples": [
         {
             "tag": "HasMultipleInts",
             "contents": [
-                -12,
+                11,
                 -15
             ]
         },
         {
             "tag": "HasMultipleInts",
             "contents": [
-                6,
-                23
+                -13,
+                12
             ]
         },
         {
             "tag": "HasMultipleInts",
             "contents": [
-                17,
-                -22
+                -22,
+                -8
             ]
         },
         {
             "tag": "HasMultipleInts",
             "contents": [
-                -20,
-                -13
+                -8,
+                17
             ]
         },
         {
             "tag": "HasMultipleInts",
             "contents": [
-                -3,
-                4
+                -27,
+                26
             ]
         },
         {
             "tag": "HasMultipleInts",
             "contents": [
                 0,
-                -26
+                -8
             ]
         },
         {
             "tag": "HasMultipleInts",
             "contents": [
-                -28,
-                -7
+                19,
+                15
             ]
         },
         {
             "tag": "HasMultipleInts",
             "contents": [
-                -2,
-                -4
+                18,
+                7
             ]
         },
         {
             "tag": "HasMultipleInts",
             "contents": [
-                10,
-                -9
+                20,
+                -3
             ]
         },
         {
             "tag": "HasMultipleInts",
             "contents": [
-                23,
-                8
+                -24,
+                6
             ]
         }
     ]

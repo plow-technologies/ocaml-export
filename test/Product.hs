@@ -46,6 +46,7 @@ mkGolden Proxy = mkGoldenFileForType 10 (Proxy :: Proxy a) "test/interface/golde
 
 mkGoldenFiles :: IO ()
 mkGoldenFiles = do
+  mkGolden (Proxy :: Proxy SimpleChoice)
   mkGolden (Proxy :: Proxy Person)
   mkGolden (Proxy :: Proxy Company)
   mkGolden (Proxy :: Proxy Suit)

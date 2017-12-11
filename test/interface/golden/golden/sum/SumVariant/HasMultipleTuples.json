@@ -1,41 +1,15 @@
 {
-    "seed": -478557258609361682,
+    "seed": -7823703335859875726,
     "samples": [
         {
             "tag": "HasMultipleTuples",
             "contents": [
                 [
-                    -12,
-                    -8
+                    28,
+                    23
                 ],
                 [
-                    -21,
-                    13
-                ]
-            ]
-        },
-        {
-            "tag": "HasMultipleTuples",
-            "contents": [
-                [
-                    11,
-                    -4
-                ],
-                [
-                    21,
-                    -2
-                ]
-            ]
-        },
-        {
-            "tag": "HasMultipleTuples",
-            "contents": [
-                [
-                    13,
-                    14
-                ],
-                [
-                    0,
+                    10,
                     9
                 ]
             ]
@@ -44,12 +18,64 @@
             "tag": "HasMultipleTuples",
             "contents": [
                 [
-                    24,
-                    25
+                    -17,
+                    -24
                 ],
                 [
+                    -18,
+                    -3
+                ]
+            ]
+        },
+        {
+            "tag": "HasMultipleTuples",
+            "contents": [
+                [
                     -26,
-                    -20
+                    -15
+                ],
+                [
+                    -30,
+                    -18
+                ]
+            ]
+        },
+        {
+            "tag": "HasMultipleTuples",
+            "contents": [
+                [
+                    22,
+                    -14
+                ],
+                [
+                    -21,
+                    -9
+                ]
+            ]
+        },
+        {
+            "tag": "HasMultipleTuples",
+            "contents": [
+                [
+                    5,
+                    -29
+                ],
+                [
+                    11,
+                    -14
+                ]
+            ]
+        },
+        {
+            "tag": "HasMultipleTuples",
+            "contents": [
+                [
+                    7,
+                    12
+                ],
+                [
+                    21,
+                    13
                 ]
             ]
         },
@@ -58,11 +84,11 @@
             "contents": [
                 [
                     -25,
-                    3
+                    -18
                 ],
                 [
-                    -4,
-                    0
+                    -18,
+                    -15
                 ]
             ]
         },
@@ -70,64 +96,38 @@
             "tag": "HasMultipleTuples",
             "contents": [
                 [
-                    21,
+                    -8,
+                    -5
+                ],
+                [
+                    16,
+                    -20
+                ]
+            ]
+        },
+        {
+            "tag": "HasMultipleTuples",
+            "contents": [
+                [
+                    11,
+                    -10
+                ],
+                [
+                    9,
+                    -12
+                ]
+            ]
+        },
+        {
+            "tag": "HasMultipleTuples",
+            "contents": [
+                [
+                    -18,
+                    18
+                ],
+                [
+                    19,
                     28
-                ],
-                [
-                    -15,
-                    -2
-                ]
-            ]
-        },
-        {
-            "tag": "HasMultipleTuples",
-            "contents": [
-                [
-                    15,
-                    0
-                ],
-                [
-                    -9,
-                    -26
-                ]
-            ]
-        },
-        {
-            "tag": "HasMultipleTuples",
-            "contents": [
-                [
-                    15,
-                    -25
-                ],
-                [
-                    15,
-                    11
-                ]
-            ]
-        },
-        {
-            "tag": "HasMultipleTuples",
-            "contents": [
-                [
-                    -21,
-                    12
-                ],
-                [
-                    12,
-                    -25
-                ]
-            ]
-        },
-        {
-            "tag": "HasMultipleTuples",
-            "contents": [
-                [
-                    0,
-                    29
-                ],
-                [
-                    -26,
-                    -4
                 ]
             ]
         }

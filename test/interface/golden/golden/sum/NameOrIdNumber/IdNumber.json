@@ -1,0 +1,45 @@
+{
+    "seed": -6153337701277386197,
+    "samples": [
+        {
+            "tag": "IdNumber",
+            "contents": -6
+        },
+        {
+            "tag": "IdNumber",
+            "contents": -24
+        },
+        {
+            "tag": "IdNumber",
+            "contents": 9
+        },
+        {
+            "tag": "IdNumber",
+            "contents": 25
+        },
+        {
+            "tag": "IdNumber",
+            "contents": -28
+        },
+        {
+            "tag": "IdNumber",
+            "contents": 2
+        },
+        {
+            "tag": "IdNumber",
+            "contents": 0
+        },
+        {
+            "tag": "IdNumber",
+            "contents": -14
+        },
+        {
+            "tag": "IdNumber",
+            "contents": 25
+        },
+        {
+            "tag": "IdNumber",
+            "contents": 16
+        }
+    ]
+}

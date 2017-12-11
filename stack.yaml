@@ -2,13 +2,9 @@ resolver: lts-9.6
 
 packages:
 - .
-- location:
-    git: git@github.com:plow-technologies/servant-in-and-out.git
-    commit: 8ddf51f18aa2ec369a17ec2ed8b19c38671d83b6
-  extra-dep: true
 
 extra-deps:
-- hspec-golden-aeson-0.3.0.0
+- hspec-golden-aeson-0.4.0.0
 - quickcheck-arbitrary-adt-0.2.0.0
 
 flags: {}

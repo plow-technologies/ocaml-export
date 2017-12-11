@@ -1,0 +1,75 @@
+{
+    "seed": -300077860210635721,
+    "samples": [
+        {
+            "tag": "HasMultipleInts",
+            "contents": [
+                -12,
+                -15
+            ]
+        },
+        {
+            "tag": "HasMultipleInts",
+            "contents": [
+                6,
+                23
+            ]
+        },
+        {
+            "tag": "HasMultipleInts",
+            "contents": [
+                17,
+                -22
+            ]
+        },
+        {
+            "tag": "HasMultipleInts",
+            "contents": [
+                -20,
+                -13
+            ]
+        },
+        {
+            "tag": "HasMultipleInts",
+            "contents": [
+                -3,
+                4
+            ]
+        },
+        {
+            "tag": "HasMultipleInts",
+            "contents": [
+                0,
+                -26
+            ]
+        },
+        {
+            "tag": "HasMultipleInts",
+            "contents": [
+                -28,
+                -7
+            ]
+        },
+        {
+            "tag": "HasMultipleInts",
+            "contents": [
+                -2,
+                -4
+            ]
+        },
+        {
+            "tag": "HasMultipleInts",
+            "contents": [
+                10,
+                -9
+            ]
+        },
+        {
+            "tag": "HasMultipleInts",
+            "contents": [
+                23,
+                8
+            ]
+        }
+    ]
+}

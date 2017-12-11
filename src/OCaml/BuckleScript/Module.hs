@@ -236,50 +236,20 @@ instance {-# OVERLAPPABLE #-} (KnownSymbol b) => HasOCamlType (OCamlTypeInFile a
       Just (Just v) -> [decodeUtf8 v]
       _ -> fail $ "Unable to find the embedded file for " ++ typeName
 
-  mkSpec Proxy _ _ _ fileMap = do
+  mkSpec a modules url goldendir fileMap = 
     let typeFilePath = symbolVal (Proxy :: Proxy b)
-    let typeName = last $ splitOn "/" typeFilePath
-    case eocSpec <$> Map.lookup typeName fileMap of
-      Just (Just v) -> [decodeUtf8 v]
-      _ -> fail $ "Unable to find the embedded file for " ++ typeName
+        typeName = T.pack $ last $ splitOn "/" typeFilePath in
+    [toOCamlSpec2 typeName modules url goldendir]
+--    let typeName = last $ splitOn "/" typeFilePath
+--    case eocSpec <$> Map.lookup typeName fileMap of
+--      Just (Just v) -> [decodeUtf8 v]
+--      _ -> fail $ "Unable to find the embedded file for " ++ typeName
 
-{-
-  mkType a _ = (:[]) <$> readType a
-  mkInterface a = (:[]) <$> readInterface a
-  mkSpec a _ _ _ = (:[]) <$> readSpec a
-
-
-instance {-# OVERLAPPING #-} (HasEmbeddedFile a) => HasOCamlType a where
---  mkType a interface = pure $ mkGType a interface
---  mkInterface a = pure $ mkGInterface a
---  mkSpec a modules url goldendir = pure $ mkGSpec a modules url goldendir
-  mkTypeWithEmbeddedFile a _ fileMap = 
-    case Map.lookup (symbolVal (Proxy :: Proxy a)) fileMap of
-      Just v -> pure [v]
-      Nothing -> fail ""
--}  
 instance {-# OVERLAPPABLE #-} (HasGenericOCamlType a) => HasOCamlType a where
   mkType a interface _ = mkGType a interface
   mkInterface a _ = mkGInterface a
   mkSpec a modules url goldendir _ = mkGSpec a modules url goldendir  
 
-{-
--- | Read OCaml type declarations and interfaces from `ml` and `mli` files
-class HasOCamlTypeInFile api where
-  readType :: Proxy api -> IO Text
-  readInterface :: Proxy api -> IO Text
-  readSpec :: Proxy api -> IO Text
-
-instance (HasOCamlTypeInFile a, HasOCamlTypeInFile b) => HasOCamlTypeInFile (a :> b) where
-  readType Proxy = (<>) <$> (readType (Proxy :: Proxy a)) <*> (readType (Proxy :: Proxy b))
-  readInterface Proxy = (<>) <$> (readInterface (Proxy :: Proxy a)) <*> (readInterface (Proxy :: Proxy b))
-  readSpec Proxy = (<>) <$> (readSpec (Proxy :: Proxy a)) <*> (readSpec (Proxy :: Proxy b))
-
-instance (KnownSymbol b) => HasOCamlTypeInFile (OCamlTypeInFile _a b) where
-  readType Proxy = T.readFile $ symbolVal (Proxy :: Proxy b) <.> "ml"
-  readInterface Proxy = T.readFile $ symbolVal (Proxy :: Proxy b) <.> "mli"
-  readSpec Proxy = T.readFile $ symbolVal (Proxy :: Proxy b) <> "_spec" <.> "ml"
--}
 
 -- | Produce OCaml files for types that have OCamlType derived via GHC.Generics
 class HasGenericOCamlType api where

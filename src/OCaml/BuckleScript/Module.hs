@@ -74,7 +74,7 @@ import qualified Data.Map as Map
 import Data.Maybe (catMaybes)
 import Data.Proxy
 import Data.Semigroup (Semigroup (..))
-import Data.Typeable
+import Data.Typeable (typeRep, Typeable)
 import GHC.Generics
 
 -- bytestring
@@ -221,7 +221,7 @@ instance (HasOCamlType a, HasOCamlType b) => HasOCamlType (a :> b) where
   mkSpec Proxy modules url goldendir fileMap = (mkSpec (Proxy :: Proxy a) modules url goldendir fileMap) <> (mkSpec (Proxy :: Proxy b) modules url goldendir fileMap)
 
 
-instance {-# OVERLAPPABLE #-} (KnownSymbol b) => HasOCamlType (OCamlTypeInFile a b) where
+instance {-# OVERLAPPABLE #-} (Typeable a, KnownSymbol b) => HasOCamlType (OCamlTypeInFile a b) where
   mkType Proxy _ fileMap = do
     let typeFilePath = symbolVal (Proxy :: Proxy b)
     let typeName = last $ splitOn "/" typeFilePath
@@ -236,14 +236,8 @@ instance {-# OVERLAPPABLE #-} (KnownSymbol b) => HasOCamlType (OCamlTypeInFile a
       Just (Just v) -> [decodeUtf8 v]
       _ -> fail $ "Unable to find the embedded file for " ++ typeName
 
-  mkSpec a modules url goldendir fileMap = 
-    let typeFilePath = symbolVal (Proxy :: Proxy b)
-        typeName = T.pack $ last $ splitOn "/" typeFilePath in
-    [toOCamlSpec2 typeName modules url goldendir]
---    let typeName = last $ splitOn "/" typeFilePath
---    case eocSpec <$> Map.lookup typeName fileMap of
---      Just (Just v) -> [decodeUtf8 v]
---      _ -> fail $ "Unable to find the embedded file for " ++ typeName
+  mkSpec Proxy modules url goldendir fileMap = 
+    [toOCamlSpec2 (T.pack . show $ typeRep (Proxy :: Proxy a)) modules url goldendir]
 
 instance {-# OVERLAPPABLE #-} (HasGenericOCamlType a) => HasOCamlType a where
   mkType a interface _ = mkGType a interface
@@ -457,10 +451,10 @@ instance (HasEmbeddedFile' a, HasEmbeddedFile' b) => HasEmbeddedFile' (a :> b) w
   mkFiles' includeInterface includeSpec Proxy = (<>) <$> mkFiles' includeInterface includeSpec (Proxy :: Proxy a) <*> mkFiles' includeInterface includeSpec (Proxy :: Proxy b)
 --instance {-# OVERLAPPABLE #-} (KnownSymbol b) => HasEmbeddedFile (OCamlTypeInFile _a b) where
 -- 
-instance (KnownSymbol b) => HasEmbeddedFile' (OCamlTypeInFile _a b) where
+instance (Typeable a, KnownSymbol b) => HasEmbeddedFile' (OCamlTypeInFile a b) where
   mkFiles' includeInterface includeSpec Proxy = do
     let typeFilePath = symbolVal (Proxy :: Proxy b)
-    let typeName = last $ splitOn "/" typeFilePath
+    let typeName = show $ typeRep (Proxy :: Proxy a)
     ml  <- embedFile (typeFilePath <.> "ml")
 
     mli <- if includeInterface
@@ -472,22 +466,6 @@ instance (KnownSymbol b) => HasEmbeddedFile' (OCamlTypeInFile _a b) where
       else pure $ ConE $ mkName "Nothing"
 
     pure [TupE [LitE $ StringL typeName, AppE (AppE (AppE (ConE $ mkName "EmbeddedOCamlFiles") ml) mli) spec]]
-{-
-  mkFiles' includeInterface includeSpec Proxy = do
-    let typeFilePath = symbolVal (Proxy :: Proxy b)
-    let typeName = last $ splitOn "/" typeFilePath
-    ml  <- (\ml -> TupE [LitE $ StringL typeName, ml]) <$> embedFile (typeFilePath <.> "ml")
-
-    mMli <- if includeInterface
-      then Just . (\mli -> TupE [LitE $ StringL (typeName <> "_interface"), mli]) <$> embedFile (typeFilePath <.> "mli")
-      else pure Nothing
-
-    mSpec <- if includeSpec
-      then Just . (\spec -> TupE [LitE $ StringL (typeName <> "_spec"), spec]) <$> embedFile (typeFilePath <> "_spec" <.> "ml")
-      else pure Nothing
-
-    pure $ catMaybes [Just ml, mMli, mSpec]
--}
 
 instance {-# OVERLAPPABLE #-} HasEmbeddedFile' a where
   mkFiles' _ _ Proxy = pure []

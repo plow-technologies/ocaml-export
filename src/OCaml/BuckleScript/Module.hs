@@ -236,8 +236,9 @@ instance {-# OVERLAPPABLE #-} (Typeable a, KnownSymbol b) => HasOCamlType (OCaml
       Just (Just v) -> [decodeUtf8 v]
       _ -> fail $ "Unable to find the embedded file for " ++ typeName
 
-  mkSpec Proxy modules url goldendir fileMap = 
-    [toOCamlSpec2 (T.pack . show $ typeRep (Proxy :: Proxy a)) modules url goldendir]
+  mkSpec z modules url goldendir fileMap = 
+--    [toOCamlSpec2 (Proxy :: Proxy a) (T.pack . show $ typeRep (Proxy :: Proxy a)) modules url goldendir]
+    [toOCamlSpec2 (typeRep (Proxy :: Proxy a)) (T.pack . show $ typeRep (Proxy :: Proxy a)) modules url goldendir]
 
 instance {-# OVERLAPPABLE #-} (HasGenericOCamlType a) => HasOCamlType a where
   mkType a interface _ = mkGType a interface
@@ -431,16 +432,10 @@ data EmbeddedOCamlFiles =
 -- | $(mkFile (Proxy :: Proxy Package))
 
 class HasEmbeddedFile api where
---  mkFile :: Proxy a -> Q [Dec]
---  mkFile :: Proxy a -> Q (Map.Map String Exp)
   mkFiles :: Bool -> Bool -> Proxy api -> Q Exp
 
 instance (HasEmbeddedFile' api) => HasEmbeddedFile api where
   mkFiles includeInterface includeSpec Proxy = ListE <$> mkFiles' includeInterface includeSpec (Proxy :: Proxy api)
-
-  {-
-mkFiles
--}
 
 
 -- | Use Template Haskell to load OCaml files for an OCaml Module
@@ -449,8 +444,7 @@ class HasEmbeddedFile' api where
 
 instance (HasEmbeddedFile' a, HasEmbeddedFile' b) => HasEmbeddedFile' (a :> b) where
   mkFiles' includeInterface includeSpec Proxy = (<>) <$> mkFiles' includeInterface includeSpec (Proxy :: Proxy a) <*> mkFiles' includeInterface includeSpec (Proxy :: Proxy b)
---instance {-# OVERLAPPABLE #-} (KnownSymbol b) => HasEmbeddedFile (OCamlTypeInFile _a b) where
--- 
+
 instance (Typeable a, KnownSymbol b) => HasEmbeddedFile' (OCamlTypeInFile a b) where
   mkFiles' includeInterface includeSpec Proxy = do
     let typeFilePath = symbolVal (Proxy :: Proxy b)

@@ -44,7 +44,7 @@ class HasTypeRef a where
   renderRef :: a -> Reader Options Doc
 
 instance HasType OCamlDatatype where
-  render datatype@(OCamlDatatype typeName constructor@(OCamlSumOfRecordConstructor _ (MultipleConstructors constructors))) = do
+  render datatype@(OCamlDatatype _ typeName constructor@(OCamlSumOfRecordConstructor _ (MultipleConstructors constructors))) = do
     -- For each constructor, if it is a record constructor, declare a type for that record
     -- before and separate form the main sum type.
     sumRecordsData <- catMaybes <$> sequence (renderSumRecord typeName <$> constructors)
@@ -55,13 +55,13 @@ instance HasType OCamlDatatype where
     fnBody <- render (OCamlValueConstructor $ MultipleConstructors newConstructors)
     pure $ sumRecords <> ("type" <+> typeParameters <+> fnName <+> "=" <$$> indent 2 ("|" <+> fnBody))
 
-  render datatype@(OCamlDatatype _ constructor@(OCamlValueConstructor (RecordConstructor _ _))) = do
+  render datatype@(OCamlDatatype _ _ constructor@(OCamlValueConstructor (RecordConstructor _ _))) = do
     let typeParameters = renderTypeParameters constructor
     fnName <- renderRef datatype
     fnBody <- render constructor
     pure $ "type" <+> typeParameters <+> fnName <+> "=" <$$> indent 2 fnBody
 
-  render datatype@(OCamlDatatype _ constructor) = do
+  render datatype@(OCamlDatatype _ _ constructor) = do
     let typeParameters = renderTypeParameters constructor
     fnName <- renderRef datatype
     fnBody <- render constructor
@@ -70,7 +70,7 @@ instance HasType OCamlDatatype where
   render (OCamlPrimitive primitive) = renderRef primitive
 
 instance HasTypeRef OCamlDatatype where
-  renderRef datatype@(OCamlDatatype typeName _) = pure $ stext $ (if isTypeParameterRef datatype then "'" else "") <> textLowercaseFirst typeName
+  renderRef datatype@(OCamlDatatype _ typeName _) = pure $ stext $ (if isTypeParameterRef datatype then "'" else "") <> textLowercaseFirst typeName
   renderRef (OCamlPrimitive primitive) = renderRef primitive
 
 instance HasType OCamlConstructor where

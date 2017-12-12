@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module OCaml.BuckleScript.Spec
   ( mkSampleServerAndGoldenSpec
@@ -11,12 +12,14 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>), (</>))
 
+import Data.Typeable
+
 -- ocaml-export
 import OCaml.BuckleScript.Types hiding (getOCamlValues)
 import OCaml.Common
 
 mkSampleServerAndGoldenSpec :: OCamlDatatype -> [Text] -> Text -> Text -> Doc
-mkSampleServerAndGoldenSpec (OCamlDatatype typeName constructors) modules url goldenDir =
+mkSampleServerAndGoldenSpec (OCamlDatatype _ typeName constructors) modules url goldenDir =
   "  AesonSpec.sampleGoldenAndServerSpec" <+> decoders
                          <+> encoders
                          <+> (dquotes down)
@@ -63,6 +66,6 @@ toOCamlSpec a modules url fp =
   pprinter $ mkSampleServerAndGoldenSpec (toOCamlType a) modules url fp
 
 
-toOCamlSpec2 :: Text -> [Text] -> Text -> Text -> Text
-toOCamlSpec2 a modules url fp =
-  pprinter $ mkSampleServerAndGoldenSpec (OCamlDatatype a $ OCamlValueConstructor $ NamedConstructor a $ OCamlEmpty) modules url fp
+toOCamlSpec2 :: TypeRep -> Text -> [Text] -> Text -> Text -> Text
+toOCamlSpec2 t a modules url fp =
+  pprinter $ mkSampleServerAndGoldenSpec (OCamlDatatype t a $ OCamlValueConstructor $ NamedConstructor a $ OCamlEmpty) modules url fp

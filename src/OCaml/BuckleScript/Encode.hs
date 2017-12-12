@@ -55,7 +55,7 @@ class HasEncoderInterface a where
 
 instance HasEncoderInterface OCamlDatatype where
   -- sum that has at least one record type
-  renderTypeInterface datatype@(OCamlDatatype typeName constructor@(OCamlSumOfRecordConstructor _ (MultipleConstructors constructors))) = do
+  renderTypeInterface datatype@(OCamlDatatype _ typeName constructor@(OCamlSumOfRecordConstructor _ (MultipleConstructors constructors))) = do
     fnName <- renderRef datatype
     let (typeParameterSignatures,typeParameters) = renderTypeParameterVals constructor
         sumRecordDeclarations = linesBetween $ catMaybes (renderSumRecordInterface typeName . OCamlValueConstructor <$> constructors)
@@ -64,7 +64,7 @@ instance HasEncoderInterface OCamlDatatype where
       <$$> "val" <+> fnName <+> ":" <+> typeParameterSignatures <+> typeParameters <> encodeFnName <+> "->" <+> "Js_json.t"
     
   -- other data types
-  renderTypeInterface datatype@(OCamlDatatype typeName constructor) = do
+  renderTypeInterface datatype@(OCamlDatatype _ typeName constructor) = do
     fnName <- renderRef datatype
     let (typeParameterSignatures,typeParameters) = renderTypeParameterVals constructor
         encodeFnName = stext . textLowercaseFirst $ typeName
@@ -75,7 +75,7 @@ instance HasEncoderInterface OCamlDatatype where
 
 instance HasEncoder OCamlDatatype where
   -- sum that has at least one record constructor
-  render datatype@(OCamlDatatype typeName constructor@(OCamlSumOfRecordConstructor _ (MultipleConstructors constructors))) = do
+  render datatype@(OCamlDatatype _ typeName constructor@(OCamlSumOfRecordConstructor _ (MultipleConstructors constructors))) = do
     ocamlInterface <- asks includeOCamlInterface
     fnName <- renderRef datatype
     typeParameterDeclarations <- linesBetween <$> catMaybes <$> sequence (renderSumRecord typeName . OCamlValueConstructor <$> constructors)
@@ -95,7 +95,7 @@ instance HasEncoder OCamlDatatype where
           <$$> (indent 2 ("match x with" <$$> foldl1 (<$$>) fnBody))
 
   -- sum
-  render datatype@(OCamlDatatype typeName constructor@(OCamlValueConstructor (MultipleConstructors constructors))) = do
+  render datatype@(OCamlDatatype _ typeName constructor@(OCamlValueConstructor (MultipleConstructors constructors))) = do
     ocamlInterface <- asks includeOCamlInterface
     fnName <- renderRef datatype
     dc <- mapM renderSum (OCamlValueConstructor <$> constructors)
@@ -113,7 +113,7 @@ instance HasEncoder OCamlDatatype where
           (indent 2 ("match x with" <$$> foldl1 (<$$>) dc))
 
   -- product or record
-  render datatype@(OCamlDatatype typeName constructor) = do
+  render datatype@(OCamlDatatype _ typeName constructor) = do
     ocamlInterface <- asks includeOCamlInterface
     fnName <- renderRef datatype
     renderedConstructor <- render constructor
@@ -133,7 +133,7 @@ instance HasEncoder OCamlDatatype where
 
 -- | produce encode function name for data types and primitives
 instance HasEncoderRef OCamlDatatype where
-  renderRef (OCamlDatatype name _) = pure $ "encode" <> (stext . textUppercaseFirst $ name)
+  renderRef (OCamlDatatype _ name _) = pure $ "encode" <> (stext . textUppercaseFirst $ name)
   renderRef (OCamlPrimitive primitive) = renderRef primitive
 
 instance HasEncoder OCamlConstructor where

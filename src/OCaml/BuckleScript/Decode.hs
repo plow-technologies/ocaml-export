@@ -58,7 +58,7 @@ class HasDecoderInterface a where
   renderInterface :: a -> Reader Options Doc
 
 instance HasDecoderInterface OCamlDatatype where
-  renderInterface datatype@(OCamlDatatype typeName constructor@(OCamlSumOfRecordConstructor _ (MultipleConstructors constructors))) = do
+  renderInterface datatype@(OCamlDatatype _ typeName constructor@(OCamlSumOfRecordConstructor _ (MultipleConstructors constructors))) = do
     fnName <- renderRef datatype
     let typeParameterInterfaces = linesBetween $ catMaybes (renderSumRecordInterface typeName . OCamlValueConstructor <$> constructors)
         (typeParameterEncoders, typeParameters) = renderTypeParameterVals constructor
@@ -66,7 +66,7 @@ instance HasDecoderInterface OCamlDatatype where
       <$$> "val" <+> fnName <+> ":" <+> typeParameterEncoders <> "Js_json.t ->" <+> "(" <> typeParameters <> (stext . textLowercaseFirst $ typeName) <> ", string)" <+> "Js_result.t"
     
 
-  renderInterface datatype@(OCamlDatatype typeName constructors) = do
+  renderInterface datatype@(OCamlDatatype _ typeName constructors) = do
     fnName <- renderRef datatype
     let (typeParameterEncoders, typeParameters) = renderTypeParameterVals constructors
     pure $ "val" <+> fnName <+> ":" <+> typeParameterEncoders <> "Js_json.t ->" <+> "(" <> typeParameters <> (stext . textLowercaseFirst $ typeName) <> ", string)" <+> "Js_result.t"
@@ -90,7 +90,7 @@ renderSumRecord _ _ = return Nothing
 
 instance HasDecoder OCamlDatatype where
   -- Sum with records
-  render datatype@(OCamlDatatype typeName constructor@(OCamlSumOfRecordConstructor _ (MultipleConstructors constructors))) = do
+  render datatype@(OCamlDatatype _ typeName constructor@(OCamlSumOfRecordConstructor _ (MultipleConstructors constructors))) = do
     fnName <- renderRef datatype
     fnBody <- mapM renderSum (OCamlSumOfRecordConstructor typeName <$> constructors)
     typeParameterDeclarations <- linesBetween <$> catMaybes <$> sequence (renderSumRecord typeName . OCamlValueConstructor <$> constructors)
@@ -111,7 +111,7 @@ instance HasDecoder OCamlDatatype where
          <$$> "| exception Aeson.Decode.DecodeError message -> Js_result.Error message"
 
 
-  render datatype@(OCamlDatatype name constructor@(OCamlEnumeratorConstructor constructors)) = do
+  render datatype@(OCamlDatatype _ name constructor@(OCamlEnumeratorConstructor constructors)) = do
     fnName <- renderRef datatype
     fnBody <- mapM render constructors
     ocamlInterface <- asks includeOCamlInterface
@@ -131,7 +131,7 @@ instance HasDecoder OCamlDatatype where
         =    "| Some err -> Js_result.Error (\"" <> fnName <> ": unknown enumeration '\" ^ err ^ \"'.\")"
         <$$> "| None -> Js_result.Error \"" <> fnName <> ": expected a top-level JSON string.\""
       
-  render datatype@(OCamlDatatype name constructor) = do
+  render datatype@(OCamlDatatype _ name constructor) = do
     fnName <- renderRef datatype
     fnBody <- render constructor
     ocamlInterface <- asks includeOCamlInterface
@@ -149,7 +149,7 @@ instance HasDecoder OCamlDatatype where
 
 instance HasDecoderRef OCamlDatatype where
   -- this should only catch type parameters
-  renderRef datatype@(OCamlDatatype name _) =
+  renderRef datatype@(OCamlDatatype _ name _) =
     if isTypeParameterRef datatype
     then
       pure $ parens ("fun a -> unwrapResult" <+> parens ("decode" <> (stext . textUppercaseFirst $ name) <+> "a"))
@@ -186,7 +186,7 @@ instance HasDecoder OCamlConstructor where
   render _ = pure ""
 
 renderResult :: Text -> OCamlDatatype -> Reader Options Doc
-renderResult jsonFieldname (OCamlDatatype datatypeName _constructor) =
+renderResult jsonFieldname (OCamlDatatype _ datatypeName _constructor) =
   pure
     $ "(field" <+> dquotes (stext jsonFieldname)
     <+> "(fun a -> unwrapResult (decode" <> (stext . textUppercaseFirst $ datatypeName) <+> "a)))"
@@ -261,7 +261,7 @@ instance HasDecoderRef OCamlPrimitive where
 
   renderRef (OList (OCamlPrimitive OChar)) = pure "string"
 
-  renderRef (OList (OCamlDatatype name _)) =
+  renderRef (OList (OCamlDatatype _ name _)) =
     pure . parens $ "list" <+> (parens $ "fun a -> unwrapResult (decode" <> (stext . textUppercaseFirst $ name) <+> "a)")
 
   renderRef (OList datatype) = do

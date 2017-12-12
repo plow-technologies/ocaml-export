@@ -30,6 +30,7 @@ module OCaml.BuckleScript.Types
   , EnumeratorConstructor (..)
   , OCamlValue (..)
   , OCamlType (..)
+  , HaskellTypeMetaData (..)
 
   -- fill type parameters of a proxy when calling toOCamlType
   -- e.g. `toOCamlType (Proxy :: Proxy (Either TypeParameterRef0 TypeParameterRef1))`
@@ -54,7 +55,7 @@ import Data.Map
 import Data.Maybe (catMaybes)
 import Data.Proxy
 import Data.Time
-import Data.Typeable (typeRep, TypeRep, Typeable)
+-- import Data.Typeable (typeRep, TypeRep, Typeable)
 import Data.Word (Word, Word8, Word16, Word32, Word64)
 import GHC.Generics
 import GHC.TypeLits (symbolVal, KnownSymbol)
@@ -81,7 +82,7 @@ import Test.QuickCheck.Arbitrary.ADT
 --   OCamlDatatype is recursive via OCamlConstructor -> ValueConstructor
 --   -> OCamlValue -> OCamlPrimitive -> OCamlDatatype.
 data OCamlDatatype
-  = OCamlDatatype TypeRep Text OCamlConstructor -- ^ The name of a type and its type constructor
+  = OCamlDatatype HaskellTypeMetaData Text OCamlConstructor -- ^ The name of a type and its type constructor
   | OCamlPrimitive OCamlPrimitive -- ^ A primitive value
   deriving (Show, Eq)
 
@@ -161,10 +162,11 @@ class GenericOCamlDatatype f where
 
 -- | Capture the Haskell type at the left side declaration `data Maybe a`, `data Person`, etc..
 --   Transform the constructor, depending on its values, if necessary.
-instance (Typeable (D1 d f), Datatype d, GenericValueConstructor f) => GenericOCamlDatatype (D1 d f) where
+
+instance (KnownSymbol typ, KnownSymbol package, KnownSymbol modul, GenericValueConstructor f) => GenericOCamlDatatype (M1 D ('MetaData typ package modul 'False) f) where
   genericToOCamlDatatype datatype =
     OCamlDatatype
-      (typeRep (Proxy :: Proxy (D1 d f)))
+      (HaskellTypeMetaData (symbolVal (Proxy :: Proxy typ)) (symbolVal (Proxy :: Proxy modul)) (symbolVal (Proxy :: Proxy package)))
       (T.pack (datatypeName datatype))
       (transform (OCamlValueConstructor (genericToValueConstructor (unM1 datatype))))
     where
@@ -175,6 +177,22 @@ instance (Typeable (D1 d f), Datatype d, GenericValueConstructor f) => GenericOC
             if isSumWithRecord ocamlConstructor
               then transformToSumOfRecord (T.pack (datatypeName datatype)) ocamlConstructor
               else ocamlConstructor
+
+instance (KnownSymbol typ, KnownSymbol package, KnownSymbol modul, GenericValueConstructor f) => GenericOCamlDatatype (M1 D ('MetaData typ package modul 'True) f) where
+  genericToOCamlDatatype datatype =
+    OCamlDatatype
+      (HaskellTypeMetaData (symbolVal (Proxy :: Proxy typ)) (symbolVal (Proxy :: Proxy modul)) (symbolVal (Proxy :: Proxy package)))
+      (T.pack (datatypeName datatype))
+      (transform (OCamlValueConstructor (genericToValueConstructor (unM1 datatype))))
+    where
+      transform ocamlConstructor =
+        if isEnumeration ocamlConstructor
+          then transformToEnumeration ocamlConstructor
+          else 
+            if isSumWithRecord ocamlConstructor
+              then transformToSumOfRecord (T.pack (datatypeName datatype)) ocamlConstructor
+              else ocamlConstructor
+
 
 
 ------------------------------------------------------------
@@ -375,7 +393,7 @@ instance ToADTArbitrary TypeParameterRef0
 instance FromJSON TypeParameterRef0
 instance ToJSON TypeParameterRef0
 instance OCamlType TypeParameterRef0 where
-  toOCamlType _ = OCamlDatatype (typeRep (Proxy :: Proxy TypeParameterRef0)) "a0" $ OCamlValueConstructor $ NamedConstructor "a0" $ OCamlTypeParameterRef "a0"
+  toOCamlType _ = OCamlDatatype (HaskellTypeMetaData "a0" "OCaml.BuckleScript.Types" "ocaml-export") "a0" $ OCamlValueConstructor $ NamedConstructor "a0" $ OCamlTypeParameterRef "a0"
 
 data TypeParameterRef1 = TypeParameterRef1 deriving (Read, Show, Eq, Generic)
 instance Arbitrary TypeParameterRef1 where arbitrary = pure TypeParameterRef1
@@ -383,7 +401,7 @@ instance ToADTArbitrary TypeParameterRef1
 instance FromJSON TypeParameterRef1
 instance ToJSON TypeParameterRef1
 instance OCamlType TypeParameterRef1 where
-  toOCamlType _ = OCamlDatatype (typeRep (Proxy :: Proxy TypeParameterRef1)) "a1" $ OCamlValueConstructor $ NamedConstructor "a1" $ OCamlTypeParameterRef "a1"
+  toOCamlType _ = OCamlDatatype (HaskellTypeMetaData "a1" "OCaml.BuckleScript.Types" "ocaml-export") "a1" $ OCamlValueConstructor $ NamedConstructor "a1" $ OCamlTypeParameterRef "a1"
 
 data TypeParameterRef2 = TypeParameterRef2 deriving (Read, Show, Eq, Generic)
 instance Arbitrary TypeParameterRef2 where arbitrary = pure TypeParameterRef2
@@ -391,7 +409,7 @@ instance ToADTArbitrary TypeParameterRef2
 instance FromJSON TypeParameterRef2
 instance ToJSON TypeParameterRef2
 instance OCamlType TypeParameterRef2 where
-  toOCamlType _ = OCamlDatatype (typeRep (Proxy :: Proxy TypeParameterRef2)) "a2" $ OCamlValueConstructor $ NamedConstructor "a2" $ OCamlTypeParameterRef "a2"
+  toOCamlType _ = OCamlDatatype (HaskellTypeMetaData "a2" "OCaml.BuckleScript.Types" "ocaml-export") "a2" $ OCamlValueConstructor $ NamedConstructor "a2" $ OCamlTypeParameterRef "a2"
 
 data TypeParameterRef3 = TypeParameterRef3 deriving (Read, Show, Eq, Generic)
 instance Arbitrary TypeParameterRef3 where arbitrary = pure TypeParameterRef3
@@ -399,7 +417,7 @@ instance ToADTArbitrary TypeParameterRef3
 instance FromJSON TypeParameterRef3
 instance ToJSON TypeParameterRef3
 instance OCamlType TypeParameterRef3 where
-  toOCamlType _ = OCamlDatatype (typeRep (Proxy :: Proxy TypeParameterRef3)) "a3" $ OCamlValueConstructor $ NamedConstructor "a3" $ OCamlTypeParameterRef "a3"
+  toOCamlType _ = OCamlDatatype (HaskellTypeMetaData "a3" "OCaml.BuckleScript.Types" "ocaml-export") "a3" $ OCamlValueConstructor $ NamedConstructor "a3" $ OCamlTypeParameterRef "a3"
 
 data TypeParameterRef4 = TypeParameterRef4 deriving (Read, Show, Eq, Generic)
 instance Arbitrary TypeParameterRef4 where arbitrary = pure TypeParameterRef4
@@ -407,7 +425,7 @@ instance ToADTArbitrary TypeParameterRef4
 instance FromJSON TypeParameterRef4
 instance ToJSON TypeParameterRef4
 instance OCamlType TypeParameterRef4 where
-  toOCamlType _ = OCamlDatatype (typeRep (Proxy :: Proxy TypeParameterRef4)) "a4" $ OCamlValueConstructor $ NamedConstructor "a4" $ OCamlTypeParameterRef "a4"
+  toOCamlType _ = OCamlDatatype (HaskellTypeMetaData "a4" "OCaml.BuckleScript.Types" "ocaml-export") "a4" $ OCamlValueConstructor $ NamedConstructor "a4" $ OCamlTypeParameterRef "a4"
 
 data TypeParameterRef5 = TypeParameterRef5 deriving (Read, Show, Eq, Generic)
 instance Arbitrary TypeParameterRef5 where arbitrary = pure TypeParameterRef5
@@ -415,7 +433,7 @@ instance ToADTArbitrary TypeParameterRef5
 instance FromJSON TypeParameterRef5
 instance ToJSON TypeParameterRef5
 instance OCamlType TypeParameterRef5 where
-  toOCamlType _ = OCamlDatatype (typeRep (Proxy :: Proxy TypeParameterRef5)) "a5" $ OCamlValueConstructor $ NamedConstructor "a5" $ OCamlTypeParameterRef "a5"
+  toOCamlType _ = OCamlDatatype (HaskellTypeMetaData "a5" "OCaml.BuckleScript.Types" "ocaml-export") "a5" $ OCamlValueConstructor $ NamedConstructor "a5" $ OCamlTypeParameterRef "a5"
 
 -- Utility functions
 

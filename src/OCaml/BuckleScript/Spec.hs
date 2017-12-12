@@ -12,8 +12,6 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>), (</>))
 
-import Data.Typeable
-
 -- ocaml-export
 import OCaml.BuckleScript.Types hiding (getOCamlValues)
 import OCaml.Common
@@ -66,6 +64,6 @@ toOCamlSpec a modules url fp =
   pprinter $ mkSampleServerAndGoldenSpec (toOCamlType a) modules url fp
 
 
-toOCamlSpec2 :: TypeRep -> Text -> [Text] -> Text -> Text -> Text
-toOCamlSpec2 t a modules url fp =
-  pprinter $ mkSampleServerAndGoldenSpec (OCamlDatatype t a $ OCamlValueConstructor $ NamedConstructor a $ OCamlEmpty) modules url fp
+toOCamlSpec2 :: Text -> [Text] -> Text -> Text -> Text
+toOCamlSpec2 a modules url fp =
+  pprinter $ mkSampleServerAndGoldenSpec (OCamlDatatype (HaskellTypeMetaData (T.unpack a) "" "") a $ OCamlValueConstructor $ NamedConstructor a $ OCamlEmpty) modules url fp

@@ -237,8 +237,7 @@ instance {-# OVERLAPPABLE #-} (Typeable a, KnownSymbol b) => HasOCamlType (OCaml
       _ -> fail $ "Unable to find the embedded file for " ++ typeName
 
   mkSpec z modules url goldendir fileMap = 
---    [toOCamlSpec2 (Proxy :: Proxy a) (T.pack . show $ typeRep (Proxy :: Proxy a)) modules url goldendir]
-    [toOCamlSpec2 (typeRep (Proxy :: Proxy a)) (T.pack . show $ typeRep (Proxy :: Proxy a)) modules url goldendir]
+    [toOCamlSpec2 (T.pack . show $ typeRep (Proxy :: Proxy a)) modules url goldendir]
 
 instance {-# OVERLAPPABLE #-} (HasGenericOCamlType a) => HasOCamlType a where
   mkType a interface _ = mkGType a interface

@@ -145,10 +145,40 @@ data SpecOptions
 defaultSpecOptions :: SpecOptions
 defaultSpecOptions = SpecOptions "/__tests__" "/__tests__/golden" "localhost:8081"
 
+
+-- |
+data OCamlTypeMetaData =
+  OCamlTypeMetaData
+    Text -- "typeName"
+--    Text -- "bs-ocaml-export"
+    [Text] -- ["",""]
+    [Text] -- ["",""]
+    deriving (Show, Eq)
+
+class HasOCamlTypeMetaData a where
+  mkOCamlTypeMetaData :: Proxy a -> [OCamlTypeMetaData]
+
+instance (KnownSymbols moduleName, KnownSymbols filePath, HasOCamlModule (OCamlModule filePath moduleName), HasOCamlTypeMetaData' api) => HasOCamlTypeMetaData ((OCamlModule filePath moduleName) :> api) where
+  mkOCamlTypeMetaData Proxy = mkOCamlTypeMetaData' (T.pack <$> symbolsVal (Proxy :: Proxy filePath)) (T.pack <$> symbolsVal (Proxy :: Proxy moduleName)) (Proxy :: Proxy api)
+
+class HasOCamlTypeMetaData' a where
+  mkOCamlTypeMetaData' :: [Text] -> [Text] -> Proxy a -> [OCamlTypeMetaData]
+
+instance (HasOCamlTypeMetaData' a, HasOCamlTypeMetaData' b) => HasOCamlTypeMetaData' (a :> b) where
+  mkOCamlTypeMetaData' modul subModul Proxy = (mkOCamlTypeMetaData' modul subModul (Proxy :: Proxy a)) <> (mkOCamlTypeMetaData' modul subModul (Proxy :: Proxy b))
+
+instance (Typeable a) => HasOCamlTypeMetaData' a where
+  mkOCamlTypeMetaData' modul subModul Proxy = [OCamlTypeMetaData (T.pack . show $ typeRep (Proxy :: Proxy a)) modul subModul]
+
 -- | An OCamlModule as a Haskell type. 'filePath' is relative to a
 --   root directory prvoiided in the 'mkPackage' function. Each symbol in
 --   moduleName will is expanded into "module SymbolName = struct ... end".
 data OCamlModule (filePath :: [Symbol]) (moduleName :: [Symbol])
+  deriving Typeable
+
+-- |
+-- subModules will expanded into "module SymbolName = struct ... end".
+data OCamlSubModule (subModules :: [Symbol])
   deriving Typeable
 
 -- | A handwritten OCaml type, encoder and decoder from a file.
@@ -255,10 +285,6 @@ instance (HasGenericOCamlType a, HasGenericOCamlType b) => HasGenericOCamlType (
   mkGType Proxy interface = mkGType (Proxy :: Proxy a) interface <> mkGType (Proxy :: Proxy b) interface 
   mkGInterface Proxy = mkGInterface (Proxy :: Proxy a) <> mkGInterface (Proxy :: Proxy b)
   mkGSpec Proxy modules url goldendir = (mkGSpec (Proxy :: Proxy a) modules url goldendir) <> (mkGSpec (Proxy :: Proxy b) modules url goldendir)
-
--- oOCamlEncoderSourceWith (options {includeOCamlInterface = True})
--- toOCamlDecoderSourceWith (options {includeOCamlInterface = True})
--- defaultOptions {includeOCamlInterface = }
 
 instance {-# OVERLAPPABLE #-} OCamlType a => HasGenericOCamlType a where
   mkGType a interface = [toOCamlTypeSource a, toOCamlEncoderSourceWith (defaultOptions {includeOCamlInterface = interface}) a, toOCamlDecoderSourceWith (defaultOptions {includeOCamlInterface = interface}) a]

@@ -76,6 +76,8 @@ main = do
   hspec File.spec
   hspec Options.spec
 
+  print $ mkOCamlTypeMetaData (Proxy :: Proxy Product.ProductPackage)
+
   _ <- forkIO $ run 8081 productPackageApp
   _ <- forkIO $ run 8082 sumPackageApp
   run 8083 File.filePackageApp

@@ -31,7 +31,8 @@ module OCaml.BuckleScript.Types
   , OCamlValue (..)
   , OCamlType (..)
   , HaskellTypeMetaData (..)
-
+  , OCamlTypeMetaData (..)
+  
   -- fill type parameters of a proxy when calling toOCamlType
   -- e.g. `toOCamlType (Proxy :: Proxy (Either TypeParameterRef0 TypeParameterRef1))`
   , TypeParameterRef0
@@ -88,10 +89,18 @@ data OCamlDatatype
 
 data HaskellTypeMetaData =
   HaskellTypeMetaData
-    String -- "TypeName"
-    String -- "Module.Name"
-    String -- "package-name"
-    deriving (Show,Eq)
+    Text -- "TypeName"
+    Text -- "Module.Name"
+    Text -- "package-name"
+    deriving (Show, Eq, Ord)
+
+data OCamlTypeMetaData =
+  OCamlTypeMetaData
+    Text -- "typeName"
+--    Text -- "bs-ocaml-export"
+    [Text] -- ["File","Path"]
+    [Text] -- ["Sub","Module"]
+    deriving (Show, Eq, Ord)
 
 -- | Smallest unit of computation in OCaml.
 data OCamlPrimitive
@@ -166,7 +175,10 @@ class GenericOCamlDatatype f where
 instance (KnownSymbol typ, KnownSymbol package, KnownSymbol modul, GenericValueConstructor f) => GenericOCamlDatatype (M1 D ('MetaData typ package modul 'False) f) where
   genericToOCamlDatatype datatype =
     OCamlDatatype
-      (HaskellTypeMetaData (symbolVal (Proxy :: Proxy typ)) (symbolVal (Proxy :: Proxy modul)) (symbolVal (Proxy :: Proxy package)))
+      (HaskellTypeMetaData
+       (T.pack $ symbolVal (Proxy :: Proxy typ))
+       (T.pack $ symbolVal (Proxy :: Proxy modul))
+       (T.pack $ symbolVal (Proxy :: Proxy package)))
       (T.pack (datatypeName datatype))
       (transform (OCamlValueConstructor (genericToValueConstructor (unM1 datatype))))
     where
@@ -181,7 +193,10 @@ instance (KnownSymbol typ, KnownSymbol package, KnownSymbol modul, GenericValueC
 instance (KnownSymbol typ, KnownSymbol package, KnownSymbol modul, GenericValueConstructor f) => GenericOCamlDatatype (M1 D ('MetaData typ package modul 'True) f) where
   genericToOCamlDatatype datatype =
     OCamlDatatype
-      (HaskellTypeMetaData (symbolVal (Proxy :: Proxy typ)) (symbolVal (Proxy :: Proxy modul)) (symbolVal (Proxy :: Proxy package)))
+      (HaskellTypeMetaData
+       (T.pack $ symbolVal (Proxy :: Proxy typ))
+       (T.pack $ symbolVal (Proxy :: Proxy modul))
+       (T.pack $ symbolVal (Proxy :: Proxy package)))
       (T.pack (datatypeName datatype))
       (transform (OCamlValueConstructor (genericToValueConstructor (unM1 datatype))))
     where

@@ -58,6 +58,8 @@ module OCaml.BuckleScript.Module
   , MkOCamlSpecAPI
   , mkServer
 
+  , HasOCamlTypeMetaData (..)
+
   -- load handwritten OCaml files at compile time
   , EmbeddedOCamlFiles (..)
   , HasEmbeddedFile (..)
@@ -68,13 +70,13 @@ module OCaml.BuckleScript.Module
   ) where
 
 -- base
-import qualified Data.List as L (intercalate)
+
 import Data.List.Split (splitOn)
-import qualified Data.Map as Map
-import Data.Maybe (catMaybes)
+import qualified Data.Map.Strict as Map
+
 import Data.Proxy
 import Data.Semigroup (Semigroup (..))
-import Data.Typeable (typeRep, Typeable)
+import Data.Typeable (typeRep, Typeable, typeRepTyCon, tyConName, tyConModule, tyConPackage)
 import GHC.Generics
 
 -- bytestring
@@ -109,8 +111,8 @@ import Data.Text.Encoding (decodeUtf8)
 -- type level
 import GHC.TypeLits
 import GHC.TypeLits.List
-import Data.Type.Bool
-import Data.Type.Equality
+
+
 
 -- servant
 import Servant.API
@@ -145,30 +147,40 @@ data SpecOptions
 defaultSpecOptions :: SpecOptions
 defaultSpecOptions = SpecOptions "/__tests__" "/__tests__/golden" "localhost:8081"
 
-
--- |
-data OCamlTypeMetaData =
-  OCamlTypeMetaData
-    Text -- "typeName"
---    Text -- "bs-ocaml-export"
-    [Text] -- ["",""]
-    [Text] -- ["",""]
-    deriving (Show, Eq)
-
 class HasOCamlTypeMetaData a where
-  mkOCamlTypeMetaData :: Proxy a -> [OCamlTypeMetaData]
+  mkOCamlTypeMetaData :: Proxy a -> Map.Map HaskellTypeMetaData OCamlTypeMetaData -- [OCamlTypeMetaData]
 
-instance (KnownSymbols moduleName, KnownSymbols filePath, HasOCamlModule (OCamlModule filePath moduleName), HasOCamlTypeMetaData' api) => HasOCamlTypeMetaData ((OCamlModule filePath moduleName) :> api) where
-  mkOCamlTypeMetaData Proxy = mkOCamlTypeMetaData' (T.pack <$> symbolsVal (Proxy :: Proxy filePath)) (T.pack <$> symbolsVal (Proxy :: Proxy moduleName)) (Proxy :: Proxy api)
+instance (HasOCamlTypeMetaData modul, HasOCamlTypeMetaData rst) => HasOCamlTypeMetaData (modul :<|> rst) where
+  mkOCamlTypeMetaData Proxy = mkOCamlTypeMetaData (Proxy :: Proxy modul) <> mkOCamlTypeMetaData (Proxy :: Proxy rst)
+
+instance (KnownSymbols moduleName, KnownSymbols filePath,  HasOCamlTypeMetaData' api) => HasOCamlTypeMetaData ((OCamlModule filePath moduleName) :> api) where
+  mkOCamlTypeMetaData Proxy = Map.fromList $ mkOCamlTypeMetaData' (T.pack <$> symbolsVal (Proxy :: Proxy filePath)) (T.pack <$> symbolsVal (Proxy :: Proxy moduleName)) (Proxy :: Proxy api)
+
+-- HasOCamlModule (OCamlModule filePath moduleName),
 
 class HasOCamlTypeMetaData' a where
-  mkOCamlTypeMetaData' :: [Text] -> [Text] -> Proxy a -> [OCamlTypeMetaData]
+  mkOCamlTypeMetaData' :: [Text] -> [Text] -> Proxy a -> [(HaskellTypeMetaData,OCamlTypeMetaData)]
 
 instance (HasOCamlTypeMetaData' a, HasOCamlTypeMetaData' b) => HasOCamlTypeMetaData' (a :> b) where
   mkOCamlTypeMetaData' modul subModul Proxy = (mkOCamlTypeMetaData' modul subModul (Proxy :: Proxy a)) <> (mkOCamlTypeMetaData' modul subModul (Proxy :: Proxy b))
 
-instance (Typeable a) => HasOCamlTypeMetaData' a where
-  mkOCamlTypeMetaData' modul subModul Proxy = [OCamlTypeMetaData (T.pack . show $ typeRep (Proxy :: Proxy a)) modul subModul]
+instance {-# OVERLAPPABLE #-} (Typeable a) => HasOCamlTypeMetaData' (OCamlTypeInFile a b) where
+  mkOCamlTypeMetaData' modul subModul Proxy =
+    [( HaskellTypeMetaData typeName (T.pack . tyConModule . typeRepTyCon $ aTypeRep) (T.pack . tyConPackage . typeRepTyCon $ aTypeRep)
+    ,  OCamlTypeMetaData typeName modul subModul
+    )]
+    where
+      aTypeRep = typeRep (Proxy :: Proxy a)
+      typeName = T.pack . tyConName . typeRepTyCon $ aTypeRep
+
+instance {-# OVERLAPPABLE #-} (Typeable a) => HasOCamlTypeMetaData' a where
+  mkOCamlTypeMetaData' modul subModul Proxy =
+    [( HaskellTypeMetaData typeName (T.pack . tyConModule . typeRepTyCon $ aTypeRep) (T.pack . tyConPackage . typeRepTyCon $ aTypeRep)
+    ,  OCamlTypeMetaData typeName modul subModul
+    )]
+    where
+      aTypeRep = typeRep (Proxy :: Proxy a)
+      typeName = T.pack . tyConName . typeRepTyCon $ aTypeRep
 
 -- | An OCamlModule as a Haskell type. 'filePath' is relative to a
 --   root directory prvoiided in the 'mkPackage' function. Each symbol in
@@ -211,19 +223,19 @@ instance (KnownSymbols filePath, KnownSymbols moduleName, HasOCamlType api) => H
       then fail "OCamlModule filePath needs at least one file name"
       else do
         createDirectoryIfMissing True (rootDir </> packageSrcDir packageOptions)
-        let typF = localModuleDoc . (<> "\n") . T.intercalate "\n\n" $ mkType (Proxy :: Proxy api) (createInterfaceFile packageOptions) (packageEmbeddedFiles packageOptions)
+        let typF = localModuleDoc . (<> "\n") . T.intercalate "\n\n" $ mkType (Proxy :: Proxy api) defaultOptions (createInterfaceFile packageOptions) (packageEmbeddedFiles packageOptions)
         T.writeFile (fp <.> "ml")  typF
 
         if createInterfaceFile packageOptions
           then do
-            let intF = localModuleSigDoc . (<> "\n") . T.intercalate "\n\n" $ mkInterface (Proxy :: Proxy api) (packageEmbeddedFiles packageOptions)
+            let intF = localModuleSigDoc . (<> "\n") . T.intercalate "\n\n" $ mkInterface (Proxy :: Proxy api) defaultOptions (packageEmbeddedFiles packageOptions)
             T.writeFile (fp <.> "mli") intF
           else pure ()
         
         case mSpecOptions packageOptions of
           Nothing -> pure ()
           Just specOptions -> do
-            let specF = (<> "\n") . T.intercalate "\n\n" $ mkSpec (Proxy :: Proxy api) modules (T.pack $ servantURL specOptions) (T.pack $ goldenDir specOptions) (packageEmbeddedFiles packageOptions)
+            let specF = (<> "\n") . T.intercalate "\n\n" $ mkSpec (Proxy :: Proxy api) defaultOptions modules (T.pack $ servantURL specOptions) (T.pack $ goldenDir specOptions) (packageEmbeddedFiles packageOptions)
             let specBody = if specF /= "" then ("let () =\n" <> specF) else ""
             createDirectoryIfMissing True (rootDir </> (specDir specOptions))
             T.writeFile (specFp <> "_spec" <.> "ml") specBody
@@ -241,55 +253,55 @@ instance (KnownSymbols filePath, KnownSymbols moduleName, HasOCamlType api) => H
 
 -- | Combine `HasGenericOCamlType` and `HasOCamlTypeInFile`
 class HasOCamlType api where
-  mkType :: Proxy api -> Bool -> Map.Map String EmbeddedOCamlFiles -> [Text]
-  mkInterface :: Proxy api -> Map.Map String EmbeddedOCamlFiles -> [Text]
-  mkSpec :: Proxy api -> [Text] -> Text -> Text -> Map.Map String EmbeddedOCamlFiles -> [Text]
+  mkType :: Proxy api -> Options -> Bool -> Map.Map String EmbeddedOCamlFiles -> [Text]
+  mkInterface :: Proxy api -> Options -> Map.Map String EmbeddedOCamlFiles -> [Text]
+  mkSpec :: Proxy api -> Options -> [Text] -> Text -> Text -> Map.Map String EmbeddedOCamlFiles -> [Text]
 
 instance (HasOCamlType a, HasOCamlType b) => HasOCamlType (a :> b) where
-  mkType Proxy interface fileMap = (mkType (Proxy :: Proxy a) interface fileMap) <> (mkType (Proxy :: Proxy b) interface fileMap)
-  mkInterface Proxy fileMap = (mkInterface (Proxy :: Proxy a) fileMap) <> (mkInterface (Proxy :: Proxy b) fileMap)
-  mkSpec Proxy modules url goldendir fileMap = (mkSpec (Proxy :: Proxy a) modules url goldendir fileMap) <> (mkSpec (Proxy :: Proxy b) modules url goldendir fileMap)
+  mkType Proxy options interface fileMap = (mkType (Proxy :: Proxy a) options interface fileMap) <> (mkType (Proxy :: Proxy b) options interface fileMap)
+  mkInterface Proxy options fileMap = (mkInterface (Proxy :: Proxy a) options fileMap) <> (mkInterface (Proxy :: Proxy b) options fileMap)
+  mkSpec Proxy options modules url goldendir fileMap = (mkSpec (Proxy :: Proxy a) options modules url goldendir fileMap) <> (mkSpec (Proxy :: Proxy b) options modules url goldendir fileMap)
 
 
 instance {-# OVERLAPPABLE #-} (Typeable a, KnownSymbol b) => HasOCamlType (OCamlTypeInFile a b) where
-  mkType Proxy _ fileMap = do
+  mkType Proxy options _ fileMap = do
     let typeFilePath = symbolVal (Proxy :: Proxy b)
     let typeName = last $ splitOn "/" typeFilePath
     case eocDeclaration <$> Map.lookup typeName fileMap of
       Just v -> [decodeUtf8 v]
       _ -> fail $ "Unable to find the embedded file for " ++ typeName
 
-  mkInterface Proxy fileMap = do
+  mkInterface Proxy options fileMap = do
     let typeFilePath = symbolVal (Proxy :: Proxy b)
     let typeName = last $ splitOn "/" typeFilePath
     case eocInterface <$> Map.lookup typeName fileMap of
       Just (Just v) -> [decodeUtf8 v]
       _ -> fail $ "Unable to find the embedded file for " ++ typeName
 
-  mkSpec z modules url goldendir fileMap = 
-    [toOCamlSpec2 (T.pack . show $ typeRep (Proxy :: Proxy a)) modules url goldendir]
+  mkSpec _z _options modules url goldendir _fileMap = 
+    [toOCamlSpec2 (T.pack . tyConName . typeRepTyCon $ typeRep (Proxy :: Proxy a)) modules url goldendir]
 
 instance {-# OVERLAPPABLE #-} (HasGenericOCamlType a) => HasOCamlType a where
-  mkType a interface _ = mkGType a interface
-  mkInterface a _ = mkGInterface a
-  mkSpec a modules url goldendir _ = mkGSpec a modules url goldendir  
+  mkType a options interface _ = mkGType a options interface
+  mkInterface a options _ = mkGInterface a options
+  mkSpec a options modules url goldendir _ = mkGSpec a options modules url goldendir  
 
 
 -- | Produce OCaml files for types that have OCamlType derived via GHC.Generics
 class HasGenericOCamlType api where
-  mkGType :: Proxy api -> Bool -> [Text]
-  mkGInterface :: Proxy api -> [Text]
-  mkGSpec :: Proxy api -> [Text] -> Text -> Text -> [Text]
+  mkGType :: Proxy api -> Options -> Bool -> [Text]
+  mkGInterface :: Proxy api -> Options -> [Text]
+  mkGSpec :: Proxy api -> Options -> [Text] -> Text -> Text -> [Text]
 
 instance (HasGenericOCamlType a, HasGenericOCamlType b) => HasGenericOCamlType (a :> b) where
-  mkGType Proxy interface = mkGType (Proxy :: Proxy a) interface <> mkGType (Proxy :: Proxy b) interface 
-  mkGInterface Proxy = mkGInterface (Proxy :: Proxy a) <> mkGInterface (Proxy :: Proxy b)
-  mkGSpec Proxy modules url goldendir = (mkGSpec (Proxy :: Proxy a) modules url goldendir) <> (mkGSpec (Proxy :: Proxy b) modules url goldendir)
+  mkGType Proxy options interface = mkGType (Proxy :: Proxy a) options interface <> mkGType (Proxy :: Proxy b) options interface
+  mkGInterface Proxy options = mkGInterface (Proxy :: Proxy a) options <> mkGInterface (Proxy :: Proxy b) options
+  mkGSpec Proxy options modules url goldendir = (mkGSpec (Proxy :: Proxy a) options modules url goldendir) <> (mkGSpec (Proxy :: Proxy b) options modules url goldendir)
 
 instance {-# OVERLAPPABLE #-} OCamlType a => HasGenericOCamlType a where
-  mkGType a interface = [toOCamlTypeSource a, toOCamlEncoderSourceWith (defaultOptions {includeOCamlInterface = interface}) a, toOCamlDecoderSourceWith (defaultOptions {includeOCamlInterface = interface}) a]
-  mkGInterface a = [toOCamlTypeSource a, toOCamlEncoderInterface a, toOCamlDecoderInterface a]
-  mkGSpec a modules url goldendir = [toOCamlSpec a modules url goldendir]
+  mkGType a options interface = [toOCamlTypeSource a, toOCamlEncoderSourceWith (defaultOptions {includeOCamlInterface = interface}) a, toOCamlDecoderSourceWith (defaultOptions {includeOCamlInterface = interface}) a]
+  mkGInterface a options = [toOCamlTypeSource a, toOCamlEncoderInterface a, toOCamlDecoderInterface a]
+  mkGSpec a options modules url goldendir = [toOCamlSpec a modules url goldendir]
 
 
 
@@ -473,7 +485,7 @@ instance (HasEmbeddedFile' a, HasEmbeddedFile' b) => HasEmbeddedFile' (a :> b) w
 instance (Typeable a, KnownSymbol b) => HasEmbeddedFile' (OCamlTypeInFile a b) where
   mkFiles' includeInterface includeSpec Proxy = do
     let typeFilePath = symbolVal (Proxy :: Proxy b)
-    let typeName = show $ typeRep (Proxy :: Proxy a)
+    let typeName = tyConName . typeRepTyCon $ typeRep (Proxy :: Proxy a)
     ml  <- embedFile (typeFilePath <.> "ml")
 
     mli <- if includeInterface

@@ -66,4 +66,4 @@ toOCamlSpec a modules url fp =
 
 toOCamlSpec2 :: Text -> [Text] -> Text -> Text -> Text
 toOCamlSpec2 a modules url fp =
-  pprinter $ mkSampleServerAndGoldenSpec (OCamlDatatype (HaskellTypeMetaData (T.unpack a) "" "") a $ OCamlValueConstructor $ NamedConstructor a $ OCamlEmpty) modules url fp
+  pprinter $ mkSampleServerAndGoldenSpec (OCamlDatatype (HaskellTypeMetaData a "" "") a $ OCamlValueConstructor $ NamedConstructor a $ OCamlEmpty) modules url fp

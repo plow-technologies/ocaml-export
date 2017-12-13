@@ -63,6 +63,7 @@ instance Monoid OCamlInterface where
   mappend a b = OCamlInterface (declars a <> declars b) (inters a <> inters b) (specs a <> specs b)
   mempty = OCamlInterface [] [] []
 
+{-
 mkOCamlInterfaceWithOptions :: OCamlType a => Options -> a -> OCamlInterface
 mkOCamlInterfaceWithOptions options a =
   OCamlInterface
@@ -84,7 +85,7 @@ mkOCamlInterfaceWithSpec url goldenDir modul a =
     [toOCamlTypeSource a, toOCamlEncoderSourceWith (defaultOptions {includeOCamlInterface = True}) a, toOCamlDecoderSourceWith (defaultOptions {includeOCamlInterface = True}) a]
     [toOCamlTypeSource a, toOCamlEncoderInterface a, toOCamlDecoderInterface a]
     [toOCamlSpec a [modul] url goldenDir]
-
+-}
 
 createOCamlFile :: FilePath -> OCamlFile -> IO ()
 createOCamlFile rootDir ocamlFile = do
@@ -118,6 +119,8 @@ createOCamlSpecFile rootDir fileName ocamlSpec = do
   let fp = rootDir <> "/" <> fileName
       body = "let () =\n" <> ocamlSpec
   T.writeFile (fp <> "_spec.ml") body
+
+
 {-
 createOCamlSpecFile :: FilePath -> FilePath -> [(OCamlDatatype,Text,Text)] -> IO ()
 createOCamlSpecFile rootDir fileName typs = do

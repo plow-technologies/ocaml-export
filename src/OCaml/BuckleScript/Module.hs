@@ -202,40 +202,47 @@ data OCamlTypeInFile a (filePath :: Symbol)
 class HasOCamlPackage a where
   mkPackage :: Proxy a -> PackageOptions -> IO ()
 
-instance (HasOCamlPackage modul, HasOCamlPackage rest) => HasOCamlPackage (modul :<|> rest) where
+instance (HasOCamlTypeMetaData a, HasOCamlPackage' a) => HasOCamlPackage a where
   mkPackage Proxy packageOptions = do
-    mkPackage (Proxy :: Proxy modul) packageOptions
-    mkPackage (Proxy :: Proxy rest) packageOptions
+    mkPackage' (Proxy :: Proxy a) packageOptions (mkOCamlTypeMetaData (Proxy :: Proxy a))
 
-instance {-# OVERLAPPABLE #-} (HasOCamlModule a) => HasOCamlPackage a where
-  mkPackage Proxy packageOptions = mkModule (Proxy :: Proxy a) packageOptions
+class HasOCamlPackage' a where
+  mkPackage' :: Proxy a -> PackageOptions -> Map.Map HaskellTypeMetaData OCamlTypeMetaData -> IO ()
+
+instance (HasOCamlPackage' modul, HasOCamlPackage' rest) => HasOCamlPackage' (modul :<|> rest) where
+  mkPackage' Proxy packageOptions deps = do
+    mkPackage' (Proxy :: Proxy modul) packageOptions deps
+    mkPackage' (Proxy :: Proxy rest) packageOptions deps
+
+instance {-# OVERLAPPABLE #-} (HasOCamlModule a) => HasOCamlPackage' a where
+  mkPackage' Proxy packageOptions = mkModule (Proxy :: Proxy a) packageOptions
 
 -- | Depending on 'PackageOptions' settings, 'mkModule' can
 --   - make a declaration file containing encoders and decoders
 --   - make an OCaml interface file
 --   - make a Spec file that tests the encoders and decoders against a golden file and a servant server
 class HasOCamlModule a where
-  mkModule :: Proxy a -> PackageOptions -> IO ()
+  mkModule :: Proxy a -> PackageOptions -> Map.Map HaskellTypeMetaData OCamlTypeMetaData -> IO ()
   
 instance (KnownSymbols filePath, KnownSymbols moduleName, HasOCamlType api) => HasOCamlModule ((OCamlModule filePath moduleName) :> api) where
-  mkModule Proxy packageOptions = do
+  mkModule Proxy packageOptions ds = do
     if (length $ symbolsVal (Proxy :: Proxy filePath)) == 0
       then fail "OCamlModule filePath needs at least one file name"
       else do
         createDirectoryIfMissing True (rootDir </> packageSrcDir packageOptions)
-        let typF = localModuleDoc . (<> "\n") . T.intercalate "\n\n" $ mkType (Proxy :: Proxy api) defaultOptions (createInterfaceFile packageOptions) (packageEmbeddedFiles packageOptions)
+        let typF = localModuleDoc . (<> "\n") . T.intercalate "\n\n" $ mkType (Proxy :: Proxy api) (defaultOptions {dependencies = ds}) (createInterfaceFile packageOptions) (packageEmbeddedFiles packageOptions)
         T.writeFile (fp <.> "ml")  typF
 
         if createInterfaceFile packageOptions
           then do
-            let intF = localModuleSigDoc . (<> "\n") . T.intercalate "\n\n" $ mkInterface (Proxy :: Proxy api) defaultOptions (packageEmbeddedFiles packageOptions)
+            let intF = localModuleSigDoc . (<> "\n") . T.intercalate "\n\n" $ mkInterface (Proxy :: Proxy api) (defaultOptions {dependencies = ds}) (packageEmbeddedFiles packageOptions)
             T.writeFile (fp <.> "mli") intF
           else pure ()
         
         case mSpecOptions packageOptions of
           Nothing -> pure ()
           Just specOptions -> do
-            let specF = (<> "\n") . T.intercalate "\n\n" $ mkSpec (Proxy :: Proxy api) defaultOptions modules (T.pack $ servantURL specOptions) (T.pack $ goldenDir specOptions) (packageEmbeddedFiles packageOptions)
+            let specF = (<> "\n") . T.intercalate "\n\n" $ mkSpec (Proxy :: Proxy api) (defaultOptions {dependencies = ds}) modules (T.pack $ servantURL specOptions) (T.pack $ goldenDir specOptions) (packageEmbeddedFiles packageOptions)
             let specBody = if specF /= "" then ("let () =\n" <> specF) else ""
             createDirectoryIfMissing True (rootDir </> (specDir specOptions))
             T.writeFile (specFp <> "_spec" <.> "ml") specBody
@@ -299,8 +306,8 @@ instance (HasGenericOCamlType a, HasGenericOCamlType b) => HasGenericOCamlType (
   mkGSpec Proxy options modules url goldendir = (mkGSpec (Proxy :: Proxy a) options modules url goldendir) <> (mkGSpec (Proxy :: Proxy b) options modules url goldendir)
 
 instance {-# OVERLAPPABLE #-} OCamlType a => HasGenericOCamlType a where
-  mkGType a options interface = [toOCamlTypeSource a, toOCamlEncoderSourceWith (defaultOptions {includeOCamlInterface = interface}) a, toOCamlDecoderSourceWith (defaultOptions {includeOCamlInterface = interface}) a]
-  mkGInterface a options = [toOCamlTypeSource a, toOCamlEncoderInterface a, toOCamlDecoderInterface a]
+  mkGType a options interface = [toOCamlTypeSource a, toOCamlEncoderSourceWith (options {includeOCamlInterface = interface}) a, toOCamlDecoderSourceWith (options {includeOCamlInterface = interface}) a]
+  mkGInterface a options = [toOCamlTypeSource a, toOCamlEncoderInterface a, toOCamlDecoderInterfaceWith options a]
   mkGSpec a options modules url goldendir = [toOCamlSpec a modules url goldendir]
 
 

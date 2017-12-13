@@ -21,6 +21,7 @@ import Test.QuickCheck.Arbitrary.ADT
 import Test.Aeson.Internal.ADT.GoldenSpecs
 import Util
 
+{-
 testOptionsInterface = testOCamlTypeWithInterface Options
 
 mkTestOCaml :: OCamlType a => Text -> a -> OCamlInterface
@@ -64,3 +65,4 @@ instance ToJSON NameOrIdNumber where
 
 instance FromJSON NameOrIdNumber where
   parseJSON = genericParseJSON constructorLowerOptions
+-}

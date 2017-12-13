@@ -74,7 +74,7 @@ main = do
   hspec Product.spec
   hspec Sum.spec
   hspec File.spec
-  hspec Options.spec
+--  hspec Options.spec
 
   print $ mkOCamlTypeMetaData (Proxy :: Proxy Product.ProductPackage)
 

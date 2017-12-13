@@ -172,7 +172,7 @@ class GenericOCamlDatatype f where
 -- | Capture the Haskell type at the left side declaration `data Maybe a`, `data Person`, etc..
 --   Transform the constructor, depending on its values, if necessary.
 
-instance (KnownSymbol typ, KnownSymbol package, KnownSymbol modul, GenericValueConstructor f) => GenericOCamlDatatype (M1 D ('MetaData typ package modul 'False) f) where
+instance (KnownSymbol typ, KnownSymbol package, KnownSymbol modul, GenericValueConstructor f) => GenericOCamlDatatype (M1 D ('MetaData typ modul package 'False) f) where
   genericToOCamlDatatype datatype =
     OCamlDatatype
       (HaskellTypeMetaData
@@ -190,7 +190,7 @@ instance (KnownSymbol typ, KnownSymbol package, KnownSymbol modul, GenericValueC
               then transformToSumOfRecord (T.pack (datatypeName datatype)) ocamlConstructor
               else ocamlConstructor
 
-instance (KnownSymbol typ, KnownSymbol package, KnownSymbol modul, GenericValueConstructor f) => GenericOCamlDatatype (M1 D ('MetaData typ package modul 'True) f) where
+instance (KnownSymbol typ, KnownSymbol package, KnownSymbol modul, GenericValueConstructor f) => GenericOCamlDatatype (M1 D ('MetaData typ modul package 'True) f) where
   genericToOCamlDatatype datatype =
     OCamlDatatype
       (HaskellTypeMetaData

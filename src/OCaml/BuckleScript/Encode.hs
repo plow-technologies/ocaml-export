@@ -10,14 +10,8 @@ Stability   : experimental
 {-# LANGUAGE OverloadedStrings #-}
 
 module OCaml.BuckleScript.Encode 
-  ( toOCamlEncoderRef
-  , toOCamlEncoderRefWith
-  , toOCamlEncoderSource
-  , toOCamlEncoderSourceWith
-  , toOCamlEncoderInterface
-
-  , toOCamlEncoderSourceWith'
-  , toOCamlEncoderInterface'
+  ( toOCamlEncoderSourceWith
+  , toOCamlEncoderInterfaceWith
   ) where
 
 -- base
@@ -284,7 +278,7 @@ instance HasEncoder OCamlValue where
   render (OCamlTypeParameterRef name) =
     pure $ "encode" <> (stext . textUppercaseFirst $ name)
   render (OCamlPrimitiveRef primitive) = renderRef primitive
-  render (OCamlRef name) = pure $ "encode" <> (stext . textUppercaseFirst $ name)
+  render (OCamlRef _ name) = pure $ "encode" <> (stext . textUppercaseFirst $ name)
   render (Values x y) = do
     dx <- render x
     dy <- render y
@@ -353,31 +347,6 @@ instance HasEncoderRef OCamlPrimitive where
     dk <- renderRef k
     dv <- renderRef v
     return . parens $ "Js.Encode.dict" <+> dk <+> dv
-
-toOCamlEncoderInterface :: OCamlType a => a -> T.Text
-toOCamlEncoderInterface x =
-  pprinter $ runReader (renderTypeInterface (toOCamlType x)) defaultOptions
-
-toOCamlEncoderInterface' :: OCamlType a => a -> Doc
-toOCamlEncoderInterface' x = runReader (renderTypeInterface (toOCamlType x)) defaultOptions
-
-toOCamlEncoderRefWith :: OCamlType a => Options -> a -> T.Text
-toOCamlEncoderRefWith options x =
-  pprinter $ runReader (renderRef (toOCamlType x)) options
-
-toOCamlEncoderRef :: OCamlType a => a -> T.Text
-toOCamlEncoderRef = toOCamlEncoderRefWith defaultOptions
-
-toOCamlEncoderSourceWith :: OCamlType a => Options -> a -> T.Text
-toOCamlEncoderSourceWith options x =
-  pprinter $ runReader (render (toOCamlType x)) options
-
-toOCamlEncoderSourceWith' :: OCamlType a => a -> Doc
-toOCamlEncoderSourceWith' x = runReader (render (toOCamlType x)) defaultOptions
-
-
-toOCamlEncoderSource :: OCamlType a => a -> T.Text
-toOCamlEncoderSource = toOCamlEncoderSourceWith defaultOptions
 
 -- | Variable names for the members of constructors
 --   Used in pattern matches
@@ -470,3 +439,14 @@ renderTypeParametersAux ocamlValues = do
 renderEncodeTypeParameters :: OCamlConstructor -> Doc
 renderEncodeTypeParameters constructor =
   foldl (<>) "" $ stext <$> L.intersperse " " ((\t -> "encode" <> (textUppercaseFirst t)) <$> getTypeParameters constructor)
+
+
+-- | export
+
+toOCamlEncoderInterfaceWith :: OCamlType a => Options -> a -> T.Text
+toOCamlEncoderInterfaceWith options x =
+  pprinter $ runReader (renderTypeInterface (toOCamlType x)) options
+
+toOCamlEncoderSourceWith :: OCamlType a => Options -> a -> T.Text
+toOCamlEncoderSourceWith options x =
+  pprinter $ runReader (render (toOCamlType x)) options

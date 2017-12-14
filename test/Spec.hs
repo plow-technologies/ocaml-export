@@ -35,6 +35,8 @@ import           ProductApp
 import qualified Sum as Sum
 import           SumApp
 
+import qualified Dependency as D
+
 import qualified Options as Options
 
 
@@ -71,10 +73,11 @@ logAllMiddleware app req respond = do
 
 main :: IO ()
 main = do
-  hspec Product.spec
-  hspec Sum.spec
-  hspec File.spec
+--  hspec Product.spec
+--  hspec Sum.spec
+--  hspec File.spec
 --  hspec Options.spec
+  hspec D.spec
 
   print $ mkOCamlTypeMetaData (Proxy :: Proxy Product.ProductPackage)
 

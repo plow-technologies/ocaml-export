@@ -44,7 +44,7 @@ class HasTypeRef a where
   renderRef :: a -> Reader Options Doc
 
 instance HasType OCamlDatatype where
-  render datatype@(OCamlDatatype _ typeName constructor@(OCamlSumOfRecordConstructor _ (MultipleConstructors constructors))) = do
+  render datatype@(OCamlDatatype mOCamlTypeDataType typeName constructor@(OCamlSumOfRecordConstructor _ (MultipleConstructors constructors))) = do
     -- For each constructor, if it is a record constructor, declare a type for that record
     -- before and separate form the main sum type.
     sumRecordsData <- catMaybes <$> sequence (renderSumRecord typeName <$> constructors)
@@ -102,7 +102,7 @@ instance HasType EnumeratorConstructor where
   render (EnumeratorConstructor name) = pure (stext name)
 
 instance HasType OCamlValue where
-  render (OCamlRef name) = pure (stext $ textLowercaseFirst name)
+  render (OCamlRef _ name) = pure (stext $ textLowercaseFirst name)
   render (OCamlTypeParameterRef name) = pure (stext ("'" <> name))
   render (OCamlPrimitiveRef primitive) = ocamlRefParens primitive <$> renderRef primitive
   render OCamlEmpty = pure (text "")
@@ -208,7 +208,7 @@ replaceRecordConstructors newConstructors recordConstructor@(RecordConstructor o
     True  -> head newRecordConstructor
   where
     replace (oldName', (RecordConstructor newName _value)) =
-      if oldName == oldName' then (Just $ NamedConstructor oldName' (OCamlRef newName)) else Nothing
+      if oldName == oldName' then (Just $ NamedConstructor oldName' (OCamlRef (HaskellTypeMetaData "" "" "") newName)) else Nothing
     replace _ = Nothing
     newRecordConstructor = catMaybes $ replace <$> newConstructors
 

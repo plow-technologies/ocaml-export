@@ -147,7 +147,7 @@ data EnumeratorConstructor
 
 -- | Expected types of a constructor
 data OCamlValue
-  = OCamlRef Text -- ^ The name of a non-primitive data type
+  = OCamlRef HaskellTypeMetaData Text -- ^ The name of a non-primitive data type
   | OCamlTypeParameterRef Text -- ^ Type parameters like `a` in `Maybe a`
   | OCamlEmpty -- ^ a place holder for OCaml value. It can represent the end of a list or an Enumerator in a mixed sum
   | OCamlPrimitiveRef OCamlPrimitive -- ^ A primitive OCaml type like `int`, `string`, etc.
@@ -262,12 +262,12 @@ instance OCamlType a => GenericOCamlValue (Rec0 a) where
   genericToOCamlValue _ =
     case toOCamlType (Proxy :: Proxy a) of
       OCamlPrimitive primitive -> OCamlPrimitiveRef primitive
-      OCamlDatatype _ name _     -> mkRef name
+      OCamlDatatype haskellTypeMetaData name _     -> mkRef haskellTypeMetaData name
     where
       typeParameterRefs = (T.append) <$> ["a"] <*> (T.pack . show <$> ([0..5] :: [Int]))
-      mkRef n
+      mkRef haskellTypeMetaData n
         | n `elem` typeParameterRefs = OCamlTypeParameterRef n
-        | otherwise = OCamlRef n
+        | otherwise = OCamlRef haskellTypeMetaData n
 
 -- OCamlType instances for primitives
 

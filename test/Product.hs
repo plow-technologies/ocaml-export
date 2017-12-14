@@ -208,4 +208,3 @@ instance Arbitrary (SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypePar
     SubTypeParameter <$> pure v <*> arbitrary <*> arbitrary
 
 instance ToADTArbitrary (SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2)
-

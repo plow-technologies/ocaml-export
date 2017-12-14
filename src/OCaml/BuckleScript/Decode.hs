@@ -146,6 +146,9 @@ instance HasDecoder OCamlDatatype where
 
   render mOCamlTypeMetaData (OCamlPrimitive primitive) = renderRef mOCamlTypeMetaData primitive
 
+foldMod :: [Text] -> Text
+foldMod = T.intercalate "."
+
 instance HasDecoderRef OCamlDatatype where
   -- this should only catch type parameters
   renderRef mOCamlTypeMetaData datatype@(OCamlDatatype typeRef name _) =
@@ -158,7 +161,14 @@ instance HasDecoderRef OCamlDatatype where
         Just (OCamlTypeMetaData _ pFPath pSubMod) -> do
           ds <- asks dependencies
           case Map.lookup typeRef ds of
-            Just (OCamlTypeMetaData tName cFPath cSubMod) -> pure $ "decode" <> (stext . textUppercaseFirst $ name)
+            Just (OCamlTypeMetaData tName cFPath cSubMod) ->
+              if (pFPath == cFPath)
+                then
+                  if (pSubMod == cSubMod)
+                  then pure $ "decode" <> (stext . textUppercaseFirst $ name)                    
+                  else pure $ (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> "decode" <> (stext . textUppercaseFirst $ name)
+                else pure $ (if cFPath == [] then "" else (stext  (foldMod cFPath) <> ".")) <> (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> "decode" <> (stext . textUppercaseFirst $ name)
+                
             Nothing -> fail ("expected to find dependency:\n\n" ++ show typeRef ++ "\n\nin\n\n" ++ show ds)
       
   renderRef mOCamlTypeMetaData (OCamlPrimitive primitive) = renderRef mOCamlTypeMetaData primitive
@@ -200,8 +210,21 @@ renderResult mOCamlTypeMetaData jsonFieldname datatype@(OCamlPrimitive _primitiv
   pure $ "(field" <+> dquotes (stext jsonFieldname) <+> dv <> ")"
 
 instance HasDecoder OCamlValue where
-  render mOCamlTypeMetaData (OCamlRef name) = do
-    pure $ "(fun a -> unwrapResult (decode" <> (stext . textUppercaseFirst $ name) <+> "a))"
+  render mOCamlTypeMetaData (OCamlRef typeRef name) = do
+    -- pure $ "(fun a -> unwrapResult (decode" <> (stext . textUppercaseFirst $ name) <+> "a))"
+    case mOCamlTypeMetaData of
+      Nothing -> fail ""
+      Just (OCamlTypeMetaData _ pFPath pSubMod) -> do
+        ds <- asks dependencies
+        case Map.lookup typeRef ds of
+          Just (OCamlTypeMetaData tName cFPath cSubMod) ->
+            if (pFPath == cFPath)
+            then
+              if (pSubMod == cSubMod)
+              then pure $ "(fun a -> unwrapResult (decode" <> (stext . textUppercaseFirst $ name) <+> "a))" 
+              else pure $ "(fun a -> unwrapResult (" <> (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> "decode" <> (stext . textUppercaseFirst $ name) <+> "a))" 
+            else pure $  "(fun a -> unwrapResult (" <> (if cFPath == [] then "" else (stext  (foldMod cFPath) <> ".")) <> (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> "decode" <> (stext . textUppercaseFirst $ name) <+> "a))"
+          Nothing -> fail ("expected to find dependency:\n\n" ++ show typeRef ++ "\n\nin\n\n" ++ show ds)
 
   render mOCamlTypeMetaData (OCamlPrimitiveRef primitive) = renderRef mOCamlTypeMetaData primitive
 

@@ -307,7 +307,7 @@ instance (HasGenericOCamlType a, HasGenericOCamlType b) => HasGenericOCamlType (
 
 instance {-# OVERLAPPABLE #-} OCamlType a => HasGenericOCamlType a where
   mkGType a options interface = [toOCamlTypeSource a, toOCamlEncoderSourceWith (options {includeOCamlInterface = interface}) a, toOCamlDecoderSourceWith (options {includeOCamlInterface = interface}) a]
-  mkGInterface a options = [toOCamlTypeSource a, toOCamlEncoderInterface a, toOCamlDecoderInterfaceWith options a]
+  mkGInterface a options = [toOCamlTypeSource a, toOCamlEncoderInterfaceWith options a, toOCamlDecoderInterfaceWith options a]
   mkGSpec a options modules url goldendir = [toOCamlSpec a modules url goldendir]
 
 

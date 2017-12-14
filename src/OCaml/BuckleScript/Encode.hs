@@ -8,6 +8,7 @@ Stability   : experimental
 -}
 
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module OCaml.BuckleScript.Encode 
   ( toOCamlEncoderSourceWith
@@ -15,13 +16,17 @@ module OCaml.BuckleScript.Encode
   ) where
 
 -- base
-import           Control.Monad.Reader
+import Control.Monad.Reader
 import qualified Data.List as L
-import           Data.Maybe (catMaybes)
-import           Data.Monoid
+import Data.Maybe (catMaybes)
+import Data.Monoid
+import Data.Proxy (Proxy (..))
 
 -- aeson
 import qualified Data.Aeson.Types as Aeson (Options(..))
+
+-- containers
+import qualified Data.Map as Map
 
 -- text
 import           Data.Text (Text)
@@ -36,15 +41,15 @@ import           OCaml.Common
 
 -- | Render the encoder function
 class HasEncoder a where
-  render :: a -> Reader Options Doc
+  render :: a -> Reader TypeMetaData Doc
 
 -- | Render the encode type signature
 class HasEncoderRef a where
-  renderRef :: a -> Reader Options Doc
+  renderRef :: a -> Reader TypeMetaData Doc
 
 -- | Render the encoder interface
 class HasEncoderInterface a where
-  renderTypeInterface :: a -> Reader Options Doc
+  renderTypeInterface :: a -> Reader TypeMetaData Doc
 
 
 instance HasEncoderInterface OCamlDatatype where
@@ -70,7 +75,7 @@ instance HasEncoderInterface OCamlDatatype where
 instance HasEncoder OCamlDatatype where
   -- sum that has at least one record constructor
   render datatype@(OCamlDatatype _ typeName constructor@(OCamlSumOfRecordConstructor _ (MultipleConstructors constructors))) = do
-    ocamlInterface <- asks includeOCamlInterface
+    ocamlInterface <- asks (includeOCamlInterface . userOptions)
     fnName <- renderRef datatype
     typeParameterDeclarations <- linesBetween <$> catMaybes <$> sequence (renderSumRecord typeName . OCamlValueConstructor <$> constructors)
     fnBody <- mapM renderSum (OCamlSumOfRecordConstructor typeName <$> constructors)
@@ -90,7 +95,7 @@ instance HasEncoder OCamlDatatype where
 
   -- sum
   render datatype@(OCamlDatatype _ typeName constructor@(OCamlValueConstructor (MultipleConstructors constructors))) = do
-    ocamlInterface <- asks includeOCamlInterface
+    ocamlInterface <- asks (includeOCamlInterface . userOptions)
     fnName <- renderRef datatype
     dc <- mapM renderSum (OCamlValueConstructor <$> constructors)
     if ocamlInterface
@@ -108,7 +113,7 @@ instance HasEncoder OCamlDatatype where
 
   -- product or record
   render datatype@(OCamlDatatype _ typeName constructor) = do
-    ocamlInterface <- asks includeOCamlInterface
+    ocamlInterface <- asks (includeOCamlInterface . userOptions)
     fnName <- renderRef datatype
     renderedConstructor <- render constructor
     if ocamlInterface
@@ -127,7 +132,29 @@ instance HasEncoder OCamlDatatype where
 
 -- | produce encode function name for data types and primitives
 instance HasEncoderRef OCamlDatatype where
-  renderRef (OCamlDatatype _ name _) = pure $ "encode" <> (stext . textUppercaseFirst $ name)
+  renderRef datatype@(OCamlDatatype typeRef name _) = do
+    if isTypeParameterRef datatype
+    then
+      pure $ "encode" <> (stext . textUppercaseFirst $ name)
+    else do
+      mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData 
+      case mOCamlTypeMetaData of
+        Nothing -> pure $ "encode" <> (stext . textUppercaseFirst $ name)
+        Just (OCamlTypeMetaData _ pFPath pSubMod) -> do
+          ds <- asks (dependencies . userOptions)
+          case Map.lookup typeRef ds of
+            Just (OCamlTypeMetaData tName cFPath cSubMod) ->
+              if (pFPath == cFPath)
+                then
+                  if (pSubMod == cSubMod)
+                  then pure $ "encode" <> (stext . textUppercaseFirst $ name)
+                  else pure $ (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> "encode" <> (stext . textUppercaseFirst $ name)
+                else pure $ (if cFPath == [] then "" else (stext  (foldMod cFPath) <> ".")) <> (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> "encode" <> (stext . textUppercaseFirst $ name)
+                
+            Nothing -> fail ("expected to find dependency:\n\n" ++ show typeRef ++ "\n\nin\n\n" ++ show ds)
+
+
+
   renderRef (OCamlPrimitive primitive) = renderRef primitive
 
 instance HasEncoder OCamlConstructor where
@@ -170,9 +197,9 @@ instance HasEncoder OCamlConstructor where
 
 
 -- | special rendering function for sum with record types
-renderSumRecord :: Text -> OCamlConstructor -> Reader Options (Maybe Doc)
+renderSumRecord :: Text -> OCamlConstructor -> Reader TypeMetaData (Maybe Doc)
 renderSumRecord typeName (OCamlValueConstructor (RecordConstructor name value)) = do
-  ocamlInterface <- asks includeOCamlInterface
+  ocamlInterface <- asks (includeOCamlInterface . userOptions)
   let sumRecordName = typeName <> name
   sumRecordBody <- render (OCamlValueConstructor $ RecordConstructor sumRecordName value)
   if ocamlInterface
@@ -193,9 +220,9 @@ renderSumRecordInterface typeName (OCamlValueConstructor (RecordConstructor name
 renderSumRecordInterface _ _ = Nothing
 
 -- |
-renderSumOfRecordEncoder :: Text -> Text -> Reader Options Doc
+renderSumOfRecordEncoder :: Text -> Text -> Reader TypeMetaData Doc
 renderSumOfRecordEncoder typeName name = do
-  ao <- asks aesonOptions
+  ao <- asks (aesonOptions . userOptions)
   let jsonConstructorName = T.pack . Aeson.constructorTagModifier ao . T.unpack $ name
   pure $
          "|" <+> stext name <+> "y0 ->"
@@ -215,9 +242,9 @@ jsonEncodeObject constructor tag mContents =
     Just contents -> constructor <$$> indent 3 ("Aeson.Encode.object_" <$$> indent 2 ("[" <+> tag <$$> contents <$$> "]"))
 
 -- | render body rules for sum types
-renderSum :: OCamlConstructor -> Reader Options Doc
+renderSum :: OCamlConstructor -> Reader TypeMetaData Doc
 renderSum (OCamlValueConstructor (NamedConstructor name OCamlEmpty)) = do
-  ao <- asks aesonOptions
+  ao <- asks (aesonOptions . userOptions)
   let jsonConstructorName = T.pack . Aeson.constructorTagModifier ao . T.unpack $ name
       constructorMatchCase = "|" <+> stext name <+> "->"
       encodeTag = pair (dquotes "tag") ("Aeson.Encode.string" <+> dquotes (stext jsonConstructorName))
@@ -225,7 +252,7 @@ renderSum (OCamlValueConstructor (NamedConstructor name OCamlEmpty)) = do
 
 renderSum (OCamlValueConstructor (NamedConstructor name value)) = do
   let constructorParams = constructorParameters 0 value
-  ao <- asks aesonOptions
+  ao <- asks (aesonOptions . userOptions)
   let jsonConstructorName = T.pack . Aeson.constructorTagModifier ao . T.unpack $ name
   (encoders, _) <- renderVariable constructorParams value
   let encoders' =
@@ -243,7 +270,7 @@ renderSum (OCamlValueConstructor (NamedConstructor name value)) = do
   pure $ jsonEncodeObject constructorMatchCase encodeTag (Just encodeContents)
 
 renderSum (OCamlValueConstructor (RecordConstructor name value)) = do
-  ao <- asks aesonOptions
+  ao <- asks (aesonOptions . userOptions)
   let jsonConstructorName = T.pack . Aeson.constructorTagModifier ao . T.unpack $ name
   encoder <- render value
   let constructorMatchCase = "|" <+> stext name <+> "->"
@@ -270,7 +297,7 @@ renderSum _ = return ""
 instance HasEncoder OCamlValue where
   render (OCamlField name value) = do
     valueBody <- render value
-    ao <- asks aesonOptions
+    ao <- asks (aesonOptions . userOptions)
     let jsonFieldname = T.pack . Aeson.fieldLabelModifier ao . T.unpack $ name
     return . spaceparens $
       dquotes (stext jsonFieldname) <> comma <+>
@@ -278,7 +305,22 @@ instance HasEncoder OCamlValue where
   render (OCamlTypeParameterRef name) =
     pure $ "encode" <> (stext . textUppercaseFirst $ name)
   render (OCamlPrimitiveRef primitive) = renderRef primitive
-  render (OCamlRef _ name) = pure $ "encode" <> (stext . textUppercaseFirst $ name)
+  render (OCamlRef typeRef name) = do
+    mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData
+    case mOCamlTypeMetaData of
+      Nothing -> fail ""
+      Just (OCamlTypeMetaData _ pFPath pSubMod) -> do
+        ds <- asks (dependencies . userOptions)
+        case Map.lookup typeRef ds of
+          Just (OCamlTypeMetaData tName cFPath cSubMod) ->
+            if (pFPath == cFPath)
+            then
+              if (pSubMod == cSubMod)
+              then pure $ "encode" <> (stext . textUppercaseFirst $ name)
+              else pure $ (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> "encode" <> (stext . textUppercaseFirst $ name) 
+            else pure $ (if cFPath == [] then "" else (stext (foldMod cFPath) <> ".")) <> (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> "encode" <> (stext . textUppercaseFirst $ name)
+          Nothing -> fail ("expected to find dependency:\n\n" ++ show typeRef ++ "\n\nin\n\n" ++ show ds)
+  
   render (Values x y) = do
     dx <- render x
     dy <- render y
@@ -363,7 +405,7 @@ constructorParameters i _ = [ "y" <> int i ]
 -- | render JSON encoders for OCamlValues. It runs recersively on Values.
 --   [Doc] helps build encoders for arrays and tuples
 --   should only use fst of return type, snd [Doc] is to help with recursion
-renderVariable :: [Doc] -> OCamlValue -> Reader Options (Doc, [Doc])
+renderVariable :: [Doc] -> OCamlValue -> Reader TypeMetaData (Doc, [Doc])
 renderVariable (d : ds) v@(OCamlRef {}) = do
   v' <- render v
   return (v' <+> d, ds)
@@ -443,10 +485,20 @@ renderEncodeTypeParameters constructor =
 
 -- | export
 
-toOCamlEncoderInterfaceWith :: OCamlType a => Options -> a -> T.Text
-toOCamlEncoderInterfaceWith options x =
-  pprinter $ runReader (renderTypeInterface (toOCamlType x)) options
+toOCamlEncoderInterfaceWith :: forall a. OCamlType a => Options -> a -> T.Text
+toOCamlEncoderInterfaceWith options a =
+  case toOCamlType (Proxy :: Proxy a) of
+    OCamlDatatype haskellTypeMetaData _ _ ->
+      case Map.lookup haskellTypeMetaData (dependencies options) of
+        Just ocamlTypeMetaData -> pprinter $ runReader (renderTypeInterface (toOCamlType a)) (TypeMetaData (Just ocamlTypeMetaData) options)
+        Nothing -> ""          
+    _ -> pprinter $ runReader (renderTypeInterface (toOCamlType a)) (TypeMetaData Nothing options)
 
-toOCamlEncoderSourceWith :: OCamlType a => Options -> a -> T.Text
-toOCamlEncoderSourceWith options x =
-  pprinter $ runReader (render (toOCamlType x)) options
+toOCamlEncoderSourceWith :: forall a. OCamlType a => Options -> a -> T.Text
+toOCamlEncoderSourceWith options a =
+  case toOCamlType (Proxy :: Proxy a) of
+    OCamlDatatype haskellTypeMetaData _ _ ->
+      case Map.lookup haskellTypeMetaData (dependencies options) of
+        Just ocamlTypeMetaData -> pprinter $ runReader (render (toOCamlType a)) (TypeMetaData (Just ocamlTypeMetaData) options)
+        Nothing -> ""
+    _ -> pprinter $ runReader (render (toOCamlType a)) (TypeMetaData Nothing options)

@@ -62,6 +62,11 @@ data Options = Options
 defaultOptions :: Options
 defaultOptions = Options {includeOCamlInterface = False, aesonOptions = Aeson.defaultOptions, dependencies = Map.empty}
 
+data TypeMetaData = TypeMetaData
+  { topLevelOCamlTypeMetaData :: Maybe OCamlTypeMetaData -- Just if not primitive
+  , userOptions :: Options
+  }
+
 cr :: Format r r
 cr = now "\n"
 
@@ -141,3 +146,6 @@ mkDocList ds =
     if length ds > 1
       then ["("] <> (L.intersperse ", " ds) <> [")"]
       else ds
+
+foldMod :: [Text] -> Text
+foldMod = T.intercalate "."

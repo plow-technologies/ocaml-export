@@ -33,9 +33,9 @@ import qualified Data.Map as Map
 type ProductPackage
   =    OCamlModule '["SimpleChoice"] '[] :> SimpleChoice
   :<|> OCamlModule '["Person"] '[] :> Person
-  :<|> OCamlModule '["Company"] '[] :> Person :> Company
+  :<|> OCamlModule '["Company"] '[] :> Company
   :<|> OCamlModule '["Card"] '[] :> Suit :> Card
-  :<|> OCamlModule '["CustomOption"] '[] :> Person :> Company2
+  :<|> OCamlModule '["CustomOption"] '[] :> Company2
   :<|> OCamlModule '["OneTypeParameter"] '[] :> OneTypeParameter TypeParameterRef0
   :<|> OCamlModule '["TwoTypeParameters"] '[] :> TwoTypeParameters TypeParameterRef0 TypeParameterRef1
   :<|> OCamlModule '["ThreeTypeParameters"] '[] :> Three TypeParameterRef0 TypeParameterRef1 TypeParameterRef2

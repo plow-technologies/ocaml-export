@@ -10,38 +10,40 @@ Stability   : experimental
 
 
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module OCaml.BuckleScript.Record
-  ( toOCamlTypeRef
-  , toOCamlTypeRefWith
-  , toOCamlTypeSource
-  , toOCamlTypeSourceWith
-
-  , toOCamlTypeSourceWith'
+  ( toOCamlTypeSourceWith
   ) where
 
-import           Control.Monad.Reader
-import           Data.List (nub)
-import           Data.Maybe (catMaybes)
-import           Data.Monoid
-import           Data.Text (Text)
-import qualified Data.Text as T
+import Control.Monad.Reader
+import Data.List (nub)
+import Data.Maybe (catMaybes)
+import Data.Monoid
+import Data.Proxy (Proxy (..))
+
 import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
+
+-- containers
+import qualified Data.Map.Strict as Map
 
 -- ocaml-export
 import           OCaml.BuckleScript.Types
 import           OCaml.Common
 
+-- text
+import Data.Text (Text)
+import qualified Data.Text as T
 
 -- | render a Haskell data type in OCaml
 class HasType a where
-  render :: a -> Reader Options Doc
+  render :: a -> Reader TypeMetaData Doc
 
 class HasRecordType a where
-  renderRecord :: a -> Reader Options Doc
+  renderRecord :: a -> Reader TypeMetaData Doc
 
 class HasTypeRef a where
-  renderRef :: a -> Reader Options Doc
+  renderRef :: a -> Reader TypeMetaData Doc
 
 instance HasType OCamlDatatype where
   render datatype@(OCamlDatatype mOCamlTypeDataType typeName constructor@(OCamlSumOfRecordConstructor _ (MultipleConstructors constructors))) = do
@@ -70,7 +72,27 @@ instance HasType OCamlDatatype where
   render (OCamlPrimitive primitive) = renderRef primitive
 
 instance HasTypeRef OCamlDatatype where
-  renderRef datatype@(OCamlDatatype _ typeName _) = pure $ stext $ (if isTypeParameterRef datatype then "'" else "") <> textLowercaseFirst typeName
+  renderRef datatype@(OCamlDatatype typeRef typeName _) = do
+    if isTypeParameterRef datatype
+    then
+      pure . stext $ "'" <> textLowercaseFirst typeName
+    else do
+      mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData 
+      case mOCamlTypeMetaData of
+        Nothing -> pure . stext . textLowercaseFirst $ typeName
+        Just (OCamlTypeMetaData _ pFPath pSubMod) -> do
+          ds <- asks (dependencies . userOptions)
+          case Map.lookup typeRef ds of
+            Just (OCamlTypeMetaData tName cFPath cSubMod) ->
+              if (pFPath == cFPath)
+                then
+                  if (pSubMod == cSubMod)
+                  then pure . stext . textLowercaseFirst $ typeName
+                  else pure $ (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> stext (textLowercaseFirst typeName)
+                else pure $ (if cFPath == [] then "" else (stext  (foldMod cFPath) <> ".")) <> (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> stext (textLowercaseFirst typeName)
+                
+            Nothing -> fail ("expected to find dependency:\n\n" ++ show typeRef ++ "\n\nin\n\n" ++ show ds)
+
   renderRef (OCamlPrimitive primitive) = renderRef primitive
 
 instance HasType OCamlConstructor where
@@ -103,6 +125,24 @@ instance HasType EnumeratorConstructor where
 
 instance HasType OCamlValue where
   render (OCamlRef _ name) = pure (stext $ textLowercaseFirst name)
+
+  render (OCamlRef typeRef name) = do
+    mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData
+    case mOCamlTypeMetaData of
+      Nothing -> fail ""
+      Just (OCamlTypeMetaData _ pFPath pSubMod) -> do
+        ds <- asks (dependencies . userOptions)
+        case Map.lookup typeRef ds of
+          Just (OCamlTypeMetaData tName cFPath cSubMod) ->
+            if (pFPath == cFPath)
+            then
+              if (pSubMod == cSubMod)
+              then pure . stext . textUppercaseFirst $ name
+              else pure $ (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> (stext . textUppercaseFirst $ name) 
+            else pure $ (if cFPath == [] then "" else (stext (foldMod cFPath) <> ".")) <> (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> (stext . textUppercaseFirst $ name)
+          Nothing -> fail ("expected to find dependency:\n\n" ++ show typeRef ++ "\n\nin\n\n" ++ show ds)
+
+  
   render (OCamlTypeParameterRef name) = pure (stext ("'" <> name))
   render (OCamlPrimitiveRef primitive) = ocamlRefParens primitive <$> renderRef primitive
   render OCamlEmpty = pure (text "")
@@ -175,27 +215,6 @@ instance HasTypeRef OCamlPrimitive where
   renderRef OString = pure "string"
   renderRef OUnit   = pure "unit"
   renderRef OFloat  = pure "float"
---  'a Js.Dict.t
-
-
-toOCamlTypeRefWith :: OCamlType a => Options -> a -> T.Text
-toOCamlTypeRefWith options x =
-  pprinter $ runReader (renderRef (toOCamlType x)) options
-
-toOCamlTypeRef :: OCamlType a => a -> T.Text
-toOCamlTypeRef = toOCamlTypeRefWith defaultOptions
-
-toOCamlTypeSourceWith :: OCamlType a => Options -> a -> T.Text
-toOCamlTypeSourceWith options x =
-  pprinter $ runReader (render (toOCamlType x)) options
-
-toOCamlTypeSourceWith' :: OCamlType a => a -> Doc
-toOCamlTypeSourceWith' x = runReader (render (toOCamlType x)) defaultOptions
-
-
-toOCamlTypeSource :: OCamlType a => a -> T.Text
-toOCamlTypeSource = toOCamlTypeSourceWith defaultOptions
-
 
 -- Util functions
 
@@ -221,7 +240,7 @@ renderTypeParameters :: OCamlConstructor -> Doc
 renderTypeParameters constructor = mkDocList $ stext . (<>) "'" <$> (nub $ getTypeParameters constructor)
 
 -- | For Haskell Sum of Records, create OCaml record types of each RecordConstructor
-renderSumRecord :: Text -> ValueConstructor -> Reader Options (Maybe (Doc,(Text,ValueConstructor)))
+renderSumRecord :: Text -> ValueConstructor -> Reader TypeMetaData (Maybe (Doc,(Text,ValueConstructor)))
 renderSumRecord typeName constructor@(RecordConstructor name value) = do
   let sumRecordName = typeName <> name
   functionBody <- render constructor
@@ -236,3 +255,13 @@ ocamlRefParens (OList _) = parens
 ocamlRefParens (OOption _) = parens
 ocamlRefParens (ODict _ _) = parens
 ocamlRefParens _ = id
+
+
+toOCamlTypeSourceWith :: forall a. OCamlType a => Options -> a -> T.Text
+toOCamlTypeSourceWith options a =
+  case toOCamlType (Proxy :: Proxy a) of
+    OCamlDatatype haskellTypeMetaData _ _ ->
+      case Map.lookup haskellTypeMetaData (dependencies options) of
+        Just ocamlTypeMetaData -> pprinter $ runReader (render (toOCamlType a)) (TypeMetaData (Just ocamlTypeMetaData) options)
+        Nothing -> ""
+    _ -> pprinter $ runReader (render (toOCamlType a)) (TypeMetaData Nothing options)

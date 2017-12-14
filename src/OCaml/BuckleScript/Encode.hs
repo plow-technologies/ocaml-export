@@ -153,8 +153,6 @@ instance HasEncoderRef OCamlDatatype where
                 
             Nothing -> fail ("expected to find dependency:\n\n" ++ show typeRef ++ "\n\nin\n\n" ++ show ds)
 
-
-
   renderRef (OCamlPrimitive primitive) = renderRef primitive
 
 instance HasEncoder OCamlConstructor where

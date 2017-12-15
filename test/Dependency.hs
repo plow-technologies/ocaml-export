@@ -83,7 +83,7 @@ data E =
   deriving (Show, Eq, Generic, OCamlType, FromJSON, ToJSON)
 
 type SubsPackage = OCamlPackage "subs" NoDependency :>
-  (OCamlModule '["AtoE"] :> A :> (OCamlSubModule '["One"] :> B :> (OCamlSubModule '["Two"] :> C) :> D) :> E)
+  (OCamlModule '["AtoE"] :> A :> (OCamlSubModule "One" :> B :> (OCamlSubModule "Two" :> C) :> D) :> E)
 --   (OCamlModule '["AtoE"] :> OCamlSubModule '["One"] :> A)
 
 spec :: Spec
@@ -91,6 +91,6 @@ spec = do
   runIO $ mkGoldenFiles
   let dir = "test/interface/temp"
   runIO $ mkPackage (Proxy :: Proxy DependencyPackage) (PackageOptions dir "dependency" Map.empty True Nothing)
---  runIO $ mkPackage (Proxy :: Proxy SubsPackage) (PackageOptions dir "subs" Map.empty True Nothing)
+  runIO $ mkPackage (Proxy :: Proxy SubsPackage) (PackageOptions dir "subs" Map.empty True Nothing)
 
   return ()

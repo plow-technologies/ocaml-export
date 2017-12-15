@@ -62,6 +62,8 @@ import Data.Constraint.Symbol (type (++))
 import GHC.TypeLits
 import GHC.TypeLits.List
 
+import Data.Monoid ((<>))
+
 logAllMiddleware :: Application -> Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived
 logAllMiddleware app req respond = do
     d <- requestBody req
@@ -78,9 +80,19 @@ main = do
   hspec File.spec
 --  hspec Options.spec
   hspec D.spec
-  print $ ocamlPackageTypeCount (Proxy :: Proxy Product.ProductPackage)
---  print $ mkOCamlTypeMetaData (Proxy :: Proxy Product.ProductPackage)
 
+  hspec $
+    describe "mkOCamlTypeMetaData" $
+      it "mkOCamlTypeMetaData on package A and B should equal mkOCamlTypeMetaData on B which has A as a dependency" $
+        (mkOCamlTypeMetaData (Proxy :: Proxy Product.ProductPackage)) <> (mkOCamlTypeMetaData (Proxy :: Proxy D.DependencyPackageWithoutProduct))
+          `shouldBe` mkOCamlTypeMetaData (Proxy :: Proxy D.DependencyPackage)
+
+
+  print $ ocamlPackageTypeCount (Proxy :: Proxy Product.ProductPackage)
+
+  print $ mkOCamlTypeMetaData (Proxy :: Proxy Product.ProductPackage)
+
+  
   _ <- forkIO $ run 8081 productPackageApp
   _ <- forkIO $ run 8082 sumPackageApp
   run 8083 File.filePackageApp

@@ -30,13 +30,14 @@ import Servant
 import Servant.API
 
 type SumPackage
-  =    OCamlModule '["OnOrOff"] '[] :> OnOrOff
+  = OCamlPackage "sum" NoDependency :>
+       (OCamlModule '["OnOrOff"] '[] :> OnOrOff
   :<|> OCamlModule '["NameOrIdNumber"] '[] :> NameOrIdNumber
   :<|> OCamlModule '["SumVariant"] '[] :> SumVariant
   :<|> OCamlModule '["WithTuple"] '[] :> WithTuple
   :<|> OCamlModule '["SumWithRecord"] '[] :> SumWithRecord
   :<|> OCamlModule '["Result"] '[] :> Result TypeParameterRef0 TypeParameterRef1
-  :<|> OCamlModule '["NewType"] '[] :> NewType
+  :<|> OCamlModule '["NewType"] '[] :> NewType)
 
 -- server1 :: Server (MkOCamlSpecAPI SumPackage)
 -- server1 = (pure :<|> (pure :<|> pure))

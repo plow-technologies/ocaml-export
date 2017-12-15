@@ -21,18 +21,23 @@ import Test.QuickCheck.Arbitrary.ADT
 import Test.Aeson.Internal.ADT.GoldenSpecs
 import Util
 
+import Product (ProductPackage, Person)
+
 mkGolden :: forall a. (ToADTArbitrary a, ToJSON a) => Proxy a -> IO ()
 mkGolden Proxy = mkGoldenFileForType 10 (Proxy :: Proxy a) "test/interface/golden/golden/dependency"
 
 mkGoldenFiles :: IO ()
 mkGoldenFiles = do
-  mkGolden (Proxy :: Proxy Person)
-  mkGolden (Proxy :: Proxy Company)
+  mkGolden (Proxy :: Proxy Class)
 
 type DependencyPackage
-  =    OCamlModule '["Person"] '[] :> Person
-  :<|> OCamlModule '["Company"] '[] :> Company
+  =    OCamlPackage "dependency" '[ProductPackage] :> (
+       OCamlModule '["Class"] '[] :> Class)
 
+type DependencyPackageWithoutProduct
+  =    OCamlPackage "dependency" NoDependency :> (
+       OCamlModule '["Class"] '[] :> Class)
+{-
 data Person = Person
   { id :: Int
   , name :: Maybe String
@@ -42,20 +47,20 @@ instance Arbitrary Person where
   arbitrary = Person <$> arbitrary <*> arbitrary
 
 instance ToADTArbitrary Person
-
-data Company = Company
-  { address   :: String
-  , employees :: [Person]
-  , boss :: Person
+-}
+data Class = Class
+  { subject   :: String
+  , students  :: [Person] -- from another package
+  , professor :: Person
   } deriving (Show, Eq, Generic, OCamlType, FromJSON, ToJSON)
 
-instance Arbitrary Company where
+instance Arbitrary Class where
   arbitrary = do
     k <- choose (1,3)
     v <- vector k
-    Company <$> arbitrary <*> pure v <*> arbitrary
+    Class <$> arbitrary <*> pure v <*> arbitrary
 
-instance ToADTArbitrary Company
+instance ToADTArbitrary Class
 
 spec :: Spec
 spec = do

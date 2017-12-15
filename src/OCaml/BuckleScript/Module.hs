@@ -49,6 +49,7 @@ module OCaml.BuckleScript.Module
   , Insert
   , Append
   , TypeName
+  , NoDependency
 
   -- servant functions
   -- automatically build a servant OCamlSpec Serve
@@ -150,11 +151,29 @@ defaultSpecOptions = SpecOptions "/__tests__" "/__tests__/golden" "localhost:808
 class HasOCamlTypeMetaData a where
   mkOCamlTypeMetaData :: Proxy a -> Map.Map HaskellTypeMetaData OCamlTypeMetaData -- [OCamlTypeMetaData]
 
+-- | packages
+instance (HasOCamlTypeMetaData (OCamlPackage packageName deps), HasOCamlTypeMetaData rest) => HasOCamlTypeMetaData (OCamlPackage packageName deps :<|> rest) where
+  mkOCamlTypeMetaData Proxy = mkOCamlTypeMetaData (Proxy :: Proxy (OCamlPackage packageName deps)) <> mkOCamlTypeMetaData (Proxy :: Proxy rest)
+
+-- | build a packages dependencies and its declared modules
+instance (HasOCamlTypeMetaData deps, HasOCamlTypeMetaData modules) => HasOCamlTypeMetaData (OCamlPackage packageName deps :> modules) where
+  mkOCamlTypeMetaData Proxy = mkOCamlTypeMetaData (Proxy :: Proxy deps) <> mkOCamlTypeMetaData (Proxy :: Proxy modules)
+
+-- | packages
+instance (HasOCamlTypeMetaData modul, HasOCamlTypeMetaData rst) => HasOCamlTypeMetaData (modul ': rst) where
+  mkOCamlTypeMetaData Proxy = mkOCamlTypeMetaData (Proxy :: Proxy modul) <> mkOCamlTypeMetaData (Proxy :: Proxy rst)
+
+-- | modules
 instance (HasOCamlTypeMetaData modul, HasOCamlTypeMetaData rst) => HasOCamlTypeMetaData (modul :<|> rst) where
   mkOCamlTypeMetaData Proxy = mkOCamlTypeMetaData (Proxy :: Proxy modul) <> mkOCamlTypeMetaData (Proxy :: Proxy rst)
 
+-- | single module
 instance (KnownSymbols moduleName, KnownSymbols filePath,  HasOCamlTypeMetaData' api) => HasOCamlTypeMetaData ((OCamlModule filePath moduleName) :> api) where
   mkOCamlTypeMetaData Proxy = Map.fromList $ mkOCamlTypeMetaData' (T.pack <$> symbolsVal (Proxy :: Proxy filePath)) (T.pack <$> symbolsVal (Proxy :: Proxy moduleName)) (Proxy :: Proxy api)
+
+instance HasOCamlTypeMetaData '[] where
+  mkOCamlTypeMetaData Proxy = Map.empty
+
 
 -- HasOCamlModule (OCamlModule filePath moduleName),
 
@@ -182,11 +201,10 @@ instance {-# OVERLAPPABLE #-} (Typeable a) => HasOCamlTypeMetaData' a where
       aTypeRep = typeRep (Proxy :: Proxy a)
       typeName = T.pack . tyConName . typeRepTyCon $ aTypeRep
 
--- | 
-data OCamlPackage (packageName :: Symbol)
-  deriving Typeable
+type NoDependency = '[]
 
-data OCamlPackageDependency ocamlPackage
+-- | 
+data OCamlPackage (packageName :: Symbol) (packageDependencies :: [*])
   deriving Typeable
 
 -- | An OCamlModule as a Haskell type. 'filePath' is relative to a
@@ -208,8 +226,8 @@ data OCamlTypeInFile a (filePath :: Symbol)
 class HasOCamlPackage a where
   mkPackage :: Proxy a -> PackageOptions -> IO ()
 
-instance (HasOCamlPackage a) => HasOCamlPackage (OCamlPackage packageName :> a) where
-  mkPackage Proxy packageOptions = mkPackage (Proxy :: Proxy a) packageOptions
+instance (HasOCamlTypeMetaData deps, HasOCamlTypeMetaData a, HasOCamlPackage' a) => HasOCamlPackage (OCamlPackage packageName deps :> a) where
+  mkPackage Proxy packageOptions = mkPackage' (Proxy :: Proxy a) packageOptions (mkOCamlTypeMetaData (Proxy :: Proxy deps) <> mkOCamlTypeMetaData (Proxy :: Proxy a))
 
 instance {-# OVERLAPPABLE #-} (HasOCamlTypeMetaData a, HasOCamlPackage' a) => HasOCamlPackage a where
   mkPackage Proxy packageOptions = do
@@ -385,7 +403,7 @@ instance OCamlModuleTypeCount' 'False a where
 
 -- package flag
 type family (FFlag a) :: Bool where
-  FFlag (OCamlPackage a :> b)  = 'True -- case 0
+  FFlag (OCamlPackage a deps :> b)  = 'True -- case 0
   FFlag (a :<|> b)  = 'True -- case 0
   FFlag a     = 'False -- case 1
 
@@ -400,7 +418,7 @@ class OCamlPackageTypeCount' (flag :: Bool) a where
   ocamlPackageTypeCount' :: Proxy flag -> Proxy a -> [Int]
 
 -- case 0
-instance (OCamlPackageTypeCount b) => OCamlPackageTypeCount' 'True (OCamlPackage a :> b) where
+instance (OCamlPackageTypeCount b) => OCamlPackageTypeCount' 'True (OCamlPackage a deps :> b) where
   ocamlPackageTypeCount' _ Proxy = ocamlPackageTypeCount (Proxy :: Proxy b)
 
 -- case 0
@@ -455,7 +473,7 @@ type family MkOCamlSpecAPI' filePath modul api :: * where
   
 -- | ff
 type family MkOCamlSpecAPI a :: * where
-  MkOCamlSpecAPI (OCamlPackage a :> rest) = MkOCamlSpecAPI rest  
+  MkOCamlSpecAPI (OCamlPackage a deps :> rest) = MkOCamlSpecAPI rest  
   MkOCamlSpecAPI ((OCamlModule filePath modul :> api) :<|> rest) = MkOCamlSpecAPI' filePath modul api :<|> MkOCamlSpecAPI rest
   MkOCamlSpecAPI (OCamlModule filePath modul :> api) = MkOCamlSpecAPI' filePath modul api
 

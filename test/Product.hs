@@ -31,7 +31,7 @@ import Util
 import qualified Data.Map as Map
 
 type ProductPackage
-  = OCamlPackage "product"
+  = OCamlPackage "product" NoDependency
     :> (OCamlModule '["SimpleChoice"] '[] :> SimpleChoice
   :<|> OCamlModule '["Person"] '[] :> Person
   :<|> OCamlModule '["Company"] '[] :> Company

@@ -17,10 +17,12 @@ import Test.QuickCheck.Arbitrary.ADT
 import Test.Aeson.Internal.ADT.GoldenSpecs
 
 
-type FilePackage = OCamlModule '["File"] '[]
-  :> OCamlTypeInFile Person "test/ocaml/Person"
-  :> Automobile
-  :> OCamlTypeInFile Business "test/ocaml/Business"
+type FilePackage = OCamlPackage "" NoDependency :>
+  (OCamlModule '["File"] '[]
+    :> OCamlTypeInFile Person "test/ocaml/Person"
+    :> Automobile
+    :> OCamlTypeInFile Business "test/ocaml/Business"
+  )
 
 
 mkGolden :: forall a. (ToADTArbitrary a, ToJSON a) => Proxy a -> IO ()

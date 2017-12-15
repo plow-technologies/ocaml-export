@@ -173,16 +173,92 @@ instance (HasOCamlTypeMetaData modul, HasOCamlTypeMetaData rst) => HasOCamlTypeM
 instance (KnownSymbols modules, HasOCamlTypeMetaData' api) => HasOCamlTypeMetaData ((OCamlModule modules) :> api) where
   mkOCamlTypeMetaData Proxy = Map.fromList $ mkOCamlTypeMetaData' (T.pack <$> symbolsVal (Proxy :: Proxy modules)) [] (Proxy :: Proxy api)
 
+
 instance HasOCamlTypeMetaData '[] where
   mkOCamlTypeMetaData Proxy = Map.empty
 
+--class HasOCamlTypeMetaData' a where
+--  mkOCamlTypeMetaData' :: Prox
+{-
+instance (KnownSymbols subModules, HasOCamlTypeMetaData' api) => HasOCamlTypeMetaData ((OCamlSubModule subModules) :> api) where
+  mkOCamlTypeMetaData Proxy = Map.fromList $ mkOCamlTypeMetaData' (T.pack <$> symbolsVal (Proxy :: Proxy modules)) [] (Proxy :: Proxy api)
 
--- HasOCamlModule (OCamlModule filePath moduleName),
+-}
+
+type family (HasOCamlTypeMetaDataFlag a) :: Nat where
+  HasOCamlTypeMetaDataFlag (OCamlSubModule a :> b) = 4
+  HasOCamlTypeMetaDataFlag (a :> b) = 3
+  HasOCamlTypeMetaDataFlag (OCamlTypeInFile a b) = 2
+  HasOCamlTypeMetaDataFlag a = 1
 
 class HasOCamlTypeMetaData' a where
   mkOCamlTypeMetaData' :: [Text] -> [Text] -> Proxy a -> [(HaskellTypeMetaData,OCamlTypeMetaData)]
 
-instance (HasOCamlTypeMetaData' a, HasOCamlTypeMetaData' b) => HasOCamlTypeMetaData' (a :> b) where
+instance (HasOCamlTypeMetaDataFlag a ~ flag, HasOCamlTypeMetaData'' flag (a :: *)) => HasOCamlTypeMetaData' a where
+  mkOCamlTypeMetaData' = mkOCamlTypeMetaData'' (Proxy :: Proxy flag)
+
+class HasOCamlTypeMetaData'' (flag :: Nat) a where
+  mkOCamlTypeMetaData'' :: Proxy flag -> [Text] -> [Text] -> Proxy a -> [(HaskellTypeMetaData,OCamlTypeMetaData)]
+
+instance (KnownSymbols restSubModules, HasOCamlTypeMetaData' b) => HasOCamlTypeMetaData'' 4 (OCamlSubModule restSubModules :> b) where
+  mkOCamlTypeMetaData'' _ modules subModules Proxy =
+    (mkOCamlTypeMetaData' modules (subModules ++ (T.pack <$> symbolsVal (Proxy :: Proxy restSubModules))) (Proxy :: Proxy b))
+
+instance (HasOCamlTypeMetaData' a, HasOCamlTypeMetaData' b) => HasOCamlTypeMetaData'' 3 (a :> b) where
+  mkOCamlTypeMetaData'' _ modul subModul Proxy = (mkOCamlTypeMetaData' modul subModul (Proxy :: Proxy a)) <> (mkOCamlTypeMetaData' modul subModul (Proxy :: Proxy b))
+
+
+instance (Typeable a) => HasOCamlTypeMetaData'' 2 (OCamlTypeInFile a b) where
+  mkOCamlTypeMetaData'' _ modul subModul Proxy =
+    [( HaskellTypeMetaData typeName (T.pack . tyConModule . typeRepTyCon $ aTypeRep) (T.pack . tyConPackage . typeRepTyCon $ aTypeRep)
+    ,  OCamlTypeMetaData typeName modul subModul
+    )]
+    where
+      aTypeRep = typeRep (Proxy :: Proxy a)
+      typeName = T.pack . tyConName . typeRepTyCon $ aTypeRep
+
+instance (Typeable a) => HasOCamlTypeMetaData'' 1 a where
+  mkOCamlTypeMetaData'' _ modul subModul Proxy =
+    [( HaskellTypeMetaData typeName (T.pack . tyConModule . typeRepTyCon $ aTypeRep) (T.pack . tyConPackage . typeRepTyCon $ aTypeRep)
+    ,  OCamlTypeMetaData typeName modul subModul
+    )]
+    where
+      aTypeRep = typeRep (Proxy :: Proxy a)
+      typeName = T.pack . tyConName . typeRepTyCon $ aTypeRep
+{-
+class OCamlPackageTypeCount modules where                
+  ocamlPackageTypeCount :: Proxy modules -> [Int]
+
+instance (FFlag a ~ flag, OCamlPackageTypeCount' flag (a :: *)) => OCamlPackageTypeCount a where
+  ocamlPackageTypeCount = ocamlPackageTypeCount' (Proxy :: Proxy flag)
+
+class OCamlPackageTypeCount' (flag :: Bool) a where
+  ocamlPackageTypeCount' :: Proxy flag -> Proxy a -> [Int]
+
+-- case 0
+instance (OCamlPackageTypeCount b) => OCamlPackageTypeCount' 'True (OCamlPackage a deps :> b) where
+  ocamlPackageTypeCount' _ Proxy = ocamlPackageTypeCount (Proxy :: Proxy b)
+
+-- case 0
+instance (OCamlModuleTypeCount a, OCamlPackageTypeCount b) => OCamlPackageTypeCount' 'True (a :<|> b) where
+  ocamlPackageTypeCount' _ Proxy = (ocamlModuleTypeCount (Proxy :: Proxy a)) : (ocamlPackageTypeCount (Proxy :: Proxy b))
+
+-- case 1
+-- everything else should count as one
+instance (OCamlModuleTypeCount a) => OCamlPackageTypeCount' 'False a where
+  ocamlPackageTypeCount' _ Proxy = [ocamlModuleTypeCount (Proxy :: Proxy a)]
+-}
+
+
+{-
+class HasOCamlTypeMetaData' a where
+  mkOCamlTypeMetaData' :: [Text] -> [Text] -> Proxy a -> [(HaskellTypeMetaData,OCamlTypeMetaData)]
+
+instance (KnownSymbols restSubModules, HasOCamlTypeMetaData' b) => HasOCamlTypeMetaData' (OCamlSubModule restSubModules :> b) where
+  mkOCamlTypeMetaData' modules subModules Proxy =
+    (mkOCamlTypeMetaData' modules (subModules ++ (T.pack <$> symbolsVal (Proxy :: Proxy restSubModules))) (Proxy :: Proxy b))
+
+instance {-# OVERLAPPABLE #-} (HasOCamlTypeMetaData' a, HasOCamlTypeMetaData' b) => HasOCamlTypeMetaData' (a :> b) where
   mkOCamlTypeMetaData' modul subModul Proxy = (mkOCamlTypeMetaData' modul subModul (Proxy :: Proxy a)) <> (mkOCamlTypeMetaData' modul subModul (Proxy :: Proxy b))
 
 instance {-# OVERLAPPABLE #-} (Typeable a) => HasOCamlTypeMetaData' (OCamlTypeInFile a b) where
@@ -202,6 +278,8 @@ instance {-# OVERLAPPABLE #-} (Typeable a) => HasOCamlTypeMetaData' a where
     where
       aTypeRep = typeRep (Proxy :: Proxy a)
       typeName = T.pack . tyConName . typeRepTyCon $ aTypeRep
+-}
+
 
 type NoDependency = '[]
 

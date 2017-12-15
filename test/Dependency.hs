@@ -13,7 +13,7 @@ import Data.Text (Text)
 import Data.Time
 import Data.Time.Clock.POSIX
 import Data.Map as Map
-import GHC.Generics
+import GHC.Generics (Generic)
 import OCaml.Export
 import Test.Hspec
 import Test.QuickCheck
@@ -62,10 +62,35 @@ instance Arbitrary Class where
 
 instance ToADTArbitrary Class
 
+data A =
+  A Int
+  deriving (Show, Eq, Generic, OCamlType, FromJSON, ToJSON)
+
+data B =
+  B String Int
+  deriving (Show, Eq, Generic, OCamlType, FromJSON, ToJSON)
+
+data C =
+  C (Int,Int)
+  deriving (Show, Eq, Generic, OCamlType, FromJSON, ToJSON)
+
+data D =
+  D Text C
+  deriving (Show, Eq, Generic, OCamlType, FromJSON, ToJSON)
+
+data E =
+  E Double
+  deriving (Show, Eq, Generic, OCamlType, FromJSON, ToJSON)
+
+type SubsPackage = OCamlPackage "subs" NoDependency :>
+--  (OCamlModule '["AtoE"] :> A :> (OCamlSubModule '["One"] :> B :> (OCamlSubModule '["Two"] :> C) :> D) :> E)
+   (OCamlModule '["AtoE"] :> OCamlSubModule '["One"] :> A)
+
 spec :: Spec
 spec = do
   runIO $ mkGoldenFiles
   let dir = "test/interface/temp"
   runIO $ mkPackage (Proxy :: Proxy DependencyPackage) (PackageOptions dir "dependency" Map.empty True Nothing)
-  
+--  runIO $ mkPackage (Proxy :: Proxy SubsPackage) (PackageOptions dir "subs" Map.empty True Nothing)
+
   return ()

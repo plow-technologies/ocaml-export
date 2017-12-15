@@ -87,11 +87,10 @@ main = do
         (mkOCamlTypeMetaData (Proxy :: Proxy Product.ProductPackage)) <> (mkOCamlTypeMetaData (Proxy :: Proxy D.DependencyPackageWithoutProduct))
           `shouldBe` mkOCamlTypeMetaData (Proxy :: Proxy D.DependencyPackage)
 
+--  print $ ocamlPackageTypeCount (Proxy :: Proxy Product.ProductPackage)
 
-  print $ ocamlPackageTypeCount (Proxy :: Proxy Product.ProductPackage)
-
-  print $ mkOCamlTypeMetaData (Proxy :: Proxy Product.ProductPackage)
-
+--  print $ mkOCamlTypeMetaData (Proxy :: Proxy Product.ProductPackage)
+  print $ mkOCamlTypeMetaData (Proxy :: Proxy D.SubsPackage)
   
   _ <- forkIO $ run 8081 productPackageApp
   _ <- forkIO $ run 8082 sumPackageApp

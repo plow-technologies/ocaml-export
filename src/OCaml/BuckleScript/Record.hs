@@ -46,7 +46,7 @@ class HasTypeRef a where
   renderRef :: a -> Reader TypeMetaData Doc
 
 instance HasType OCamlDatatype where
-  render datatype@(OCamlDatatype mOCamlTypeDataType typeName constructor@(OCamlSumOfRecordConstructor _ (MultipleConstructors constructors))) = do
+  render datatype@(OCamlDatatype _mOCamlTypeDataType typeName constructor@(OCamlSumOfRecordConstructor _ (MultipleConstructors constructors))) = do
     -- For each constructor, if it is a record constructor, declare a type for that record
     -- before and separate form the main sum type.
     sumRecordsData <- catMaybes <$> sequence (renderSumRecord typeName <$> constructors)
@@ -83,7 +83,7 @@ instance HasTypeRef OCamlDatatype where
         Just (OCamlTypeMetaData _ pFPath pSubMod) -> do
           ds <- asks (dependencies . userOptions)
           case Map.lookup typeRef ds of
-            Just (OCamlTypeMetaData tName cFPath cSubMod) ->
+            Just (OCamlTypeMetaData _tName cFPath cSubMod) ->
               if (pFPath == cFPath)
                 then
                   if (pSubMod == cSubMod)
@@ -124,24 +124,23 @@ instance HasType EnumeratorConstructor where
   render (EnumeratorConstructor name) = pure (stext name)
 
 instance HasType OCamlValue where
-  render (OCamlRef _ name) = pure (stext $ textLowercaseFirst name)
-
-  render (OCamlRef typeRef name) = do
+  render ref@(OCamlRef typeRef name) = do
     mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData
     case mOCamlTypeMetaData of
-      Nothing -> fail ""
+      Nothing -> fail $ "OCaml.BuckleScript.Record (HasType (OCamlDatatype typeRep name)) mOCamlTypeMetaData is Nothing:\n\n" ++ (show ref)
       Just (OCamlTypeMetaData _ pFPath pSubMod) -> do
         ds <- asks (dependencies . userOptions)
         case Map.lookup typeRef ds of
-          Just (OCamlTypeMetaData tName cFPath cSubMod) ->
+          Just (OCamlTypeMetaData _tName cFPath cSubMod) ->
             if (pFPath == cFPath)
             then
               if (pSubMod == cSubMod)
-              then pure . stext . textUppercaseFirst $ name
-              else pure $ (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> (stext . textUppercaseFirst $ name) 
-            else pure $ (if cFPath == [] then "" else (stext (foldMod cFPath) <> ".")) <> (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> (stext . textUppercaseFirst $ name)
-          Nothing -> fail ("expected to find dependency:\n\n" ++ show typeRef ++ "\n\nin\n\n" ++ show ds)
-
+              then pure . stext . textLowercaseFirst $ name
+              else pure $ (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> (stext . textLowercaseFirst $ name) 
+            else pure $ (if cFPath == [] then "" else (stext (foldMod cFPath) <> ".")) <> (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> (stext . textLowercaseFirst $ name)
+          -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
+          -- within the same file as the sum. These products will not be in the dependencies map.
+          Nothing -> pure . stext . textLowercaseFirst $ name
   
   render (OCamlTypeParameterRef name) = pure (stext ("'" <> name))
   render (OCamlPrimitiveRef primitive) = ocamlRefParens primitive <$> renderRef primitive

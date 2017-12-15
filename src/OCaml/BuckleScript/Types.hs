@@ -262,7 +262,7 @@ instance OCamlType a => GenericOCamlValue (Rec0 a) where
   genericToOCamlValue _ =
     case toOCamlType (Proxy :: Proxy a) of
       OCamlPrimitive primitive -> OCamlPrimitiveRef primitive
-      OCamlDatatype haskellTypeMetaData name _     -> mkRef haskellTypeMetaData name
+      OCamlDatatype haskellTypeMetaData name _ -> mkRef haskellTypeMetaData name
     where
       typeParameterRefs = (T.append) <$> ["a"] <*> (T.pack . show <$> ([0..5] :: [Int]))
       mkRef haskellTypeMetaData n

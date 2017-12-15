@@ -159,7 +159,7 @@ instance HasDecoderRef OCamlDatatype where
         Just (OCamlTypeMetaData _ pFPath pSubMod) -> do
           ds <- asks (dependencies . userOptions)
           case Map.lookup typeRef ds of
-            Just (OCamlTypeMetaData tName cFPath cSubMod) ->
+            Just (OCamlTypeMetaData _tName cFPath cSubMod) ->
               if (pFPath == cFPath)
                 then
                   if (pSubMod == cSubMod)
@@ -167,7 +167,7 @@ instance HasDecoderRef OCamlDatatype where
                   else pure $ (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> "decode" <> (stext . textUppercaseFirst $ name)
                 else pure $ (if cFPath == [] then "" else (stext  (foldMod cFPath) <> ".")) <> (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> "decode" <> (stext . textUppercaseFirst $ name)
                 
-            Nothing -> fail ("expected to find dependency:\n\n" ++ show typeRef ++ "\n\nin\n\n" ++ show ds)
+            Nothing -> fail ("OCaml.BuckleScript.Decode (HasDecoderRef OCamlDataType) expected to find dependency:\n\n" ++ show typeRef ++ "\n\nin\n\n" ++ show ds)
       
   renderRef (OCamlPrimitive primitive) = renderRef primitive
 
@@ -208,21 +208,23 @@ renderResult jsonFieldname datatype@(OCamlPrimitive _primitive) = do
   pure $ "(field" <+> dquotes (stext jsonFieldname) <+> dv <> ")"
 
 instance HasDecoder OCamlValue where
-  render (OCamlRef typeRef name) = do
+  render ref@(OCamlRef typeRef name) = do
     mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData
     case mOCamlTypeMetaData of
-      Nothing -> fail ""
+      Nothing -> fail $ "OCaml.BuckleScript.Decode (HasDecoder (OCamlRef typeRep name )) mOCamlTypeMetaData is Nothing:\n\n" ++ (show ref)
       Just (OCamlTypeMetaData _ pFPath pSubMod) -> do
         ds <- asks (dependencies . userOptions)
         case Map.lookup typeRef ds of
-          Just (OCamlTypeMetaData tName cFPath cSubMod) ->
+          Just (OCamlTypeMetaData _tName cFPath cSubMod) ->
             if (pFPath == cFPath)
             then
               if (pSubMod == cSubMod)
               then pure $ "(fun a -> unwrapResult (decode" <> (stext . textUppercaseFirst $ name) <+> "a))" 
               else pure $ "(fun a -> unwrapResult (" <> (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> "decode" <> (stext . textUppercaseFirst $ name) <+> "a))" 
             else pure $  "(fun a -> unwrapResult (" <> (if cFPath == [] then "" else (stext  (foldMod cFPath) <> ".")) <> (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> "decode" <> (stext . textUppercaseFirst $ name) <+> "a))"
-          Nothing -> fail ("expected to find dependency:\n\n" ++ show typeRef ++ "\n\nin\n\n" ++ show ds)
+          -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
+          -- within the same file as the sum. These products will not be in the dependencies map.
+          Nothing -> pure $ "(fun a -> unwrapResult (decode" <> (stext . textUppercaseFirst $ name) <+> "a))" 
 
   render (OCamlPrimitiveRef primitive) = renderRef primitive
 
@@ -262,22 +264,25 @@ instance HasDecoderRef OCamlPrimitive where
 
   renderRef (OList (OCamlPrimitive OChar)) = pure "string"
 
-  renderRef (OList (OCamlDatatype typeRef name _)) = do
---    pure . parens $ "list" <+> (parens $ "fun a -> unwrapResult (decode" <> (stext . textUppercaseFirst $ name) <+> "a)")
-    mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData
-    case mOCamlTypeMetaData of
-      Nothing -> fail ""
-      Just (OCamlTypeMetaData _ pFPath pSubMod) -> do
-        ds <- asks (dependencies . userOptions)
-        case Map.lookup typeRef ds of
-          Just (OCamlTypeMetaData tName cFPath cSubMod) ->
-            if (pFPath == cFPath)
-            then
-              if (pSubMod == cSubMod)
-              then pure . parens $ "list" <+> (parens $ "fun a -> unwrapResult (decode" <> (stext . textUppercaseFirst $ name) <+> "a)")
-              else pure . parens $ "list" <+> (parens $ "fun a -> unwrapResult (" <> (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> "decode" <> (stext . textUppercaseFirst $ name) <+> "a)")
-            else pure . parens $ "list" <+> (parens $ "fun a -> unwrapResult (" <> (if cFPath == [] then "" else (stext  (foldMod cFPath) <> ".")) <> (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> "decode" <> (stext . textUppercaseFirst $ name) <+> "a)")
-          Nothing -> fail ("expected to find dependency:\n\n" ++ show typeRef ++ "\n\nin\n\n" ++ show ds)
+  renderRef (OList datatype@(OCamlDatatype typeRef name _)) =
+    if isTypeParameterRef datatype
+    then
+      pure . parens $ "list" <+> (parens $ "fun a -> unwrapResult (decode" <> (stext . textUppercaseFirst $ name) <+> "a)")
+    else do
+      mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData
+      case mOCamlTypeMetaData of
+        Nothing -> fail $ "OCaml.BuckleScript.Decode (HasDecoderRef (OList (OCamlDatatype typeRep name _))) mOCamlTypeMetaData is Nothing:\n\n" ++ (show datatype)
+        Just (OCamlTypeMetaData _ pFPath pSubMod) -> do
+          ds <- asks (dependencies . userOptions)
+          case Map.lookup typeRef ds of
+            Just (OCamlTypeMetaData _tName cFPath cSubMod) ->
+              if (pFPath == cFPath)
+              then
+                if (pSubMod == cSubMod)
+                then pure . parens $ "list" <+> (parens $ "fun a -> unwrapResult (decode" <> (stext . textUppercaseFirst $ name) <+> "a)")
+                else pure . parens $ "list" <+> (parens $ "fun a -> unwrapResult (" <> (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> "decode" <> (stext . textUppercaseFirst $ name) <+> "a)")
+              else pure . parens $ "list" <+> (parens $ "fun a -> unwrapResult (" <> (if cFPath == [] then "" else (stext  (foldMod cFPath) <> ".")) <> (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> "decode" <> (stext . textUppercaseFirst $ name) <+> "a)")
+            Nothing -> fail ("OCaml.BuckleScript.Decode (HasDecoderRef (OList (OCamlDatatype typeRep name _))) expected to find dependency:\n\n" ++ show typeRef ++ "\n\nin\n\n" ++ show ds)
 
 
 

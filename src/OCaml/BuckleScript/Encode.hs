@@ -151,7 +151,7 @@ instance HasEncoderRef OCamlDatatype where
                   else pure $ (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> "encode" <> (stext . textUppercaseFirst $ name)
                 else pure $ (if cFPath == [] then "" else (stext  (foldMod cFPath) <> ".")) <> (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> "encode" <> (stext . textUppercaseFirst $ name)
                 
-            Nothing -> fail ("expected to find dependency:\n\n" ++ show typeRef ++ "\n\nin\n\n" ++ show ds)
+            Nothing -> fail ("OCaml.BuckleScript.Encode (HasEncoderRef OCamlDataType) expected to find dependency:\n\n" ++ show typeRef ++ "\n\nin\n\n" ++ show ds)
 
   renderRef (OCamlPrimitive primitive) = renderRef primitive
 
@@ -303,10 +303,10 @@ instance HasEncoder OCamlValue where
   render (OCamlTypeParameterRef name) =
     pure $ "encode" <> (stext . textUppercaseFirst $ name)
   render (OCamlPrimitiveRef primitive) = renderRef primitive
-  render (OCamlRef typeRef name) = do
+  render ref@(OCamlRef typeRef name) = do
     mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData
     case mOCamlTypeMetaData of
-      Nothing -> fail ""
+      Nothing -> fail $ "OCaml.BuckleScript.Encode (HasEncoder (OCamlRef typeRep name)) mOCamlTypeMetaData is Nothing:\n\n" ++ (show ref)
       Just (OCamlTypeMetaData _ pFPath pSubMod) -> do
         ds <- asks (dependencies . userOptions)
         case Map.lookup typeRef ds of
@@ -317,7 +317,9 @@ instance HasEncoder OCamlValue where
               then pure $ "encode" <> (stext . textUppercaseFirst $ name)
               else pure $ (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> "encode" <> (stext . textUppercaseFirst $ name) 
             else pure $ (if cFPath == [] then "" else (stext (foldMod cFPath) <> ".")) <> (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> "encode" <> (stext . textUppercaseFirst $ name)
-          Nothing -> fail ("expected to find dependency:\n\n" ++ show typeRef ++ "\n\nin\n\n" ++ show ds)
+          -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
+          -- within the same file as the sum. These products will not be in the dependencies map.
+          Nothing -> pure $ "encode" <> (stext . textUppercaseFirst $ name)
   
   render (Values x y) = do
     dx <- render x

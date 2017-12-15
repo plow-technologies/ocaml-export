@@ -30,7 +30,7 @@ import Servant
 import Servant.API
 
 type SumPackage
-  =    OCamlModule '["OnOrOff"] '[] :> OnOrOff -- :> NameOrIdNumber :> SumVariant
+  =    OCamlModule '["OnOrOff"] '[] :> OnOrOff
   :<|> OCamlModule '["NameOrIdNumber"] '[] :> NameOrIdNumber
   :<|> OCamlModule '["SumVariant"] '[] :> SumVariant
   :<|> OCamlModule '["WithTuple"] '[] :> WithTuple
@@ -72,7 +72,7 @@ spec = do
     compareInterfaceFiles "SumWithRecord"
     compareInterfaceFiles "Result"
     compareInterfaceFiles "NewType"
-
+{-
   let dir2 = "test/nointerface/temp"
   runIO $ mkPackage (Proxy :: Proxy SumPackage) (PackageOptions dir2 "sum" Map.empty False Nothing)
 
@@ -84,6 +84,7 @@ spec = do
     compareNoInterfaceFiles "SumWithRecord"
     compareNoInterfaceFiles "Result"
     compareNoInterfaceFiles "NewType"
+-}
     
 data OnOrOff = On | Off
   deriving (Show,Eq,Generic,OCamlType,ToJSON,FromJSON)

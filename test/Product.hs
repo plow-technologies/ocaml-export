@@ -81,7 +81,7 @@ spec = do
   let dir2 = "test/nointerface/temp"
   runIO $ mkPackage (Proxy :: Proxy ProductPackage) (PackageOptions dir2 "product" Map.empty False Nothing)
 
-  describe "OCaml Declaration with Interface: Product Types" $ do
+  describe "OCaml Declaration without Interface: Product Types" $ do
     compareNoInterfaceFiles "Person"
     compareNoInterfaceFiles "Company"
     compareNoInterfaceFiles "Card"

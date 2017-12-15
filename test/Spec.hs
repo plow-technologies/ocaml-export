@@ -78,8 +78,8 @@ main = do
   hspec File.spec
 --  hspec Options.spec
   hspec D.spec
-
-  print $ mkOCamlTypeMetaData (Proxy :: Proxy Product.ProductPackage)
+  print $ ocamlPackageTypeCount (Proxy :: Proxy Product.ProductPackage)
+--  print $ mkOCamlTypeMetaData (Proxy :: Proxy Product.ProductPackage)
 
   _ <- forkIO $ run 8081 productPackageApp
   _ <- forkIO $ run 8082 sumPackageApp

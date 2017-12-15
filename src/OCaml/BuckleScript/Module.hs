@@ -8,8 +8,6 @@ Stability   : experimental
 
 -}
 
--- {-# LANGUAGE AllowAmbiguousTypes #-}
-
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveFunctor      #-}
@@ -43,7 +41,9 @@ module OCaml.BuckleScript.Module
 
   -- types without constructors
   -- used to calculate types at the type level
+  , OCamlPackage
   , OCamlModule
+  , OCamlSubModule
   , OCamlTypeInFile
   , ConcatSymbols
   , Insert
@@ -182,14 +182,20 @@ instance {-# OVERLAPPABLE #-} (Typeable a) => HasOCamlTypeMetaData' a where
       aTypeRep = typeRep (Proxy :: Proxy a)
       typeName = T.pack . tyConName . typeRepTyCon $ aTypeRep
 
+-- | 
+data OCamlPackage (packageName :: Symbol)
+  deriving Typeable
+
+data OCamlPackageDependency ocamlPackage
+  deriving Typeable
+
 -- | An OCamlModule as a Haskell type. 'filePath' is relative to a
 --   root directory prvoiided in the 'mkPackage' function. Each symbol in
 --   moduleName will is expanded into "module SymbolName = struct ... end".
 data OCamlModule (filePath :: [Symbol]) (moduleName :: [Symbol])
   deriving Typeable
 
--- |
--- subModules will expanded into "module SymbolName = struct ... end".
+-- | subModules will expanded into "module SymbolName = struct ... end".
 data OCamlSubModule (subModules :: [Symbol])
   deriving Typeable
 
@@ -202,7 +208,10 @@ data OCamlTypeInFile a (filePath :: Symbol)
 class HasOCamlPackage a where
   mkPackage :: Proxy a -> PackageOptions -> IO ()
 
-instance (HasOCamlTypeMetaData a, HasOCamlPackage' a) => HasOCamlPackage a where
+instance (HasOCamlPackage a) => HasOCamlPackage (OCamlPackage packageName :> a) where
+  mkPackage Proxy packageOptions = mkPackage (Proxy :: Proxy a) packageOptions
+
+instance {-# OVERLAPPABLE #-} (HasOCamlTypeMetaData a, HasOCamlPackage' a) => HasOCamlPackage a where
   mkPackage Proxy packageOptions = do
     mkPackage' (Proxy :: Proxy a) packageOptions (mkOCamlTypeMetaData (Proxy :: Proxy a))
 
@@ -271,14 +280,14 @@ instance (HasOCamlType a, HasOCamlType b) => HasOCamlType (a :> b) where
 
 
 instance {-# OVERLAPPABLE #-} (Typeable a, KnownSymbol b) => HasOCamlType (OCamlTypeInFile a b) where
-  mkType Proxy options _ fileMap = do
+  mkType Proxy _options _ fileMap = do
     let typeFilePath = symbolVal (Proxy :: Proxy b)
     let typeName = last $ splitOn "/" typeFilePath
     case eocDeclaration <$> Map.lookup typeName fileMap of
       Just v -> [decodeUtf8 v]
       _ -> fail $ "Unable to find the embedded file for " ++ typeName
 
-  mkInterface Proxy options fileMap = do
+  mkInterface Proxy _options fileMap = do
     let typeFilePath = symbolVal (Proxy :: Proxy b)
     let typeName = last $ splitOn "/" typeFilePath
     case eocInterface <$> Map.lookup typeName fileMap of
@@ -308,7 +317,7 @@ instance (HasGenericOCamlType a, HasGenericOCamlType b) => HasGenericOCamlType (
 instance {-# OVERLAPPABLE #-} OCamlType a => HasGenericOCamlType a where
   mkGType a options interface = [toOCamlTypeSourceWith options a, toOCamlEncoderSourceWith (options {includeOCamlInterface = interface}) a, toOCamlDecoderSourceWith (options {includeOCamlInterface = interface}) a]
   mkGInterface a options = [toOCamlTypeSourceWith options a, toOCamlEncoderInterfaceWith options a, toOCamlDecoderInterfaceWith options a]
-  mkGSpec a options modules url goldendir = [toOCamlSpec a modules url goldendir]
+  mkGSpec a _options modules url goldendir = [toOCamlSpec a modules url goldendir]
 
 
 
@@ -339,6 +348,7 @@ type family Append xy ys where
 --   Internal helper function.
 type family (Flag a) :: Bool where
   Flag (a :> b)  = 'True -- case 1
+--  Flag (OCamlPackage a)  = 'True -- case 2  
   Flag (OCamlModule a b)  = 'True -- case 2
   Flag a     = 'False -- case 3
 
@@ -360,6 +370,10 @@ instance (OCamlModuleTypeCount a, OCamlModuleTypeCount b) => OCamlModuleTypeCoun
 
 -- case 1
 -- do not count anything wrapped in OCamlModule
+--instance OCamlModuleTypeCount' 'True (OCamlPackage a) where
+--  ocamlModuleTypeCount' _ Proxy = 0
+
+-- do not count anything wrapped in OCamlModule
 instance OCamlModuleTypeCount' 'True (OCamlModule a b) where
   ocamlModuleTypeCount' _ Proxy = 0
 
@@ -371,6 +385,7 @@ instance OCamlModuleTypeCount' 'False a where
 
 -- package flag
 type family (FFlag a) :: Bool where
+  FFlag (OCamlPackage a :> b)  = 'True -- case 0
   FFlag (a :<|> b)  = 'True -- case 0
   FFlag a     = 'False -- case 1
 
@@ -383,6 +398,10 @@ instance (FFlag a ~ flag, OCamlPackageTypeCount' flag (a :: *)) => OCamlPackageT
 
 class OCamlPackageTypeCount' (flag :: Bool) a where
   ocamlPackageTypeCount' :: Proxy flag -> Proxy a -> [Int]
+
+-- case 0
+instance (OCamlPackageTypeCount b) => OCamlPackageTypeCount' 'True (OCamlPackage a :> b) where
+  ocamlPackageTypeCount' _ Proxy = ocamlPackageTypeCount (Proxy :: Proxy b)
 
 -- case 0
 instance (OCamlModuleTypeCount a, OCamlPackageTypeCount b) => OCamlPackageTypeCount' 'True (a :<|> b) where
@@ -436,6 +455,7 @@ type family MkOCamlSpecAPI' filePath modul api :: * where
   
 -- | ff
 type family MkOCamlSpecAPI a :: * where
+  MkOCamlSpecAPI (OCamlPackage a :> rest) = MkOCamlSpecAPI rest  
   MkOCamlSpecAPI ((OCamlModule filePath modul :> api) :<|> rest) = MkOCamlSpecAPI' filePath modul api :<|> MkOCamlSpecAPI rest
   MkOCamlSpecAPI (OCamlModule filePath modul :> api) = MkOCamlSpecAPI' filePath modul api
 

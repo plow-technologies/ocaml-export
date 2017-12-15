@@ -14,10 +14,12 @@ Stability   : experimental
 {-# LANGUAGE DeriveFoldable     #-}
 {-# LANGUAGE DeriveTraversable  #-}
 {-# LANGUAGE FlexibleInstances  #-}
+{-# LANGUAGE InstanceSigs  #-}
 {-# LANGUAGE KindSignatures  #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE PolyKinds  #-}
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -168,8 +170,8 @@ instance (HasOCamlTypeMetaData modul, HasOCamlTypeMetaData rst) => HasOCamlTypeM
   mkOCamlTypeMetaData Proxy = mkOCamlTypeMetaData (Proxy :: Proxy modul) <> mkOCamlTypeMetaData (Proxy :: Proxy rst)
 
 -- | single module
-instance (KnownSymbols moduleName, KnownSymbols filePath,  HasOCamlTypeMetaData' api) => HasOCamlTypeMetaData ((OCamlModule filePath moduleName) :> api) where
-  mkOCamlTypeMetaData Proxy = Map.fromList $ mkOCamlTypeMetaData' (T.pack <$> symbolsVal (Proxy :: Proxy filePath)) (T.pack <$> symbolsVal (Proxy :: Proxy moduleName)) (Proxy :: Proxy api)
+instance (KnownSymbols modules, HasOCamlTypeMetaData' api) => HasOCamlTypeMetaData ((OCamlModule modules) :> api) where
+  mkOCamlTypeMetaData Proxy = Map.fromList $ mkOCamlTypeMetaData' (T.pack <$> symbolsVal (Proxy :: Proxy modules)) [] (Proxy :: Proxy api)
 
 instance HasOCamlTypeMetaData '[] where
   mkOCamlTypeMetaData Proxy = Map.empty
@@ -207,13 +209,13 @@ type NoDependency = '[]
 data OCamlPackage (packageName :: Symbol) (packageDependencies :: [*])
   deriving Typeable
 
--- | An OCamlModule as a Haskell type. 'filePath' is relative to a
---   root directory prvoiided in the 'mkPackage' function. Each symbol in
---   moduleName will is expanded into "module SymbolName = struct ... end".
-data OCamlModule (filePath :: [Symbol]) (moduleName :: [Symbol])
+-- | An OCamlModule as a Haskell type. File level 'modules' is relative to a
+--   root directory prvoiided in the 'mkPackage' function. 
+data OCamlModule (modules :: [Symbol])
   deriving Typeable
 
--- | subModules will expanded into "module SymbolName = struct ... end".
+-- | Each symbol in subModules will be expanded into
+--   "module SymbolName = struct ... end".
 data OCamlSubModule (subModules :: [Symbol])
   deriving Typeable
 
@@ -250,10 +252,34 @@ instance {-# OVERLAPPABLE #-} (HasOCamlModule a) => HasOCamlPackage' a where
 --   - make a Spec file that tests the encoders and decoders against a golden file and a servant server
 class HasOCamlModule a where
   mkModule :: Proxy a -> PackageOptions -> Map.Map HaskellTypeMetaData OCamlTypeMetaData -> IO ()
+
+instance (KnownSymbols modules, HasOCamlModule' api) => HasOCamlModule ((OCamlModule modules) :> api) where
+  mkModule Proxy packageOptions deps = mkModule' (Proxy :: Proxy api) (symbolsVal (Proxy :: Proxy modules)) [] packageOptions deps
+
+class HasOCamlModule' a where
+  mkModule' :: Proxy a -> [String] -> [String] -> PackageOptions -> Map.Map HaskellTypeMetaData OCamlTypeMetaData -> IO ()
+
+instance (KnownSymbols restSubModules, HasOCamlModule' api) => HasOCamlModule' ((OCamlSubModule restSubModules) :> api) where
+  mkModule' Proxy modules subModules packageOptions deps =
+    mkModule' (Proxy :: Proxy api) modules (subModules ++ (symbolsVal (Proxy :: Proxy restSubModules))) packageOptions deps
+
+instance (HasOCamlModule'' api) => HasOCamlModule' api where
+  mkModule' Proxy modules subModules packageOptions deps = mkModule'' (Proxy :: Proxy api) modules subModules packageOptions deps
+
+{-
+class HasOCamlModule a where
+  mkModule :: Proxy a -> PackageOptions -> Map.Map HaskellTypeMetaData OCamlTypeMetaData -> IO ()
   
 instance (KnownSymbols filePath, KnownSymbols moduleName, HasOCamlType api) => HasOCamlModule ((OCamlModule filePath moduleName) :> api) where
-  mkModule Proxy packageOptions ds = do
-    if (length $ symbolsVal (Proxy :: Proxy filePath)) == 0
+mkModule Proxy packageOptions ds = do
+-}
+
+class HasOCamlModule'' a where
+  mkModule'' :: Proxy a -> [String] -> [String] -> PackageOptions -> Map.Map HaskellTypeMetaData OCamlTypeMetaData -> IO ()
+--mkModule'' :: forall api. (HasOCamlType api) => Proxy api -> [String] -> [String] -> PackageOptions -> Map.Map HaskellTypeMetaData OCamlTypeMetaData -> IO ()
+instance (HasOCamlType api) => HasOCamlModule'' api where
+  mkModule'' Proxy modules subModules packageOptions ds = do
+    if (length modules) == 0
       then fail "OCamlModule filePath needs at least one file name"
       else do
         createDirectoryIfMissing True (rootDir </> packageSrcDir packageOptions)
@@ -269,20 +295,20 @@ instance (KnownSymbols filePath, KnownSymbols moduleName, HasOCamlType api) => H
         case mSpecOptions packageOptions of
           Nothing -> pure ()
           Just specOptions -> do
-            let specF = (<> "\n") . T.intercalate "\n\n" $ mkSpec (Proxy :: Proxy api) (defaultOptions {dependencies = ds}) modules (T.pack $ servantURL specOptions) (T.pack $ goldenDir specOptions) (packageEmbeddedFiles packageOptions)
+            let specF = (<> "\n") . T.intercalate "\n\n" $ mkSpec (Proxy :: Proxy api) (defaultOptions {dependencies = ds}) moduls (T.pack $ servantURL specOptions) (T.pack $ goldenDir specOptions) (packageEmbeddedFiles packageOptions)
             let specBody = if specF /= "" then ("let () =\n" <> specF) else ""
             createDirectoryIfMissing True (rootDir </> (specDir specOptions))
             T.writeFile (specFp <> "_spec" <.> "ml") specBody
     
             where
-              specFp = rootDir </> (specDir specOptions) </> (foldl (</>) "" $ symbolsVal (Proxy :: Proxy filePath))
-              modules = T.pack <$> (symbolsVal (Proxy :: Proxy filePath) <> symbolsVal (Proxy :: Proxy moduleName))
+              specFp = rootDir </> (specDir specOptions) </> (foldl (</>) "" modules)
+              moduls = T.pack <$> modules <> subModules
         
     where
       rootDir = packageRootDir packageOptions
-      fp = rootDir </> (packageSrcDir packageOptions) </> (foldl (</>) "" $ symbolsVal (Proxy :: Proxy filePath))
-      localModuleDoc body = pprinter $ foldr (\l r -> "module" <+> l <+> "= struct" <$$> indent 2 r <$$> "end") (stext body) (stext . T.pack <$> symbolsVal (Proxy :: Proxy moduleName))
-      localModuleSigDoc body = pprinter $ foldr (\l r -> "module" <+> l <+> ": sig" <$$> indent 2 r <$$> "end") (stext body) (stext . T.pack <$> symbolsVal (Proxy :: Proxy moduleName))
+      fp = rootDir </> (packageSrcDir packageOptions) </> (foldl (</>) "" modules)
+      localModuleDoc body = pprinter $ foldr (\l r -> "module" <+> l <+> "= struct" <$$> indent 2 r <$$> "end") (stext body) (stext . T.pack <$> subModules)
+      localModuleSigDoc body = pprinter $ foldr (\l r -> "module" <+> l <+> ": sig" <$$> indent 2 r <$$> "end") (stext body) (stext . T.pack <$> subModules)
 
 
 -- | Combine `HasGenericOCamlType` and `HasOCamlTypeInFile`
@@ -367,7 +393,8 @@ type family Append xy ys where
 type family (Flag a) :: Bool where
   Flag (a :> b)  = 'True -- case 1
 --  Flag (OCamlPackage a)  = 'True -- case 2  
-  Flag (OCamlModule a b)  = 'True -- case 2
+  Flag (OCamlModule a)  = 'True -- case 2
+  Flag (OCamlSubModule a) = 'True
   Flag a     = 'False -- case 3
 
 -- | Exposed type level function
@@ -388,13 +415,11 @@ instance (OCamlModuleTypeCount a, OCamlModuleTypeCount b) => OCamlModuleTypeCoun
 
 -- case 1
 -- do not count anything wrapped in OCamlModule
---instance OCamlModuleTypeCount' 'True (OCamlPackage a) where
---  ocamlModuleTypeCount' _ Proxy = 0
-
--- do not count anything wrapped in OCamlModule
-instance OCamlModuleTypeCount' 'True (OCamlModule a b) where
+instance OCamlModuleTypeCount' 'True (OCamlModule modules) where
   ocamlModuleTypeCount' _ Proxy = 0
 
+instance OCamlModuleTypeCount' 'True (OCamlSubModule subModules) where
+  ocamlModuleTypeCount' _ Proxy = 0
 -- case 2
 -- everything else should count as one
 instance OCamlModuleTypeCount' 'False a where
@@ -463,19 +488,20 @@ type family ConcatSymbols xs rhs :: * where
   ConcatSymbols '[] rhs = rhs
   ConcatSymbols (x ': xs) rhs = x :> ConcatSymbols xs rhs
   
-type OCamlSpecAPI (filePath :: [Symbol]) (modul :: [Symbol]) typ = ConcatSymbols (Insert (TypeName typ) (Append filePath modul)) (ReqBody '[JSON] [typ] :> Post '[JSON] [typ])
+type OCamlSpecAPI (modules :: [Symbol]) (subModules :: [Symbol]) typ = ConcatSymbols (Insert (TypeName typ) (Append modules subModules)) (ReqBody '[JSON] [typ] :> Post '[JSON] [typ])
 
 -- | abc
-type family MkOCamlSpecAPI' filePath modul api :: * where
-  MkOCamlSpecAPI' filePath modul (a :> b) = MkOCamlSpecAPI' filePath modul a :<|> MkOCamlSpecAPI' filePath modul b
-  MkOCamlSpecAPI' filePath modul (OCamlTypeInFile api _typeFilePath) = OCamlSpecAPI filePath modul api
-  MkOCamlSpecAPI' filePath modul api = OCamlSpecAPI filePath modul api
+type family MkOCamlSpecAPI' modules subModules api :: * where
+  MkOCamlSpecAPI' modules subModules ((OCamlSubModule restSubModules) :> a) = MkOCamlSpecAPI' modules (Append subModules restSubModules) a
+  MkOCamlSpecAPI' modules subModules (a :> b) = MkOCamlSpecAPI' modules subModules a :<|> MkOCamlSpecAPI' modules subModules b
+  MkOCamlSpecAPI' modules subModules (OCamlTypeInFile api _typeFilePath) = OCamlSpecAPI modules subModules api
+  MkOCamlSpecAPI' modules subModules api = OCamlSpecAPI modules subModules api
   
 -- | ff
 type family MkOCamlSpecAPI a :: * where
   MkOCamlSpecAPI (OCamlPackage a deps :> rest) = MkOCamlSpecAPI rest  
-  MkOCamlSpecAPI ((OCamlModule filePath modul :> api) :<|> rest) = MkOCamlSpecAPI' filePath modul api :<|> MkOCamlSpecAPI rest
-  MkOCamlSpecAPI (OCamlModule filePath modul :> api) = MkOCamlSpecAPI' filePath modul api
+  MkOCamlSpecAPI ((OCamlModule modules :> api) :<|> rest) = MkOCamlSpecAPI' modules '[] api :<|> MkOCamlSpecAPI rest
+  MkOCamlSpecAPI (OCamlModule modules :> api) = MkOCamlSpecAPI' modules '[] api
 
 
 -- | 

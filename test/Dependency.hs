@@ -32,11 +32,11 @@ mkGoldenFiles = do
 
 type DependencyPackage
   =    OCamlPackage "dependency" '[ProductPackage] :> (
-       OCamlModule '["Class"] '[] :> Class)
+       OCamlModule '["Class"] :> Class)
 
 type DependencyPackageWithoutProduct
   =    OCamlPackage "dependency" NoDependency :> (
-       OCamlModule '["Class"] '[] :> Class)
+       OCamlModule '["Class"] :> Class)
 {-
 data Person = Person
   { id :: Int

@@ -18,7 +18,7 @@ import Test.Aeson.Internal.ADT.GoldenSpecs
 
 
 type FilePackage = OCamlPackage "" NoDependency :>
-  (OCamlModule '["File"] '[]
+  (OCamlModule '["File"]
     :> OCamlTypeInFile Person "test/ocaml/Person"
     :> Automobile
     :> OCamlTypeInFile Business "test/ocaml/Business"

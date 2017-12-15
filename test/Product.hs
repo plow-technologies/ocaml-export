@@ -32,15 +32,15 @@ import qualified Data.Map as Map
 
 type ProductPackage
   = OCamlPackage "product" NoDependency
-    :> (OCamlModule '["SimpleChoice"] '[] :> SimpleChoice
-  :<|> OCamlModule '["Person"] '[] :> Person
-  :<|> OCamlModule '["Company"] '[] :> Company
-  :<|> OCamlModule '["Card"] '[] :> Suit :> Card
-  :<|> OCamlModule '["CustomOption"] '[] :> Company2
-  :<|> OCamlModule '["OneTypeParameter"] '[] :> OneTypeParameter TypeParameterRef0
-  :<|> OCamlModule '["TwoTypeParameters"] '[] :> TwoTypeParameters TypeParameterRef0 TypeParameterRef1
-  :<|> OCamlModule '["ThreeTypeParameters"] '[] :> Three TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
-  :<|> OCamlModule '["SubTypeParameter"] '[] :> SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2)
+    :> (OCamlModule '["SimpleChoice"] :> SimpleChoice
+  :<|> OCamlModule '["Person"] :> Person
+  :<|> OCamlModule '["Company"] :> Company
+  :<|> OCamlModule '["Card"] :> Suit :> Card
+  :<|> OCamlModule '["CustomOption"] :> Company2
+  :<|> OCamlModule '["OneTypeParameter"] :> OneTypeParameter TypeParameterRef0
+  :<|> OCamlModule '["TwoTypeParameters"] :> TwoTypeParameters TypeParameterRef0 TypeParameterRef1
+  :<|> OCamlModule '["ThreeTypeParameters"] :> Three TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
+  :<|> OCamlModule '["SubTypeParameter"] :> SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2)
 
 mkGolden :: forall a. (ToADTArbitrary a, ToJSON a) => Proxy a -> IO ()
 mkGolden Proxy = mkGoldenFileForType 10 (Proxy :: Proxy a) "test/interface/golden/golden/product"

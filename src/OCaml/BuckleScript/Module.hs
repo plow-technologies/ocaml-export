@@ -72,20 +72,17 @@ module OCaml.BuckleScript.Module
   ) where
 
 -- base
-
-import Data.List.Split (splitOn)
-import qualified Data.Map.Strict as Map
-
 import Data.Proxy
 import Data.Semigroup (Semigroup (..))
 import Data.Typeable (typeRep, Typeable, typeRepTyCon, tyConName, tyConModule, tyConPackage)
 import GHC.Generics
+import GHC.TypeLits
 
 -- bytestring
 import Data.ByteString (ByteString)
 
--- template-haskell
-import Language.Haskell.TH
+-- containers
+import qualified Data.Map.Strict as Map
 
 -- directory
 import System.Directory (createDirectoryIfMissing)
@@ -104,24 +101,20 @@ import OCaml.BuckleScript.Record
 import OCaml.BuckleScript.Spec
 import OCaml.BuckleScript.Types
 
+-- servant
+import Servant.API
+
+-- template-haskell
+import Language.Haskell.TH
+
 -- text
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.IO     as T
 import Data.Text.Encoding (decodeUtf8)
 
--- type level
-import GHC.TypeLits
+-- typelits-witnesses
 import GHC.TypeLits.List
-
-
-
--- servant
-import Servant.API
-
--- wl-pprint
-import Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>), (</>))
-
 
 -- | Options for creating an OCaml package based on Haskell types.
 data PackageOptions
@@ -272,16 +265,6 @@ class HasOCamlModule a where
 instance (KnownSymbols modules, HasOCamlModule' api) => HasOCamlModule ((OCamlModule modules) :> api) where
   mkModule Proxy packageOptions deps = mkModule' (Proxy :: Proxy api) (symbolsVal (Proxy :: Proxy modules)) packageOptions deps
 
---class HasOCamlModule' a where
---  mkModule' :: Proxy a -> [String] -> PackageOptions -> Map.Map HaskellTypeMetaData OCamlTypeMetaData -> IO ()
-
---instance (HasOCamlModule' api) => HasOCamlModule' ((OCamlSubModule restSubModules) :> api) where
---  mkModule' Proxy modules packageOptions deps =
---    mkModule' (Proxy :: Proxy api) modules packageOptions deps
-
---instance (HasOCamlModule'' api) => HasOCamlModule' api where
---  mkModule' Proxy modules packageOptions deps = mkModule'' (Proxy :: Proxy api) modules packageOptions deps
-
 class HasOCamlModule' a where
   mkModule' :: Proxy a -> [String] -> PackageOptions -> Map.Map HaskellTypeMetaData OCamlTypeMetaData -> IO ()
 
@@ -290,8 +273,6 @@ instance (Typeable api, HasOCamlType api) => HasOCamlModule' api where
     if (length modules) == 0
       then fail "OCamlModule filePath needs at least one file name"
       else do
-        print "HasOCamlModule'"
-        print $ typeRep (Proxy :: Proxy api)
         createDirectoryIfMissing True (rootDir </> packageSrcDir packageOptions)
         let typF = (<> "\n") . T.intercalate "\n\n" $ mkType (Proxy :: Proxy api) (defaultOptions {dependencies = ds}) (createInterfaceFile packageOptions) (packageEmbeddedFiles packageOptions)
         T.writeFile (fp <.> "ml")  typF
@@ -382,15 +363,7 @@ instance (OCamlType a) => HasOCamlType' 1 a where
           , (toOCamlEncoderInterfaceWith options a) 
           , (toOCamlDecoderInterfaceWith options a)]
 
-  mkSpec' _ a options modules url goldendir _ = [toOCamlSpec a modules url goldendir]
-
-
-mkSubModuleDoc :: Text -> [Text] -> [Text]
-mkSubModuleDoc body subModules = (:[]) $ pprinter $ foldr (\l r -> "module" <+> l <+> "= struct" <$$> indent 2 r <$$> "end") (stext body) (stext <$> subModules)
-
-mkSubModuleSigDoc :: Text -> [Text] -> [Text]
-mkSubModuleSigDoc body subModules = (:[]) $ pprinter $ foldr (\l r -> "module" <+> l <+> ": sig" <$$> indent 2 r <$$> "end") (stext body) (stext <$> subModules)
-
+  mkSpec' _ a _options modules url goldendir _ = [toOCamlSpec a modules url goldendir]
 
 
 -- build servant spec server

@@ -5,6 +5,9 @@ Copyright   : Plow Technologies, 2017
 License     : BSD3
 Maintainer  : mchaver@gmail.com
 Stability   : experimental
+
+For a Haskell type with an instance of OCamlType, output an
+OCaml type to JSON (aeson) encoder.
 -}
 
 {-# LANGUAGE OverloadedStrings #-}
@@ -151,20 +154,6 @@ instance HasEncoderRef OCamlDatatype where
             -- within the same file as the sum. These products will not be in the dependencies map.
             Nothing -> pure $ "encode" <> (stext . textUppercaseFirst $ name)
 
-{-
-        Just (OCamlTypeMetaData _ pFPath pSubMod) -> do
-          ds <- asks (dependencies . userOptions)
-          case Map.lookup typeRef ds of
-            Just (OCamlTypeMetaData tName cFPath cSubMod) ->
-              if (pFPath == cFPath)
-                then
-                  if (pSubMod == cSubMod)
-                  then pure $ "encode" <> (stext . textUppercaseFirst $ name)
-                  else pure $ (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> "encode" <> (stext . textUppercaseFirst $ name)
-                else pure $ (if cFPath == [] then "" else (stext  (foldMod cFPath) <> ".")) <> (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> "encode" <> (stext . textUppercaseFirst $ name)
-                
-            Nothing -> fail ("OCaml.BuckleScript.Encode (HasEncoderRef OCamlDataType) expected to find dependency:\n\n" ++ show typeRef ++ "\n\nin\n\n" ++ show ds)
--}
   renderRef (OCamlPrimitive primitive) = renderRef primitive
 
 instance HasEncoder OCamlConstructor where
@@ -329,21 +318,7 @@ instance HasEncoder OCamlValue where
           -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
           -- within the same file as the sum. These products will not be in the dependencies map.
           Nothing -> pure $ "encode" <> (stext . textUppercaseFirst $ name)
-{-      
-      Just (OCamlTypeMetaData _ pFPath pSubMod) -> do
-        ds <- asks (dependencies . userOptions)
-        case Map.lookup typeRef ds of
-          Just (OCamlTypeMetaData tName cFPath cSubMod) ->
-            if (pFPath == cFPath)
-            then
-              if (pSubMod == cSubMod)
-              then pure $ "encode" <> (stext . textUppercaseFirst $ name)
-              else pure $ (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> "encode" <> (stext . textUppercaseFirst $ name) 
-            else pure $ (if cFPath == [] then "" else (stext (foldMod cFPath) <> ".")) <> (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> "encode" <> (stext . textUppercaseFirst $ name)
-          -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
-          -- within the same file as the sum. These products will not be in the dependencies map.
-          Nothing -> pure $ "encode" <> (stext . textUppercaseFirst $ name)
--}  
+
   render (Values x y) = do
     dx <- render x
     dy <- render y
@@ -407,11 +382,6 @@ instance HasEncoderRef OCamlPrimitive where
     dt4 <- renderRef t4
     dt5 <- renderRef t5
     return $ "Aeson.Encode.tuple6" <+> dt0 <+> dt1 <+> dt2 <+> dt3 <+> dt4 <+> dt5
-
-  renderRef (ODict k v) = do
-    dk <- renderRef k
-    dv <- renderRef v
-    return . parens $ "Js.Encode.dict" <+> dk <+> dv
 
 -- | Variable names for the members of constructors
 --   Used in pattern matches
@@ -506,8 +476,7 @@ renderEncodeTypeParameters constructor =
   foldl (<>) "" $ stext <$> L.intersperse " " ((\t -> "encode" <> (textUppercaseFirst t)) <$> getTypeParameters constructor)
 
 
--- | export
-
+-- | Convert a 'Proxy a' into OCaml type to JSON function source code which expects an interface file '.ml'.
 toOCamlEncoderInterfaceWith :: forall a. OCamlType a => Options -> a -> T.Text
 toOCamlEncoderInterfaceWith options a =
   case toOCamlType (Proxy :: Proxy a) of
@@ -517,6 +486,7 @@ toOCamlEncoderInterfaceWith options a =
         Nothing -> ""          
     _ -> pprinter $ runReader (renderTypeInterface (toOCamlType a)) (TypeMetaData Nothing options)
 
+-- | Convert a 'Proxy a' into OCaml type to JSON function source code without an interface file '.mli'.
 toOCamlEncoderSourceWith :: forall a. OCamlType a => Options -> a -> T.Text
 toOCamlEncoderSourceWith options a =
   case toOCamlType (Proxy :: Proxy a) of

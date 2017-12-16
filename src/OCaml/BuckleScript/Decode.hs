@@ -165,20 +165,6 @@ instance HasDecoderRef OCamlDatatype where
 
             Nothing -> fail ("OCaml.BuckleScript.Decode (HasDecoderRef OCamlDataType) expected to find dependency:\n\n" ++ show typeRef ++ "\n\nin\n\n" ++ show ds)
 
-{-        
-        Just (OCamlTypeMetaData _ pFPath pSubMod) -> do
-          ds <- asks (dependencies . userOptions)
-          case Map.lookup typeRef ds of
-            Just (OCamlTypeMetaData _tName cFPath cSubMod) ->
-              if (pFPath == cFPath)
-                then
-                  if (pSubMod == cSubMod)
-                  then pure $ "decode" <> (stext . textUppercaseFirst $ name)                    
-                  else pure $ (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> "decode" <> (stext . textUppercaseFirst $ name)
-                else pure $ (if cFPath == [] then "" else (stext  (foldMod cFPath) <> ".")) <> (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> "decode" <> (stext . textUppercaseFirst $ name)
-                
-            Nothing -> fail ("OCaml.BuckleScript.Decode (HasDecoderRef OCamlDataType) expected to find dependency:\n\n" ++ show typeRef ++ "\n\nin\n\n" ++ show ds)
--}
   renderRef (OCamlPrimitive primitive) = renderRef primitive
 
 instance HasDecoder OCamlConstructor where
@@ -232,23 +218,7 @@ instance HasDecoder OCamlValue where
           -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
           -- within the same file as the sum. These products will not be in the dependencies map.
           Nothing -> pure $ "(fun a -> unwrapResult (decode" <> (stext . textUppercaseFirst $ name) <+> "a))" 
-      {-
-      Just (OCamlTypeMetaData _ pFPath pSubMod) -> do
 
-        
-        ds <- asks (dependencies . userOptions)
-        case Map.lookup typeRef ds of
-          Just (OCamlTypeMetaData _tName cFPath cSubMod) ->
-            if (pFPath == cFPath)
-            then
-              if (pSubMod == cSubMod)
-              then pure $ "(fun a -> unwrapResult (decode" <> (stext . textUppercaseFirst $ name) <+> "a))" 
-              else pure $ "(fun a -> unwrapResult (" <> (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> "decode" <> (stext . textUppercaseFirst $ name) <+> "a))" 
-            else pure $  "(fun a -> unwrapResult (" <> (if cFPath == [] then "" else (stext  (foldMod cFPath) <> ".")) <> (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> "decode" <> (stext . textUppercaseFirst $ name) <+> "a))"
-          -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
-          -- within the same file as the sum. These products will not be in the dependencies map.
-          Nothing -> pure $ "(fun a -> unwrapResult (decode" <> (stext . textUppercaseFirst $ name) <+> "a))" 
-       -}
   render (OCamlPrimitiveRef primitive) = renderRef primitive
 
   render (OCamlTypeParameterRef name) =
@@ -302,21 +272,6 @@ instance HasDecoderRef OCamlPrimitive where
               let prefix = stext $ mkModulePrefix decOCamlTypeMetaData parOCamlTypeMetaData
               pure . parens $ "list" <+> (parens $ "fun a -> unwrapResult (" <> prefix <> "decode" <> (stext . textUppercaseFirst $ name) <+> "a)")
             Nothing -> fail ("OCaml.BuckleScript.Decode (HasDecoderRef (OList (OCamlDatatype typeRep name _))) expected to find dependency:\n\n" ++ show typeRef ++ "\n\nin\n\n" ++ show ds)
-        {-
-        Just (OCamlTypeMetaData _ pFPath pSubMod) -> do
-          ds <- asks (dependencies . userOptions)
-          case Map.lookup typeRef ds of
-            Just (OCamlTypeMetaData _tName cFPath cSubMod) ->
-              if (pFPath == cFPath)
-              then
-                if (pSubMod == cSubMod)
-                then pure . parens $ "list" <+> (parens $ "fun a -> unwrapResult (decode" <> (stext . textUppercaseFirst $ name) <+> "a)")
-                else pure . parens $ "list" <+> (parens $ "fun a -> unwrapResult (" <> (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> "decode" <> (stext . textUppercaseFirst $ name) <+> "a)")
-              else pure . parens $ "list" <+> (parens $ "fun a -> unwrapResult (" <> (if cFPath == [] then "" else (stext  (foldMod cFPath) <> ".")) <> (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> "decode" <> (stext . textUppercaseFirst $ name) <+> "a)")
-            Nothing -> fail ("OCaml.BuckleScript.Decode (HasDecoderRef (OList (OCamlDatatype typeRep name _))) expected to find dependency:\n\n" ++ show typeRef ++ "\n\nin\n\n" ++ show ds)
-
--}
-
 
   renderRef (OList datatype) = do
     dt <- renderRef datatype
@@ -506,6 +461,7 @@ renderSumRecordInterface _ _ = Nothing
 
 -- Exported
 
+-- | Convert a 'Proxy a' into OCaml type to decode JSON function source code with an interface file '.mli'.
 toOCamlDecoderInterfaceWith :: forall a. OCamlType a => Options -> a -> T.Text
 toOCamlDecoderInterfaceWith options a =
   case toOCamlType (Proxy :: Proxy a) of
@@ -515,6 +471,7 @@ toOCamlDecoderInterfaceWith options a =
         Nothing -> ""          
     _ -> pprinter $ runReader (renderInterface (toOCamlType a)) (TypeMetaData Nothing options)
 
+-- | Convert a 'Proxy a' into OCaml type to decode JSON function source code without an interface file '.mli'.
 toOCamlDecoderSourceWith :: forall a. OCamlType a => Options -> a -> T.Text
 toOCamlDecoderSourceWith options a =
   case toOCamlType (Proxy :: Proxy a) of

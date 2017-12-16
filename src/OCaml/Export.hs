@@ -13,7 +13,6 @@ module OCaml.Export (module X) where
 import OCaml.BuckleScript.Decode  as X
 import OCaml.BuckleScript.Encode  as X
 import OCaml.BuckleScript.Module  as X
-import OCaml.BuckleScript.Package as X
 import OCaml.BuckleScript.Record  as X
 import OCaml.BuckleScript.Spec    as X
 import OCaml.BuckleScript.Types   as X

@@ -34,6 +34,7 @@ module OCaml.BuckleScript.Types
   , OCamlTypeMetaData (..)
   
   -- fill type parameters of a proxy when calling toOCamlType
+  -- so the kind is *
   -- e.g. `toOCamlType (Proxy :: Proxy (Either TypeParameterRef0 TypeParameterRef1))`
   , TypeParameterRef0
   , TypeParameterRef1
@@ -53,12 +54,10 @@ module OCaml.BuckleScript.Types
 -- base
 import Data.Int (Int16, Int32, Int64, Int8)
 import Data.List (nub)
-import Data.Map
 import Data.Maybe (catMaybes)
 import Data.Monoid ((<>))
 import Data.Proxy
 import Data.Time
--- import Data.Typeable (typeRep, TypeRep, Typeable)
 import Data.Word (Word, Word8, Word16, Word32, Word64)
 import GHC.Generics
 import GHC.TypeLits (symbolVal, KnownSymbol)
@@ -66,9 +65,6 @@ import Prelude
 
 -- aeson
 import Data.Aeson (ToJSON, FromJSON)
-
--- containers
-import Data.IntMap
 
 -- text
 import Data.Text (Text)
@@ -89,6 +85,7 @@ data OCamlDatatype
   | OCamlPrimitive OCamlPrimitive -- ^ A primitive value
   deriving (Show, Eq)
 
+-- | Store data about the Haskell origin of a type.
 data HaskellTypeMetaData =
   HaskellTypeMetaData
     Text -- "TypeName"
@@ -96,10 +93,10 @@ data HaskellTypeMetaData =
     Text -- "package-name"
     deriving (Show, Eq, Ord)
 
+-- | Store data about the OCaml destination of a type.
 data OCamlTypeMetaData =
   OCamlTypeMetaData
     Text -- "typeName"
---    Text -- "bs-ocaml-export"
     [Text] -- ["File","Path"]
     [Text] -- ["Sub","Module"]
     deriving (Show, Eq, Ord)
@@ -116,7 +113,6 @@ data OCamlPrimitive
   | OList OCamlDatatype -- ^ 'a list, 'a Js_array.t
   | OOption OCamlDatatype -- ^ 'a option
   | OEither OCamlDatatype OCamlDatatype -- ^ 'l 'r Aeson.Compatibility.Either.t
-  | ODict OCamlPrimitive OCamlDatatype -- ^ 'a Js_dict.t
   | OTuple2 OCamlDatatype OCamlDatatype -- ^ (*)
   | OTuple3 OCamlDatatype OCamlDatatype OCamlDatatype -- ^ (**)
   | OTuple4 OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype -- ^ (***)
@@ -173,7 +169,6 @@ class GenericOCamlDatatype f where
 
 -- | Capture the Haskell type at the left side declaration `data Maybe a`, `data Person`, etc..
 --   Transform the constructor, depending on its values, if necessary.
-
 instance (KnownSymbol typ, KnownSymbol package, KnownSymbol modul, GenericValueConstructor f) => GenericOCamlDatatype (M1 D ('MetaData typ modul package 'False) f) where
   genericToOCamlDatatype datatype =
     OCamlDatatype
@@ -259,7 +254,7 @@ instance (GenericOCamlValue f, GenericOCamlValue g) =>
 instance GenericOCamlValue U1 where
   genericToOCamlValue _ = OCamlEmpty
 
--- | handle type parameter
+-- | Handle type parameter.
 instance OCamlType a => GenericOCamlValue (Rec0 a) where
   genericToOCamlValue _ =
     case toOCamlType (Proxy :: Proxy a) of
@@ -327,6 +322,18 @@ instance OCamlType Word32 where
 instance OCamlType Word64 where
   toOCamlType _ = OCamlPrimitive OInt
 
+instance OCamlType Int where
+  toOCamlType _ = OCamlPrimitive OInt
+
+instance OCamlType Integer where
+  toOCamlType _ = OCamlPrimitive OInt
+
+instance OCamlType Char where
+  toOCamlType _ = OCamlPrimitive OChar
+
+instance OCamlType Bool where
+  toOCamlType _ = OCamlPrimitive OBool
+
 instance (OCamlType a, OCamlType b) => OCamlType (a, b) where
   toOCamlType _ =
     OCamlPrimitive $
@@ -363,40 +370,10 @@ instance (OCamlType a) =>
          OCamlType (Proxy a) where
   toOCamlType _ = toOCamlType (undefined :: a)
 
-instance (HasOCamlComparable k, OCamlType v) =>
-         OCamlType (Map k v) where
-  toOCamlType _ =
-    OCamlPrimitive $
-    ODict (toOCamlComparable (undefined :: k)) (toOCamlType (Proxy :: Proxy v))
-
-instance (OCamlType v) =>
-         OCamlType (IntMap v) where
-  toOCamlType _ = OCamlPrimitive $ ODict OInt (toOCamlType (Proxy :: Proxy v))
-
-class HasOCamlComparable a where
-  toOCamlComparable :: a -> OCamlPrimitive
-
-instance HasOCamlComparable String where
-  toOCamlComparable _ = OString
-
-instance OCamlType Int where
-  toOCamlType _ = OCamlPrimitive OInt
-
-instance OCamlType Integer where
-  toOCamlType _ = OCamlPrimitive OInt
-
-instance OCamlType Char where
-  toOCamlType _ = OCamlPrimitive OChar
-
-instance OCamlType Bool where
-  toOCamlType _ = OCamlPrimitive OBool
-
 {-
-should support String, Int, Text maps, but nothing else at the moment
-
-ToJSON and FromJSON instances are provided for the following types in aeson
+-- ToJSON and FromJSON instances are provided for the following types in aeson
 -- not currently defined here
--- Word, LocalTime, ZonedTime, IntSet, CTime, Version, Natural
+-- Map, LocalTime, ZonedTime, IntSet, CTime, Version, Natural
 -- TimeOfDay, UTCTime, NominalDiffTime, Day, DiffTime, UUID, DotNetTime
 -- Value, Dual, First, Last, IntMap, Tree, Seq, Vector, HashSet, Proxy
 -- Const Tagged, Dual, First, Last, tuple up to length of 15
@@ -412,6 +389,7 @@ instance ToJSON TypeParameterRef0
 instance OCamlType TypeParameterRef0 where
   toOCamlType _ = OCamlDatatype (HaskellTypeMetaData "a0" "OCaml.BuckleScript.Types" "ocaml-export") "a0" $ OCamlValueConstructor $ NamedConstructor "a0" $ OCamlTypeParameterRef "a0"
 
+-- | Second unique TypeParameterRef.
 data TypeParameterRef1 = TypeParameterRef1 deriving (Read, Show, Eq, Generic)
 instance Arbitrary TypeParameterRef1 where arbitrary = pure TypeParameterRef1
 instance ToADTArbitrary TypeParameterRef1
@@ -420,6 +398,7 @@ instance ToJSON TypeParameterRef1
 instance OCamlType TypeParameterRef1 where
   toOCamlType _ = OCamlDatatype (HaskellTypeMetaData "a1" "OCaml.BuckleScript.Types" "ocaml-export") "a1" $ OCamlValueConstructor $ NamedConstructor "a1" $ OCamlTypeParameterRef "a1"
 
+-- | Third unique TypeParameterRef.
 data TypeParameterRef2 = TypeParameterRef2 deriving (Read, Show, Eq, Generic)
 instance Arbitrary TypeParameterRef2 where arbitrary = pure TypeParameterRef2
 instance ToADTArbitrary TypeParameterRef2
@@ -428,6 +407,7 @@ instance ToJSON TypeParameterRef2
 instance OCamlType TypeParameterRef2 where
   toOCamlType _ = OCamlDatatype (HaskellTypeMetaData "a2" "OCaml.BuckleScript.Types" "ocaml-export") "a2" $ OCamlValueConstructor $ NamedConstructor "a2" $ OCamlTypeParameterRef "a2"
 
+-- | Fourth unique TypeParameterRef.
 data TypeParameterRef3 = TypeParameterRef3 deriving (Read, Show, Eq, Generic)
 instance Arbitrary TypeParameterRef3 where arbitrary = pure TypeParameterRef3
 instance ToADTArbitrary TypeParameterRef3
@@ -436,6 +416,7 @@ instance ToJSON TypeParameterRef3
 instance OCamlType TypeParameterRef3 where
   toOCamlType _ = OCamlDatatype (HaskellTypeMetaData "a3" "OCaml.BuckleScript.Types" "ocaml-export") "a3" $ OCamlValueConstructor $ NamedConstructor "a3" $ OCamlTypeParameterRef "a3"
 
+-- | Fifth unique TypeParameterRef.
 data TypeParameterRef4 = TypeParameterRef4 deriving (Read, Show, Eq, Generic)
 instance Arbitrary TypeParameterRef4 where arbitrary = pure TypeParameterRef4
 instance ToADTArbitrary TypeParameterRef4
@@ -444,6 +425,7 @@ instance ToJSON TypeParameterRef4
 instance OCamlType TypeParameterRef4 where
   toOCamlType _ = OCamlDatatype (HaskellTypeMetaData "a4" "OCaml.BuckleScript.Types" "ocaml-export") "a4" $ OCamlValueConstructor $ NamedConstructor "a4" $ OCamlTypeParameterRef "a4"
 
+-- | Sixth unique TypeParameterRef.
 data TypeParameterRef5 = TypeParameterRef5 deriving (Read, Show, Eq, Generic)
 instance Arbitrary TypeParameterRef5 where arbitrary = pure TypeParameterRef5
 instance ToADTArbitrary TypeParameterRef5
@@ -533,7 +515,7 @@ getOCamlValues (NamedConstructor     _ value) = [value]
 getOCamlValues (RecordConstructor    _ value) = [value]
 getOCamlValues (MultipleConstructors cs)      = concat $ getOCamlValues <$> cs
 
--- | 
+-- | getTypePar
 getTypeParameters :: OCamlConstructor -> [Text]
 getTypeParameters (OCamlValueConstructor vc) = getTypeParameterRefNames . getOCamlValues $ vc
 getTypeParameters (OCamlSumOfRecordConstructor _ vc) = getTypeParameterRefNames . getOCamlValues $ vc
@@ -545,13 +527,16 @@ isTypeParameterRef :: OCamlDatatype -> Bool
 isTypeParameterRef (OCamlDatatype _ _ (OCamlValueConstructor (NamedConstructor _ (OCamlTypeParameterRef _)))) = True
 isTypeParameterRef _ = False
 
+-- | Make OCaml module prefix for a value based on the declaration's and parameter's meta data.
 mkModulePrefix :: OCamlTypeMetaData -> OCamlTypeMetaData -> Text
 mkModulePrefix (OCamlTypeMetaData _ decModules decSubModules) (OCamlTypeMetaData _ parModules parSubModules) =
   if prefix /= "" then prefix <> "." else ""
   where
     (l,r) = zipWithRightRemainder (decModules <> decSubModules) (parModules <> parSubModules)    
     prefix = T.intercalate "." $ (removeMatchingHead l) <> r
-      
+
+-- | Iterate through the beginning of a list, remove values as long as they are equal.
+--   When one inequality is found, return the value and its tail.
 removeMatchingHead :: Eq a => [(a,a)] -> [a]
 removeMatchingHead [] = []
 removeMatchingHead (hd:tl) =
@@ -559,6 +544,7 @@ removeMatchingHead (hd:tl) =
   then removeMatchingHead tl
   else [snd hd] <> (snd <$> tl)
 
+-- | Zip two lists. If the right hand side is longer, then return the remaining right side.
 zipWithRightRemainder :: [a] -> [b] -> ([(a,b)], [b])
 zipWithRightRemainder [] bs = ([], bs)
 zipWithRightRemainder _ab [] = ([], [])

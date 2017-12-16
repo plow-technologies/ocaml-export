@@ -6,8 +6,9 @@ License     : BSD3
 Maintainer  : mchaver@gmail.com
 Stability   : experimental
 
+For a Haskell type with an instance of OCamlType, output the
+OCaml type declaration.
 -}
-
 
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -22,8 +23,6 @@ import Data.Maybe (catMaybes)
 import Data.Monoid
 import Data.Proxy (Proxy (..))
 
-import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
-
 -- containers
 import qualified Data.Map.Strict as Map
 
@@ -34,6 +33,9 @@ import           OCaml.Common
 -- text
 import Data.Text (Text)
 import qualified Data.Text as T
+
+-- wl-pprint
+import Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
 
 -- | render a Haskell data type in OCaml
 class HasType a where
@@ -88,20 +90,7 @@ instance HasTypeRef OCamlDatatype where
               let prefix = stext $ mkModulePrefix decOCamlTypeMetaData parOCamlTypeMetaData
               pure $ prefix <> (stext . textLowercaseFirst $ typeName)
             Nothing -> fail ("expected to find dependency:\n\n" ++ show typeRef ++ "\n\nin\n\n" ++ show ds)
-{-
-        Just (OCamlTypeMetaData _ pFPath pSubMod) -> do
-          ds <- asks (dependencies . userOptions)
-          case Map.lookup typeRef ds of
-            Just (OCamlTypeMetaData _tName cFPath cSubMod) ->
-              if (pFPath == cFPath)
-                then
-                  if (pSubMod == cSubMod)
-                  then pure . stext . textLowercaseFirst $ typeName
-                  else pure $ (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> stext (textLowercaseFirst typeName)
-                else pure $ (if cFPath == [] then "" else (stext  (foldMod cFPath) <> ".")) <> (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> stext (textLowercaseFirst typeName)
-                
-            Nothing -> fail ("expected to find dependency:\n\n" ++ show typeRef ++ "\n\nin\n\n" ++ show ds)
--}
+
   renderRef (OCamlPrimitive primitive) = renderRef primitive
 
 instance HasType OCamlConstructor where
@@ -146,21 +135,7 @@ instance HasType OCamlValue where
           -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
           -- within the same file as the sum. These products will not be in the dependencies map.
           Nothing -> pure . stext . textLowercaseFirst $ name
-      {-
-      Just (OCamlTypeMetaData _ pFPath pSubMod) -> do
-        ds <- asks (dependencies . userOptions)
-        case Map.lookup typeRef ds of
-          Just (OCamlTypeMetaData _tName cFPath cSubMod) ->
-            if (pFPath == cFPath)
-            then
-              if (pSubMod == cSubMod)
-              then pure . stext . textLowercaseFirst $ name
-              else pure $ (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> (stext . textLowercaseFirst $ name) 
-            else pure $ (if cFPath == [] then "" else (stext (foldMod cFPath) <> ".")) <> (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> (stext . textLowercaseFirst $ name)
-          -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
-          -- within the same file as the sum. These products will not be in the dependencies map.
-          Nothing -> pure . stext . textLowercaseFirst $ name
-      -}
+
   render (OCamlTypeParameterRef name) = pure (stext ("'" <> name))
   render (OCamlPrimitiveRef primitive) = ocamlRefParens primitive <$> renderRef primitive
   render OCamlEmpty = pure (text "")
@@ -218,10 +193,6 @@ instance HasTypeRef OCamlPrimitive where
   renderRef (OOption datatype) = do
     dt <- renderRef datatype
     return $ parens dt <+> "option"
-  renderRef (ODict k v) = do
-    dk <- renderRef k
-    dv <- renderRef v
-    return $ "Dict" <+> parens dk <+> parens dv
   renderRef (OEither k v) = do
     dk <- renderRef k
     dv <- renderRef v
@@ -265,16 +236,14 @@ renderSumRecord typeName constructor@(RecordConstructor name value) = do
   pure $ Just (("type" <+> (stext (textLowercaseFirst sumRecordName)) <+> "=" <$$> indent 2 functionBody), (name, (RecordConstructor sumRecordName value)))
 renderSumRecord _ _ = return Nothing
 
-
 -- | Puts parentheses around the doc of an OCaml ref if it contains spaces.
 ocamlRefParens :: OCamlPrimitive -> Doc -> Doc
 ocamlRefParens (OList (OCamlPrimitive OChar)) = id
 ocamlRefParens (OList _) = parens
 ocamlRefParens (OOption _) = parens
-ocamlRefParens (ODict _ _) = parens
 ocamlRefParens _ = id
 
-
+-- | Convert a 'Proxy a' into OCaml type source code.
 toOCamlTypeSourceWith :: forall a. OCamlType a => Options -> a -> T.Text
 toOCamlTypeSourceWith options a =
   case toOCamlType (Proxy :: Proxy a) of

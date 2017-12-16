@@ -148,45 +148,58 @@ data SpecOptions
 -- | Default 'SpecOptions'.
 defaultSpecOptions :: SpecOptions
 defaultSpecOptions = SpecOptions "/__tests__" "/__tests__/golden" "localhost:8081"
-
+{-
+type family (HasOCamlTypeMetaDataFlag a) :: Bool where
+  HasOCamlTypeMetaDataFlag (OCamlPackage a b :<|> c) = 'True
+  HasOCamlTypeMetaDataFlag (OCamlPackage a b :> c) = 'True
+  HasOCamlTypeMetaDataFlag (a ': b) = 'True
+  HasOCamlTypeMetaDataFlag (a :<|> b) = 'True
+  HasOCamlTypeMetaDataFlag (OCamlSubModule a :> b) = 'True
+  HasOCamlTypeMetaDataFlag (a :> b) = 'True
+  HasOCamlTypeMetaDataFlag (OCamlTypeInFile a b) = 'True
+  HasOCamlTypeMetaDataFlag a = 'True
+  HasOCamlTypeMetaDataFlag '[] = 'False
+-}
 class HasOCamlTypeMetaData a where
-  mkOCamlTypeMetaData :: Proxy a -> Map.Map HaskellTypeMetaData OCamlTypeMetaData -- [OCamlTypeMetaData]
+  mkOCamlTypeMetaData :: [Text] -> Proxy a -> Map.Map HaskellTypeMetaData OCamlTypeMetaData
 
 -- | packages
-instance (HasOCamlTypeMetaData (OCamlPackage packageName deps), HasOCamlTypeMetaData rest) => HasOCamlTypeMetaData (OCamlPackage packageName deps :<|> rest) where
-  mkOCamlTypeMetaData Proxy = mkOCamlTypeMetaData (Proxy :: Proxy (OCamlPackage packageName deps)) <> mkOCamlTypeMetaData (Proxy :: Proxy rest)
+instance {-# OVERLAPPING #-} (HasOCamlTypeMetaData (OCamlPackage packageName deps), HasOCamlTypeMetaData rest) => HasOCamlTypeMetaData (OCamlPackage packageName deps :<|> rest) where
+  mkOCamlTypeMetaData modules Proxy = mkOCamlTypeMetaData modules (Proxy :: Proxy (OCamlPackage packageName deps)) <> mkOCamlTypeMetaData modules (Proxy :: Proxy rest)
 
 -- | build a packages dependencies and its declared modules
-instance (HasOCamlTypeMetaData deps, HasOCamlTypeMetaData modules) => HasOCamlTypeMetaData (OCamlPackage packageName deps :> modules) where
-  mkOCamlTypeMetaData Proxy = mkOCamlTypeMetaData (Proxy :: Proxy deps) <> mkOCamlTypeMetaData (Proxy :: Proxy modules)
+instance {-# OVERLAPPING #-} (HasOCamlTypeMetaData deps, HasOCamlTypeMetaData modules) => HasOCamlTypeMetaData (OCamlPackage packageName deps :> modules) where
+  mkOCamlTypeMetaData modules Proxy = mkOCamlTypeMetaData modules (Proxy :: Proxy deps) <> mkOCamlTypeMetaData modules (Proxy :: Proxy modules)
 
 -- | packages
-instance (HasOCamlTypeMetaData modul, HasOCamlTypeMetaData rst) => HasOCamlTypeMetaData (modul ': rst) where
-  mkOCamlTypeMetaData Proxy = mkOCamlTypeMetaData (Proxy :: Proxy modul) <> mkOCamlTypeMetaData (Proxy :: Proxy rst)
+instance {-# OVERLAPPING #-} (HasOCamlTypeMetaData modul, HasOCamlTypeMetaData rst) => HasOCamlTypeMetaData (modul ': rst) where
+  mkOCamlTypeMetaData modules Proxy = mkOCamlTypeMetaData modules (Proxy :: Proxy modul) <> mkOCamlTypeMetaData modules (Proxy :: Proxy rst)
 
 -- | modules
-instance (HasOCamlTypeMetaData modul, HasOCamlTypeMetaData rst) => HasOCamlTypeMetaData (modul :<|> rst) where
-  mkOCamlTypeMetaData Proxy = mkOCamlTypeMetaData (Proxy :: Proxy modul) <> mkOCamlTypeMetaData (Proxy :: Proxy rst)
+instance {-# OVERLAPPING #-} (HasOCamlTypeMetaData modul, HasOCamlTypeMetaData rst) => HasOCamlTypeMetaData (modul :<|> rst) where
+  mkOCamlTypeMetaData _modules Proxy = mkOCamlTypeMetaData [] (Proxy :: Proxy modul) <> mkOCamlTypeMetaData [] (Proxy :: Proxy rst)
 
 -- | single module
-instance (KnownSymbols modules, HasOCamlTypeMetaData' api) => HasOCamlTypeMetaData ((OCamlModule modules) :> api) where
-  mkOCamlTypeMetaData Proxy = Map.fromList $ mkOCamlTypeMetaData' (T.pack <$> symbolsVal (Proxy :: Proxy modules)) [] (Proxy :: Proxy api)
+instance {-# OVERLAPPING #-} (KnownSymbol nextModule) => HasOCamlTypeMetaData ((OCamlModule nextModule) :> api) where
+  mkOCamlTypeMetaData modules Proxy = mkOCamlTypeMetaData (modules <> [T.pack $ symbolVal (Proxy :: Proxy nextModule)]) (Proxy :: Proxy api)
 
+instance {-# OVERLAPPABLE #-} (HasOCamlTypeMetaData' api) => HasOCamlTypeMetaData api where
+  mkOCamlTypeMetaData modules Proxy = Map.fromList $ mkOCamlTypeMetaData' modules [] (Proxy :: Proxy api)
 
-instance HasOCamlTypeMetaData '[] where
-  mkOCamlTypeMetaData Proxy = Map.empty
+instance {-# OVERLAPPING #-} HasOCamlTypeMetaData '[] where
+  mkOCamlTypeMetaData _ Proxy = Map.empty
 
 -- | Need flag to overcome overlapping issues
-type family (HasOCamlTypeMetaDataFlag a) :: Nat where
-  HasOCamlTypeMetaDataFlag (OCamlSubModule a :> b) = 4
-  HasOCamlTypeMetaDataFlag (a :> b) = 3
-  HasOCamlTypeMetaDataFlag (OCamlTypeInFile a b) = 2
-  HasOCamlTypeMetaDataFlag a = 1
+type family (HasOCamlTypeMetaDataFlag' a) :: Nat where
+  HasOCamlTypeMetaDataFlag' (OCamlSubModule a :> b) = 4
+  HasOCamlTypeMetaDataFlag' (a :> b) = 3
+  HasOCamlTypeMetaDataFlag' (OCamlTypeInFile a b) = 2
+  HasOCamlTypeMetaDataFlag' a = 1
 
 class HasOCamlTypeMetaData' a where
   mkOCamlTypeMetaData' :: [Text] -> [Text] -> Proxy a -> [(HaskellTypeMetaData,OCamlTypeMetaData)]
 
-instance (HasOCamlTypeMetaDataFlag a ~ flag, HasOCamlTypeMetaData'' flag (a :: *)) => HasOCamlTypeMetaData' a where
+instance (HasOCamlTypeMetaDataFlag' a ~ flag, HasOCamlTypeMetaData'' flag (a :: *)) => HasOCamlTypeMetaData' a where
   mkOCamlTypeMetaData' = mkOCamlTypeMetaData'' (Proxy :: Proxy flag)
 
 class HasOCamlTypeMetaData'' (flag :: Nat) a where
@@ -227,7 +240,7 @@ data OCamlPackage (packageName :: Symbol) (packageDependencies :: [*])
 
 -- | An OCamlModule as a Haskell type. File level 'modules' is relative to a
 --   root directory prvoiided in the 'mkPackage' function. 
-data OCamlModule (modules :: [Symbol])
+data OCamlModule (modules :: Symbol)
   deriving Typeable
 
 -- | Symobl will be expaneded to 
@@ -245,11 +258,11 @@ class HasOCamlPackage a where
   mkPackage :: Proxy a -> PackageOptions -> IO ()
 
 instance (HasOCamlTypeMetaData deps, HasOCamlTypeMetaData a, HasOCamlPackage' a) => HasOCamlPackage (OCamlPackage packageName deps :> a) where
-  mkPackage Proxy packageOptions = mkPackage' (Proxy :: Proxy a) packageOptions (mkOCamlTypeMetaData (Proxy :: Proxy deps) <> mkOCamlTypeMetaData (Proxy :: Proxy a))
+  mkPackage Proxy packageOptions = mkPackage' (Proxy :: Proxy a) packageOptions (mkOCamlTypeMetaData [] (Proxy :: Proxy deps) <> mkOCamlTypeMetaData [] (Proxy :: Proxy a))
 
 instance {-# OVERLAPPABLE #-} (HasOCamlTypeMetaData a, HasOCamlPackage' a) => HasOCamlPackage a where
   mkPackage Proxy packageOptions = do
-    mkPackage' (Proxy :: Proxy a) packageOptions (mkOCamlTypeMetaData (Proxy :: Proxy a))
+    mkPackage' (Proxy :: Proxy a) packageOptions (mkOCamlTypeMetaData [] (Proxy :: Proxy a))
 
 class HasOCamlPackage' a where
   mkPackage' :: Proxy a -> PackageOptions -> Map.Map HaskellTypeMetaData OCamlTypeMetaData -> IO ()
@@ -260,17 +273,21 @@ instance (HasOCamlPackage' modul, HasOCamlPackage' rest) => HasOCamlPackage' (mo
     mkPackage' (Proxy :: Proxy rest) packageOptions deps
 
 instance {-# OVERLAPPABLE #-} (HasOCamlModule a) => HasOCamlPackage' a where
-  mkPackage' Proxy packageOptions = mkModule (Proxy :: Proxy a) packageOptions
+  mkPackage' Proxy packageOptions = mkModule (Proxy :: Proxy a) [] packageOptions
 
 -- | Depending on 'PackageOptions' settings, 'mkModule' can
 --   - make a declaration file containing encoders and decoders
 --   - make an OCaml interface file
 --   - make a Spec file that tests the encoders and decoders against a golden file and a servant server
 class HasOCamlModule a where
-  mkModule :: Proxy a -> PackageOptions -> Map.Map HaskellTypeMetaData OCamlTypeMetaData -> IO ()
+  mkModule :: Proxy a -> [String] -> PackageOptions -> Map.Map HaskellTypeMetaData OCamlTypeMetaData -> IO ()
 
-instance (KnownSymbols modules, HasOCamlModule' api) => HasOCamlModule ((OCamlModule modules) :> api) where
-  mkModule Proxy packageOptions deps = mkModule' (Proxy :: Proxy api) (symbolsVal (Proxy :: Proxy modules)) packageOptions deps
+instance (KnownSymbol nextModule, HasOCamlModule' api) => HasOCamlModule ((OCamlModule nextModule) :> api) where
+  mkModule Proxy modules packageOptions deps = mkModule' (Proxy :: Proxy api) (modules ++ [symbolVal (Proxy :: Proxy nextModule)]) packageOptions deps
+
+instance (HasOCamlModule' api) => HasOCamlModule api where
+  mkModule Proxy modules packageOptions deps = mkModule' (Proxy :: Proxy api) modules packageOptions deps
+
 
 --class HasOCamlModule' a where
 --  mkModule' :: Proxy a -> [String] -> PackageOptions -> Map.Map HaskellTypeMetaData OCamlTypeMetaData -> IO ()
@@ -290,8 +307,6 @@ instance (Typeable api, HasOCamlType api) => HasOCamlModule' api where
     if (length modules) == 0
       then fail "OCamlModule filePath needs at least one file name"
       else do
-        print "HasOCamlModule'"
-        print $ typeRep (Proxy :: Proxy api)
         createDirectoryIfMissing True (rootDir </> packageSrcDir packageOptions)
         let typF = (<> "\n") . T.intercalate "\n\n" $ mkType (Proxy :: Proxy api) (defaultOptions {dependencies = ds}) (createInterfaceFile packageOptions) (packageEmbeddedFiles packageOptions)
         T.writeFile (fp <.> "ml")  typF
@@ -517,17 +532,20 @@ type family ConcatSymbols xs rhs :: * where
 type OCamlSpecAPI (modules :: [Symbol]) (subModules :: [Symbol]) typ = ConcatSymbols (Insert (TypeName typ) (Append modules subModules)) (ReqBody '[JSON] [typ] :> Post '[JSON] [typ])
 
 -- | abc
-type family MkOCamlSpecAPI' modules subModules api :: * where
-  MkOCamlSpecAPI' modules subModules ((OCamlSubModule restSubModules) :> a) = MkOCamlSpecAPI' modules (Append subModules '[restSubModules]) a
-  MkOCamlSpecAPI' modules subModules (a :> b) = MkOCamlSpecAPI' modules subModules a :<|> MkOCamlSpecAPI' modules subModules b
-  MkOCamlSpecAPI' modules subModules (OCamlTypeInFile api _typeFilePath) = OCamlSpecAPI modules subModules api
-  MkOCamlSpecAPI' modules subModules api = OCamlSpecAPI modules subModules api
-  
+type family MkOCamlSpecAPI'' modules subModules api :: * where
+  MkOCamlSpecAPI'' modules subModules ((OCamlSubModule restSubModules) :> a) = MkOCamlSpecAPI'' modules (Append subModules '[restSubModules]) a
+  MkOCamlSpecAPI'' modules subModules (a :> b) = MkOCamlSpecAPI'' modules subModules a :<|> MkOCamlSpecAPI'' modules subModules b
+  MkOCamlSpecAPI'' modules subModules (OCamlTypeInFile api _typeFilePath) = OCamlSpecAPI modules subModules api
+  MkOCamlSpecAPI'' modules subModules api = OCamlSpecAPI modules subModules api
+
+type family MkOCamlSpecAPI' (modules :: [Symbol]) a :: * where
+  MkOCamlSpecAPI' modules (api :<|> rest) = MkOCamlSpecAPI' modules api :<|> MkOCamlSpecAPI' '[] rest
+  MkOCamlSpecAPI' modules (OCamlModule nextModule :> api) = MkOCamlSpecAPI' (Append modules '[nextModule]) api
+  MkOCamlSpecAPI' modules api = MkOCamlSpecAPI'' modules '[] api
+
 -- | ff
 type family MkOCamlSpecAPI a :: * where
-  MkOCamlSpecAPI (OCamlPackage a deps :> rest) = MkOCamlSpecAPI rest  
-  MkOCamlSpecAPI ((OCamlModule modules :> api) :<|> rest) = MkOCamlSpecAPI' modules '[] api :<|> MkOCamlSpecAPI rest
-  MkOCamlSpecAPI (OCamlModule modules :> api) = MkOCamlSpecAPI' modules '[] api
+  MkOCamlSpecAPI (OCamlPackage a deps :> rest) = MkOCamlSpecAPI' '[] rest
 
 
 -- | 

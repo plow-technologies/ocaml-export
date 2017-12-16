@@ -32,11 +32,11 @@ mkGoldenFiles = do
 
 type DependencyPackage
   =    OCamlPackage "dependency" '[ProductPackage] :> (
-       OCamlModule '["Class"] :> Class)
+       OCamlModule "Class" :> Class)
 
 type DependencyPackageWithoutProduct
   =    OCamlPackage "dependency" NoDependency :> (
-       OCamlModule '["Class"] :> Class)
+       OCamlModule "Class" :> Class)
 {-
 data Person = Person
   { id :: Int
@@ -83,7 +83,7 @@ data E =
   deriving (Show, Eq, Generic, OCamlType, FromJSON, ToJSON)
 
 type SubsPackage = OCamlPackage "subs" NoDependency :>
-  (OCamlModule '["AtoE"] :> A :> (OCamlSubModule "One" :> B :> (OCamlSubModule "Two" :> C) :> D) :> E)
+  (OCamlModule "AtoE" :> A :> (OCamlSubModule "One" :> B :> (OCamlSubModule "Two" :> C) :> D) :> E)
 --   (OCamlModule '["AtoE"] :> OCamlSubModule '["One"] :> A)
 
 spec :: Spec

@@ -46,10 +46,6 @@ module OCaml.BuckleScript.Module
   , OCamlModule
   , OCamlSubModule
   , OCamlTypeInFile
-  , ConcatSymbols
-  , Insert
-  , Append
-  , TypeName
   , NoDependency
 
   -- servant functions
@@ -100,6 +96,7 @@ import OCaml.BuckleScript.Encode
 import OCaml.BuckleScript.Record
 import OCaml.BuckleScript.Spec
 import OCaml.BuckleScript.Types
+-- import OCaml.Internal.Type.Util (ConcatSymbols,TypeNames)
 
 -- servant
 import Servant.API
@@ -369,22 +366,6 @@ instance (OCamlType a) => HasOCamlType' 1 a where
 -- build servant spec server
 
 -- type level utility functions
-
--- | Get the length of a type level list
-type family Length xs where
-  Length '[]       = 0
-  Length (x ': xs) = 1 + Length xs
-
--- | Insert type into type level list
-type family Insert a xs where
-  Insert a '[]       = a ': '[]
-  Insert a (x ': xs) = x ': (Insert a xs)
-
--- | Append two type level lists           
-type family Append xy ys where
-  Append '[] ys = ys
-  Append (x ': xs) ys = x ': (Append xs ys)
-
             
 -- module flag
 -- | Get the number of declared types in an OCaml Module
@@ -455,8 +436,17 @@ instance (OCamlModuleTypeCount a) => OCamlPackageTypeCount' 'False a where
   ocamlPackageTypeCount' _ Proxy = [ocamlModuleTypeCount (Proxy :: Proxy a)]
 
 
+-- | OCamlSpecAPI is a servant type that repesents and OCamlModule and its
+--   OCamlTypes. It automatically creates path names based on the name of the
+--   OCamlModule and the name of each OCamlType.
+--   OCamlModule '[] '["Core"] :> User :> Profile
+--   /Core/User
+--   /Core/Profile
+--   OCamlModule '["Source"] '["Core"] :> User :> Profile
+--   /Source/Core/User
+--   /Source/Core/Profile
 
--- | Symbol for Proxy types
+-- | Convert a type into a Symbol at the type level.
 type family TypeName a :: Symbol where
   -- Types which don't have a Generic instance
   TypeName Double = "Double"
@@ -468,25 +458,28 @@ type family TypeName a :: Symbol where
   TypeName (M1 D ('MetaData name _ _ _) f ()) = name
   TypeName a = TypeName (Rep a ())
 
-type family TypeNames a :: [Symbol] where
-  TypeNames (a ': '[]) = '[TypeName a]
-  TypeNames (a ': as) = TypeName a ': TypeNames as
+-- | Append two type level lists.
+type family Append xy ys where
+  Append '[] ys = ys
+  Append (x ': xs) ys = x ': (Append xs ys)
 
+-- | Get the length of a type level list.
+type family Length xs :: Nat where
+  Length '[]       = 0
+  Length (x ': xs) = 1 + Length xs
 
--- | OCamlSpecAPI is a servant type that repesents and OCamlModule and its
---   OCamlTypes. It automatically creates path names based on the name of the
---   OCamlModule and the name of each OCamlType.
---   OCamlModule '[] '["Core"] :> User :> Profile
---   /Core/User
---   /Core/Profile
---   OCamlModule '["Source"] '["Core"] :> User :> Profile
---   /Source/Core/User
---   /Source/Core/Profile
+-- | Insert type into type level list
+type family Insert a xs where
+  Insert a '[]       = a ': '[]
+  Insert a (x ': xs) = x ': (Insert a xs)
 
+-- | Concat a Symbol the end of a list of Symbols.
 type family ConcatSymbols xs rhs :: * where
   ConcatSymbols '[] rhs = rhs
   ConcatSymbols (x ': xs) rhs = x :> ConcatSymbols xs rhs
-  
+
+
+
 type OCamlSpecAPI (modules :: [Symbol]) (subModules :: [Symbol]) typ = ConcatSymbols (Insert (TypeName typ) (Append modules subModules)) (ReqBody '[JSON] [typ] :> Post '[JSON] [typ])
 
 -- | abc

@@ -3,8 +3,8 @@
 module ProductApp where
 
 import Data.Proxy
-import OCaml.Export
+import OCaml.BuckleScript
 import Product
 import Servant
 
-$(mkServer "ProductPackage" (Proxy :: Proxy ProductPackage))
+$(mkOCamlSpecServer "ProductPackage" (Proxy :: Proxy ProductPackage))

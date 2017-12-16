@@ -13,7 +13,7 @@ module Sum where
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Proxy
 import GHC.Generics
-import OCaml.Export
+import OCaml.BuckleScript
 import Test.Hspec
 import Util
 import qualified Data.Map as Map

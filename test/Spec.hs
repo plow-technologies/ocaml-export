@@ -50,7 +50,7 @@ import Test.Aeson.GenericSpecs
 
 import System.Process
 
-import OCaml.Export
+import OCaml.BuckleScript
 
 import Servant.API
 import Servant

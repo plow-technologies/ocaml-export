@@ -22,7 +22,7 @@ import Data.Text (Text)
 import Data.Time
 import Data.Time.Clock.POSIX
 import GHC.Generics
-import OCaml.Export
+import OCaml.BuckleScript
 import Test.Hspec
 import Test.QuickCheck
 import Test.QuickCheck.Arbitrary.ADT

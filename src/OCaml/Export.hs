@@ -1,5 +1,5 @@
 {-|
-Module      : OCaml.Record
+Module      : OCaml.Export
 Description : Export everything from one module
 Copyright   : Plow Technologies, 2017
 License     : BSD3

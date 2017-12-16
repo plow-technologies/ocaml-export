@@ -10,7 +10,7 @@ module File where
 import Data.Aeson
 import Data.Proxy
 import GHC.Generics (Generic)
-import OCaml.Export
+import OCaml.BuckleScript
 import Test.Hspec
 import Test.QuickCheck
 import Test.QuickCheck.Arbitrary.ADT

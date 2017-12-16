@@ -14,7 +14,7 @@ import Data.Time
 import Data.Time.Clock.POSIX
 import Data.Map as Map
 import GHC.Generics (Generic)
-import OCaml.Export
+import OCaml.BuckleScript
 import Test.Hspec
 import Test.QuickCheck
 import Test.QuickCheck.Arbitrary.ADT

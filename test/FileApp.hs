@@ -6,13 +6,13 @@ module FileApp where
 
 import qualified Data.Map as Map
 import Data.Proxy
-import OCaml.Export
+import OCaml.BuckleScript
 import File
 import Servant
 import Test.Hspec
 import Util
 
-$(mkServer "FilePackage" (Proxy :: Proxy FilePackage))
+$(mkOCamlSpecServer "FilePackage" (Proxy :: Proxy FilePackage))
 
 fileMap :: Map.Map String EmbeddedOCamlFiles
 fileMap = Map.fromList $(mkFiles True False (Proxy :: Proxy FilePackage))

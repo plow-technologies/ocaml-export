@@ -8,7 +8,7 @@ import Data.Time
 import qualified Data.Text.IO as T
 
 -- ocaml-export
-import OCaml.Export hiding (Options, (</>))
+import OCaml.BuckleScript hiding (Options, (</>))
 
 
 import System.Directory (doesFileExist)
@@ -61,6 +61,7 @@ compareFiles rootDir categoryDir compareInterfaceAndSpecFiles typeName =
     testSpecPath   = rootDir </> "temp" </> "__tests__" </> categoryDir
     goldenSpecPath = rootDir </> "golden" </> "__tests__" </> categoryDir
 
+{-
 testOCamlTypeWithInterface :: ADT -> FilePath -> OCamlInterface -> SpecWith ()
 testOCamlTypeWithInterface adt typeName ocamlFile =
   it typeName $ do
@@ -87,3 +88,4 @@ testOCamlTypeWithInterface adt typeName ocamlFile =
     goldenPath = "test/interface/golden/" <> adtPath
     specPath  = "test/interface/temp/__tests__/" <> adtPath
     specGoldenPath  = "test/interface/golden/__tests__/" <> adtPath
+-}

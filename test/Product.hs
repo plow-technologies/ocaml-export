@@ -28,23 +28,26 @@ import Test.QuickCheck
 import Test.QuickCheck.Arbitrary.ADT
 import Test.Aeson.Internal.ADT.GoldenSpecs
 import Util
+import qualified Data.Map as Map
 
 type ProductPackage
-  =    OCamlModule '["SimpleChoice"] '[] :> SimpleChoice
-  :<|> OCamlModule '["Person"] '[] :> Person
-  :<|> OCamlModule '["Company"] '[] :> Person :> Company
-  :<|> OCamlModule '["Card"] '[] :> Suit :> Card
-  :<|> OCamlModule '["CustomOption"] '[] :> Person :> Company2
-  :<|> OCamlModule '["OneTypeParameter"] '[] :> OneTypeParameter TypeParameterRef0
-  :<|> OCamlModule '["TwoTypeParameters"] '[] :> TwoTypeParameters TypeParameterRef0 TypeParameterRef1
-  :<|> OCamlModule '["ThreeTypeParameters"] '[] :> Three TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
-  :<|> OCamlModule '["SubTypeParameter"] '[] :> SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
+  = OCamlPackage "product" NoDependency
+    :> (OCamlModule '["SimpleChoice"] :> SimpleChoice
+  :<|> OCamlModule '["Person"] :> Person
+  :<|> OCamlModule '["Company"] :> Company
+  :<|> OCamlModule '["Card"] :> Suit :> Card
+  :<|> OCamlModule '["CustomOption"] :> Company2
+  :<|> OCamlModule '["OneTypeParameter"] :> OneTypeParameter TypeParameterRef0
+  :<|> OCamlModule '["TwoTypeParameters"] :> TwoTypeParameters TypeParameterRef0 TypeParameterRef1
+  :<|> OCamlModule '["ThreeTypeParameters"] :> Three TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
+  :<|> OCamlModule '["SubTypeParameter"] :> SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2)
 
 mkGolden :: forall a. (ToADTArbitrary a, ToJSON a) => Proxy a -> IO ()
 mkGolden Proxy = mkGoldenFileForType 10 (Proxy :: Proxy a) "test/interface/golden/golden/product"
 
 mkGoldenFiles :: IO ()
 mkGoldenFiles = do
+  mkGolden (Proxy :: Proxy SimpleChoice)
   mkGolden (Proxy :: Proxy Person)
   mkGolden (Proxy :: Proxy Company)
   mkGolden (Proxy :: Proxy Suit)
@@ -65,7 +68,7 @@ spec = do
   runIO $ mkGoldenFiles
   
   let dir = "test/interface/temp"
-  runIO $ mkPackage (Proxy :: Proxy ProductPackage) (PackageOptions dir "product" True $ Just $ SpecOptions "__tests__/product" "golden/product" "http://localhost:8081")
+  runIO $ mkPackage (Proxy :: Proxy ProductPackage) (PackageOptions dir "product" Map.empty True $ Just $ SpecOptions "__tests__/product" "golden/product" "http://localhost:8081")
   
   describe "OCaml Declaration with Interface: Product Types" $ do
     compareInterfaceFiles "Person"
@@ -77,9 +80,9 @@ spec = do
     compareInterfaceFiles "SubTypeParameter"
 
   let dir2 = "test/nointerface/temp"
-  runIO $ mkPackage (Proxy :: Proxy ProductPackage) (PackageOptions dir2 "product" False Nothing)
+  runIO $ mkPackage (Proxy :: Proxy ProductPackage) (PackageOptions dir2 "product" Map.empty False Nothing)
 
-  describe "OCaml Declaration with Interface: Product Types" $ do
+  describe "OCaml Declaration without Interface: Product Types" $ do
     compareNoInterfaceFiles "Person"
     compareNoInterfaceFiles "Company"
     compareNoInterfaceFiles "Card"
@@ -206,4 +209,3 @@ instance Arbitrary (SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypePar
     SubTypeParameter <$> pure v <*> arbitrary <*> arbitrary
 
 instance ToADTArbitrary (SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2)
-

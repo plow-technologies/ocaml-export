@@ -30,6 +30,7 @@ library:
   - filepath
   - formatting
   - mtl
+  - split
   - QuickCheck
   - quickcheck-arbitrary-adt
   - servant
@@ -51,6 +52,7 @@ tests:
     - aeson
     - bytestring
     - constraints
+    - containers
     - directory
     - filepath
     - hspec
@@ -61,7 +63,6 @@ tests:
     - quickcheck-arbitrary-adt
     - servant
     - servant-server
-    - servant-in-and-out
     - template-haskell
     - text
     - time

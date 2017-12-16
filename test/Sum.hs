@@ -16,6 +16,8 @@ import GHC.Generics
 import OCaml.Export
 import Test.Hspec
 import Util
+import qualified Data.Map as Map
+
 
 -- QuickCheck
 import Test.QuickCheck hiding (Result, Success)
@@ -28,13 +30,14 @@ import Servant
 import Servant.API
 
 type SumPackage
-  =    OCamlModule '["OnOrOff"] '[] :> OnOrOff -- :> NameOrIdNumber :> SumVariant
-  :<|> OCamlModule '["NameOrIdNumber"] '[] :> NameOrIdNumber
-  :<|> OCamlModule '["SumVariant"] '[] :> SumVariant
-  :<|> OCamlModule '["WithTuple"] '[] :> WithTuple
-  :<|> OCamlModule '["SumWithRecord"] '[] :> SumWithRecord
-  :<|> OCamlModule '["Result"] '[] :> Result TypeParameterRef0 TypeParameterRef1
-  :<|> OCamlModule '["NewType"] '[] :> NewType
+  = OCamlPackage "sum" NoDependency :>
+       (OCamlModule '["OnOrOff"] :> OnOrOff
+  :<|> OCamlModule '["NameOrIdNumber"] :> NameOrIdNumber
+  :<|> OCamlModule '["SumVariant"] :> SumVariant
+  :<|> OCamlModule '["WithTuple"] :> WithTuple
+  :<|> OCamlModule '["SumWithRecord"] :> SumWithRecord
+  :<|> OCamlModule '["Result"] :> Result TypeParameterRef0 TypeParameterRef1
+  :<|> OCamlModule '["NewType"] :> NewType)
 
 -- server1 :: Server (MkOCamlSpecAPI SumPackage)
 -- server1 = (pure :<|> (pure :<|> pure))
@@ -60,7 +63,7 @@ spec :: Spec
 spec = do
   runIO mkGoldenFiles
   let dir = "test/interface/temp"
-  runIO $ mkPackage (Proxy :: Proxy SumPackage) (PackageOptions dir "sum" True $ Just $ SpecOptions "__tests__/sum" "golden/sum" "http://localhost:8082")
+  runIO $ mkPackage (Proxy :: Proxy SumPackage) (PackageOptions dir "sum" Map.empty True $ Just $ SpecOptions "__tests__/sum" "golden/sum" "http://localhost:8082")
 
   describe "OCaml Declaration with Interface: Sum Types" $ do
     compareInterfaceFiles "OnOrOff"
@@ -70,9 +73,9 @@ spec = do
     compareInterfaceFiles "SumWithRecord"
     compareInterfaceFiles "Result"
     compareInterfaceFiles "NewType"
-
+{-
   let dir2 = "test/nointerface/temp"
-  runIO $ mkPackage (Proxy :: Proxy SumPackage) (PackageOptions dir2 "sum" False Nothing)
+  runIO $ mkPackage (Proxy :: Proxy SumPackage) (PackageOptions dir2 "sum" Map.empty False Nothing)
 
   describe "Sum Types" $ do
     compareNoInterfaceFiles "OnOrOff"
@@ -82,6 +85,7 @@ spec = do
     compareNoInterfaceFiles "SumWithRecord"
     compareNoInterfaceFiles "Result"
     compareNoInterfaceFiles "NewType"
+-}
     
 data OnOrOff = On | Off
   deriving (Show,Eq,Generic,OCamlType,ToJSON,FromJSON)

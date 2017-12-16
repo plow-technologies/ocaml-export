@@ -1,0 +1,75 @@
+{
+    "seed": 5667027004019475914,
+    "samples": [
+        {
+            "tag": "HasSingleTuple",
+            "contents": [
+                30,
+                -21
+            ]
+        },
+        {
+            "tag": "HasSingleTuple",
+            "contents": [
+                -19,
+                -3
+            ]
+        },
+        {
+            "tag": "HasSingleTuple",
+            "contents": [
+                -8,
+                23
+            ]
+        },
+        {
+            "tag": "HasSingleTuple",
+            "contents": [
+                -9,
+                -7
+            ]
+        },
+        {
+            "tag": "HasSingleTuple",
+            "contents": [
+                -24,
+                -17
+            ]
+        },
+        {
+            "tag": "HasSingleTuple",
+            "contents": [
+                -1,
+                -23
+            ]
+        },
+        {
+            "tag": "HasSingleTuple",
+            "contents": [
+                -23,
+                -13
+            ]
+        },
+        {
+            "tag": "HasSingleTuple",
+            "contents": [
+                6,
+                -1
+            ]
+        },
+        {
+            "tag": "HasSingleTuple",
+            "contents": [
+                -28,
+                8
+            ]
+        },
+        {
+            "tag": "HasSingleTuple",
+            "contents": [
+                25,
+                -11
+            ]
+        }
+    ]
+}

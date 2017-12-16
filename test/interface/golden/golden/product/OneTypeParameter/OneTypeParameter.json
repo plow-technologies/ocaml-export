@@ -1,0 +1,45 @@
+{
+    "seed": 8956205861117711976,
+    "samples": [
+        {
+            "otpId": -30,
+            "otpFirst": []
+        },
+        {
+            "otpId": -13,
+            "otpFirst": []
+        },
+        {
+            "otpId": 20,
+            "otpFirst": []
+        },
+        {
+            "otpId": 14,
+            "otpFirst": []
+        },
+        {
+            "otpId": -17,
+            "otpFirst": []
+        },
+        {
+            "otpId": 18,
+            "otpFirst": []
+        },
+        {
+            "otpId": -30,
+            "otpFirst": []
+        },
+        {
+            "otpId": 0,
+            "otpFirst": []
+        },
+        {
+            "otpId": 5,
+            "otpFirst": []
+        },
+        {
+            "otpId": 19,
+            "otpFirst": []
+        }
+    ]
+}

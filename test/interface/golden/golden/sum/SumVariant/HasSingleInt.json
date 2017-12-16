@@ -1,0 +1,45 @@
+{
+    "seed": -2294570375976772307,
+    "samples": [
+        {
+            "tag": "HasSingleInt",
+            "contents": -26
+        },
+        {
+            "tag": "HasSingleInt",
+            "contents": 13
+        },
+        {
+            "tag": "HasSingleInt",
+            "contents": 26
+        },
+        {
+            "tag": "HasSingleInt",
+            "contents": 29
+        },
+        {
+            "tag": "HasSingleInt",
+            "contents": 14
+        },
+        {
+            "tag": "HasSingleInt",
+            "contents": 1
+        },
+        {
+            "tag": "HasSingleInt",
+            "contents": -25
+        },
+        {
+            "tag": "HasSingleInt",
+            "contents": 22
+        },
+        {
+            "tag": "HasSingleInt",
+            "contents": -9
+        },
+        {
+            "tag": "HasSingleInt",
+            "contents": 10
+        }
+    ]
+}

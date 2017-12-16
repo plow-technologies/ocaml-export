@@ -18,6 +18,7 @@ let decodePerson json =
   | v -> Js_result.Ok v
   | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodePerson: " ^ message)
 
+
 type automobile =
   { make : string
   ; model : string
@@ -66,3 +67,4 @@ let decodeBusiness json =
   with
   | v -> Js_result.Ok v
   | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeBusiness: " ^ message)
+

@@ -25,14 +25,6 @@ import           Data.Text        (Text)
 import qualified Data.Text        as T
 import qualified Data.Text.IO     as T
 
--- ocaml-export
-import OCaml.BuckleScript.Decode
-import OCaml.BuckleScript.Encode
-import OCaml.BuckleScript.Record
-import OCaml.BuckleScript.Spec
-import OCaml.BuckleScript.Types
-import OCaml.Common
-
 -- file-embed
 import Data.FileEmbed (embedFile)
 
@@ -62,29 +54,6 @@ data OCamlInterface =
 instance Monoid OCamlInterface where
   mappend a b = OCamlInterface (declars a <> declars b) (inters a <> inters b) (specs a <> specs b)
   mempty = OCamlInterface [] [] []
-
-mkOCamlInterfaceWithOptions :: OCamlType a => Options -> a -> OCamlInterface
-mkOCamlInterfaceWithOptions options a =
-  OCamlInterface
-    [toOCamlTypeSource a, toOCamlEncoderSourceWith (options {includeOCamlInterface = True}) a, toOCamlDecoderSourceWith (options {includeOCamlInterface = True}) a]
-    [toOCamlTypeSource a, toOCamlEncoderInterface a, toOCamlDecoderInterface a]
-    []
-
-
-mkOCamlInterface :: OCamlType a => a -> OCamlInterface
-mkOCamlInterface a =
-  OCamlInterface
-    [toOCamlTypeSource a, toOCamlEncoderSourceWith (defaultOptions {includeOCamlInterface = True}) a, toOCamlDecoderSourceWith (defaultOptions {includeOCamlInterface = True}) a]
-    [toOCamlTypeSource a, toOCamlEncoderInterface a, toOCamlDecoderInterface a]
-    []
-
-mkOCamlInterfaceWithSpec :: OCamlType a => Text -> Text -> Text -> a -> OCamlInterface
-mkOCamlInterfaceWithSpec url goldenDir modul a =
-  OCamlInterface
-    [toOCamlTypeSource a, toOCamlEncoderSourceWith (defaultOptions {includeOCamlInterface = True}) a, toOCamlDecoderSourceWith (defaultOptions {includeOCamlInterface = True}) a]
-    [toOCamlTypeSource a, toOCamlEncoderInterface a, toOCamlDecoderInterface a]
-    [toOCamlSpec a [modul] url goldenDir]
-
 
 createOCamlFile :: FilePath -> OCamlFile -> IO ()
 createOCamlFile rootDir ocamlFile = do
@@ -118,11 +87,3 @@ createOCamlSpecFile rootDir fileName ocamlSpec = do
   let fp = rootDir <> "/" <> fileName
       body = "let () =\n" <> ocamlSpec
   T.writeFile (fp <> "_spec.ml") body
-{-
-createOCamlSpecFile :: FilePath -> FilePath -> [(OCamlDatatype,Text,Text)] -> IO ()
-createOCamlSpecFile rootDir fileName typs = do
-  createDirectoryIfMissing True rootDir
-  let fp = rootDir <> "/" <> fileName
-      body = T.intercalate "\n\n" $ pprinter . (\(value,url,filepath) -> mkSampleServerAndGoldenSpec value url filepath) <$> typs
-  T.writeFile (fp <> ".ml") body
--}

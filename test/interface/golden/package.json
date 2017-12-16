@@ -18,8 +18,8 @@
   "license": "MIT",
   "dependencies": {
     "bs-fetch": "git+ssh://git@github.com/plow-technologies/bs-fetch.git#01202669fb57a2e179e327bd816c2aa1db3dfdc3",
-    "bs-aeson": "git+ssh://git@github.com/plow-technologies/bs-aeson.git#fb3e995b2fa2282020c3edf0a159145bcb94c1f5",
-    "bs-aeson-spec": "git+ssh://git@github.com/plow-technologies/bs-aeson-spec.git#f4d7b23a86bc37689258504b19ea25f37cb4438a",
+    "bs-aeson": "git+ssh://git@github.com/plow-technologies/bs-aeson.git#8e7938ce32cdef2e14dbf060f466f776331e3d55",
+    "bs-aeson-spec": "git+ssh://git@github.com/plow-technologies/bs-aeson-spec.git#cdd41a17e372bd0176169bb2a02c4419d76f5d3b",
     "bs-node": "github:buckletypes/bs-node",
     "bs-node-fetch": "^0.1.2"
   },

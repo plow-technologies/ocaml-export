@@ -6,8 +6,11 @@ Export aeson serializations to OCaml BuckleScript.
 
 ## Todo
 
+Complete before stablizing the API.
+
 - [ ] Use internal modules
 - [ ] Clean up OCaml.BuckleScript.Module
+- [ ] Remove OCaml.File
 - [ ] Automate package files, commit bs dependencies to npm
 - [ ] Documentation
 - [ ] Examples
@@ -16,6 +19,15 @@ Export aeson serializations to OCaml BuckleScript.
 - [ ] Haskell list as OCaml array
 - [ ] Support (Map String ..) (Map Text ..) (Map Int ..), must provide one decoder
 - [ ] Support (Map x ..) but two encoders/decoders must be provided
+- [ ] Resolve dependency order for output code so you are not required to declare 'OCamlPackage' types in the correct order
+- [ ] suppport list of list, option of option, etc.
+
+## Wishlist
+
+Nice to have but not top priority at the moment.
+
+- [ ] OCaml source code parser and AST. Would make it a lot easier to handle manually written types, encoders, decoders.
+- [ ] Output to js_of_ocaml and OCaml.
 
 ## Test
 

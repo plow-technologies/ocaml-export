@@ -25,7 +25,8 @@ import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
 --  , Options (..)
 --  , defaultOptions
 import qualified Data.Aeson.Types as Aeson (Options(..), defaultOptions)
-
+import OCaml.BuckleScript.Types (HaskellTypeMetaData, OCamlTypeMetaData)
+import qualified Data.Map.Strict as Map
 
 -- | For URLs and POSIX systems.
 (</>) :: Text -> Text -> Text
@@ -55,10 +56,16 @@ infix 5 </>
 data Options = Options
   { includeOCamlInterface :: Bool
   , aesonOptions :: Aeson.Options
+  , dependencies :: Map.Map HaskellTypeMetaData OCamlTypeMetaData
   }
 
 defaultOptions :: Options
-defaultOptions = Options {includeOCamlInterface = False, aesonOptions = Aeson.defaultOptions}
+defaultOptions = Options {includeOCamlInterface = False, aesonOptions = Aeson.defaultOptions, dependencies = Map.empty}
+
+data TypeMetaData = TypeMetaData
+  { topLevelOCamlTypeMetaData :: Maybe OCamlTypeMetaData -- Just if not primitive
+  , userOptions :: Options
+  }
 
 cr :: Format r r
 cr = now "\n"
@@ -139,3 +146,6 @@ mkDocList ds =
     if length ds > 1
       then ["("] <> (L.intersperse ", " ds) <> [")"]
       else ds
+
+foldMod :: [Text] -> Text
+foldMod = T.intercalate "."

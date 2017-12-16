@@ -27,13 +27,15 @@ import Control.Concurrent (forkIO)
 import           Test.Hspec
 
 import qualified File as File
-import           FileApp
+import qualified FileApp as File
 
 import qualified Product as Product
 import           ProductApp
 
 import qualified Sum as Sum
 import           SumApp
+
+import qualified Dependency as D
 
 import qualified Options as Options
 
@@ -60,6 +62,8 @@ import Data.Constraint.Symbol (type (++))
 import GHC.TypeLits
 import GHC.TypeLits.List
 
+import Data.Monoid ((<>))
+
 logAllMiddleware :: Application -> Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived
 logAllMiddleware app req respond = do
     d <- requestBody req
@@ -74,10 +78,23 @@ main = do
   hspec Product.spec
   hspec Sum.spec
   hspec File.spec
-  hspec Options.spec
+--  hspec Options.spec
+  hspec D.spec
 
+  hspec $
+    describe "mkOCamlTypeMetaData" $
+      it "mkOCamlTypeMetaData on package A and B should equal mkOCamlTypeMetaData on B which has A as a dependency" $
+        (mkOCamlTypeMetaData (Proxy :: Proxy Product.ProductPackage)) <> (mkOCamlTypeMetaData (Proxy :: Proxy D.DependencyPackageWithoutProduct))
+          `shouldBe` mkOCamlTypeMetaData (Proxy :: Proxy D.DependencyPackage)
+
+--  print $ ocamlPackageTypeCount (Proxy :: Proxy Product.ProductPackage)
+
+--  print $ mkOCamlTypeMetaData (Proxy :: Proxy Product.ProductPackage)
+  print $ mkOCamlTypeMetaData (Proxy :: Proxy D.SubsPackage)
+  
   _ <- forkIO $ run 8081 productPackageApp
   _ <- forkIO $ run 8082 sumPackageApp
-  run 8083 filePackageApp
+  run 8083 File.filePackageApp
 
 -- curl -i -d '"hi"' -H 'Content-type: application/json' -X POST http://localhost:8081/x/y
+ 

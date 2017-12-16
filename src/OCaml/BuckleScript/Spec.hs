@@ -1,8 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module OCaml.BuckleScript.Spec
   ( mkSampleServerAndGoldenSpec
   , toOCamlSpec
+  , toOCamlSpec2
   ) where
 
 import Data.Monoid
@@ -15,12 +17,12 @@ import OCaml.BuckleScript.Types hiding (getOCamlValues)
 import OCaml.Common
 
 mkSampleServerAndGoldenSpec :: OCamlDatatype -> [Text] -> Text -> Text -> Doc
-mkSampleServerAndGoldenSpec (OCamlDatatype typeName constructors) modules url goldenDir =
+mkSampleServerAndGoldenSpec (OCamlDatatype _ typeName constructors) modules url goldenDir =
   "  AesonSpec.sampleGoldenAndServerSpec" <+> decoders
                          <+> encoders
                          <+> (dquotes down)
                          <+> (dquotes . stext $ ((url </> urlModul) </> typeName))
-                         <+> (dquotes (stext $ goldenDir </> (textUppercaseFirst typeName) <> ".json")) <> ";"
+                         <+> (dquotes (stext $ goldenDir </> textUppercaseFirst typeName)) <> ";"
   where
     (tprDecoders, tprEncoders) = renderTypeParameterVals constructors
     decoders = if tprDecoders == "" then (smodul <> "decode" <> up) else ("(" <> smodul <> "decode" <> up <+> (stext tprDecoders) <> ")")
@@ -60,3 +62,8 @@ getOCamlValues (MultipleConstructors cs)      = concat $ getOCamlValues <$> cs
 toOCamlSpec :: OCamlType a => a -> [Text] -> Text -> Text -> Text
 toOCamlSpec a modules url fp =
   pprinter $ mkSampleServerAndGoldenSpec (toOCamlType a) modules url fp
+
+
+toOCamlSpec2 :: Text -> [Text] -> Text -> Text -> Text
+toOCamlSpec2 a modules url fp =
+  pprinter $ mkSampleServerAndGoldenSpec (OCamlDatatype (HaskellTypeMetaData a "" "") a $ OCamlValueConstructor $ NamedConstructor a $ OCamlEmpty) modules url fp

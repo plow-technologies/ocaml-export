@@ -1,0 +1,45 @@
+{
+    "seed": 8617436390722601079,
+    "samples": [
+        {
+            "cardValue": -15,
+            "cardSuit": "Clubs"
+        },
+        {
+            "cardValue": -30,
+            "cardSuit": "Hearts"
+        },
+        {
+            "cardValue": 2,
+            "cardSuit": "Diamonds"
+        },
+        {
+            "cardValue": -13,
+            "cardSuit": "Hearts"
+        },
+        {
+            "cardValue": 14,
+            "cardSuit": "Diamonds"
+        },
+        {
+            "cardValue": 3,
+            "cardSuit": "Hearts"
+        },
+        {
+            "cardValue": 0,
+            "cardSuit": "Diamonds"
+        },
+        {
+            "cardValue": 8,
+            "cardSuit": "Diamonds"
+        },
+        {
+            "cardValue": -21,
+            "cardSuit": "Spades"
+        },
+        {
+            "cardValue": 21,
+            "cardSuit": "Hearts"
+        }
+    ]
+}

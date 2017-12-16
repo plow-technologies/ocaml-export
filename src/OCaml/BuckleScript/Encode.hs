@@ -140,6 +140,18 @@ instance HasEncoderRef OCamlDatatype where
       mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData 
       case mOCamlTypeMetaData of
         Nothing -> pure $ "encode" <> (stext . textUppercaseFirst $ name)
+        Just decOCamlTypeMetaData -> do
+          ds <- asks (dependencies . userOptions)
+          case Map.lookup typeRef ds of
+            Just parOCamlTypeMetaData -> do
+              let prefix = stext $ mkModulePrefix decOCamlTypeMetaData parOCamlTypeMetaData
+              pure $ prefix <> "encode" <> (stext . textUppercaseFirst $ name)
+
+            -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
+            -- within the same file as the sum. These products will not be in the dependencies map.
+            Nothing -> pure $ "encode" <> (stext . textUppercaseFirst $ name)
+
+{-
         Just (OCamlTypeMetaData _ pFPath pSubMod) -> do
           ds <- asks (dependencies . userOptions)
           case Map.lookup typeRef ds of
@@ -152,7 +164,7 @@ instance HasEncoderRef OCamlDatatype where
                 else pure $ (if cFPath == [] then "" else (stext  (foldMod cFPath) <> ".")) <> (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> "encode" <> (stext . textUppercaseFirst $ name)
                 
             Nothing -> fail ("OCaml.BuckleScript.Encode (HasEncoderRef OCamlDataType) expected to find dependency:\n\n" ++ show typeRef ++ "\n\nin\n\n" ++ show ds)
-
+-}
   renderRef (OCamlPrimitive primitive) = renderRef primitive
 
 instance HasEncoder OCamlConstructor where
@@ -307,6 +319,17 @@ instance HasEncoder OCamlValue where
     mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData
     case mOCamlTypeMetaData of
       Nothing -> fail $ "OCaml.BuckleScript.Encode (HasEncoder (OCamlRef typeRep name)) mOCamlTypeMetaData is Nothing:\n\n" ++ (show ref)
+      Just decOCamlTypeMetaData -> do
+        ds <- asks (dependencies . userOptions)
+        case Map.lookup typeRef ds of
+          Just parOCamlTypeMetaData -> do
+            let prefix = stext $ mkModulePrefix decOCamlTypeMetaData parOCamlTypeMetaData
+            pure $ prefix <> "encode" <> (stext . textUppercaseFirst $ name)
+
+          -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
+          -- within the same file as the sum. These products will not be in the dependencies map.
+          Nothing -> pure $ "encode" <> (stext . textUppercaseFirst $ name)
+{-      
       Just (OCamlTypeMetaData _ pFPath pSubMod) -> do
         ds <- asks (dependencies . userOptions)
         case Map.lookup typeRef ds of
@@ -320,7 +343,7 @@ instance HasEncoder OCamlValue where
           -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
           -- within the same file as the sum. These products will not be in the dependencies map.
           Nothing -> pure $ "encode" <> (stext . textUppercaseFirst $ name)
-  
+-}  
   render (Values x y) = do
     dx <- render x
     dy <- render y

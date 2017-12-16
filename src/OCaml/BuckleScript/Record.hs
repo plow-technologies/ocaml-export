@@ -80,6 +80,15 @@ instance HasTypeRef OCamlDatatype where
       mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData 
       case mOCamlTypeMetaData of
         Nothing -> pure . stext . textLowercaseFirst $ typeName
+
+        Just decOCamlTypeMetaData -> do
+          ds <- asks (dependencies . userOptions)
+          case Map.lookup typeRef ds of
+            Just parOCamlTypeMetaData -> do
+              let prefix = stext $ mkModulePrefix decOCamlTypeMetaData parOCamlTypeMetaData
+              pure $ prefix <> (stext . textLowercaseFirst $ typeName)
+            Nothing -> fail ("expected to find dependency:\n\n" ++ show typeRef ++ "\n\nin\n\n" ++ show ds)
+{-
         Just (OCamlTypeMetaData _ pFPath pSubMod) -> do
           ds <- asks (dependencies . userOptions)
           case Map.lookup typeRef ds of
@@ -92,7 +101,7 @@ instance HasTypeRef OCamlDatatype where
                 else pure $ (if cFPath == [] then "" else (stext  (foldMod cFPath) <> ".")) <> (if cSubMod == [] then "" else (stext (foldMod cSubMod) <> ".")) <> stext (textLowercaseFirst typeName)
                 
             Nothing -> fail ("expected to find dependency:\n\n" ++ show typeRef ++ "\n\nin\n\n" ++ show ds)
-
+-}
   renderRef (OCamlPrimitive primitive) = renderRef primitive
 
 instance HasType OCamlConstructor where
@@ -128,6 +137,16 @@ instance HasType OCamlValue where
     mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData
     case mOCamlTypeMetaData of
       Nothing -> fail $ "OCaml.BuckleScript.Record (HasType (OCamlDatatype typeRep name)) mOCamlTypeMetaData is Nothing:\n\n" ++ (show ref)
+      Just decOCamlTypeMetaData -> do
+        ds <- asks (dependencies . userOptions)
+        case Map.lookup typeRef ds of
+          Just parOCamlTypeMetaData -> do
+            let prefix = stext $ mkModulePrefix decOCamlTypeMetaData parOCamlTypeMetaData
+            pure $ prefix <> (stext . textLowercaseFirst $ name)
+          -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
+          -- within the same file as the sum. These products will not be in the dependencies map.
+          Nothing -> pure . stext . textLowercaseFirst $ name
+      {-
       Just (OCamlTypeMetaData _ pFPath pSubMod) -> do
         ds <- asks (dependencies . userOptions)
         case Map.lookup typeRef ds of
@@ -141,7 +160,7 @@ instance HasType OCamlValue where
           -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
           -- within the same file as the sum. These products will not be in the dependencies map.
           Nothing -> pure . stext . textLowercaseFirst $ name
-  
+      -}
   render (OCamlTypeParameterRef name) = pure (stext ("'" <> name))
   render (OCamlPrimitiveRef primitive) = ocamlRefParens primitive <$> renderRef primitive
   render OCamlEmpty = pure (text "")

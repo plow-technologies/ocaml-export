@@ -47,6 +47,7 @@ module OCaml.BuckleScript.Types
   , getOCamlValues
   , getTypeParameters
   , isTypeParameterRef
+  , mkModulePrefix
   ) where
 
 -- base
@@ -54,6 +55,7 @@ import Data.Int (Int16, Int32, Int64, Int8)
 import Data.List (nub)
 import Data.Map
 import Data.Maybe (catMaybes)
+import Data.Monoid ((<>))
 import Data.Proxy
 import Data.Time
 -- import Data.Typeable (typeRep, TypeRep, Typeable)
@@ -542,3 +544,22 @@ getTypeParameters _ = []
 isTypeParameterRef :: OCamlDatatype -> Bool
 isTypeParameterRef (OCamlDatatype _ _ (OCamlValueConstructor (NamedConstructor _ (OCamlTypeParameterRef _)))) = True
 isTypeParameterRef _ = False
+
+mkModulePrefix :: OCamlTypeMetaData -> OCamlTypeMetaData -> Text
+mkModulePrefix (OCamlTypeMetaData _ decModules decSubModules) (OCamlTypeMetaData _ parModules parSubModules) =
+  if prefix /= "" then prefix <> "." else ""
+  where
+    (l,r) = zipWithRightRemainder (decModules <> decSubModules) (parModules <> parSubModules)    
+    prefix = T.intercalate "." $ (removeMatchingHead l) <> r
+      
+removeMatchingHead :: Eq a => [(a,a)] -> [a]
+removeMatchingHead [] = []
+removeMatchingHead (hd:tl) =
+  if fst hd == snd hd
+  then removeMatchingHead tl
+  else [snd hd] <> (snd <$> tl)
+
+zipWithRightRemainder :: [a] -> [b] -> ([(a,b)], [b])
+zipWithRightRemainder [] bs = ([], bs)
+zipWithRightRemainder _ab [] = ([], [])
+zipWithRightRemainder (a:as) (b:bs) = ([(a,b)], []) <> zipWithRightRemainder as bs

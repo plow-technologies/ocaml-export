@@ -6,22 +6,39 @@
 
 module Dependency where
 
-import Data.Aeson (FromJSON, ToJSON)
+-- base
 import Data.Monoid ((<>))
-import Data.Proxy
+import GHC.Generics (Generic)
+
+-- aeson
+import Data.Aeson (FromJSON, ToJSON)
+
+-- containers
+import Data.Map as Map
+
+-- hspec
+import Test.Hspec
+
+-- hspec-aeson-golden
+import Test.Aeson.Internal.ADT.GoldenSpecs
+
+-- QuickCheck
+import Test.QuickCheck
+
+-- quickcheck-arbitrary-adt
+import Test.QuickCheck.Arbitrary.ADT
+
+-- text
 import Data.Text (Text)
+
+-- time
 import Data.Time
 import Data.Time.Clock.POSIX
-import Data.Map as Map
-import GHC.Generics (Generic)
-import OCaml.BuckleScript
-import Test.Hspec
-import Test.QuickCheck
-import Test.QuickCheck.Arbitrary.ADT
-import Test.Aeson.Internal.ADT.GoldenSpecs
-import Util
 
+-- ocaml-export
+import OCaml.Export
 import Product (ProductPackage, Person)
+import Util
 
 mkGolden :: forall a. (ToADTArbitrary a, ToJSON a) => Proxy a -> IO ()
 mkGolden Proxy = mkGoldenFileForType 10 (Proxy :: Proxy a) "test/interface/golden/golden/dependency"

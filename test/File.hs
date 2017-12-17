@@ -7,15 +7,27 @@
 
 module File where
 
-import Data.Aeson
+-- base
 import Data.Proxy
 import GHC.Generics (Generic)
-import OCaml.BuckleScript
+
+-- aeson
+import Data.Aeson
+
+-- hspec
 import Test.Hspec
-import Test.QuickCheck
-import Test.QuickCheck.Arbitrary.ADT
+
+-- hspec-golden-aeson
 import Test.Aeson.Internal.ADT.GoldenSpecs
 
+-- QuickCheck
+import Test.QuickCheck
+
+-- quickcheck-arbitrary-adt
+import Test.QuickCheck.Arbitrary.ADT
+
+-- ocaml-export
+import OCaml.Export
 
 type FilePackage = OCamlPackage "" NoDependency :>
   (OCamlModule '["File"]

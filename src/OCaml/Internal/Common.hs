@@ -1,5 +1,5 @@
 {-|
-Module      : OCaml.Common
+Module      : OCaml.Internal.Common
 Description : Internal utility functions
 Copyright   : Plow Technologies, 2017
 License     : BSD3
@@ -11,22 +11,33 @@ Stability   : experimental
 
 {-# LANGUAGE OverloadedStrings #-}
 
-module OCaml.Common where
+module OCaml.Internal.Common where
 
-import           Data.Char (toLower,toUpper)
+-- base
+import Data.Char (toLower,toUpper)
 import qualified Data.List as L
-import           Data.Monoid
-import           Data.Text  (Text)
+import Data.Monoid
+
+-- aeson
+import qualified Data.Aeson.Types as Aeson (Options(..), defaultOptions)
+
+-- containers
+import qualified Data.Map.Strict as Map
+
+-- formatting
+import Formatting hiding (stext, text)
+
+-- ocaml-export
+import OCaml.BuckleScript.Types (HaskellTypeMetaData, OCamlTypeMetaData)
+
+-- text
+import Data.Text  (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as LT
-import           Formatting hiding (stext, text)
-import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
-  -- re-export
---  , Options (..)
---  , defaultOptions
-import qualified Data.Aeson.Types as Aeson (Options(..), defaultOptions)
-import OCaml.BuckleScript.Types (HaskellTypeMetaData, OCamlTypeMetaData)
-import qualified Data.Map.Strict as Map
+
+-- wl-pprint
+import Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
+
 
 -- | For URLs and POSIX systems.
 (</>) :: Text -> Text -> Text

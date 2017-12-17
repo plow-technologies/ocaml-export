@@ -59,7 +59,7 @@ import System.Directory (createDirectoryIfMissing)
 import System.FilePath.Posix ((</>), (<.>))
 
 -- ocaml-export
-import OCaml.Common hiding ((</>))
+import OCaml.Internal.Common hiding ((</>))
 import OCaml.BuckleScript.Internal.Module
 import OCaml.BuckleScript.Types
 

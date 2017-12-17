@@ -12,13 +12,14 @@ github: plow-technologies/ocaml-export
 library:
   source-dirs: src
   exposed-modules: 
-  - OCaml.Common
-  - OCaml.BuckleScript
+  - OCaml.Export
   - OCaml.BuckleScript.Decode
   - OCaml.BuckleScript.Encode
   - OCaml.BuckleScript.Record
   - OCaml.BuckleScript.Spec
   - OCaml.BuckleScript.Types
+  # Internal packages
+  - OCaml.Internal.Common  
   - OCaml.BuckleScript.Internal.Spec
   - OCaml.BuckleScript.Internal.Module
   - OCaml.BuckleScript.Internal.Package  

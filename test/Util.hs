@@ -8,7 +8,7 @@ import Data.Time
 import qualified Data.Text.IO as T
 
 -- ocaml-export
-import OCaml.BuckleScript hiding (Options, (</>))
+import OCaml.Export hiding (Options)
 
 
 import System.Directory (doesFileExist)

@@ -21,48 +21,45 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-
-import Control.Concurrent (forkIO)
-
-import           Test.Hspec
-
-import qualified File as File
-import qualified FileApp as File
-
-import qualified Product as Product
-import           ProductApp
-
-import qualified Sum as Sum
-import           SumApp
-
-import qualified Dependency as D
-
-import qualified Options as Options
-
-
-import Data.Proxy
-
 import Network.Wai.Handler.Warp
 import Network.Wai
 import Network.Wai.Middleware.RequestLogger (logStdout)
-import Data.ByteString (unpack)
-import Test.Aeson.GenericSpecs
-
 import System.Process
 
-import OCaml.BuckleScript
+-- base
+import Control.Concurrent (forkIO)
+import Data.Monoid ((<>))
+import GHC.TypeLits
 
-import Servant.API
+-- ByteString
+import Data.ByteString (unpack)
+
+-- hspec
+import           Test.Hspec
+
+-- hspec-aeson-golden
+import Test.Aeson.GenericSpecs
+
+
+-- servant
 import Servant
+
+-- servant-server
+import Servant.API
+
+-- text
 import Data.Text (Text)
 
-import GHC.TypeLits
-import Data.Constraint.Symbol (type (++))
-
-import GHC.TypeLits
-import GHC.TypeLits.List
-
-import Data.Monoid ((<>))
+-- ocaml-export
+import OCaml.Export
+import qualified Dependency as D
+import qualified File as File
+import qualified FileApp as File
+import qualified Options as Options
+import qualified Product as Product
+import ProductApp
+import qualified Sum as Sum
+import SumApp
 
 logAllMiddleware :: Application -> Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived
 logAllMiddleware app req respond = do

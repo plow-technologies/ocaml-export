@@ -57,7 +57,7 @@ import Data.FileEmbed (embedFile)
 import System.FilePath.Posix ((<.>)) -- ((</>), (<.>))
 
 -- ocaml-export
-import OCaml.Common hiding ((</>))
+import OCaml.Internal.Common hiding ((</>))
 import OCaml.BuckleScript.Decode
 import OCaml.BuckleScript.Encode
 import OCaml.BuckleScript.Record

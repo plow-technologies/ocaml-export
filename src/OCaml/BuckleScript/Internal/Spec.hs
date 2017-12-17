@@ -43,7 +43,7 @@ import GHC.Generics
 import GHC.TypeLits
 
 -- ocaml-export
-import OCaml.Common hiding ((</>))
+import OCaml.Internal.Common hiding ((</>))
 import OCaml.BuckleScript.Internal.Module
 import OCaml.BuckleScript.Internal.Package
 
@@ -55,9 +55,6 @@ import Language.Haskell.TH
 
 -- text
 import Data.Text (Text)
-
-
-
 
 
 mkOCamlSpecServer :: forall ocamlPackage. (OCamlPackageTypeCount ocamlPackage, HasOCamlPackage ocamlPackage) => String -> Proxy ocamlPackage -> Q [Dec]

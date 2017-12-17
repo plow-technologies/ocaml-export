@@ -2,8 +2,7 @@
 
 module SumApp where
 
-import Data.Proxy
-import OCaml.BuckleScript
+import OCaml.Export
 import Sum
 
 $(mkOCamlSpecServer "SumPackage" (Proxy :: Proxy SumPackage))

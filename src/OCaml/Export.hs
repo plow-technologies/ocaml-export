@@ -8,14 +8,54 @@ Stability   : experimental
 
 -}
 
-module OCaml.Export (module X) where
+module OCaml.Export
+  ( OCamlPackage
+  , NoDependency
+  , OCamlModule
+  , OCamlSubModule
+  , OCamlTypeInFile
 
-import OCaml.BuckleScript.Decode  as X
-import OCaml.BuckleScript.Encode  as X
-import OCaml.BuckleScript.Module  as X
-import OCaml.BuckleScript.Record  as X
-import OCaml.BuckleScript.Spec    as X
-import OCaml.BuckleScript.Types   as X
-import OCaml.Common               as X
-import OCaml.File                 as X
+  , PackageOptions (..)
+  , defaultPackageOptions
+  , SpecOptions (..)
+  , defaultSpecOptions
 
+  , EmbeddedOCamlFiles (..)
+
+  , mkPackage
+  , mkFiles
+  , mkOCamlTypeMetaData
+  
+  -- OCaml.BuckleScript.Types
+  , OCamlType (..)
+  , TypeParameterRef0
+  , TypeParameterRef1
+  , TypeParameterRef2
+  , TypeParameterRef3
+  , TypeParameterRef4
+  , TypeParameterRef5
+
+  -- servant spec
+  , mkOCamlSpecServer
+  , MkOCamlSpecAPI
+
+  -- re-export
+  , Proxy (..)
+  , (:>)
+  , (:<|>) (..)
+  , Application
+  , Server
+  , serve
+
+  ) where
+
+import Data.Proxy (Proxy (..))
+
+import OCaml.BuckleScript.Types
+
+import OCaml.BuckleScript.Internal.Module
+import OCaml.BuckleScript.Internal.Package
+import OCaml.BuckleScript.Internal.Spec
+
+import Servant (Application, Server, serve)
+import Servant.API ((:>), (:<|>) (..))

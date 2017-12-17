@@ -4,12 +4,18 @@
 
 module FileApp where
 
+-- containers
 import qualified Data.Map as Map
-import Data.Proxy
-import OCaml.BuckleScript
-import File
-import Servant
+
+-- hspec
 import Test.Hspec
+
+-- servant-server
+import Servant
+
+-- ocaml-export
+import OCaml.Export
+import File
 import Util
 
 $(mkOCamlSpecServer "FilePackage" (Proxy :: Proxy FilePackage))

@@ -7,14 +7,19 @@ module OCaml.BuckleScript.Spec
   , toOCamlSpec2
   ) where
 
+-- base
 import Data.Monoid
+
+-- text
 import Data.Text (Text)
 import qualified Data.Text as T
-import Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>), (</>))
 
 -- ocaml-export
 import OCaml.BuckleScript.Types hiding (getOCamlValues)
-import OCaml.Common
+import OCaml.Internal.Common
+
+-- wl-pprint
+import Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>), (</>))
 
 mkSampleServerAndGoldenSpec :: OCamlDatatype -> [Text] -> Text -> Text -> Doc
 mkSampleServerAndGoldenSpec (OCamlDatatype _ typeName constructors) modules url goldenDir =
@@ -62,7 +67,6 @@ getOCamlValues (MultipleConstructors cs)      = concat $ getOCamlValues <$> cs
 toOCamlSpec :: OCamlType a => a -> [Text] -> Text -> Text -> Text
 toOCamlSpec a modules url fp =
   pprinter $ mkSampleServerAndGoldenSpec (toOCamlType a) modules url fp
-
 
 toOCamlSpec2 :: Text -> [Text] -> Text -> Text -> Text
 toOCamlSpec2 a modules url fp =

@@ -163,7 +163,7 @@ instance (KnownSymbols modules, HasOCamlModule' api) => HasOCamlModule ((OCamlMo
 class HasOCamlModule' a where
   mkModule' :: Proxy a -> [String] -> PackageOptions -> Map.Map HaskellTypeMetaData OCamlTypeMetaData -> IO ()
 
-instance (Typeable api, HasOCamlType api) => HasOCamlModule' api where
+instance (HasOCamlType api) => HasOCamlModule' api where
   mkModule' Proxy modules packageOptions ds = do
     if (length modules) == 0
       then fail "OCamlModule filePath needs at least one file name"

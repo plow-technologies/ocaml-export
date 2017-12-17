@@ -46,7 +46,9 @@ library:
   ghc-options:
   - -Wall
   - -Werror
+  - -Wredundant-constraints
   - -fprint-potential-instances
+
 tests:
   spec:
     main: Spec.hs

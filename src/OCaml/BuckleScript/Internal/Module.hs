@@ -151,7 +151,7 @@ instance (HasOCamlType a, HasOCamlType b) => HasOCamlType' 3 (a :> b) where
   mkInterface' _ Proxy options fileMap = (mkInterface (Proxy :: Proxy a) options fileMap) <> (mkInterface (Proxy :: Proxy b) options fileMap)
   mkSpec' _ Proxy options modules url goldendir fileMap = (mkSpec (Proxy :: Proxy a) options modules url goldendir fileMap) <> (mkSpec (Proxy :: Proxy b) options modules url goldendir fileMap)
 
-instance (Typeable a, KnownSymbol b) => HasOCamlType' 2 (OCamlTypeInFile a b) where
+instance (Typeable a) => HasOCamlType' 2 (OCamlTypeInFile a b) where
   mkType' _ Proxy _options _ fileMap = do
     let typeName = tyConName . typeRepTyCon $ typeRep (Proxy :: Proxy a)
     case eocDeclaration <$> Map.lookup typeName fileMap of

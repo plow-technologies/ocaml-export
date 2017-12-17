@@ -57,7 +57,7 @@ import Language.Haskell.TH
 import Data.Text (Text)
 
 
-mkOCamlSpecServer :: forall ocamlPackage. (OCamlPackageTypeCount ocamlPackage, HasOCamlPackage ocamlPackage) => String -> Proxy ocamlPackage -> Q [Dec]
+mkOCamlSpecServer :: forall ocamlPackage. (OCamlPackageTypeCount ocamlPackage) => String -> Proxy ocamlPackage -> Q [Dec]
 mkOCamlSpecServer typeName Proxy = do
   let sizes = ocamlPackageTypeCount (Proxy :: Proxy ocamlPackage)
   if (length sizes) < 1 || (not . and $ (> 0) <$> sizes)

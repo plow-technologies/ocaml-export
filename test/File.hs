@@ -27,7 +27,7 @@ import Test.QuickCheck
 import Test.QuickCheck.Arbitrary.ADT
 
 -- ocaml-export
-import OCaml.Export
+import OCaml.Export hiding (mkGoldenFiles)
 
 type FilePackage = OCamlPackage "" NoDependency :>
   (OCamlModule '["File"]

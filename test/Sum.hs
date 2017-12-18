@@ -36,7 +36,7 @@ import Servant.API
 import Servant
 
 -- ocaml-export
-import OCaml.Export
+import OCaml.Export hiding (mkGoldenFiles)
 import Util
 
 

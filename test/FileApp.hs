@@ -14,7 +14,7 @@ import Test.Hspec
 import Servant
 
 -- ocaml-export
-import OCaml.Export
+import OCaml.Export hiding (mkGoldenFiles)
 import File
 import Util
 

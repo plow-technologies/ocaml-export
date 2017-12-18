@@ -32,6 +32,7 @@ library:
   - file-embed
   - filepath
   - formatting
+  - hspec-golden-aeson
   - mtl
   - split
   - QuickCheck

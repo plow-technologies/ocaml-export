@@ -19,3 +19,10 @@ let () =
     "business"
     "http://localhost:8083/File/Business"
     "golden/file/Business";
+
+  AesonSpec.sampleGoldenAndServerSpec
+    (File.decodeWrapper AesonSpec.decodeIntWithResult AesonSpec.decodeIntWithResult)
+    (File.encodeWrapper Aeson.Encode.int Aeson.Encode.int)
+    "wrapper"
+    "http://localhost:8083/File/Wrapper"
+    "golden/file/Wrapper";

@@ -34,6 +34,7 @@ type FilePackage = OCamlPackage "" NoDependency :>
     :> OCamlTypeInFile Person "test/ocaml/Person"
     :> Automobile
     :> OCamlTypeInFile Business "test/ocaml/Business"
+    :> OCamlTypeInFile (Wrapper TypeParameterRef0 TypeParameterRef1) "test/ocaml/Wrapper"
   )
 
 data Person = Person
@@ -72,3 +73,14 @@ instance Arbitrary Business where
     Business <$> arbitrary <*> arbitrary <*> vector employeeCount <*> arbitrary
 
 instance ToADTArbitrary Business
+
+data Wrapper a b = Wrapper
+  { wrapperA :: a
+  , wrapperB :: b
+  , wrapperC :: String
+  } deriving (Show, Eq, Generic, FromJSON, ToJSON)
+
+instance (Arbitrary a, Arbitrary b) => Arbitrary (Wrapper a b) where
+  arbitrary = Wrapper <$> arbitrary <*> arbitrary <*> arbitrary
+
+instance (ToADTArbitrary a, ToADTArbitrary b) => ToADTArbitrary (Wrapper a b)

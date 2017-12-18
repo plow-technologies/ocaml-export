@@ -38,7 +38,7 @@ module OCaml.BuckleScript.Internal.Module
 -- base
 import Data.Monoid ((<>))
 import Data.Proxy (Proxy (..))
-import Data.Typeable (typeRep, Typeable, typeRepTyCon, tyConName) -- , tyConModule, tyConPackage)
+import Data.Typeable (Typeable, typeRep, typeRepTyCon, tyConName, splitTyConApp) 
 import GHC.TypeLits (Nat, Symbol, KnownSymbol, symbolVal)
 
 -- bytestring
@@ -165,8 +165,22 @@ instance (Typeable a) => HasOCamlType' 2 (OCamlTypeInFile a b) where
       _ -> fail $ "Unable to find the embedded file for " ++ typeName
 
   mkSpec' _ Proxy _options modules url goldendir _fileMap = 
-    [typeInFileToOCamlSpec (T.pack . tyConName . typeRepTyCon $ typeRep (Proxy :: Proxy a)) modules url goldendir]
-
+    [typeInFileToOCamlSpec (T.pack . tyConName . typeRepTyCon $ typeRep (Proxy :: Proxy a)) typeParameterRefCount modules url goldendir]
+    where
+      parameters = fmap show . snd . splitTyConApp $ typeRep (Proxy :: Proxy a)
+      inParameters = flip elem parameters
+      xs =
+        [ inParameters "TypeParameterRef0"
+        , inParameters "TypeParameterRef1"
+        , inParameters "TypeParameterRef2"
+        , inParameters "TypeParameterRef3"
+        , inParameters "TypeParameterRef4"
+        , inParameters "TypeParameterRef5"
+        , inParameters "TypeParameterRef6"
+        ]
+      countTrues = foldl (flip ((+) . fromEnum)) 0
+      typeParameterRefCount = countTrues xs
+      
 
 instance (OCamlType a) => HasOCamlType' 1 a where
   mkType' _ a options interface _ = body

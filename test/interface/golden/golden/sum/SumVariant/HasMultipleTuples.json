@@ -1,16 +1,29 @@
 {
-    "seed": -7823703335859875726,
+    "seed": 4864816181383656316,
     "samples": [
         {
             "tag": "HasMultipleTuples",
             "contents": [
                 [
-                    28,
-                    23
+                    -30,
+                    8
                 ],
                 [
-                    10,
-                    9
+                    -27,
+                    -6
+                ]
+            ]
+        },
+        {
+            "tag": "HasMultipleTuples",
+            "contents": [
+                [
+                    -13,
+                    13
+                ],
+                [
+                    3,
+                    -21
                 ]
             ]
         },
@@ -19,11 +32,11 @@
             "contents": [
                 [
                     -17,
-                    -24
+                    4
                 ],
                 [
-                    -18,
-                    -3
+                    15,
+                    5
                 ]
             ]
         },
@@ -31,12 +44,12 @@
             "tag": "HasMultipleTuples",
             "contents": [
                 [
-                    -26,
-                    -15
+                    -14,
+                    -2
                 ],
                 [
-                    -30,
-                    -18
+                    2,
+                    24
                 ]
             ]
         },
@@ -44,12 +57,12 @@
             "tag": "HasMultipleTuples",
             "contents": [
                 [
-                    22,
-                    -14
+                    15,
+                    26
                 ],
                 [
-                    -21,
-                    -9
+                    8,
+                    29
                 ]
             ]
         },
@@ -57,38 +70,25 @@
             "tag": "HasMultipleTuples",
             "contents": [
                 [
-                    5,
-                    -29
+                    -23,
+                    28
                 ],
+                [
+                    12,
+                    16
+                ]
+            ]
+        },
+        {
+            "tag": "HasMultipleTuples",
+            "contents": [
                 [
                     11,
-                    -14
-                ]
-            ]
-        },
-        {
-            "tag": "HasMultipleTuples",
-            "contents": [
-                [
-                    7,
-                    12
+                    21
                 ],
                 [
                     21,
-                    13
-                ]
-            ]
-        },
-        {
-            "tag": "HasMultipleTuples",
-            "contents": [
-                [
-                    -25,
-                    -18
-                ],
-                [
-                    -18,
-                    -15
+                    -1
                 ]
             ]
         },
@@ -97,24 +97,11 @@
             "contents": [
                 [
                     -8,
-                    -5
-                ],
-                [
-                    16,
-                    -20
-                ]
-            ]
-        },
-        {
-            "tag": "HasMultipleTuples",
-            "contents": [
-                [
-                    11,
-                    -10
+                    -9
                 ],
                 [
                     9,
-                    -12
+                    -28
                 ]
             ]
         },
@@ -122,12 +109,25 @@
             "tag": "HasMultipleTuples",
             "contents": [
                 [
-                    -18,
-                    18
+                    -6,
+                    -16
                 ],
                 [
-                    19,
-                    28
+                    2,
+                    -3
+                ]
+            ]
+        },
+        {
+            "tag": "HasMultipleTuples",
+            "contents": [
+                [
+                    16,
+                    -8
+                ],
+                [
+                    7,
+                    18
                 ]
             ]
         }

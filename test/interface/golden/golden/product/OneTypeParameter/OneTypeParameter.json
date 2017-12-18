@@ -1,45 +1,45 @@
 {
-    "seed": 8956205861117711976,
+    "seed": 2171856290673571772,
     "samples": [
         {
-            "otpId": -30,
-            "otpFirst": []
+            "otpId": 10,
+            "otpFirst": -13
         },
         {
-            "otpId": -13,
-            "otpFirst": []
+            "otpId": 8,
+            "otpFirst": 8
+        },
+        {
+            "otpId": -3,
+            "otpFirst": 23
+        },
+        {
+            "otpId": -3,
+            "otpFirst": -9
+        },
+        {
+            "otpId": 28,
+            "otpFirst": 30
+        },
+        {
+            "otpId": -8,
+            "otpFirst": -12
+        },
+        {
+            "otpId": 17,
+            "otpFirst": -21
         },
         {
             "otpId": 20,
-            "otpFirst": []
+            "otpFirst": -9
         },
         {
-            "otpId": 14,
-            "otpFirst": []
+            "otpId": 12,
+            "otpFirst": -5
         },
         {
-            "otpId": -17,
-            "otpFirst": []
-        },
-        {
-            "otpId": 18,
-            "otpFirst": []
-        },
-        {
-            "otpId": -30,
-            "otpFirst": []
-        },
-        {
-            "otpId": 0,
-            "otpFirst": []
-        },
-        {
-            "otpId": 5,
-            "otpFirst": []
-        },
-        {
-            "otpId": 19,
-            "otpFirst": []
+            "otpId": -20,
+            "otpFirst": 4
         }
     ]
 }

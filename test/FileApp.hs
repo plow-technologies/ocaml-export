@@ -14,7 +14,7 @@ import Test.Hspec
 import Servant
 
 -- ocaml-export
-import OCaml.Export hiding (mkGoldenFiles)
+import OCaml.Export
 import File
 import Util
 
@@ -27,7 +27,7 @@ compareInterfaceFiles = compareFiles "test/interface" "file" True
 
 spec :: Spec
 spec = do
-  runIO $ mkGoldenFiles
+  runIO $ mkGoldenFiles (Proxy :: Proxy FilePackage) 10 "test/interface/golden/golden/file"
   
   let dir = "test/interface/temp"
   runIO $ mkPackage (Proxy :: Proxy FilePackage) (PackageOptions dir "file" fileMap True $ Just $ SpecOptions "__tests__/file" "golden/file" "http://localhost:8083")

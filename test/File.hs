@@ -27,7 +27,7 @@ import Test.QuickCheck
 import Test.QuickCheck.Arbitrary.ADT
 
 -- ocaml-export
-import OCaml.Export hiding (mkGoldenFiles)
+import OCaml.Export
 
 type FilePackage = OCamlPackage "" NoDependency :>
   (OCamlModule '["File"]
@@ -35,17 +35,6 @@ type FilePackage = OCamlPackage "" NoDependency :>
     :> Automobile
     :> OCamlTypeInFile Business "test/ocaml/Business"
   )
-
-
-mkGolden :: forall a. (ToADTArbitrary a, ToJSON a) => Proxy a -> IO ()
-mkGolden Proxy = mkGoldenFileForType 10 (Proxy :: Proxy a) "test/interface/golden/golden/file"
-
-mkGoldenFiles :: IO ()
-mkGoldenFiles = do
-  mkGolden (Proxy :: Proxy Person)
-  mkGolden (Proxy :: Proxy Automobile)
-  mkGolden (Proxy :: Proxy Business)
-
 
 data Person = Person
   { id :: Int

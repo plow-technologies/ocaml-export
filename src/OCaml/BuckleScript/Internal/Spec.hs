@@ -101,57 +101,46 @@ instance (HasMkGoldenFilesFlag a ~ flag, HasMkGoldenFiles' flag (a :: *)) => Has
   mkGoldenFiles = mkGoldenFiles' (Proxy :: Proxy flag)
 
 type family (HasMkGoldenFilesFlag a) :: Nat where
-  HasMkGoldenFilesFlag (OCamlPackage a b :> c) = 6
-  HasMkGoldenFilesFlag ((OCamlModule a :> b) :<|> c) = 5
-  HasMkGoldenFilesFlag (OCamlModule a :> b) = 4
-  HasMkGoldenFilesFlag (OCamlSubModule a :> b) = 3
-  HasMkGoldenFilesFlag (OCamlTypeInFile a b) = 2
-  HasMkGoldenFilesFlag (a :> b) = 7
+  HasMkGoldenFilesFlag (OCamlPackage a b :> c) = 7
+  HasMkGoldenFilesFlag ((OCamlModule a :> b) :<|> c) = 6
+  HasMkGoldenFilesFlag (OCamlModule a :> b) = 5
+  HasMkGoldenFilesFlag (OCamlSubModule a :> b) = 4
+  HasMkGoldenFilesFlag (OCamlTypeInFile a b) = 3
+  HasMkGoldenFilesFlag (a :> b) = 2
   HasMkGoldenFilesFlag a = 1
 
 class HasMkGoldenFiles' (flag :: Nat) a where
   mkGoldenFiles' :: Proxy flag -> Proxy a -> Int -> FilePath -> IO ()
 
-instance (HasMkGoldenFiles a, HasMkGoldenFiles b) => HasMkGoldenFiles' 7 (a :> b) where
-  mkGoldenFiles' _ Proxy size fp = do
-    mkGoldenFiles (Proxy :: Proxy a) size fp
-    mkGoldenFiles (Proxy :: Proxy b) size fp
-
-
-instance (HasMkGoldenFiles a) => HasMkGoldenFiles' 6 (OCamlPackage packageName deps :> a) where
+instance (HasMkGoldenFiles a) => HasMkGoldenFiles' 7 (OCamlPackage packageName deps :> a) where
   mkGoldenFiles' _ Proxy size fp = mkGoldenFiles (Proxy :: Proxy a) size fp
 
-instance (HasMkGoldenFiles a, HasMkGoldenFiles b) => HasMkGoldenFiles' 5 ((OCamlModule modules :> a) :<|> b) where
+instance (HasMkGoldenFiles a, HasMkGoldenFiles b) => HasMkGoldenFiles' 6 ((OCamlModule modules :> a) :<|> b) where
   mkGoldenFiles' _ Proxy size fp = do
     mkGoldenFiles (Proxy :: Proxy a) size fp
     mkGoldenFiles (Proxy :: Proxy b) size fp
     
-instance (HasMkGoldenFiles a) => HasMkGoldenFiles' 4 (OCamlModule modules :> a) where
+instance (HasMkGoldenFiles a) => HasMkGoldenFiles' 5 (OCamlModule modules :> a) where
   mkGoldenFiles' _ Proxy size fp = mkGoldenFiles (Proxy :: Proxy a) size fp
 
-instance (HasMkGoldenFiles a) => HasMkGoldenFiles' 3 (OCamlSubModule subModule :> a) where
+instance (HasMkGoldenFiles a) => HasMkGoldenFiles' 4 (OCamlSubModule subModule :> a) where
   mkGoldenFiles' _ Proxy size fp = mkGoldenFiles (Proxy :: Proxy a) size fp
 
-instance (ToADTArbitrary a, ToJSON a) => HasMkGoldenFiles' 2 (OCamlTypeInFile a b) where
+instance (ToADTArbitrary a, ToJSON a) => HasMkGoldenFiles' 3 (OCamlTypeInFile a b) where
   mkGoldenFiles' _ Proxy size fp = mkGoldenFileForType size (Proxy :: Proxy a) fp
+
+instance (HasMkGoldenFiles a, HasMkGoldenFiles b) => HasMkGoldenFiles' 2 (a :> b) where
+  mkGoldenFiles' _ Proxy size fp = do
+    mkGoldenFiles (Proxy :: Proxy a) size fp
+    mkGoldenFiles (Proxy :: Proxy b) size fp
 
 instance (ToADTArbitrary a, ToJSON a) => HasMkGoldenFiles' 1 a where
   mkGoldenFiles' _ Proxy size fp = mkGoldenFileForType size (Proxy :: Proxy a) fp
 
---mkGolden :: forall a. (ToADTArbitrary a, ToJSON a) => Proxy a -> IO ()
--- mkGolden Proxy = mkGoldenFileForType 10 (Proxy :: Proxy a) "test/interface/golden/golden/dependency"
 
-{-
-class HasMkGoldenFiles' a where
-  mkGoldenFiles' :: Proxy a -> Int -> FilePath -> IO ()
 
-instance {-# OVERLAPPABLE #-} (ToADTArbitrary a, ToJSON a) => HasMkGoldenFiles' a where
-  mkGoldenFiles' Proxy size fp = mkGoldenFileForType size (Proxy :: Proxy a) fp
--}
---mkGolden :: forall a. (ToADTArbitrary a, ToJSON a) => Proxy a -> IO ()
--- mkGolden Proxy = mkGoldenFileForType 10 (Proxy :: Proxy a) "test/interface/golden/golden/dependency"
 
---    
+
 -- | Convert an OCamlPackage into a servant API.
 type family MkOCamlSpecAPI a :: * where
   MkOCamlSpecAPI (OCamlPackage a deps :> rest) = MkOCamlSpecAPI rest  

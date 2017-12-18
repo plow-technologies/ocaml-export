@@ -19,7 +19,7 @@
   "dependencies": {
     "bs-fetch": "git+ssh://git@github.com/plow-technologies/bs-fetch.git#01202669fb57a2e179e327bd816c2aa1db3dfdc3",
     "bs-aeson": "git+ssh://git@github.com/plow-technologies/bs-aeson.git#8e7938ce32cdef2e14dbf060f466f776331e3d55",
-    "bs-aeson-spec": "git+ssh://git@github.com/plow-technologies/bs-aeson-spec.git#cdd41a17e372bd0176169bb2a02c4419d76f5d3b",
+    "bs-aeson-spec": "git+ssh://git@github.com/plow-technologies/bs-aeson-spec.git#90e262bac479a3d4f3af330378432397e645cbf2",
     "bs-node": "github:buckletypes/bs-node",
     "bs-node-fetch": "^0.1.2"
   },

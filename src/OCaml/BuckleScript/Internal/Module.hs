@@ -164,8 +164,8 @@ instance (Typeable a) => HasOCamlType' 2 (OCamlTypeInFile a b) where
       Just (Just v) -> [decodeUtf8 v]
       _ -> fail $ "Unable to find the embedded file for " ++ typeName
 
-  mkSpec' _ _z _options modules url goldendir _fileMap = 
-    [toOCamlSpec2 (T.pack . tyConName . typeRepTyCon $ typeRep (Proxy :: Proxy a)) modules url goldendir]
+  mkSpec' _ Proxy _options modules url goldendir _fileMap = 
+    [typeInFileToOCamlSpec (T.pack . tyConName . typeRepTyCon $ typeRep (Proxy :: Proxy a)) modules url goldendir]
 
 
 instance (OCamlType a) => HasOCamlType' 1 a where

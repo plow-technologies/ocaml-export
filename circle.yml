@@ -1,12 +1,6 @@
 machine:
   pre:
     - sudo apt-get update
-    - sudo apt-get install gcc-4.8
-    - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 90
-    - gcc --version
-    - echo 'deb http://download.fpcomplete.com/ubuntu precise main'|sudo tee /etc/apt/sources.list.d/fpco.list
-    - sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 575159689BEFB442
-    - sudo apt-get update
     - sudo apt-get install stack -y
     - sudo apt-get update
     - sudo apt-get install ocaml
@@ -15,7 +9,7 @@ machine:
     version: 6.11.4
     
   environment:
-    PATH: $HOME/.cabal/bin:$CIRCLE_ARTIFACTS:$PATH:$HOME/$CIRCLE_PROJECT_REPONAME/.cabal-sandbox/bin
+    PATH: $HOME/.local/bin:$CIRCLE_ARTIFACTS:$PATH
 
 dependencies:
   cache_directories:
@@ -32,6 +26,7 @@ dependencies:
 
 test:
   override:
+    - bash test.sh
     - stack test:
         background: true
     - sleep 5

@@ -51,7 +51,8 @@ type ProductPackage
   :<|> OCamlModule '["OneTypeParameter"] :> OneTypeParameter TypeParameterRef0
   :<|> OCamlModule '["TwoTypeParameters"] :> TwoTypeParameters TypeParameterRef0 TypeParameterRef1
   :<|> OCamlModule '["ThreeTypeParameters"] :> Three TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
-  :<|> OCamlModule '["SubTypeParameter"] :> SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2)
+  :<|> OCamlModule '["SubTypeParameter"] :> SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
+  :<|> OCamlModule '["UnnamedProduct"] :> UnnamedProduct)
 
 mkGolden :: forall a. (ToADTArbitrary a, ToJSON a) => Proxy a -> IO ()
 mkGolden Proxy = mkGoldenFileForType 10 (Proxy :: Proxy a) "test/interface/golden/golden/product"
@@ -68,6 +69,7 @@ mkGoldenFiles = do
   mkGolden (Proxy :: Proxy (TwoTypeParameters TypeParameterRef0 TypeParameterRef1))
   mkGolden (Proxy :: Proxy (Three TypeParameterRef0 TypeParameterRef1 TypeParameterRef2))
   mkGolden (Proxy :: Proxy (SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2))
+  mkGolden (Proxy :: Proxy UnnamedProduct)
   
 compareInterfaceFiles = compareFiles "test/interface" "product" True
 
@@ -89,7 +91,8 @@ spec = do
     compareInterfaceFiles "TwoTypeParameters"
     compareInterfaceFiles "ThreeTypeParameters"
     compareInterfaceFiles "SubTypeParameter"
-
+    compareInterfaceFiles "UnnamedProduct"
+    
   let dir2 = "test/nointerface/temp"
   runIO $ mkPackage (Proxy :: Proxy ProductPackage) (PackageOptions dir2 "product" Map.empty False Nothing)
 
@@ -220,3 +223,11 @@ instance Arbitrary (SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypePar
     SubTypeParameter <$> pure v <*> arbitrary <*> arbitrary
 
 instance ToADTArbitrary (SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2)
+
+data UnnamedProduct = UnnamedProduct String Int
+  deriving (Eq, Read, Show, Generic, OCamlType, FromJSON, ToJSON)
+  
+instance Arbitrary UnnamedProduct where
+  arbitrary = UnnamedProduct <$> arbitrary <*> arbitrary
+
+instance ToADTArbitrary UnnamedProduct

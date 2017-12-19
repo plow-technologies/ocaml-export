@@ -380,9 +380,9 @@ instance (OCamlType a) =>
 -}
 
 
--- | Used to fill the type parameters of proxy types. `Proxy :: Proxy (Maybe TypeParameterRef0)`, `Proxy :: Proxy Either TypeParameterRef0 TypeParameterRef1`.
-data TypeParameterRef0 = TypeParameterRef0 deriving (Read, Show, Eq, Generic)
-instance Arbitrary TypeParameterRef0 where arbitrary = pure TypeParameterRef0
+-- | Used to fill the type parameters of proxy types. `Proxy :: Proxy (Maybe TypeParameterRef0)`, `Proxy :: Proxy Either TypeParameterRef0 TypeParameterRef1`. JSON representation is as an Int to simplify the automated tests.
+newtype TypeParameterRef0 = TypeParameterRef0 Int deriving (Read, Show, Eq, Generic)
+instance Arbitrary TypeParameterRef0 where arbitrary = TypeParameterRef0 <$> arbitrary
 instance ToADTArbitrary TypeParameterRef0
 instance FromJSON TypeParameterRef0
 instance ToJSON TypeParameterRef0
@@ -390,8 +390,8 @@ instance OCamlType TypeParameterRef0 where
   toOCamlType _ = OCamlDatatype (HaskellTypeMetaData "a0" "OCaml.BuckleScript.Types" "ocaml-export") "a0" $ OCamlValueConstructor $ NamedConstructor "a0" $ OCamlTypeParameterRef "a0"
 
 -- | Second unique TypeParameterRef.
-data TypeParameterRef1 = TypeParameterRef1 deriving (Read, Show, Eq, Generic)
-instance Arbitrary TypeParameterRef1 where arbitrary = pure TypeParameterRef1
+newtype TypeParameterRef1 = TypeParameterRef1 Int deriving (Read, Show, Eq, Generic)
+instance Arbitrary TypeParameterRef1 where arbitrary = TypeParameterRef1 <$> arbitrary
 instance ToADTArbitrary TypeParameterRef1
 instance FromJSON TypeParameterRef1
 instance ToJSON TypeParameterRef1
@@ -399,8 +399,8 @@ instance OCamlType TypeParameterRef1 where
   toOCamlType _ = OCamlDatatype (HaskellTypeMetaData "a1" "OCaml.BuckleScript.Types" "ocaml-export") "a1" $ OCamlValueConstructor $ NamedConstructor "a1" $ OCamlTypeParameterRef "a1"
 
 -- | Third unique TypeParameterRef.
-data TypeParameterRef2 = TypeParameterRef2 deriving (Read, Show, Eq, Generic)
-instance Arbitrary TypeParameterRef2 where arbitrary = pure TypeParameterRef2
+data TypeParameterRef2 = TypeParameterRef2 Int deriving (Read, Show, Eq, Generic)
+instance Arbitrary TypeParameterRef2 where arbitrary = TypeParameterRef2 <$> arbitrary
 instance ToADTArbitrary TypeParameterRef2
 instance FromJSON TypeParameterRef2
 instance ToJSON TypeParameterRef2
@@ -408,8 +408,8 @@ instance OCamlType TypeParameterRef2 where
   toOCamlType _ = OCamlDatatype (HaskellTypeMetaData "a2" "OCaml.BuckleScript.Types" "ocaml-export") "a2" $ OCamlValueConstructor $ NamedConstructor "a2" $ OCamlTypeParameterRef "a2"
 
 -- | Fourth unique TypeParameterRef.
-data TypeParameterRef3 = TypeParameterRef3 deriving (Read, Show, Eq, Generic)
-instance Arbitrary TypeParameterRef3 where arbitrary = pure TypeParameterRef3
+data TypeParameterRef3 = TypeParameterRef3 Int deriving (Read, Show, Eq, Generic)
+instance Arbitrary TypeParameterRef3 where arbitrary = TypeParameterRef3 <$> arbitrary
 instance ToADTArbitrary TypeParameterRef3
 instance FromJSON TypeParameterRef3
 instance ToJSON TypeParameterRef3
@@ -417,8 +417,8 @@ instance OCamlType TypeParameterRef3 where
   toOCamlType _ = OCamlDatatype (HaskellTypeMetaData "a3" "OCaml.BuckleScript.Types" "ocaml-export") "a3" $ OCamlValueConstructor $ NamedConstructor "a3" $ OCamlTypeParameterRef "a3"
 
 -- | Fifth unique TypeParameterRef.
-data TypeParameterRef4 = TypeParameterRef4 deriving (Read, Show, Eq, Generic)
-instance Arbitrary TypeParameterRef4 where arbitrary = pure TypeParameterRef4
+data TypeParameterRef4 = TypeParameterRef4 Int deriving (Read, Show, Eq, Generic)
+instance Arbitrary TypeParameterRef4 where arbitrary = TypeParameterRef4 <$> arbitrary
 instance ToADTArbitrary TypeParameterRef4
 instance FromJSON TypeParameterRef4
 instance ToJSON TypeParameterRef4
@@ -426,8 +426,8 @@ instance OCamlType TypeParameterRef4 where
   toOCamlType _ = OCamlDatatype (HaskellTypeMetaData "a4" "OCaml.BuckleScript.Types" "ocaml-export") "a4" $ OCamlValueConstructor $ NamedConstructor "a4" $ OCamlTypeParameterRef "a4"
 
 -- | Sixth unique TypeParameterRef.
-data TypeParameterRef5 = TypeParameterRef5 deriving (Read, Show, Eq, Generic)
-instance Arbitrary TypeParameterRef5 where arbitrary = pure TypeParameterRef5
+data TypeParameterRef5 = TypeParameterRef5 Int deriving (Read, Show, Eq, Generic)
+instance Arbitrary TypeParameterRef5 where arbitrary = TypeParameterRef5 <$> arbitrary
 instance ToADTArbitrary TypeParameterRef5
 instance FromJSON TypeParameterRef5
 instance ToJSON TypeParameterRef5

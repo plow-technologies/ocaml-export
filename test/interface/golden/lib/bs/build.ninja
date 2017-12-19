@@ -1,0 +1,292 @@
+bs_package_flags = -bs-package-name ocaml-export
+src_root_dir = /home/james/work/reason-export/test/interface/golden
+bsc = /home/james/work/reason-export/test/interface/golden/node_modules/bs-platform/bin/bsc.exe
+bsdep = /home/james/work/reason-export/test/interface/golden/node_modules/bs-platform/bin/bsb_helper.exe
+warnings = -w -30-40+6+7+27+32..39+44+45+101
+bsc_flags = -nostdlib -I '/home/james/work/reason-export/test/interface/golden/node_modules/bs-platform/lib/ocaml' -bs-no-version-header -bs-super-errors -no-alias-deps -color always
+ppx_flags = 
+bs_package_includes = -I /home/james/work/reason-export/test/interface/golden/node_modules/bs-node-fetch/lib/ocaml -I /home/james/work/reason-export/test/interface/golden/node_modules/bs-aeson/lib/ocaml -I /home/james/work/reason-export/test/interface/golden/node_modules/bs-node/lib/ocaml
+bs_package_dev_includes = -I /home/james/work/reason-export/test/interface/golden/node_modules/bs-aeson/lib/ocaml -I /home/james/work/reason-export/test/interface/golden/node_modules/bs-aeson-spec/lib/ocaml -I /home/james/work/reason-export/test/interface/golden/node_modules/bs-node-fetch/lib/ocaml -I /home/james/work/reason-export/test/interface/golden/node_modules/bs-jest/lib/ocaml
+refmt = /home/james/work/reason-export/test/interface/golden/node_modules/bs-platform/bin/refmt.exe
+reason_react_jsx = 
+refmt_flags = --print binary
+namespace = 
+bsb_dir_group = 0
+bsc_lib_includes = -I product -I sum -I file
+bsc_group_1_includes = -I __tests__/product
+bsc_group_2_includes = -I __tests__/sum
+bsc_group_3_includes = -I __tests__/file
+rule build_ast_and_module_sets
+  command = ${bsc}  ${pp_flags} ${ppx_flags} ${warnings} ${bsc_flags} -c -o ${out} -bs-syntax-only -bs-binary-ast ${in}
+  description = [34mBuilding[39m [2m${out}[22m
+build __tests__/file/File_spec.mlast : build_ast_and_module_sets $src_root_dir/__tests__/file/File_spec.ml
+rule build_deps
+  command = ${bsdep} ${namespace} -g ${bsb_dir_group} -MD ${in}
+  description = [34mBuilding[39m [2m${out}[22m
+build __tests__/file/File_spec.mlast.d : build_deps __tests__/file/File_spec.mlast
+  bsb_dir_group = 3
+rule build_cmj_cmi
+  command = ${bsc} ${bs_package_flags} -bs-assume-no-mli -bs-no-builtin-ppx-ml -bs-no-implicit-include ${bs_package_includes} ${bsc_lib_includes} ${bsc_extra_includes} ${warnings} ${bsc_flags} -o ${out} -c  ${in} $postbuild
+  depfile = ${in}.d
+  description = [34mBuilding[39m [2m${out}[22m
+build __tests__/file/File_spec.cmj |  $src_root_dir/lib/js/__tests__/file/File_spec.js __tests__/file/File_spec.cmi : build_cmj_cmi __tests__/file/File_spec.mlast
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/__tests__/file
+  bs_package_includes = $bs_package_includes $bs_package_dev_includes
+  bsc_extra_includes = $bsc_group_3_includes
+build __tests__/sum/Result_spec.mlast : build_ast_and_module_sets $src_root_dir/__tests__/sum/Result_spec.ml
+build __tests__/sum/Result_spec.mlast.d : build_deps __tests__/sum/Result_spec.mlast
+  bsb_dir_group = 2
+build __tests__/sum/Result_spec.cmj |  $src_root_dir/lib/js/__tests__/sum/Result_spec.js __tests__/sum/Result_spec.cmi : build_cmj_cmi __tests__/sum/Result_spec.mlast
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/__tests__/sum
+  bs_package_includes = $bs_package_includes $bs_package_dev_includes
+  bsc_extra_includes = $bsc_group_2_includes
+build __tests__/sum/NewType_spec.mlast : build_ast_and_module_sets $src_root_dir/__tests__/sum/NewType_spec.ml
+build __tests__/sum/NewType_spec.mlast.d : build_deps __tests__/sum/NewType_spec.mlast
+  bsb_dir_group = 2
+build __tests__/sum/NewType_spec.cmj |  $src_root_dir/lib/js/__tests__/sum/NewType_spec.js __tests__/sum/NewType_spec.cmi : build_cmj_cmi __tests__/sum/NewType_spec.mlast
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/__tests__/sum
+  bs_package_includes = $bs_package_includes $bs_package_dev_includes
+  bsc_extra_includes = $bsc_group_2_includes
+build __tests__/sum/OnOrOff_spec.mlast : build_ast_and_module_sets $src_root_dir/__tests__/sum/OnOrOff_spec.ml
+build __tests__/sum/OnOrOff_spec.mlast.d : build_deps __tests__/sum/OnOrOff_spec.mlast
+  bsb_dir_group = 2
+build __tests__/sum/OnOrOff_spec.cmj |  $src_root_dir/lib/js/__tests__/sum/OnOrOff_spec.js __tests__/sum/OnOrOff_spec.cmi : build_cmj_cmi __tests__/sum/OnOrOff_spec.mlast
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/__tests__/sum
+  bs_package_includes = $bs_package_includes $bs_package_dev_includes
+  bsc_extra_includes = $bsc_group_2_includes
+build __tests__/sum/WithTuple_spec.mlast : build_ast_and_module_sets $src_root_dir/__tests__/sum/WithTuple_spec.ml
+build __tests__/sum/WithTuple_spec.mlast.d : build_deps __tests__/sum/WithTuple_spec.mlast
+  bsb_dir_group = 2
+build __tests__/sum/WithTuple_spec.cmj |  $src_root_dir/lib/js/__tests__/sum/WithTuple_spec.js __tests__/sum/WithTuple_spec.cmi : build_cmj_cmi __tests__/sum/WithTuple_spec.mlast
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/__tests__/sum
+  bs_package_includes = $bs_package_includes $bs_package_dev_includes
+  bsc_extra_includes = $bsc_group_2_includes
+build __tests__/sum/SumVariant_spec.mlast : build_ast_and_module_sets $src_root_dir/__tests__/sum/SumVariant_spec.ml
+build __tests__/sum/SumVariant_spec.mlast.d : build_deps __tests__/sum/SumVariant_spec.mlast
+  bsb_dir_group = 2
+build __tests__/sum/SumVariant_spec.cmj |  $src_root_dir/lib/js/__tests__/sum/SumVariant_spec.js __tests__/sum/SumVariant_spec.cmi : build_cmj_cmi __tests__/sum/SumVariant_spec.mlast
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/__tests__/sum
+  bs_package_includes = $bs_package_includes $bs_package_dev_includes
+  bsc_extra_includes = $bsc_group_2_includes
+build __tests__/sum/SumWithRecord_spec.mlast : build_ast_and_module_sets $src_root_dir/__tests__/sum/SumWithRecord_spec.ml
+build __tests__/sum/SumWithRecord_spec.mlast.d : build_deps __tests__/sum/SumWithRecord_spec.mlast
+  bsb_dir_group = 2
+build __tests__/sum/SumWithRecord_spec.cmj |  $src_root_dir/lib/js/__tests__/sum/SumWithRecord_spec.js __tests__/sum/SumWithRecord_spec.cmi : build_cmj_cmi __tests__/sum/SumWithRecord_spec.mlast
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/__tests__/sum
+  bs_package_includes = $bs_package_includes $bs_package_dev_includes
+  bsc_extra_includes = $bsc_group_2_includes
+build __tests__/sum/NameOrIdNumber_spec.mlast : build_ast_and_module_sets $src_root_dir/__tests__/sum/NameOrIdNumber_spec.ml
+build __tests__/sum/NameOrIdNumber_spec.mlast.d : build_deps __tests__/sum/NameOrIdNumber_spec.mlast
+  bsb_dir_group = 2
+build __tests__/sum/NameOrIdNumber_spec.cmj |  $src_root_dir/lib/js/__tests__/sum/NameOrIdNumber_spec.js __tests__/sum/NameOrIdNumber_spec.cmi : build_cmj_cmi __tests__/sum/NameOrIdNumber_spec.mlast
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/__tests__/sum
+  bs_package_includes = $bs_package_includes $bs_package_dev_includes
+  bsc_extra_includes = $bsc_group_2_includes
+build __tests__/product/Card_spec.mlast : build_ast_and_module_sets $src_root_dir/__tests__/product/Card_spec.ml
+build __tests__/product/Card_spec.mlast.d : build_deps __tests__/product/Card_spec.mlast
+  bsb_dir_group = 1
+build __tests__/product/Card_spec.cmj |  $src_root_dir/lib/js/__tests__/product/Card_spec.js __tests__/product/Card_spec.cmi : build_cmj_cmi __tests__/product/Card_spec.mlast
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/__tests__/product
+  bs_package_includes = $bs_package_includes $bs_package_dev_includes
+  bsc_extra_includes = $bsc_group_1_includes
+build __tests__/product/Person_spec.mlast : build_ast_and_module_sets $src_root_dir/__tests__/product/Person_spec.ml
+build __tests__/product/Person_spec.mlast.d : build_deps __tests__/product/Person_spec.mlast
+  bsb_dir_group = 1
+build __tests__/product/Person_spec.cmj |  $src_root_dir/lib/js/__tests__/product/Person_spec.js __tests__/product/Person_spec.cmi : build_cmj_cmi __tests__/product/Person_spec.mlast
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/__tests__/product
+  bs_package_includes = $bs_package_includes $bs_package_dev_includes
+  bsc_extra_includes = $bsc_group_1_includes
+build __tests__/product/Company_spec.mlast : build_ast_and_module_sets $src_root_dir/__tests__/product/Company_spec.ml
+build __tests__/product/Company_spec.mlast.d : build_deps __tests__/product/Company_spec.mlast
+  bsb_dir_group = 1
+build __tests__/product/Company_spec.cmj |  $src_root_dir/lib/js/__tests__/product/Company_spec.js __tests__/product/Company_spec.cmi : build_cmj_cmi __tests__/product/Company_spec.mlast
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/__tests__/product
+  bs_package_includes = $bs_package_includes $bs_package_dev_includes
+  bsc_extra_includes = $bsc_group_1_includes
+build __tests__/product/CustomOption_spec.mlast : build_ast_and_module_sets $src_root_dir/__tests__/product/CustomOption_spec.ml
+build __tests__/product/CustomOption_spec.mlast.d : build_deps __tests__/product/CustomOption_spec.mlast
+  bsb_dir_group = 1
+build __tests__/product/CustomOption_spec.cmj |  $src_root_dir/lib/js/__tests__/product/CustomOption_spec.js __tests__/product/CustomOption_spec.cmi : build_cmj_cmi __tests__/product/CustomOption_spec.mlast
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/__tests__/product
+  bs_package_includes = $bs_package_includes $bs_package_dev_includes
+  bsc_extra_includes = $bsc_group_1_includes
+build __tests__/product/SimpleChoice_spec.mlast : build_ast_and_module_sets $src_root_dir/__tests__/product/SimpleChoice_spec.ml
+build __tests__/product/SimpleChoice_spec.mlast.d : build_deps __tests__/product/SimpleChoice_spec.mlast
+  bsb_dir_group = 1
+build __tests__/product/SimpleChoice_spec.cmj |  $src_root_dir/lib/js/__tests__/product/SimpleChoice_spec.js __tests__/product/SimpleChoice_spec.cmi : build_cmj_cmi __tests__/product/SimpleChoice_spec.mlast
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/__tests__/product
+  bs_package_includes = $bs_package_includes $bs_package_dev_includes
+  bsc_extra_includes = $bsc_group_1_includes
+build __tests__/product/OneTypeParameter_spec.mlast : build_ast_and_module_sets $src_root_dir/__tests__/product/OneTypeParameter_spec.ml
+build __tests__/product/OneTypeParameter_spec.mlast.d : build_deps __tests__/product/OneTypeParameter_spec.mlast
+  bsb_dir_group = 1
+build __tests__/product/OneTypeParameter_spec.cmj |  $src_root_dir/lib/js/__tests__/product/OneTypeParameter_spec.js __tests__/product/OneTypeParameter_spec.cmi : build_cmj_cmi __tests__/product/OneTypeParameter_spec.mlast
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/__tests__/product
+  bs_package_includes = $bs_package_includes $bs_package_dev_includes
+  bsc_extra_includes = $bsc_group_1_includes
+build __tests__/product/SubTypeParameter_spec.mlast : build_ast_and_module_sets $src_root_dir/__tests__/product/SubTypeParameter_spec.ml
+build __tests__/product/SubTypeParameter_spec.mlast.d : build_deps __tests__/product/SubTypeParameter_spec.mlast
+  bsb_dir_group = 1
+build __tests__/product/SubTypeParameter_spec.cmj |  $src_root_dir/lib/js/__tests__/product/SubTypeParameter_spec.js __tests__/product/SubTypeParameter_spec.cmi : build_cmj_cmi __tests__/product/SubTypeParameter_spec.mlast
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/__tests__/product
+  bs_package_includes = $bs_package_includes $bs_package_dev_includes
+  bsc_extra_includes = $bsc_group_1_includes
+build __tests__/product/TwoTypeParameters_spec.mlast : build_ast_and_module_sets $src_root_dir/__tests__/product/TwoTypeParameters_spec.ml
+build __tests__/product/TwoTypeParameters_spec.mlast.d : build_deps __tests__/product/TwoTypeParameters_spec.mlast
+  bsb_dir_group = 1
+build __tests__/product/TwoTypeParameters_spec.cmj |  $src_root_dir/lib/js/__tests__/product/TwoTypeParameters_spec.js __tests__/product/TwoTypeParameters_spec.cmi : build_cmj_cmi __tests__/product/TwoTypeParameters_spec.mlast
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/__tests__/product
+  bs_package_includes = $bs_package_includes $bs_package_dev_includes
+  bsc_extra_includes = $bsc_group_1_includes
+build __tests__/product/ThreeTypeParameters_spec.mlast : build_ast_and_module_sets $src_root_dir/__tests__/product/ThreeTypeParameters_spec.ml
+build __tests__/product/ThreeTypeParameters_spec.mlast.d : build_deps __tests__/product/ThreeTypeParameters_spec.mlast
+  bsb_dir_group = 1
+build __tests__/product/ThreeTypeParameters_spec.cmj |  $src_root_dir/lib/js/__tests__/product/ThreeTypeParameters_spec.js __tests__/product/ThreeTypeParameters_spec.cmi : build_cmj_cmi __tests__/product/ThreeTypeParameters_spec.mlast
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/__tests__/product
+  bs_package_includes = $bs_package_includes $bs_package_dev_includes
+  bsc_extra_includes = $bsc_group_1_includes
+build file/File.mliast : build_ast_and_module_sets $src_root_dir/file/File.mli
+build file/File.mliast.d : build_deps file/File.mliast
+rule build_cmi
+  command = ${bsc} ${bs_package_flags} -bs-no-builtin-ppx-mli -bs-no-implicit-include ${bs_package_includes} ${bsc_lib_includes} ${bsc_extra_includes} ${warnings} ${bsc_flags} -o ${out} -c  ${in}
+  depfile = ${in}.d
+  description = [34mBuilding[39m [2m${out}[22m
+build file/File.cmi : build_cmi file/File.mliast
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/file
+build file/File.mlast : build_ast_and_module_sets $src_root_dir/file/File.ml
+build file/File.mlast.d : build_deps file/File.mlast
+rule build_cmj_only
+  command = ${bsc} ${bs_package_flags} -bs-assume-has-mli -bs-no-builtin-ppx-ml -bs-no-implicit-include  ${bs_package_includes} ${bsc_lib_includes} ${bsc_extra_includes} ${warnings} ${bsc_flags} -o ${out} -c  ${in} $postbuild
+  depfile = ${in}.d
+  description = [34mBuilding[39m [2m${out}[22m
+build file/File.cmj |  $src_root_dir/lib/js/file/File.js : build_cmj_only file/File.mlast |  file/File.cmi
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/file
+build sum/Result.mliast : build_ast_and_module_sets $src_root_dir/sum/Result.mli
+build sum/Result.mliast.d : build_deps sum/Result.mliast
+build sum/Result.cmi : build_cmi sum/Result.mliast
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/sum
+build sum/Result.mlast : build_ast_and_module_sets $src_root_dir/sum/Result.ml
+build sum/Result.mlast.d : build_deps sum/Result.mlast
+build sum/Result.cmj |  $src_root_dir/lib/js/sum/Result.js : build_cmj_only sum/Result.mlast |  sum/Result.cmi
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/sum
+build sum/NewType.mliast : build_ast_and_module_sets $src_root_dir/sum/NewType.mli
+build sum/NewType.mliast.d : build_deps sum/NewType.mliast
+build sum/NewType.cmi : build_cmi sum/NewType.mliast
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/sum
+build sum/NewType.mlast : build_ast_and_module_sets $src_root_dir/sum/NewType.ml
+build sum/NewType.mlast.d : build_deps sum/NewType.mlast
+build sum/NewType.cmj |  $src_root_dir/lib/js/sum/NewType.js : build_cmj_only sum/NewType.mlast |  sum/NewType.cmi
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/sum
+build sum/OnOrOff.mliast : build_ast_and_module_sets $src_root_dir/sum/OnOrOff.mli
+build sum/OnOrOff.mliast.d : build_deps sum/OnOrOff.mliast
+build sum/OnOrOff.cmi : build_cmi sum/OnOrOff.mliast
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/sum
+build sum/OnOrOff.mlast : build_ast_and_module_sets $src_root_dir/sum/OnOrOff.ml
+build sum/OnOrOff.mlast.d : build_deps sum/OnOrOff.mlast
+build sum/OnOrOff.cmj |  $src_root_dir/lib/js/sum/OnOrOff.js : build_cmj_only sum/OnOrOff.mlast |  sum/OnOrOff.cmi
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/sum
+build sum/WithTuple.mliast : build_ast_and_module_sets $src_root_dir/sum/WithTuple.mli
+build sum/WithTuple.mliast.d : build_deps sum/WithTuple.mliast
+build sum/WithTuple.cmi : build_cmi sum/WithTuple.mliast
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/sum
+build sum/WithTuple.mlast : build_ast_and_module_sets $src_root_dir/sum/WithTuple.ml
+build sum/WithTuple.mlast.d : build_deps sum/WithTuple.mlast
+build sum/WithTuple.cmj |  $src_root_dir/lib/js/sum/WithTuple.js : build_cmj_only sum/WithTuple.mlast |  sum/WithTuple.cmi
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/sum
+build sum/SumVariant.mliast : build_ast_and_module_sets $src_root_dir/sum/SumVariant.mli
+build sum/SumVariant.mliast.d : build_deps sum/SumVariant.mliast
+build sum/SumVariant.cmi : build_cmi sum/SumVariant.mliast
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/sum
+build sum/SumVariant.mlast : build_ast_and_module_sets $src_root_dir/sum/SumVariant.ml
+build sum/SumVariant.mlast.d : build_deps sum/SumVariant.mlast
+build sum/SumVariant.cmj |  $src_root_dir/lib/js/sum/SumVariant.js : build_cmj_only sum/SumVariant.mlast |  sum/SumVariant.cmi
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/sum
+build sum/SumWithRecord.mliast : build_ast_and_module_sets $src_root_dir/sum/SumWithRecord.mli
+build sum/SumWithRecord.mliast.d : build_deps sum/SumWithRecord.mliast
+build sum/SumWithRecord.cmi : build_cmi sum/SumWithRecord.mliast
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/sum
+build sum/SumWithRecord.mlast : build_ast_and_module_sets $src_root_dir/sum/SumWithRecord.ml
+build sum/SumWithRecord.mlast.d : build_deps sum/SumWithRecord.mlast
+build sum/SumWithRecord.cmj |  $src_root_dir/lib/js/sum/SumWithRecord.js : build_cmj_only sum/SumWithRecord.mlast |  sum/SumWithRecord.cmi
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/sum
+build sum/NameOrIdNumber.mliast : build_ast_and_module_sets $src_root_dir/sum/NameOrIdNumber.mli
+build sum/NameOrIdNumber.mliast.d : build_deps sum/NameOrIdNumber.mliast
+build sum/NameOrIdNumber.cmi : build_cmi sum/NameOrIdNumber.mliast
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/sum
+build sum/NameOrIdNumber.mlast : build_ast_and_module_sets $src_root_dir/sum/NameOrIdNumber.ml
+build sum/NameOrIdNumber.mlast.d : build_deps sum/NameOrIdNumber.mlast
+build sum/NameOrIdNumber.cmj |  $src_root_dir/lib/js/sum/NameOrIdNumber.js : build_cmj_only sum/NameOrIdNumber.mlast |  sum/NameOrIdNumber.cmi
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/sum
+build product/Card.mliast : build_ast_and_module_sets $src_root_dir/product/Card.mli
+build product/Card.mliast.d : build_deps product/Card.mliast
+build product/Card.cmi : build_cmi product/Card.mliast
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/product
+build product/Card.mlast : build_ast_and_module_sets $src_root_dir/product/Card.ml
+build product/Card.mlast.d : build_deps product/Card.mlast
+build product/Card.cmj |  $src_root_dir/lib/js/product/Card.js : build_cmj_only product/Card.mlast |  product/Card.cmi
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/product
+build product/Person.mliast : build_ast_and_module_sets $src_root_dir/product/Person.mli
+build product/Person.mliast.d : build_deps product/Person.mliast
+build product/Person.cmi : build_cmi product/Person.mliast
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/product
+build product/Person.mlast : build_ast_and_module_sets $src_root_dir/product/Person.ml
+build product/Person.mlast.d : build_deps product/Person.mlast
+build product/Person.cmj |  $src_root_dir/lib/js/product/Person.js : build_cmj_only product/Person.mlast |  product/Person.cmi
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/product
+build product/Company.mliast : build_ast_and_module_sets $src_root_dir/product/Company.mli
+build product/Company.mliast.d : build_deps product/Company.mliast
+build product/Company.cmi : build_cmi product/Company.mliast
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/product
+build product/Company.mlast : build_ast_and_module_sets $src_root_dir/product/Company.ml
+build product/Company.mlast.d : build_deps product/Company.mlast
+build product/Company.cmj |  $src_root_dir/lib/js/product/Company.js : build_cmj_only product/Company.mlast |  product/Company.cmi
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/product
+build product/CustomOption.mliast : build_ast_and_module_sets $src_root_dir/product/CustomOption.mli
+build product/CustomOption.mliast.d : build_deps product/CustomOption.mliast
+build product/CustomOption.cmi : build_cmi product/CustomOption.mliast
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/product
+build product/CustomOption.mlast : build_ast_and_module_sets $src_root_dir/product/CustomOption.ml
+build product/CustomOption.mlast.d : build_deps product/CustomOption.mlast
+build product/CustomOption.cmj |  $src_root_dir/lib/js/product/CustomOption.js : build_cmj_only product/CustomOption.mlast |  product/CustomOption.cmi
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/product
+build product/SimpleChoice.mliast : build_ast_and_module_sets $src_root_dir/product/SimpleChoice.mli
+build product/SimpleChoice.mliast.d : build_deps product/SimpleChoice.mliast
+build product/SimpleChoice.cmi : build_cmi product/SimpleChoice.mliast
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/product
+build product/SimpleChoice.mlast : build_ast_and_module_sets $src_root_dir/product/SimpleChoice.ml
+build product/SimpleChoice.mlast.d : build_deps product/SimpleChoice.mlast
+build product/SimpleChoice.cmj |  $src_root_dir/lib/js/product/SimpleChoice.js : build_cmj_only product/SimpleChoice.mlast |  product/SimpleChoice.cmi
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/product
+build product/OneTypeParameter.mliast : build_ast_and_module_sets $src_root_dir/product/OneTypeParameter.mli
+build product/OneTypeParameter.mliast.d : build_deps product/OneTypeParameter.mliast
+build product/OneTypeParameter.cmi : build_cmi product/OneTypeParameter.mliast
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/product
+build product/OneTypeParameter.mlast : build_ast_and_module_sets $src_root_dir/product/OneTypeParameter.ml
+build product/OneTypeParameter.mlast.d : build_deps product/OneTypeParameter.mlast
+build product/OneTypeParameter.cmj |  $src_root_dir/lib/js/product/OneTypeParameter.js : build_cmj_only product/OneTypeParameter.mlast |  product/OneTypeParameter.cmi
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/product
+build product/SubTypeParameter.mliast : build_ast_and_module_sets $src_root_dir/product/SubTypeParameter.mli
+build product/SubTypeParameter.mliast.d : build_deps product/SubTypeParameter.mliast
+build product/SubTypeParameter.cmi : build_cmi product/SubTypeParameter.mliast
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/product
+build product/SubTypeParameter.mlast : build_ast_and_module_sets $src_root_dir/product/SubTypeParameter.ml
+build product/SubTypeParameter.mlast.d : build_deps product/SubTypeParameter.mlast
+build product/SubTypeParameter.cmj |  $src_root_dir/lib/js/product/SubTypeParameter.js : build_cmj_only product/SubTypeParameter.mlast |  product/SubTypeParameter.cmi
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/product
+build product/TwoTypeParameters.mliast : build_ast_and_module_sets $src_root_dir/product/TwoTypeParameters.mli
+build product/TwoTypeParameters.mliast.d : build_deps product/TwoTypeParameters.mliast
+build product/TwoTypeParameters.cmi : build_cmi product/TwoTypeParameters.mliast
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/product
+build product/TwoTypeParameters.mlast : build_ast_and_module_sets $src_root_dir/product/TwoTypeParameters.ml
+build product/TwoTypeParameters.mlast.d : build_deps product/TwoTypeParameters.mlast
+build product/TwoTypeParameters.cmj |  $src_root_dir/lib/js/product/TwoTypeParameters.js : build_cmj_only product/TwoTypeParameters.mlast |  product/TwoTypeParameters.cmi
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/product
+build product/ThreeTypeParameters.mliast : build_ast_and_module_sets $src_root_dir/product/ThreeTypeParameters.mli
+build product/ThreeTypeParameters.mliast.d : build_deps product/ThreeTypeParameters.mliast
+build product/ThreeTypeParameters.cmi : build_cmi product/ThreeTypeParameters.mliast
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/product
+build product/ThreeTypeParameters.mlast : build_ast_and_module_sets $src_root_dir/product/ThreeTypeParameters.ml
+build product/ThreeTypeParameters.mlast.d : build_deps product/ThreeTypeParameters.mlast
+build product/ThreeTypeParameters.cmj |  $src_root_dir/lib/js/product/ThreeTypeParameters.js : build_cmj_only product/ThreeTypeParameters.mlast |  product/ThreeTypeParameters.cmi
+  bs_package_flags = $bs_package_flags  -bs-package-output commonjs:lib/js/product
+build build.ninja : phony  ||  product/ThreeTypeParameters.mlast.d product/ThreeTypeParameters.mliast.d product/TwoTypeParameters.mlast.d product/TwoTypeParameters.mliast.d product/SubTypeParameter.mlast.d product/SubTypeParameter.mliast.d product/OneTypeParameter.mlast.d product/OneTypeParameter.mliast.d product/SimpleChoice.mlast.d product/SimpleChoice.mliast.d product/CustomOption.mlast.d product/CustomOption.mliast.d product/Company.mlast.d product/Company.mliast.d product/Person.mlast.d product/Person.mliast.d product/Card.mlast.d product/Card.mliast.d sum/NameOrIdNumber.mlast.d sum/NameOrIdNumber.mliast.d sum/SumWithRecord.mlast.d sum/SumWithRecord.mliast.d sum/SumVariant.mlast.d sum/SumVariant.mliast.d sum/WithTuple.mlast.d sum/WithTuple.mliast.d sum/OnOrOff.mlast.d sum/OnOrOff.mliast.d sum/NewType.mlast.d sum/NewType.mliast.d sum/Result.mlast.d sum/Result.mliast.d file/File.mlast.d file/File.mliast.d __tests__/product/ThreeTypeParameters_spec.mlast.d __tests__/product/TwoTypeParameters_spec.mlast.d __tests__/product/SubTypeParameter_spec.mlast.d __tests__/product/OneTypeParameter_spec.mlast.d __tests__/product/SimpleChoice_spec.mlast.d __tests__/product/CustomOption_spec.mlast.d __tests__/product/Company_spec.mlast.d __tests__/product/Person_spec.mlast.d __tests__/product/Card_spec.mlast.d __tests__/sum/NameOrIdNumber_spec.mlast.d __tests__/sum/SumWithRecord_spec.mlast.d __tests__/sum/SumVariant_spec.mlast.d __tests__/sum/WithTuple_spec.mlast.d __tests__/sum/OnOrOff_spec.mlast.d __tests__/sum/NewType_spec.mlast.d __tests__/sum/Result_spec.mlast.d __tests__/file/File_spec.mlast.d

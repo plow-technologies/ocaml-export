@@ -17,6 +17,7 @@ module OCaml.BuckleScript.Record
   ( toOCamlTypeSourceWith
   ) where
 
+-- base
 import Control.Monad.Reader
 import Data.List (nub)
 import Data.Maybe (catMaybes)
@@ -27,8 +28,8 @@ import Data.Proxy (Proxy (..))
 import qualified Data.Map.Strict as Map
 
 -- ocaml-export
-import           OCaml.BuckleScript.Types
-import           OCaml.Common
+import OCaml.BuckleScript.Types
+import OCaml.Internal.Common
 
 -- text
 import Data.Text (Text)

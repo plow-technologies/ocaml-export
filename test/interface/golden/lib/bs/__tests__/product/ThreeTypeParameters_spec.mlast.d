@@ -1,0 +1,1 @@
+__tests__/product/ThreeTypeParameters_spec.cmj : product/ThreeTypeParameters.cmj

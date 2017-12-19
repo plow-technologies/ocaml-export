@@ -4,6 +4,7 @@
 
 module Options where
 
+{-
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Aeson.Types hiding (Options)
 import Data.Char (toUpper,toLower)
@@ -21,7 +22,7 @@ import Test.QuickCheck.Arbitrary.ADT
 import Test.Aeson.Internal.ADT.GoldenSpecs
 import Util
 
-{-
+
 testOptionsInterface = testOCamlTypeWithInterface Options
 
 mkTestOCaml :: OCamlType a => Text -> a -> OCamlInterface

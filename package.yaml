@@ -1,6 +1,6 @@
 name: ocaml-export
 version: 0.1.0.0
-synopsis: Collect statistics for all plowtech servers
+synopsis: Convert Haskell types in OCaml types
 description: README.md
 category: Web
 author: James M.C. Haver II
@@ -12,14 +12,17 @@ github: plow-technologies/ocaml-export
 library:
   source-dirs: src
   exposed-modules: 
-  - OCaml.Common
   - OCaml.Export
-  - OCaml.File
   - OCaml.BuckleScript.Decode
   - OCaml.BuckleScript.Encode
-  - OCaml.BuckleScript.Record  
+  - OCaml.BuckleScript.Record
   - OCaml.BuckleScript.Spec
   - OCaml.BuckleScript.Types
+  # Internal packages
+  - OCaml.Internal.Common  
+  - OCaml.BuckleScript.Internal.Spec
+  - OCaml.BuckleScript.Internal.Module
+  - OCaml.BuckleScript.Internal.Package  
   dependencies:
   - base >= 4.7 && < 5
   - aeson
@@ -29,11 +32,13 @@ library:
   - file-embed
   - filepath
   - formatting
+  - hspec-golden-aeson >= 0.4.0.0
   - mtl
   - split
   - QuickCheck
   - quickcheck-arbitrary-adt
   - servant
+  - servant-server
   - text
   - template-haskell
   - time
@@ -42,7 +47,9 @@ library:
   ghc-options:
   - -Wall
   - -Werror
+  - -Wredundant-constraints
   - -fprint-potential-instances
+
 tests:
   spec:
     main: Spec.hs

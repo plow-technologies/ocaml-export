@@ -32,15 +32,15 @@ import qualified Data.Aeson.Types as Aeson (Options(..))
 import qualified Data.Map as Map
 
 -- text
-import           Data.Text (Text)
+import Data.Text (Text)
 import qualified Data.Text as T
 
 -- wl-pprint
-import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
+import Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
 
 -- ocaml-export
-import           OCaml.BuckleScript.Types
-import           OCaml.Common
+import OCaml.BuckleScript.Types
+import OCaml.Internal.Common
 
 -- | Render the encoder function
 class HasEncoder a where

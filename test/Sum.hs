@@ -10,14 +10,17 @@
 
 module Sum where
 
-import Data.Aeson (FromJSON, ToJSON)
-import Data.Proxy
+-- base
 import GHC.Generics
-import OCaml.Export
-import Test.Hspec
-import Util
+
+-- aeson
+import Data.Aeson (FromJSON, ToJSON)
+
+-- containers
 import qualified Data.Map as Map
 
+-- hspec
+import Test.Hspec
 
 -- QuickCheck
 import Test.QuickCheck hiding (Result, Success)
@@ -26,8 +29,16 @@ import Test.QuickCheck hiding (Result, Success)
 import Test.QuickCheck.Arbitrary.ADT
 import Test.Aeson.Internal.ADT.GoldenSpecs
 
-import Servant
+-- servant
 import Servant.API
+
+-- servant-server
+import Servant
+
+-- ocaml-export
+import OCaml.Export hiding (mkGoldenFiles)
+import Util
+
 
 type SumPackage
   = OCamlPackage "sum" NoDependency :>
@@ -38,9 +49,6 @@ type SumPackage
   :<|> OCamlModule '["SumWithRecord"] :> SumWithRecord
   :<|> OCamlModule '["Result"] :> Result TypeParameterRef0 TypeParameterRef1
   :<|> OCamlModule '["NewType"] :> NewType)
-
--- server1 :: Server (MkOCamlSpecAPI SumPackage)
--- server1 = (pure :<|> (pure :<|> pure))
 
 compareInterfaceFiles = compareFiles "test/interface" "sum" True
 

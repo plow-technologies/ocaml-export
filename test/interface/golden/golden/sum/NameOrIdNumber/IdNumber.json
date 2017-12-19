@@ -1,17 +1,13 @@
 {
-    "seed": -4307075982238666473,
+    "seed": -6700410909550775431,
     "samples": [
         {
             "tag": "IdNumber",
-            "contents": -2
+            "contents": 10
         },
         {
             "tag": "IdNumber",
-            "contents": 6
-        },
-        {
-            "tag": "IdNumber",
-            "contents": -23
+            "contents": -30
         },
         {
             "tag": "IdNumber",
@@ -19,27 +15,31 @@
         },
         {
             "tag": "IdNumber",
-            "contents": -2
+            "contents": -8
         },
         {
             "tag": "IdNumber",
-            "contents": 19
+            "contents": -26
         },
         {
             "tag": "IdNumber",
-            "contents": -4
+            "contents": -1
         },
         {
             "tag": "IdNumber",
-            "contents": 21
+            "contents": -24
         },
         {
             "tag": "IdNumber",
-            "contents": 19
+            "contents": -11
         },
         {
             "tag": "IdNumber",
-            "contents": -25
+            "contents": -14
+        },
+        {
+            "tag": "IdNumber",
+            "contents": -8
         }
     ]
 }

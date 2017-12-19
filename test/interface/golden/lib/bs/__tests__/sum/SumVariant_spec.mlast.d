@@ -1,0 +1,1 @@
+__tests__/sum/SumVariant_spec.cmj : sum/SumVariant.cmj

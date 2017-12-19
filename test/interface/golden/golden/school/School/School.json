@@ -1,0 +1,3150 @@
+{
+    "seed": -6935824360712168237,
+    "samples": [
+        {
+            "administrator": {
+                "created": "1864-05-28T00:00:01.011Z",
+                "name": "]r*\u0016g{&üùÜ)g,\u0015>Ax\u0019¶ ãlÍ\u0013\u001ba",
+                "id": -29
+            },
+            "schoolName": "9(öQOGaA\u0017\u001e~\u000c",
+            "classes": [
+                {
+                    "subject": "LZzlz ÅæUÔ)WBH3[",
+                    "students": [
+                        {
+                            "created": "1864-05-30T00:00:01.011Z",
+                            "name": null,
+                            "id": 0
+                        },
+                        {
+                            "created": "1864-04-18T00:00:01.011Z",
+                            "name": "\u0000>-\u001a\\Aøí^v\u001a9Ú\u0013t\u0006",
+                            "id": 15
+                        },
+                        {
+                            "created": "1864-05-30T00:00:01.011Z",
+                            "name": "'´b&Y(9",
+                            "id": 24
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-26T00:00:01.011Z",
+                        "name": "\r_ó\u001d0\"@ZUÞ[@\u001e#",
+                        "id": 8
+                    }
+                },
+                {
+                    "subject": "k!S}bnQ´ã\u0013ÿ§}J\r³ü\u000c}",
+                    "students": [
+                        {
+                            "created": "1864-04-27T00:00:01.011Z",
+                            "name": "\u0002SòI\t+X8pó-@\u001b.2\u0005gòm\\\u0011a:(T<",
+                            "id": -21
+                        },
+                        {
+                            "created": "1864-05-29T00:00:01.011Z",
+                            "name": "Þ1'`õ\u001fH2©_;3\u000cµH.PQI9~\u001cz?C",
+                            "id": -25
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-27T00:00:01.011Z",
+                        "name": "aË,Fs",
+                        "id": 12
+                    }
+                },
+                {
+                    "subject": "PE",
+                    "students": [
+                        {
+                            "created": "1864-04-19T00:00:01.011Z",
+                            "name": "bâîTÜ",
+                            "id": -15
+                        },
+                        {
+                            "created": "1864-05-18T00:00:01.011Z",
+                            "name": "»&U)û.?bÔ\u0019\u001f*°ª?)e\u0001w <(\u000bunæ",
+                            "id": 18
+                        },
+                        {
+                            "created": "1864-05-22T00:00:01.011Z",
+                            "name": "\u001a§[;\u0006\u001e\u00149Ì8\r2vD7",
+                            "id": -2
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-28T00:00:01.011Z",
+                        "name": "\u0013vô®M¿",
+                        "id": -5
+                    }
+                },
+                {
+                    "subject": "\u000b\u0018c\u001bñªøð=*",
+                    "students": [
+                        {
+                            "created": "1864-06-05T00:00:01.011Z",
+                            "name": null,
+                            "id": 19
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-03T00:00:01.011Z",
+                        "name": " y±æm\u0000Z>4jt®b´CÃÁ,Ô\u0004\u001a",
+                        "id": 21
+                    }
+                },
+                {
+                    "subject": "\u0018?\u0006\u001eC[nka0uQT\u000b3\u0001ëÒX&y®R8",
+                    "students": [
+                        {
+                            "created": "1864-06-05T00:00:01.011Z",
+                            "name": null,
+                            "id": 23
+                        },
+                        {
+                            "created": "1864-04-25T00:00:01.011Z",
+                            "name": "",
+                            "id": 24
+                        },
+                        {
+                            "created": "1864-05-17T00:00:01.011Z",
+                            "name": null,
+                            "id": -12
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-16T00:00:01.011Z",
+                        "name": "Æ[%­<=1\u001fÑ\n¾Lÿ¼O®µ\u0017\u0008pí2Q(",
+                        "id": 10
+                    }
+                },
+                {
+                    "subject": "(åjM5\u001dÿ\u0004e\u001a\r>\u000biô÷ØQBz",
+                    "students": [
+                        {
+                            "created": "1864-06-01T00:00:01.011Z",
+                            "name": "\u001e5kU",
+                            "id": 17
+                        },
+                        {
+                            "created": "1864-05-07T00:00:01.011Z",
+                            "name": null,
+                            "id": -18
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-06-05T00:00:01.011Z",
+                        "name": null,
+                        "id": 12
+                    }
+                },
+                {
+                    "subject": "`:\u0015u\u0014bî;¾\u000cÕhB\u0014¤\u000c5ü\u0005ÍX",
+                    "students": [
+                        {
+                            "created": "1864-05-25T00:00:01.011Z",
+                            "name": "h1%T?Â-%6t!T¤;",
+                            "id": 13
+                        },
+                        {
+                            "created": "1864-06-05T00:00:01.011Z",
+                            "name": null,
+                            "id": 21
+                        },
+                        {
+                            "created": "1864-06-01T00:00:01.011Z",
+                            "name": "ájUsJ",
+                            "id": 20
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-25T00:00:01.011Z",
+                        "name": "[V´`\u0004qç2ÜW",
+                        "id": 21
+                    }
+                },
+                {
+                    "subject": "\u0007\\EN$\u0000©C\u0000w\u001cÊ\u0016Ör\u0017\u001fßeØ×<Q?lL\u0005y",
+                    "students": [
+                        {
+                            "created": "1864-05-05T00:00:01.011Z",
+                            "name": "yMéA(\u0003e#\u0014\u000co",
+                            "id": 12
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-22T00:00:01.011Z",
+                        "name": "´\u0001(Ö ÞÜM])ñ\u0005\u0010<G",
+                        "id": -7
+                    }
+                },
+                {
+                    "subject": "µ47",
+                    "students": [
+                        {
+                            "created": "1864-05-23T00:00:01.011Z",
+                            "name": "éòKTì5TÂ\r",
+                            "id": 25
+                        },
+                        {
+                            "created": "1864-04-26T00:00:01.011Z",
+                            "name": null,
+                            "id": 11
+                        },
+                        {
+                            "created": "1864-05-15T00:00:01.011Z",
+                            "name": "°\rjÑgG\u000bg",
+                            "id": 17
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-24T00:00:01.011Z",
+                        "name": null,
+                        "id": 3
+                    }
+                },
+                {
+                    "subject": "|Ør\u000c'",
+                    "students": [
+                        {
+                            "created": "1864-06-08T00:00:01.011Z",
+                            "name": "g\u0003\u0007¿Kô¿\u0014\u0018\u001aë/WS\rSä\nç\u0013zT#nØº\u0007",
+                            "id": -14
+                        },
+                        {
+                            "created": "1864-05-13T00:00:01.011Z",
+                            "name": null,
+                            "id": 12
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-11T00:00:01.011Z",
+                        "name": "±/öÐú\u0011V~RAF\u0003RVa à\u0001h^@\u0010{õ`\u00012àÚ",
+                        "id": -9
+                    }
+                },
+                {
+                    "subject": "\u0013G\u0016]]6ZÃ¾r\u0019O]GEq\"\u000cät0²ö",
+                    "students": [
+                        {
+                            "created": "1864-05-29T00:00:01.011Z",
+                            "name": "\u0000gEb*0\u000ca'éX>3PV\u0012E15ôc",
+                            "id": -25
+                        },
+                        {
+                            "created": "1864-04-29T00:00:01.011Z",
+                            "name": null,
+                            "id": -4
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-13T00:00:01.011Z",
+                        "name": "ãa\n¸ª\u0006\rîB \u001b*\u0001°ÓX\u0019u¸úgP5E9iåN",
+                        "id": -2
+                    }
+                },
+                {
+                    "subject": "Oäd\u001f´3¢\u000b³\u0001q2{M0",
+                    "students": [
+                        {
+                            "created": "1864-05-26T00:00:01.011Z",
+                            "name": "!\"e¹",
+                            "id": 26
+                        },
+                        {
+                            "created": "1864-05-05T00:00:01.011Z",
+                            "name": "ò×QW\u0001#Üµ0p%\u0003­iLÛG9%dÝs-\u000e[",
+                            "id": 29
+                        },
+                        {
+                            "created": "1864-05-03T00:00:01.011Z",
+                            "name": null,
+                            "id": -21
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-28T00:00:01.011Z",
+                        "name": "33GN\u0007Jd}G8÷$q\u0005",
+                        "id": -15
+                    }
+                },
+                {
+                    "subject": "G08û\u0016C]ï\u0006\u001ae&#Un%LDC@\u0017Éz\u0013L©¦",
+                    "students": [
+                        {
+                            "created": "1864-06-07T00:00:01.011Z",
+                            "name": "\\04Xyp ]R*MÃ",
+                            "id": -18
+                        },
+                        {
+                            "created": "1864-05-16T00:00:01.011Z",
+                            "name": "\u001fD)9;1óy\u0008\u001c\u0003ûÕa`",
+                            "id": 28
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-17T00:00:01.011Z",
+                        "name": "|~jj.\u0019",
+                        "id": 15
+                    }
+                },
+                {
+                    "subject": "-¦ª2ñ",
+                    "students": [
+                        {
+                            "created": "1864-05-27T00:00:01.011Z",
+                            "name": null,
+                            "id": 3
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-28T00:00:01.011Z",
+                        "name": null,
+                        "id": -26
+                    }
+                },
+                {
+                    "subject": "%³N~^_ÊG\u0001wQ·qDr\u001fGSeíí?\u0002Ek_\u0005",
+                    "students": [
+                        {
+                            "created": "1864-05-17T00:00:01.011Z",
+                            "name": "\u0018=K\u001c\u0002\u001cõæ~kc¯q",
+                            "id": 28
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-25T00:00:01.011Z",
+                        "name": null,
+                        "id": -3
+                    }
+                },
+                {
+                    "subject": "\u0018\u0004óX9Ð\u000b\u0006@\u000fá",
+                    "students": [
+                        {
+                            "created": "1864-05-06T00:00:01.011Z",
+                            "name": ">]_Ï5w\"î\u001e",
+                            "id": 16
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-02T00:00:01.011Z",
+                        "name": ":\u0018W{f¡÷Æ1XahhV¦Z}Èá½",
+                        "id": 11
+                    }
+                },
+                {
+                    "subject": "|º\u0003º©[eé\u0017*",
+                    "students": [
+                        {
+                            "created": "1864-06-01T00:00:01.011Z",
+                            "name": "å",
+                            "id": -28
+                        },
+                        {
+                            "created": "1864-06-04T00:00:01.011Z",
+                            "name": "©\u001fÜjR@ a\u0018\u0016\u0001a_üW¤k|Ëÿ",
+                            "id": -17
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-06-05T00:00:01.011Z",
+                        "name": "6r!G\u0005Hõ2-²+G\u001b",
+                        "id": -12
+                    }
+                },
+                {
+                    "subject": "i\n}b¡ûg2x@føP=\u001cð]à:\u0007\u000cF",
+                    "students": [
+                        {
+                            "created": "1864-05-04T00:00:01.011Z",
+                            "name": "",
+                            "id": -28
+                        },
+                        {
+                            "created": "1864-05-24T00:00:01.011Z",
+                            "name": "\u001eßd;d\nO",
+                            "id": 12
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-25T00:00:01.011Z",
+                        "name": "*:õDw",
+                        "id": 12
+                    }
+                },
+                {
+                    "subject": "\r\u0008\u0017XÀS\u0003zf",
+                    "students": [
+                        {
+                            "created": "1864-05-19T00:00:01.011Z",
+                            "name": null,
+                            "id": -23
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-14T00:00:01.011Z",
+                        "name": "qb'ðÇn\r\u0002I\u0001VQo\u001f?B",
+                        "id": 29
+                    }
+                },
+                {
+                    "subject": "\u0006²!hÝK",
+                    "students": [
+                        {
+                            "created": "1864-05-19T00:00:01.011Z",
+                            "name": "^9q|Ì¸\u0003CU\u0013y6aG­­",
+                            "id": -13
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-28T00:00:01.011Z",
+                        "name": null,
+                        "id": 22
+                    }
+                },
+                {
+                    "subject": "4«N7#\u0001'\u000b[6sT",
+                    "students": [
+                        {
+                            "created": "1864-04-23T00:00:01.011Z",
+                            "name": null,
+                            "id": 1
+                        },
+                        {
+                            "created": "1864-05-22T00:00:01.011Z",
+                            "name": null,
+                            "id": 2
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-12T00:00:01.011Z",
+                        "name": "m·\u0005ûÆ@XH",
+                        "id": -2
+                    }
+                }
+            ]
+        },
+        {
+            "administrator": {
+                "created": "1864-04-15T00:00:01.011Z",
+                "name": null,
+                "id": -22
+            },
+            "schoolName": "0\u0008H~;.W",
+            "classes": [
+                {
+                    "subject": "ôYS[Vä\"_¸}\u0015",
+                    "students": [
+                        {
+                            "created": "1864-04-22T00:00:01.011Z",
+                            "name": "\u001f1\u00145Ng\u0010p«B={@B5àXV\u0003V",
+                            "id": -8
+                        },
+                        {
+                            "created": "1864-05-18T00:00:01.011Z",
+                            "name": "Gr\u0003H*SÑ©\u0019t-¾q'_Fx\r&X|\nr9J1ø",
+                            "id": -5
+                        },
+                        {
+                            "created": "1864-04-18T00:00:01.011Z",
+                            "name": null,
+                            "id": -22
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-06-02T00:00:01.011Z",
+                        "name": "\u001d9Æ½V^2MpP:\u000c3Lq:rÎÃUËî\u0007MZ",
+                        "id": 29
+                    }
+                },
+                {
+                    "subject": "ÿOSM<\u0014\u0015\u001cv7bep?læ¤lX6¨\u0002",
+                    "students": [
+                        {
+                            "created": "1864-06-08T00:00:01.011Z",
+                            "name": "Ki'`g",
+                            "id": -17
+                        },
+                        {
+                            "created": "1864-05-15T00:00:01.011Z",
+                            "name": "\u0019À¬rûAou\u0010õ-?\u0015ÌZm\u0011³R7nG*` ,\u0005",
+                            "id": -26
+                        },
+                        {
+                            "created": "1864-05-21T00:00:01.011Z",
+                            "name": "áÑ;â'\u001d\u0002xå\u0019\u0003N",
+                            "id": 23
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-23T00:00:01.011Z",
+                        "name": "\\l\u0004ð\u0010Ræ\u0008ùUNðLT<\u0004",
+                        "id": 0
+                    }
+                },
+                {
+                    "subject": "Ú\u0004[ÊÙHâr4",
+                    "students": [
+                        {
+                            "created": "1864-05-09T00:00:01.011Z",
+                            "name": "6\u0018u8\"\u000f e¡i`b{",
+                            "id": -10
+                        },
+                        {
+                            "created": "1864-05-09T00:00:01.011Z",
+                            "name": "L8:»\u0006\u0001\u0002 R\u0005>§\u001drý.\u0010",
+                            "id": -24
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-06-07T00:00:01.011Z",
+                        "name": null,
+                        "id": 12
+                    }
+                },
+                {
+                    "subject": "&07©d)ê#N\u0007T\\\u000fn-B)Ø",
+                    "students": [
+                        {
+                            "created": "1864-04-30T00:00:01.011Z",
+                            "name": "1\u0013ç-(\u001eA/\u0016S>\u001dò\u0013ùºÆ@ë",
+                            "id": -25
+                        },
+                        {
+                            "created": "1864-04-17T00:00:01.011Z",
+                            "name": "\u0000\u001a\u0017\u0005j4-\u001dV\u0012>Zvk6",
+                            "id": -20
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-26T00:00:01.011Z",
+                        "name": "^!AAÀ$Ðe\u001cf.y¦i±",
+                        "id": -30
+                    }
+                },
+                {
+                    "subject": "",
+                    "students": [
+                        {
+                            "created": "1864-06-04T00:00:01.011Z",
+                            "name": "P",
+                            "id": -6
+                        },
+                        {
+                            "created": "1864-06-03T00:00:01.011Z",
+                            "name": null,
+                            "id": 3
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-06-02T00:00:01.011Z",
+                        "name": "rpU\u0014}(h5\u001d;\\N¾\u001dC\\\u000fpH",
+                        "id": -19
+                    }
+                },
+                {
+                    "subject": "HW-%HêB;\u001c\u0002)°*uuwaV\u001f×\\\u000e~~.|",
+                    "students": [
+                        {
+                            "created": "1864-05-06T00:00:01.011Z",
+                            "name": "£jg/ÝCO",
+                            "id": -23
+                        },
+                        {
+                            "created": "1864-05-12T00:00:01.011Z",
+                            "name": "",
+                            "id": -16
+                        },
+                        {
+                            "created": "1864-05-01T00:00:01.011Z",
+                            "name": "+N9fQÅ\t6VüÂZ\u0007ÔHµD%|jvO\u001b#JE£",
+                            "id": -27
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-11T00:00:01.011Z",
+                        "name": "õOcÚRec\"\u0017M\u0015",
+                        "id": -12
+                    }
+                },
+                {
+                    "subject": "Ö3×\u0017[wv¿N",
+                    "students": [
+                        {
+                            "created": "1864-05-06T00:00:01.011Z",
+                            "name": "Lp'@]}6G\u0014\u0019w'\u001bRA6\u0011\rE\u0003",
+                            "id": -13
+                        },
+                        {
+                            "created": "1864-05-20T00:00:01.011Z",
+                            "name": "W°qçr",
+                            "id": 15
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-20T00:00:01.011Z",
+                        "name": "&&d©r<«",
+                        "id": 22
+                    }
+                },
+                {
+                    "subject": "V8/4\u0005<WqÁ",
+                    "students": [
+                        {
+                            "created": "1864-04-10T00:00:01.011Z",
+                            "name": null,
+                            "id": -13
+                        },
+                        {
+                            "created": "1864-06-01T00:00:01.011Z",
+                            "name": null,
+                            "id": -13
+                        },
+                        {
+                            "created": "1864-04-24T00:00:01.011Z",
+                            "name": null,
+                            "id": -24
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-25T00:00:01.011Z",
+                        "name": "29qjÎA\\¶|s¿Q4+H¥'Eà%",
+                        "id": -18
+                    }
+                },
+                {
+                    "subject": "",
+                    "students": [
+                        {
+                            "created": "1864-04-24T00:00:01.011Z",
+                            "name": "ð\u001b:o\u0016\u0006òNG[[\u001cPJm8bA¢fë\u0014/øqW\nxf!",
+                            "id": -25
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-12T00:00:01.011Z",
+                        "name": null,
+                        "id": -11
+                    }
+                },
+                {
+                    "subject": "8\u0016L¢Å»=A9ÓpºÚ~L\t=aÈ|pL\u001d¨F",
+                    "students": [
+                        {
+                            "created": "1864-05-15T00:00:01.011Z",
+                            "name": "r\u0012'Y\\y`´ \u000ev\n+ê\u00068\tB}:E=>\u0010i^^kÅ",
+                            "id": 18
+                        },
+                        {
+                            "created": "1864-05-30T00:00:01.011Z",
+                            "name": "jcRbO-\u0007i%\u000e.5:íÄRW£P\u00182",
+                            "id": 13
+                        },
+                        {
+                            "created": "1864-05-19T00:00:01.011Z",
+                            "name": "uL(vIÑ=s¶\u001bh",
+                            "id": 8
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-20T00:00:01.011Z",
+                        "name": "Tç(TG'xSt&K´&\n\u0010r",
+                        "id": -5
+                    }
+                },
+                {
+                    "subject": "¼#\u0018±gõM\r\\1\u0013q\u0002u\u0011\"3Ø\u0018G",
+                    "students": [
+                        {
+                            "created": "1864-05-23T00:00:01.011Z",
+                            "name": "O\u0007",
+                            "id": -22
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-09T00:00:01.011Z",
+                        "name": null,
+                        "id": 18
+                    }
+                },
+                {
+                    "subject": "JnbjLM\u0016>@ü1U\u0002gPýd¶ï",
+                    "students": [
+                        {
+                            "created": "1864-06-05T00:00:01.011Z",
+                            "name": null,
+                            "id": -13
+                        },
+                        {
+                            "created": "1864-04-24T00:00:01.011Z",
+                            "name": "`X*­\u001eß\u0007l}\u001c»A\r\u0005\u001e",
+                            "id": 27
+                        },
+                        {
+                            "created": "1864-04-18T00:00:01.011Z",
+                            "name": "ã|\u00035=/\u001a¬.í\r<\u001am\u000b\u0012quFm\u000f\u0004F",
+                            "id": 1
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-07T00:00:01.011Z",
+                        "name": "SQ· p<!\"\u000báry\u001e\u0018\u001e(<",
+                        "id": 6
+                    }
+                }
+            ]
+        },
+        {
+            "administrator": {
+                "created": "1864-05-07T00:00:01.011Z",
+                "name": "Ps\u001aoO\u001e\u0013:X|\u000fQÀ\u000eo(Q\u0004,epN",
+                "id": 22
+            },
+            "schoolName": "0º\u0013ö^\u000cpq\u0014\u001cm\u0008ÿ\u0018\u001ceÁ;\u0010 ²\r$\u0000",
+            "classes": [
+                {
+                    "subject": "G\u000cÚ\u001d\r_=\"\t(OL",
+                    "students": [
+                        {
+                            "created": "1864-04-22T00:00:01.011Z",
+                            "name": null,
+                            "id": 4
+                        },
+                        {
+                            "created": "1864-04-28T00:00:01.011Z",
+                            "name": "ä\u001b)\u0001¶\u0018æA\u0011¥x\u0002ÌùÍ=;rNc",
+                            "id": -5
+                        },
+                        {
+                            "created": "1864-06-04T00:00:01.011Z",
+                            "name": "ÎÛ¿\t\u001eo\u0015-eOà\u0003ÍRT\u001ep%\u0008²@6.ZÓFb",
+                            "id": -27
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-05T00:00:01.011Z",
+                        "name": null,
+                        "id": -12
+                    }
+                },
+                {
+                    "subject": "uði:Rp\u0004\u0013-\u001eÄ\u0002v",
+                    "students": [
+                        {
+                            "created": "1864-05-21T00:00:01.011Z",
+                            "name": "P\t\u000c<¬\u001dÎ]xú\u0015\u000f!",
+                            "id": 28
+                        },
+                        {
+                            "created": "1864-04-25T00:00:01.011Z",
+                            "name": "÷ånsq¦~fMF>I¦&Ê'sÎ\u000f\u0007M®J:R\u001aq",
+                            "id": -8
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-23T00:00:01.011Z",
+                        "name": "S6=\u00083M èx\u0006,z®AU@",
+                        "id": 30
+                    }
+                },
+                {
+                    "subject": "Tg}|Kb*\u001a\u001e\u0007Y\u001f.",
+                    "students": [
+                        {
+                            "created": "1864-04-23T00:00:01.011Z",
+                            "name": null,
+                            "id": -2
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-03T00:00:01.011Z",
+                        "name": "£Éy\u0007e!¨\u001bq\u0015>N\r\u000e-",
+                        "id": 21
+                    }
+                },
+                {
+                    "subject": "~az:çx \r|P[?\u0015W¡©<<G",
+                    "students": [
+                        {
+                            "created": "1864-05-03T00:00:01.011Z",
+                            "name": "uU",
+                            "id": -30
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-06-02T00:00:01.011Z",
+                        "name": "*Â12vá¾×\"ï\n8:#\u0013&\u000f[",
+                        "id": 10
+                    }
+                },
+                {
+                    "subject": "Z`U#",
+                    "students": [
+                        {
+                            "created": "1864-05-03T00:00:01.011Z",
+                            "name": "XêUw\u001b6{ù\u0012\u001d :",
+                            "id": 24
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-22T00:00:01.011Z",
+                        "name": null,
+                        "id": 21
+                    }
+                },
+                {
+                    "subject": "1t*å§F\u0004!t\u0004:\u0006I@à*~í)'-",
+                    "students": [
+                        {
+                            "created": "1864-04-24T00:00:01.011Z",
+                            "name": "\u0003¯g w$~\nü),¢5VwVXèL\u0019èÐE7]",
+                            "id": -19
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-18T00:00:01.011Z",
+                        "name": "º+PD=gpqÆúO;l|\u0006\u0006bgRP\u000cæ",
+                        "id": 11
+                    }
+                },
+                {
+                    "subject": "\u001d,ÇN0\u0013e<kJZ",
+                    "students": [
+                        {
+                            "created": "1864-04-30T00:00:01.011Z",
+                            "name": "\u000c2v%\u0014Þ3O¸Á\u000cL",
+                            "id": 10
+                        },
+                        {
+                            "created": "1864-05-29T00:00:01.011Z",
+                            "name": null,
+                            "id": 6
+                        },
+                        {
+                            "created": "1864-05-25T00:00:01.011Z",
+                            "name": "4k´1\\Þ\u0010G(1\r",
+                            "id": -26
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-13T00:00:01.011Z",
+                        "name": null,
+                        "id": -24
+                    }
+                },
+                {
+                    "subject": "\u001fs{¯.e+W=îhw _P\u001c\u0017èVM\u0001[s2",
+                    "students": [
+                        {
+                            "created": "1864-04-25T00:00:01.011Z",
+                            "name": "516",
+                            "id": 22
+                        },
+                        {
+                            "created": "1864-05-16T00:00:01.011Z",
+                            "name": null,
+                            "id": -8
+                        },
+                        {
+                            "created": "1864-05-11T00:00:01.011Z",
+                            "name": null,
+                            "id": 12
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-26T00:00:01.011Z",
+                        "name": "ËCue%6pszQB\u0012",
+                        "id": -24
+                    }
+                },
+                {
+                    "subject": "9?Î _[Ð",
+                    "students": [
+                        {
+                            "created": "1864-04-15T00:00:01.011Z",
+                            "name": "H\u0012yµP!:u",
+                            "id": -7
+                        },
+                        {
+                            "created": "1864-05-17T00:00:01.011Z",
+                            "name": null,
+                            "id": 19
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-21T00:00:01.011Z",
+                        "name": "\u0007IiL¦w[·U^>RUU4Ø&Iz\u0004\u001c\u000cñÄM",
+                        "id": -30
+                    }
+                },
+                {
+                    "subject": "\u0000`\u0013\u0011¡0 w\u000f15äºy¸ÏMè\u0000JZ\rTrE01",
+                    "students": [
+                        {
+                            "created": "1864-05-05T00:00:01.011Z",
+                            "name": null,
+                            "id": 13
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-29T00:00:01.011Z",
+                        "name": "f9ó\u001bn\u0001Í$\u001d",
+                        "id": 8
+                    }
+                },
+                {
+                    "subject": "tP4hTp",
+                    "students": [
+                        {
+                            "created": "1864-05-13T00:00:01.011Z",
+                            "name": "¶\u0010|\u0002K@:8wim\"òlo\u0003}\u0004p\u0017·ðJn\u0013",
+                            "id": -24
+                        },
+                        {
+                            "created": "1864-06-06T00:00:01.011Z",
+                            "name": "&",
+                            "id": 27
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-06-04T00:00:01.011Z",
+                        "name": "i;\r",
+                        "id": 2
+                    }
+                },
+                {
+                    "subject": "X:OÞfu\u001eËo",
+                    "students": [
+                        {
+                            "created": "1864-04-25T00:00:01.011Z",
+                            "name": "\u0007­6\u0010TG?1z}rN2æß-)&T;L\u000f4F",
+                            "id": -11
+                        },
+                        {
+                            "created": "1864-04-26T00:00:01.011Z",
+                            "name": null,
+                            "id": 2
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-06-03T00:00:01.011Z",
+                        "name": null,
+                        "id": 27
+                    }
+                },
+                {
+                    "subject": "\u0011°\u0001\u0004óG25x]n`w~×.a\u001fhnC\u0002é8C8\u0002\u000f",
+                    "students": [
+                        {
+                            "created": "1864-06-03T00:00:01.011Z",
+                            "name": "Xh¡{$",
+                            "id": -16
+                        },
+                        {
+                            "created": "1864-05-06T00:00:01.011Z",
+                            "name": "Q^ÆU'u",
+                            "id": -1
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-30T00:00:01.011Z",
+                        "name": null,
+                        "id": 0
+                    }
+                },
+                {
+                    "subject": "RO\u0014h0NñèSF:\u0015r\t!n5V´",
+                    "students": [
+                        {
+                            "created": "1864-05-31T00:00:01.011Z",
+                            "name": "&G(\t$G4\u001a7g0\u0005Ïy\u0019s",
+                            "id": 29
+                        },
+                        {
+                            "created": "1864-05-28T00:00:01.011Z",
+                            "name": "ÝM[Y\u0016nd:OTX",
+                            "id": 16
+                        },
+                        {
+                            "created": "1864-05-21T00:00:01.011Z",
+                            "name": null,
+                            "id": -15
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-01T00:00:01.011Z",
+                        "name": "Uoq\u0016\t@\rqÄ\u0016G#4üB\u0004%Hc\u0017",
+                        "id": 4
+                    }
+                },
+                {
+                    "subject": ":\u0013$\u0004\u0012t\u0001\u0017n\u0015$å1)Ê\u000b\u0005",
+                    "students": [
+                        {
+                            "created": "1864-05-25T00:00:01.011Z",
+                            "name": null,
+                            "id": -13
+                        },
+                        {
+                            "created": "1864-06-04T00:00:01.011Z",
+                            "name": null,
+                            "id": 18
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-29T00:00:01.011Z",
+                        "name": "\u001eG1#GJÏÄÏ\u0006DCºA\u001aD_.e?v\u000ck",
+                        "id": 26
+                    }
+                },
+                {
+                    "subject": ",+\u0019QX]tGÅL\u0014JÀ\u0012­3\u001b0\\Í",
+                    "students": [
+                        {
+                            "created": "1864-05-27T00:00:01.011Z",
+                            "name": "Pp\u001ch÷QY\u0014\u001fe7/",
+                            "id": -24
+                        },
+                        {
+                            "created": "1864-05-13T00:00:01.011Z",
+                            "name": "\"d\u0008~\u0004\u001dû\u0004",
+                            "id": -13
+                        },
+                        {
+                            "created": "1864-06-04T00:00:01.011Z",
+                            "name": null,
+                            "id": 25
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-06-06T00:00:01.011Z",
+                        "name": "Ó\u000bEX1±ce¥[",
+                        "id": 14
+                    }
+                },
+                {
+                    "subject": "BrIVäcn\u000bÜ;Y5K W!`NÆ",
+                    "students": [
+                        {
+                            "created": "1864-04-26T00:00:01.011Z",
+                            "name": "[*3sr£\u001d-(`ëÝ£ d\u0005M",
+                            "id": 19
+                        },
+                        {
+                            "created": "1864-05-12T00:00:01.011Z",
+                            "name": "",
+                            "id": 18
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-17T00:00:01.011Z",
+                        "name": null,
+                        "id": 19
+                    }
+                },
+                {
+                    "subject": "\u0016pmE\u0005@¨\u0008\u001c-\u001c\u0003",
+                    "students": [
+                        {
+                            "created": "1864-04-14T00:00:01.011Z",
+                            "name": null,
+                            "id": -8
+                        },
+                        {
+                            "created": "1864-05-30T00:00:01.011Z",
+                            "name": null,
+                            "id": 10
+                        },
+                        {
+                            "created": "1864-04-13T00:00:01.011Z",
+                            "name": "g&\u000c(Y\u0003Fx9\u0011E` \"s»\u0001\u000cV\u0003`\u0013\u0013P",
+                            "id": -10
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-05T00:00:01.011Z",
+                        "name": "0/b\u0010x\u001bRå6=\u0006\u001fe¶e\u0000r3Q\u001b+\u0016",
+                        "id": -20
+                    }
+                },
+                {
+                    "subject": ")|ÌS!\u000f$*@R\u0016\u0012Ó\u0007\u0003cN:t\u0016BnÍd\ra",
+                    "students": [
+                        {
+                            "created": "1864-04-10T00:00:01.011Z",
+                            "name": "W¥!",
+                            "id": -15
+                        },
+                        {
+                            "created": "1864-04-19T00:00:01.011Z",
+                            "name": "+KZâ6mG\u00088S6J>½",
+                            "id": 24
+                        },
+                        {
+                            "created": "1864-04-19T00:00:01.011Z",
+                            "name": "3}_\u001cDyÑyîåI8&q%\u0018F\u001c~+0{@8ª\u001b N",
+                            "id": 29
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-06T00:00:01.011Z",
+                        "name": null,
+                        "id": -9
+                    }
+                },
+                {
+                    "subject": "±UÊ\t´ r/H\u0012\u000cVN\u001e{",
+                    "students": [
+                        {
+                            "created": "1864-04-29T00:00:01.011Z",
+                            "name": null,
+                            "id": -21
+                        },
+                        {
+                            "created": "1864-06-06T00:00:01.011Z",
+                            "name": "#'Aú1",
+                            "id": 16
+                        },
+                        {
+                            "created": "1864-04-10T00:00:01.011Z",
+                            "name": "}',n\\zD\u0010Y|úDTn",
+                            "id": -28
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-10T00:00:01.011Z",
+                        "name": null,
+                        "id": 16
+                    }
+                },
+                {
+                    "subject": "5T\u001bqè½3g8\u000c¨O³\"QmÎh\u0003$",
+                    "students": [
+                        {
+                            "created": "1864-06-06T00:00:01.011Z",
+                            "name": "Ço\"\u0001#H¯÷G\\q*",
+                            "id": -16
+                        },
+                        {
+                            "created": "1864-05-27T00:00:01.011Z",
+                            "name": null,
+                            "id": -4
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-15T00:00:01.011Z",
+                        "name": "?|[*Ì\u000ciënIô$CLx/\u0013G\u001eòxCqGi¿h",
+                        "id": -26
+                    }
+                },
+                {
+                    "subject": "ý\u0013\u001a\u0017lâ/1M\u000bY»7Fr·\u001a\u0007)¶.f,cG«I",
+                    "students": [
+                        {
+                            "created": "1864-05-25T00:00:01.011Z",
+                            "name": "\u0003ºp0kQn=À1ç\u0019')",
+                            "id": -30
+                        },
+                        {
+                            "created": "1864-05-01T00:00:01.011Z",
+                            "name": "¦1P\u000f%!\u0013jN$f÷uq\u001dmB\u0004÷",
+                            "id": -5
+                        },
+                        {
+                            "created": "1864-05-13T00:00:01.011Z",
+                            "name": null,
+                            "id": 21
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-22T00:00:01.011Z",
+                        "name": null,
+                        "id": 28
+                    }
+                },
+                {
+                    "subject": "jYpMRE©",
+                    "students": [
+                        {
+                            "created": "1864-04-23T00:00:01.011Z",
+                            "name": null,
+                            "id": -29
+                        },
+                        {
+                            "created": "1864-05-15T00:00:01.011Z",
+                            "name": "",
+                            "id": 13
+                        },
+                        {
+                            "created": "1864-04-12T00:00:01.011Z",
+                            "name": null,
+                            "id": 27
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-24T00:00:01.011Z",
+                        "name": "Lði",
+                        "id": -22
+                    }
+                }
+            ]
+        },
+        {
+            "administrator": {
+                "created": "1864-05-05T00:00:01.011Z",
+                "name": "ÙWj9&*|¢jöhL\u001a>pò\u0016»\u000fù{(«\u0016<N}¶",
+                "id": -19
+            },
+            "schoolName": "G\u001f\u0006\u000fs>}\u0015+´\u0013\u0014\u000c-<jÀglf`\u0002\nBÔäõk",
+            "classes": [
+                {
+                    "subject": "¹\u001b\u0018+$",
+                    "students": [
+                        {
+                            "created": "1864-05-08T00:00:01.011Z",
+                            "name": "W\u0017áSP",
+                            "id": 0
+                        },
+                        {
+                            "created": "1864-05-07T00:00:01.011Z",
+                            "name": "^f\u00152s\u0008ÒD*¦b\u0002ßYØ\u0017Ê",
+                            "id": 29
+                        },
+                        {
+                            "created": "1864-05-25T00:00:01.011Z",
+                            "name": null,
+                            "id": -29
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-06-05T00:00:01.011Z",
+                        "name": "4\u0019\u0018³tE¤=ä°Qt m48Ü",
+                        "id": -6
+                    }
+                },
+                {
+                    "subject": "\u0007yÑÅq\"\u0019%\u001aîVDd<\u0003'Çuø",
+                    "students": [
+                        {
+                            "created": "1864-04-30T00:00:01.011Z",
+                            "name": "ºy\u0017òImÉÞ\u0016Ù\u0013_\u001dd8f\u0016d\u001a:\u0002ÿ",
+                            "id": 13
+                        },
+                        {
+                            "created": "1864-04-17T00:00:01.011Z",
+                            "name": "5\u0002¤X\tB^~z U:\u0011\u0006O",
+                            "id": 17
+                        },
+                        {
+                            "created": "1864-06-07T00:00:01.011Z",
+                            "name": "\u0011\u0007C'Tv9v<Dª\u0017=",
+                            "id": 15
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-06-02T00:00:01.011Z",
+                        "name": "\u001bQQ]ÚA\u0017ô0A¶",
+                        "id": -19
+                    }
+                },
+                {
+                    "subject": "Õ[-Q|",
+                    "students": [
+                        {
+                            "created": "1864-05-26T00:00:01.011Z",
+                            "name": "z¦,+`\u001c",
+                            "id": 10
+                        },
+                        {
+                            "created": "1864-05-20T00:00:01.011Z",
+                            "name": null,
+                            "id": 13
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-12T00:00:01.011Z",
+                        "name": "w",
+                        "id": 26
+                    }
+                },
+                {
+                    "subject": "aD¼Þ£",
+                    "students": [
+                        {
+                            "created": "1864-06-03T00:00:01.011Z",
+                            "name": "\u0013R7@\u0003)KPL\u0015X ü=",
+                            "id": 0
+                        },
+                        {
+                            "created": "1864-05-23T00:00:01.011Z",
+                            "name": "psm¯=Ja6Ê",
+                            "id": -30
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-18T00:00:01.011Z",
+                        "name": "`×X4\u000f§a­",
+                        "id": -30
+                    }
+                },
+                {
+                    "subject": "pa;|E]\rÉ\u0002ûx502",
+                    "students": [
+                        {
+                            "created": "1864-04-27T00:00:01.011Z",
+                            "name": "6\u0010\u0019s&ãý\u000eø)\u0016j-=\u0019C4c&-h`\\!",
+                            "id": -16
+                        },
+                        {
+                            "created": "1864-05-16T00:00:01.011Z",
+                            "name": null,
+                            "id": 16
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-30T00:00:01.011Z",
+                        "name": "Æs\u0018Iê;|i¯3|\u0019*\u001fÇ]¯>¹Gme!E\u0018",
+                        "id": 0
+                    }
+                },
+                {
+                    "subject": "®B==Ip0\u001e\u0011î!",
+                    "students": [
+                        {
+                            "created": "1864-04-25T00:00:01.011Z",
+                            "name": "w\u0001Óoè\u0000ÂpÞ48ë\u0016\u0011ÔªX&),",
+                            "id": 28
+                        },
+                        {
+                            "created": "1864-04-09T00:00:01.011Z",
+                            "name": "t+#0ËÀ\u001c\u001b4j\u0004#-\u0018\u001b",
+                            "id": -13
+                        },
+                        {
+                            "created": "1864-04-20T00:00:01.011Z",
+                            "name": null,
+                            "id": -13
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-12T00:00:01.011Z",
+                        "name": "H\u000e1Y\u0002[Ve9\u0016&2\u001d;÷w",
+                        "id": 8
+                    }
+                },
+                {
+                    "subject": "\u000c?\u001c+{e\u0014\u0000\u0005?&ñ\u0013ª\t",
+                    "students": [
+                        {
+                            "created": "1864-06-03T00:00:01.011Z",
+                            "name": "L\\\u00177",
+                            "id": -4
+                        },
+                        {
+                            "created": "1864-06-03T00:00:01.011Z",
+                            "name": null,
+                            "id": 8
+                        },
+                        {
+                            "created": "1864-05-05T00:00:01.011Z",
+                            "name": "\t]\u0004[>Va\u0004",
+                            "id": -12
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-27T00:00:01.011Z",
+                        "name": null,
+                        "id": -10
+                    }
+                },
+                {
+                    "subject": "G.{Uzv_;\u00042CÞ\u0005\u0004@¹ï8j\n-\u0004{",
+                    "students": [
+                        {
+                            "created": "1864-04-14T00:00:01.011Z",
+                            "name": "u¶#i\u0001",
+                            "id": 5
+                        },
+                        {
+                            "created": "1864-05-28T00:00:01.011Z",
+                            "name": "ÿm\u0011v]mÑ\u0016",
+                            "id": -10
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-19T00:00:01.011Z",
+                        "name": null,
+                        "id": 6
+                    }
+                },
+                {
+                    "subject": "Jå\u000cw.'3M{=\u0013QVYë¬'\r\r~\u0002y+s \u0000\u0005Ý",
+                    "students": [
+                        {
+                            "created": "1864-05-09T00:00:01.011Z",
+                            "name": "\u000fô|3<#z",
+                            "id": 0
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-26T00:00:01.011Z",
+                        "name": null,
+                        "id": -11
+                    }
+                },
+                {
+                    "subject": "%7ó\u001c\u000bW]ú\u0000É",
+                    "students": [
+                        {
+                            "created": "1864-05-17T00:00:01.011Z",
+                            "name": "#)%[0îi2Õ¯W\u0003pÛ\u001e\u0005»dö_°ýècÓ\u000e2Î",
+                            "id": -26
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-14T00:00:01.011Z",
+                        "name": "(ê'Ogn\u00056/\u001dÕ\u0011\u0000",
+                        "id": 14
+                    }
+                },
+                {
+                    "subject": "\u0011!ÐÂaÅpµ¯TÈpÞû",
+                    "students": [
+                        {
+                            "created": "1864-05-26T00:00:01.011Z",
+                            "name": "I\u000e\rñ",
+                            "id": 17
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-06-06T00:00:01.011Z",
+                        "name": "=sÝÅ·üX\u0007\u001d@",
+                        "id": 21
+                    }
+                },
+                {
+                    "subject": "WÑ37{^«Ui´e",
+                    "students": [
+                        {
+                            "created": "1864-04-24T00:00:01.011Z",
+                            "name": "À'\u0016=ú\u0000{\"FUQ\u0004 Ka\u001c%Nt\u0015KÁ\u0017>",
+                            "id": 2
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-24T00:00:01.011Z",
+                        "name": "w­\u0008/õ\u0008\u001a\u0004\u001f?w,ÂF&ÌFµHrD\u0015sZe",
+                        "id": -14
+                    }
+                },
+                {
+                    "subject": "YàY`&¸\u001dPWwí¸()zn)w\u0016 \u0005V@Ur}",
+                    "students": [
+                        {
+                            "created": "1864-04-30T00:00:01.011Z",
+                            "name": null,
+                            "id": -16
+                        },
+                        {
+                            "created": "1864-05-22T00:00:01.011Z",
+                            "name": "Ü¥m\u0019cMs07VArP¬DrÞX\u0008",
+                            "id": 20
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-29T00:00:01.011Z",
+                        "name": "~ý0\u00041\u0011\u0000Ï¾",
+                        "id": 17
+                    }
+                },
+                {
+                    "subject": "Fc\u0005*q0\u000bïL²%\u0011.Vz3A<",
+                    "students": [
+                        {
+                            "created": "1864-04-27T00:00:01.011Z",
+                            "name": null,
+                            "id": 21
+                        },
+                        {
+                            "created": "1864-05-25T00:00:01.011Z",
+                            "name": "T¦\u001b.+Nîeu7\u001c;U9BªHF",
+                            "id": 15
+                        },
+                        {
+                            "created": "1864-04-24T00:00:01.011Z",
+                            "name": "J_$\u000fM^GR¦=±V\u001dhWàà?\u000eR7é®\u0017;µ2",
+                            "id": -18
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-02T00:00:01.011Z",
+                        "name": null,
+                        "id": 3
+                    }
+                },
+                {
+                    "subject": "\\)ix",
+                    "students": [
+                        {
+                            "created": "1864-04-22T00:00:01.011Z",
+                            "name": "Eó6\u001bfM \u001b\u000f\u0008\u0013Ï -üH\u0011\u0001\u0015A\u00166D",
+                            "id": 15
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-06-06T00:00:01.011Z",
+                        "name": "\u0014\nVü1?%G5h\u0001x$Né|{<A",
+                        "id": -4
+                    }
+                },
+                {
+                    "subject": "xæ=\u0002¼p\u001dV\nruê¡MYqb\u0018yµ",
+                    "students": [
+                        {
+                            "created": "1864-05-14T00:00:01.011Z",
+                            "name": "¡\u001cf",
+                            "id": -23
+                        },
+                        {
+                            "created": "1864-05-01T00:00:01.011Z",
+                            "name": "\u0005\u0018ø,\u0018\u000cu¼",
+                            "id": 14
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-29T00:00:01.011Z",
+                        "name": "z/7êLJ8\u001f8T<\u0006\u0002w\u000b~9±snS\u0019b",
+                        "id": -12
+                    }
+                },
+                {
+                    "subject": "ë",
+                    "students": [
+                        {
+                            "created": "1864-04-18T00:00:01.011Z",
+                            "name": "\u0013}åB%c\u0016<bÎU|\\êGZæÞY<5G",
+                            "id": 16
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-06-04T00:00:01.011Z",
+                        "name": "¸1 2M$Çw",
+                        "id": -3
+                    }
+                },
+                {
+                    "subject": "\u001a-}_ep~V&v<×#\u000f>5NbV^ó)E\u0007î3\u001b",
+                    "students": [
+                        {
+                            "created": "1864-04-10T00:00:01.011Z",
+                            "name": "\u001bàyÀ\u001cEW\u001aOlËº1Ê¥i\u0017Õ³\"J4µG",
+                            "id": -6
+                        },
+                        {
+                            "created": "1864-06-08T00:00:01.011Z",
+                            "name": "(2ÀNbV$9\\i@\u0018v 8\u0008À\u0007±s\u0018.ü\u0003Ä\u001d\n\u000e",
+                            "id": -20
+                        },
+                        {
+                            "created": "1864-05-09T00:00:01.011Z",
+                            "name": "&\u0017",
+                            "id": -10
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-12T00:00:01.011Z",
+                        "name": "nJ\u0012\u001dx8ª]ô^{)\u000c.yc[*\u0007MPjc8Wxg",
+                        "id": 19
+                    }
+                },
+                {
+                    "subject": "d\u0017F|fp0~",
+                    "students": [
+                        {
+                            "created": "1864-04-27T00:00:01.011Z",
+                            "name": null,
+                            "id": 22
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-30T00:00:01.011Z",
+                        "name": null,
+                        "id": -27
+                    }
+                }
+            ]
+        },
+        {
+            "administrator": {
+                "created": "1864-04-29T00:00:01.011Z",
+                "name": null,
+                "id": -1
+            },
+            "schoolName": "ÍLcn",
+            "classes": [
+                {
+                    "subject": "WZøêOcGej\tÓ\u000c¯16A¬3m\u000eEj2",
+                    "students": [
+                        {
+                            "created": "1864-04-26T00:00:01.011Z",
+                            "name": "|W\u0004§'j)Õ;h6¯/$DßKgLlt",
+                            "id": -20
+                        },
+                        {
+                            "created": "1864-06-05T00:00:01.011Z",
+                            "name": null,
+                            "id": 4
+                        },
+                        {
+                            "created": "1864-05-23T00:00:01.011Z",
+                            "name": "µ¤=ß0á&XN²\u0017EO}maQ\u00002q²\u0010Êû-cø",
+                            "id": -10
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-14T00:00:01.011Z",
+                        "name": "<zø5\u0019U¢@",
+                        "id": -9
+                    }
+                },
+                {
+                    "subject": "\u0006zk",
+                    "students": [
+                        {
+                            "created": "1864-06-02T00:00:01.011Z",
+                            "name": "ac'Gðh¡",
+                            "id": 12
+                        },
+                        {
+                            "created": "1864-06-04T00:00:01.011Z",
+                            "name": " OH\u000fd\u0010&^\u0012\u0006\u001fHt\u0008úÇë\u000c2",
+                            "id": 26
+                        },
+                        {
+                            "created": "1864-04-30T00:00:01.011Z",
+                            "name": "KâQ\u0012m\u0015ÔA;A\u000eILI=rV\u000f\u000c\u001a\u0008f",
+                            "id": 14
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-01T00:00:01.011Z",
+                        "name": "ÝËk,0\u0014l} VD\u001e&[\u0017u\u0001\u0014(ÿlX\"D\u0017¸",
+                        "id": -14
+                    }
+                }
+            ]
+        },
+        {
+            "administrator": {
+                "created": "1864-04-19T00:00:01.011Z",
+                "name": "KàrP\u001aaW÷\t\u001b\t:P-O ¡%&Æ\u001fv¥ß9\u0014áb",
+                "id": -12
+            },
+            "schoolName": "óKesÁp=\u0003L;\u000b",
+            "classes": [
+                {
+                    "subject": "\u000eSKàh~õ÷!o\u001b;Ymê7\u001aY2)\u0002ÇE\u0006G",
+                    "students": [
+                        {
+                            "created": "1864-04-22T00:00:01.011Z",
+                            "name": null,
+                            "id": 23
+                        },
+                        {
+                            "created": "1864-04-26T00:00:01.011Z",
+                            "name": null,
+                            "id": 0
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-06-01T00:00:01.011Z",
+                        "name": null,
+                        "id": 16
+                    }
+                },
+                {
+                    "subject": "Iô(\"Fp¥[]0ÄeÜR,\u0015ü\u0012\n«\u0018lM6r",
+                    "students": [
+                        {
+                            "created": "1864-06-01T00:00:01.011Z",
+                            "name": "_U",
+                            "id": 8
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-18T00:00:01.011Z",
+                        "name": "!\u000fÊ\"g",
+                        "id": -18
+                    }
+                },
+                {
+                    "subject": "\\I*NG45,më2\u0013\u001aí$4\u0016u¼(=gNu\u0015",
+                    "students": [
+                        {
+                            "created": "1864-06-02T00:00:01.011Z",
+                            "name": "C'ÇhØy\u001ahFw»Æ{Þ~\u00006\u0016\u001e8%",
+                            "id": -8
+                        },
+                        {
+                            "created": "1864-05-12T00:00:01.011Z",
+                            "name": "xLA\u000c\u0016|Æ`\u001eO¹.m'Þâ¦ÅF]\u001di²(Kh",
+                            "id": -30
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-24T00:00:01.011Z",
+                        "name": "a",
+                        "id": -5
+                    }
+                },
+                {
+                    "subject": "\u0016ºB3¡sa\u0005\r¯,.y:\u001b?L70*`\u0013â¢o1",
+                    "students": [
+                        {
+                            "created": "1864-06-06T00:00:01.011Z",
+                            "name": "ªXH\u000c\u0007.\u0019&Èl>`\u0000.<S\u001djãzoÑ\u0008\u0014",
+                            "id": -9
+                        },
+                        {
+                            "created": "1864-05-15T00:00:01.011Z",
+                            "name": "G\u0002zYÿ\\",
+                            "id": 13
+                        },
+                        {
+                            "created": "1864-05-05T00:00:01.011Z",
+                            "name": "\u0010R\u0006¼Jò\"ÿXÊk\u001b\u001aF>«\u00197q",
+                            "id": -21
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-24T00:00:01.011Z",
+                        "name": "{L:\u0015÷Tý9-$\u0014Q$\u0018\u0017\u001b}=S2ÐÛ\u0004Ü ì\\",
+                        "id": 28
+                    }
+                },
+                {
+                    "subject": ",6rH\u001dj\u001dS\u0017\r\u0013K!\u0007$\u0005J!{Ø",
+                    "students": [
+                        {
+                            "created": "1864-05-06T00:00:01.011Z",
+                            "name": "!\u001b%t\u0014\u0017",
+                            "id": -29
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-30T00:00:01.011Z",
+                        "name": "\u0015Õju#\u0007èrÈL°+È\u0013×Á\u0001v",
+                        "id": 28
+                    }
+                },
+                {
+                    "subject": "â83{}\u000f\u000cS\u001aB\u0015y¨V+\u0012f9OM\u0004E>t\u0018í\u0018ØYB",
+                    "students": [
+                        {
+                            "created": "1864-04-11T00:00:01.011Z",
+                            "name": "QÄvSd\u0017jØ4?p¥uZó\u0000MrsQo](vt\u0010",
+                            "id": 23
+                        },
+                        {
+                            "created": "1864-04-21T00:00:01.011Z",
+                            "name": "uO#R;cFT",
+                            "id": -18
+                        },
+                        {
+                            "created": "1864-05-08T00:00:01.011Z",
+                            "name": "t#ùnWeR\u0014\tü&\u0018",
+                            "id": -6
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-13T00:00:01.011Z",
+                        "name": "3v2¶{\u000bn@#ç7\u000bi\u000bGo\u000bÄft \u0014\u0006UX",
+                        "id": -23
+                    }
+                },
+                {
+                    "subject": "$!O%\u001c+",
+                    "students": [
+                        {
+                            "created": "1864-05-13T00:00:01.011Z",
+                            "name": " \\I\u0003l\r\u001dr\\6`·]v\u001bÄI\u000eb8Ì\u0012W\u0010",
+                            "id": 23
+                        },
+                        {
+                            "created": "1864-05-12T00:00:01.011Z",
+                            "name": null,
+                            "id": 18
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-13T00:00:01.011Z",
+                        "name": null,
+                        "id": 2
+                    }
+                },
+                {
+                    "subject": "-K",
+                    "students": [
+                        {
+                            "created": "1864-05-05T00:00:01.011Z",
+                            "name": "\u0015*\u001dA7\u0000ûp\u0015Ä\u0001",
+                            "id": 23
+                        },
+                        {
+                            "created": "1864-05-12T00:00:01.011Z",
+                            "name": "ÃJà\n-/Ä",
+                            "id": -28
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-06-04T00:00:01.011Z",
+                        "name": null,
+                        "id": 25
+                    }
+                },
+                {
+                    "subject": "\u001dÓ\t\\$³mO\u0005°\u0002\u000e`NEw\u001c6\u001e\u000eý",
+                    "students": [
+                        {
+                            "created": "1864-05-30T00:00:01.011Z",
+                            "name": null,
+                            "id": 6
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-06-07T00:00:01.011Z",
+                        "name": "XñqpA\u001eâ\u000fi\u0001{0ZXT 8",
+                        "id": 30
+                    }
+                },
+                {
+                    "subject": "Jaf4R{V9 Z9t/Ô\u0016¨]>lV`,b^g\"Å{£",
+                    "students": [
+                        {
+                            "created": "1864-04-15T00:00:01.011Z",
+                            "name": null,
+                            "id": -16
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-13T00:00:01.011Z",
+                        "name": null,
+                        "id": -24
+                    }
+                },
+                {
+                    "subject": "s\u001aâk\rU/m\u0001~\u0010sfeÐ>ëObª\u001bÛÀD\u0008|",
+                    "students": [
+                        {
+                            "created": "1864-05-10T00:00:01.011Z",
+                            "name": null,
+                            "id": 3
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-06-04T00:00:01.011Z",
+                        "name": "\u0017 ê25È´ôp\u000e\u001c\u0007>=Dc\u0011¼7B",
+                        "id": 15
+                    }
+                },
+                {
+                    "subject": "VF6",
+                    "students": [
+                        {
+                            "created": "1864-05-24T00:00:01.011Z",
+                            "name": "l8#PY\r1+\u0010Gp#P&\u0006Dnl(J\u0008\u0005D\u001e",
+                            "id": 4
+                        },
+                        {
+                            "created": "1864-04-19T00:00:01.011Z",
+                            "name": null,
+                            "id": 19
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-15T00:00:01.011Z",
+                        "name": "",
+                        "id": 28
+                    }
+                },
+                {
+                    "subject": "\u0005N",
+                    "students": [
+                        {
+                            "created": "1864-06-02T00:00:01.011Z",
+                            "name": "åÃ?\r8aãq´}íOdÀ_",
+                            "id": 3
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-06-05T00:00:01.011Z",
+                        "name": ">\u0005i2O\u0006È.wU\u001foÜ\u001cMÑH-nm]:\u0007ð\u000cNw",
+                        "id": 8
+                    }
+                },
+                {
+                    "subject": "\u0016Ñ5k.p\u0019\u0016\\)",
+                    "students": [
+                        {
+                            "created": "1864-04-09T00:00:01.011Z",
+                            "name": null,
+                            "id": -20
+                        },
+                        {
+                            "created": "1864-05-09T00:00:01.011Z",
+                            "name": "f\u0019Y",
+                            "id": 1
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-14T00:00:01.011Z",
+                        "name": "8ýí>:â\u001d§P",
+                        "id": -17
+                    }
+                },
+                {
+                    "subject": "E\u0003",
+                    "students": [
+                        {
+                            "created": "1864-04-16T00:00:01.011Z",
+                            "name": "r\u0014Jí¢B¥",
+                            "id": 16
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-10T00:00:01.011Z",
+                        "name": "\u0014w'\u000bH0ø c\u001b\u00117§Üb\u0010y¥c",
+                        "id": 21
+                    }
+                },
+                {
+                    "subject": ")0u)É0T\nw\u0010\u0004cTxü\u0011mV\u0000î0d(",
+                    "students": [
+                        {
+                            "created": "1864-05-18T00:00:01.011Z",
+                            "name": null,
+                            "id": -19
+                        },
+                        {
+                            "created": "1864-05-22T00:00:01.011Z",
+                            "name": null,
+                            "id": 12
+                        },
+                        {
+                            "created": "1864-05-01T00:00:01.011Z",
+                            "name": "µþ",
+                            "id": -19
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-05T00:00:01.011Z",
+                        "name": null,
+                        "id": -9
+                    }
+                },
+                {
+                    "subject": "Ã\"\u000f²[UF\u000e5Ô\tW2\u001f_\u0019Cv\u001b",
+                    "students": [
+                        {
+                            "created": "1864-06-05T00:00:01.011Z",
+                            "name": "À]]ælnZÕºXqXÎs\u0004höØ&>a:",
+                            "id": -10
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-28T00:00:01.011Z",
+                        "name": null,
+                        "id": 22
+                    }
+                },
+                {
+                    "subject": "*\u0008{/\t\u00171[\u001f÷\\l¯%W\u000e½ãP\u0004O\t)tc",
+                    "students": [
+                        {
+                            "created": "1864-05-19T00:00:01.011Z",
+                            "name": "MÏôqt,DÖ¹1IN\rGJu\tE@Î-@\u0016\u0011",
+                            "id": -29
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-06T00:00:01.011Z",
+                        "name": "kHÂV>Mg*Oà\u0017<\u000bqYUZ¶S\u0018&qI",
+                        "id": -7
+                    }
+                }
+            ]
+        },
+        {
+            "administrator": {
+                "created": "1864-04-24T00:00:01.011Z",
+                "name": "+B\u000c\u001fz¸\u0010Z\u0014§t66u\u001aI·\u0002®ª>äg4{ÏöÜ\u0010",
+                "id": 12
+            },
+            "schoolName": "eRN\u001b\u001f\u001c\u001eËha6",
+            "classes": [
+                {
+                    "subject": "\u0004ªÝ\u0018KL\u001a2é^Ê",
+                    "students": [
+                        {
+                            "created": "1864-05-14T00:00:01.011Z",
+                            "name": "BwX«bîRú4.\u0016?\u0001E\u0000$d  \u0006]¯\u0000ÖH",
+                            "id": 27
+                        },
+                        {
+                            "created": "1864-04-30T00:00:01.011Z",
+                            "name": "Ý²",
+                            "id": -3
+                        },
+                        {
+                            "created": "1864-05-24T00:00:01.011Z",
+                            "name": "ª\u000fZ9\u001cº:ð½8|'#·ó_ð",
+                            "id": 18
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-24T00:00:01.011Z",
+                        "name": "FpY4åAQ3A\\XçÃq\u0019Ù\u000e8[Ö]",
+                        "id": -22
+                    }
+                }
+            ]
+        },
+        {
+            "administrator": {
+                "created": "1864-06-06T00:00:01.011Z",
+                "name": ":\u000f\u000cj\u0005\u000fu²M<h_#.S&7\u0001=_D\u0006(\u0016i>",
+                "id": 16
+            },
+            "schoolName": "ï83\u0005\u001dFk<\u001euvÆ\u000fx?µ´q­Îø<[»8`1ae",
+            "classes": [
+                {
+                    "subject": "òÛ",
+                    "students": [
+                        {
+                            "created": "1864-04-14T00:00:01.011Z",
+                            "name": null,
+                            "id": -19
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-19T00:00:01.011Z",
+                        "name": "\u001ev",
+                        "id": 21
+                    }
+                },
+                {
+                    "subject": "\u0018e\u0001\u0017\u000b;0\n",
+                    "students": [
+                        {
+                            "created": "1864-05-03T00:00:01.011Z",
+                            "name": "Üj8y$<Ø\u0016\u0007\u0017`HEuAw",
+                            "id": 30
+                        },
+                        {
+                            "created": "1864-04-29T00:00:01.011Z",
+                            "name": "®\u0013Ã1¤W&$%PzEbó6qiï\u0003Hð&\u0017\u0010\u0004",
+                            "id": 13
+                        },
+                        {
+                            "created": "1864-06-04T00:00:01.011Z",
+                            "name": null,
+                            "id": 10
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-06T00:00:01.011Z",
+                        "name": "m\u00024*Z[\u000cd­d8",
+                        "id": 19
+                    }
+                },
+                {
+                    "subject": "qI\u001cNH@&P",
+                    "students": [
+                        {
+                            "created": "1864-05-18T00:00:01.011Z",
+                            "name": "hp\u0015\u0003¯nä\u0005",
+                            "id": -30
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-12T00:00:01.011Z",
+                        "name": "«``",
+                        "id": -4
+                    }
+                },
+                {
+                    "subject": "²JO\u001eS2íi\u0014Õ",
+                    "students": [
+                        {
+                            "created": "1864-04-25T00:00:01.011Z",
+                            "name": "Ù\u000eJ²\r",
+                            "id": -25
+                        },
+                        {
+                            "created": "1864-05-31T00:00:01.011Z",
+                            "name": "\u0013`\u0004\u0016R\u0015R¯#÷V",
+                            "id": -7
+                        },
+                        {
+                            "created": "1864-05-08T00:00:01.011Z",
+                            "name": null,
+                            "id": 17
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-24T00:00:01.011Z",
+                        "name": "{©[2rA(VDcHæþ\u0007AB\u0016\u001c89\u0003­2\u001dêòi",
+                        "id": -23
+                    }
+                },
+                {
+                    "subject": "F\u0013\u0003U\u00172&\u0011\u0014?gÕ\ró\r\u0015WG\\\n\u001eM",
+                    "students": [
+                        {
+                            "created": "1864-04-22T00:00:01.011Z",
+                            "name": "ÃIÆecßO5\u0007Bç",
+                            "id": 17
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-23T00:00:01.011Z",
+                        "name": "lQ\t]\u001a\u0012HAy$8áv",
+                        "id": 7
+                    }
+                },
+                {
+                    "subject": "rX¿_<K^j\\g\u0018\r_\u0014\u0010ù6d\u001fö»^e",
+                    "students": [
+                        {
+                            "created": "1864-05-31T00:00:01.011Z",
+                            "name": "u",
+                            "id": -30
+                        },
+                        {
+                            "created": "1864-04-25T00:00:01.011Z",
+                            "name": "ê^\t\u0004R\u001d\u0017",
+                            "id": 30
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-09T00:00:01.011Z",
+                        "name": "0'n",
+                        "id": -19
+                    }
+                },
+                {
+                    "subject": "Ã$_¬Ë;\u000b3\u001cBMzA·rYÓu²:\u0003",
+                    "students": [
+                        {
+                            "created": "1864-05-26T00:00:01.011Z",
+                            "name": "lÝ%+`X¢X\u0015jÚ\u0007",
+                            "id": 17
+                        },
+                        {
+                            "created": "1864-05-28T00:00:01.011Z",
+                            "name": "Oõs=o&Rtò5-h-#[*Ó",
+                            "id": -29
+                        },
+                        {
+                            "created": "1864-04-29T00:00:01.011Z",
+                            "name": "7\u000ffk\u001e\u00067",
+                            "id": 27
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-05T00:00:01.011Z",
+                        "name": "1bý¢òCÎTÏ?$VN\u001d\u0000´ P:qRJ{",
+                        "id": -22
+                    }
+                },
+                {
+                    "subject": "?\u001bRoògy8ÛQx£1IG\u0008CZP\u0008\u0007V\u0011?Zãs\u000f",
+                    "students": [
+                        {
+                            "created": "1864-04-17T00:00:01.011Z",
+                            "name": "\u0018v\"\u0014Ô\u000c\tª=q8\u0008uÚ\u000e.5ê7\u000c\u0010à/-}\u001a\u001a",
+                            "id": 5
+                        },
+                        {
+                            "created": "1864-05-20T00:00:01.011Z",
+                            "name": "E\u0014ä,JÊW\u000f:\u0011[êv",
+                            "id": 26
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-11T00:00:01.011Z",
+                        "name": "",
+                        "id": 24
+                    }
+                },
+                {
+                    "subject": "2\tGà?=ÝwOu*IfiY\u000b´möù 8ÄQP",
+                    "students": [
+                        {
+                            "created": "1864-05-01T00:00:01.011Z",
+                            "name": ",1#ç\u0018èvhÍbol)",
+                            "id": 1
+                        },
+                        {
+                            "created": "1864-05-26T00:00:01.011Z",
+                            "name": "b)rt9zr*Àå4S´\u00184ö\"\u000f)\u001e",
+                            "id": -5
+                        },
+                        {
+                            "created": "1864-06-08T00:00:01.011Z",
+                            "name": "&\u0017\u0003í\u0016e«ON0\u0005üó[wg°\u000eÐ¶\u0008\u001c\r÷1âó\u0013Ò",
+                            "id": -27
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-31T00:00:01.011Z",
+                        "name": "u`sÏ\u000b\u0011êD>râ¦<\u0012",
+                        "id": -21
+                    }
+                },
+                {
+                    "subject": "\u000fo®\u0014@ï\u0017+e6YgD\r{\nm}*¿zÀ|ø2jF",
+                    "students": [
+                        {
+                            "created": "1864-04-14T00:00:01.011Z",
+                            "name": "¿",
+                            "id": -18
+                        },
+                        {
+                            "created": "1864-05-21T00:00:01.011Z",
+                            "name": null,
+                            "id": 19
+                        },
+                        {
+                            "created": "1864-04-18T00:00:01.011Z",
+                            "name": null,
+                            "id": 13
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-27T00:00:01.011Z",
+                        "name": "U\n\u0015úís\u001cz$¹\rC\u0004%\u0018q~",
+                        "id": 1
+                    }
+                },
+                {
+                    "subject": "× rñXPGa7%J",
+                    "students": [
+                        {
+                            "created": "1864-05-18T00:00:01.011Z",
+                            "name": null,
+                            "id": 2
+                        },
+                        {
+                            "created": "1864-05-03T00:00:01.011Z",
+                            "name": "];9\nN(mckP\u0007\u001eÏ¬/B¿v8\u0017&gÇ³",
+                            "id": -27
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-22T00:00:01.011Z",
+                        "name": "\u0012Xß¦\r2v\u001f\u001ap\téù",
+                        "id": -20
+                    }
+                },
+                {
+                    "subject": "~\u0005Ï5óK[gmQ)`}Y\u0017å",
+                    "students": [
+                        {
+                            "created": "1864-05-18T00:00:01.011Z",
+                            "name": "\u0006öôG¬Ôz\u0019k\u001duJ",
+                            "id": -23
+                        },
+                        {
+                            "created": "1864-05-26T00:00:01.011Z",
+                            "name": null,
+                            "id": 0
+                        },
+                        {
+                            "created": "1864-04-29T00:00:01.011Z",
+                            "name": "auîD\u000f36~1UèNÛ=\\",
+                            "id": 30
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-06-01T00:00:01.011Z",
+                        "name": "¤Á2.\u0012'\u0019[C\r\u00019?êS\u0019Åq.4)=b\u0011B\u0010\u0016È\u0006",
+                        "id": 7
+                    }
+                },
+                {
+                    "subject": "ZY\u0006O\tL\u001d>ýe",
+                    "students": [
+                        {
+                            "created": "1864-04-25T00:00:01.011Z",
+                            "name": null,
+                            "id": -4
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-22T00:00:01.011Z",
+                        "name": "+-\r\u0007by1ÝA\u001f",
+                        "id": -6
+                    }
+                },
+                {
+                    "subject": "BùXü­±GL%\u001dÝ",
+                    "students": [
+                        {
+                            "created": "1864-05-05T00:00:01.011Z",
+                            "name": "\u001a!\tÑ0Rk-\\ó$IeT#k%\u0001k4=gÛOhK/",
+                            "id": 18
+                        },
+                        {
+                            "created": "1864-05-16T00:00:01.011Z",
+                            "name": "s\u001có÷)",
+                            "id": 12
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-06-05T00:00:01.011Z",
+                        "name": "\u001b\u0003]AN\\´QÜ",
+                        "id": -21
+                    }
+                },
+                {
+                    "subject": "Î%S\\OÏJ\u001b.\u000eC®\u001e«\u0017X:Ä[Â-",
+                    "students": [
+                        {
+                            "created": "1864-04-09T00:00:01.011Z",
+                            "name": "\u001b°2\"Ø{c",
+                            "id": -27
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-13T00:00:01.011Z",
+                        "name": "W.=\u0005 ~",
+                        "id": 29
+                    }
+                },
+                {
+                    "subject": "¶",
+                    "students": [
+                        {
+                            "created": "1864-04-19T00:00:01.011Z",
+                            "name": "jE\u0012HA|%Ý÷\u000c",
+                            "id": 23
+                        },
+                        {
+                            "created": "1864-04-29T00:00:01.011Z",
+                            "name": null,
+                            "id": -28
+                        },
+                        {
+                            "created": "1864-04-21T00:00:01.011Z",
+                            "name": "\u000e4±co.°x5",
+                            "id": -16
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-28T00:00:01.011Z",
+                        "name": "?f",
+                        "id": 6
+                    }
+                },
+                {
+                    "subject": "N_5B\u001cJOÂ\r\u001c\u000e\u0003Cw\u001e4j-ZmU}yp",
+                    "students": [
+                        {
+                            "created": "1864-05-28T00:00:01.011Z",
+                            "name": ">\u0002\u000c··",
+                            "id": 21
+                        },
+                        {
+                            "created": "1864-05-19T00:00:01.011Z",
+                            "name": ")\u0016ï-)",
+                            "id": -25
+                        },
+                        {
+                            "created": "1864-05-24T00:00:01.011Z",
+                            "name": "\u0011/=\u0014|\u00045öV@\u0003#\t\u0012",
+                            "id": -18
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-12T00:00:01.011Z",
+                        "name": "ó9",
+                        "id": 13
+                    }
+                },
+                {
+                    "subject": "d#½2èw^\u0005\t¦#WÎ\u0013*nßg",
+                    "students": [
+                        {
+                            "created": "1864-06-01T00:00:01.011Z",
+                            "name": "!K",
+                            "id": 1
+                        },
+                        {
+                            "created": "1864-04-13T00:00:01.011Z",
+                            "name": ">1tPg^\u0002i9\u000c<çýr\u000f6q\u0002>6}x\u0007Ýy",
+                            "id": 6
+                        },
+                        {
+                            "created": "1864-04-14T00:00:01.011Z",
+                            "name": null,
+                            "id": 4
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-06T00:00:01.011Z",
+                        "name": null,
+                        "id": 28
+                    }
+                },
+                {
+                    "subject": "\u0015T´Ê%½\u0017,fT¬4©Skj\tÄ&L{Ì\u0007\u0014",
+                    "students": [
+                        {
+                            "created": "1864-05-10T00:00:01.011Z",
+                            "name": "vßSÚôcD14",
+                            "id": -3
+                        },
+                        {
+                            "created": "1864-06-05T00:00:01.011Z",
+                            "name": null,
+                            "id": -29
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-30T00:00:01.011Z",
+                        "name": ">ye8",
+                        "id": -14
+                    }
+                },
+                {
+                    "subject": "W÷kEf\u0000þ°SÕ9Do¿ý#\rÅ\u0005Ô",
+                    "students": [
+                        {
+                            "created": "1864-05-26T00:00:01.011Z",
+                            "name": ",Sß©\u0016El<",
+                            "id": -30
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-06-06T00:00:01.011Z",
+                        "name": ")>m6Iò½U\u000c®",
+                        "id": 9
+                    }
+                },
+                {
+                    "subject": "ö¹\u001aEF<\u0019\u0001ö*¤¦",
+                    "students": [
+                        {
+                            "created": "1864-05-27T00:00:01.011Z",
+                            "name": "Ñm*,\u0019$ZT\u000fj$\u0006ýU$\u001cQìH@",
+                            "id": -6
+                        },
+                        {
+                            "created": "1864-05-26T00:00:01.011Z",
+                            "name": "Ú\u0016[\u000bÙ\u001f",
+                            "id": 17
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-06-03T00:00:01.011Z",
+                        "name": null,
+                        "id": -23
+                    }
+                },
+                {
+                    "subject": "",
+                    "students": [
+                        {
+                            "created": "1864-05-22T00:00:01.011Z",
+                            "name": "ê]",
+                            "id": -10
+                        },
+                        {
+                            "created": "1864-05-04T00:00:01.011Z",
+                            "name": "",
+                            "id": -9
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-28T00:00:01.011Z",
+                        "name": "â",
+                        "id": -28
+                    }
+                },
+                {
+                    "subject": "4^\u0002Ê8\u00084»E×;=\u000fA[äb\u000f\n{l",
+                    "students": [
+                        {
+                            "created": "1864-04-11T00:00:01.011Z",
+                            "name": "1w\u0001WVr",
+                            "id": 0
+                        },
+                        {
+                            "created": "1864-05-31T00:00:01.011Z",
+                            "name": "ÙàU\u000eÐMØ\n\u001eÉ;¡m]yY5¿\u0016Æ\u0003C\u001b",
+                            "id": 28
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-20T00:00:01.011Z",
+                        "name": null,
+                        "id": -6
+                    }
+                },
+                {
+                    "subject": "3ª~`",
+                    "students": [
+                        {
+                            "created": "1864-04-15T00:00:01.011Z",
+                            "name": "P.\u0014a1h%mb\u0018W\u001fÉ",
+                            "id": -2
+                        },
+                        {
+                            "created": "1864-05-01T00:00:01.011Z",
+                            "name": "\u001e#*eev¬\u0019ÓX\u000fÒñëh[tT|éÏñk\u0017\u0011!°L",
+                            "id": -6
+                        },
+                        {
+                            "created": "1864-06-06T00:00:01.011Z",
+                            "name": "|ÜVT\tt\tÉOUÍá\u0000·vU|h",
+                            "id": 17
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-06-04T00:00:01.011Z",
+                        "name": "¥\u000c,ýzó\"`\u0006·J1@/Cj",
+                        "id": 12
+                    }
+                },
+                {
+                    "subject": "\u001d\u0001CC\u0007ÂGU\u0018r¦\u0008",
+                    "students": [
+                        {
+                            "created": "1864-05-08T00:00:01.011Z",
+                            "name": "TYÚ\u0006/&68ZX1{U0=Î",
+                            "id": 30
+                        },
+                        {
+                            "created": "1864-04-12T00:00:01.011Z",
+                            "name": "§?",
+                            "id": -15
+                        },
+                        {
+                            "created": "1864-05-20T00:00:01.011Z",
+                            "name": "6#>G\u000b'\u001d\u0008<<bn\u001f/gD}>g?ýhm\u0019\u0002",
+                            "id": 6
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-07T00:00:01.011Z",
+                        "name": null,
+                        "id": 13
+                    }
+                },
+                {
+                    "subject": "t*ýf",
+                    "students": [
+                        {
+                            "created": "1864-04-12T00:00:01.011Z",
+                            "name": "è8SQqÊõÄ\u0012hÙéC0U3PT?ä ",
+                            "id": 11
+                        },
+                        {
+                            "created": "1864-05-15T00:00:01.011Z",
+                            "name": "/\u00133Y]}ã=ÐM\"<|Mw@\u001a5û:*T\u0011",
+                            "id": -21
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-25T00:00:01.011Z",
+                        "name": null,
+                        "id": 16
+                    }
+                },
+                {
+                    "subject": "\u000es",
+                    "students": [
+                        {
+                            "created": "1864-04-25T00:00:01.011Z",
+                            "name": null,
+                            "id": -23
+                        },
+                        {
+                            "created": "1864-04-10T00:00:01.011Z",
+                            "name": "×\u00086Nß>DH\r\u0013Sox>dOr%",
+                            "id": -21
+                        },
+                        {
+                            "created": "1864-04-26T00:00:01.011Z",
+                            "name": "Ä\u001eSû´<m3szÝLc\u001etÉEáJ",
+                            "id": -6
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-13T00:00:01.011Z",
+                        "name": null,
+                        "id": -13
+                    }
+                }
+            ]
+        },
+        {
+            "administrator": {
+                "created": "1864-05-23T00:00:01.011Z",
+                "name": null,
+                "id": 3
+            },
+            "schoolName": ")ýB_\u0014}Ä",
+            "classes": [
+                {
+                    "subject": "3\u0012o\u000e\u0017",
+                    "students": [
+                        {
+                            "created": "1864-05-23T00:00:01.011Z",
+                            "name": null,
+                            "id": -17
+                        },
+                        {
+                            "created": "1864-04-24T00:00:01.011Z",
+                            "name": null,
+                            "id": 14
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-28T00:00:01.011Z",
+                        "name": null,
+                        "id": 19
+                    }
+                },
+                {
+                    "subject": "A\n¦U1.;ü!À1",
+                    "students": [
+                        {
+                            "created": "1864-04-29T00:00:01.011Z",
+                            "name": "L\u0011FM­Ì°*\u0008]\u00177sµÈ,!Y 8\nºOÂT",
+                            "id": 0
+                        },
+                        {
+                            "created": "1864-04-27T00:00:01.011Z",
+                            "name": null,
+                            "id": 10
+                        },
+                        {
+                            "created": "1864-05-19T00:00:01.011Z",
+                            "name": "F\u001enbeK\u001c@Ü,¶ßYú]^CN",
+                            "id": 4
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-19T00:00:01.011Z",
+                        "name": "\u0014\\Ze~±ÏÌM)%\u0016¥(¹S?ß\t\u0000wq¦",
+                        "id": 6
+                    }
+                },
+                {
+                    "subject": "\u0017\u001bÂFfcV\"(\u0019",
+                    "students": [
+                        {
+                            "created": "1864-04-27T00:00:01.011Z",
+                            "name": "Jj¨3Læ",
+                            "id": -14
+                        },
+                        {
+                            "created": "1864-05-26T00:00:01.011Z",
+                            "name": "¢M=R«'½#@l\u000ee\u0005\u001e\u0004§\u001e\u00088V\u00136\u0019³\\\u0002",
+                            "id": 3
+                        },
+                        {
+                            "created": "1864-04-19T00:00:01.011Z",
+                            "name": "\rA1|wÚ^N#ÞÝR-| \u0012+3&\u001eþc",
+                            "id": 0
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-22T00:00:01.011Z",
+                        "name": "v<\u0005µ\rôVKsk\ntä",
+                        "id": -16
+                    }
+                },
+                {
+                    "subject": ">n\u0016R3\u001cõzHw\u0001",
+                    "students": [
+                        {
+                            "created": "1864-04-17T00:00:01.011Z",
+                            "name": "\\0~\u0006e\u0007gqP\\£BA±ê_ô9",
+                            "id": -20
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-04T00:00:01.011Z",
+                        "name": "I9M{â\u0019IJýk¨,\u0000\u0010Jl&H÷6",
+                        "id": 6
+                    }
+                },
+                {
+                    "subject": "þ\u000b ë\u0004\u0015ä\u0005\u0006½LB\u000fa\u0016¢] S",
+                    "students": [
+                        {
+                            "created": "1864-04-27T00:00:01.011Z",
+                            "name": "é\"©zo\u000bAq\u001aÂJOVªIx¡C¯",
+                            "id": 17
+                        },
+                        {
+                            "created": "1864-05-20T00:00:01.011Z",
+                            "name": null,
+                            "id": 20
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-24T00:00:01.011Z",
+                        "name": "_Ó\u0006Ä\u0015ýU\\6Uc\u000c@¬\r\u0017ÕUG\\kÝ\u0016\u000e",
+                        "id": 4
+                    }
+                },
+                {
+                    "subject": "I\u0017µ.zÇ4P?§\u0008'0\u0001jv`»y\u001a",
+                    "students": [
+                        {
+                            "created": "1864-04-13T00:00:01.011Z",
+                            "name": "Q&T#agôÁ\"",
+                            "id": 19
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-20T00:00:01.011Z",
+                        "name": "ºÚ¤\u00086\u0001Rr3\u0003#%,5N·ùx\u001dz\u000e\u001d¤$i",
+                        "id": 28
+                    }
+                },
+                {
+                    "subject": "2VVxal.¹p¿j\\U}¸N\u0002C\u001d-V$+?Hy",
+                    "students": [
+                        {
+                            "created": "1864-04-21T00:00:01.011Z",
+                            "name": "t\\\u0019ï>n{",
+                            "id": -28
+                        },
+                        {
+                            "created": "1864-04-15T00:00:01.011Z",
+                            "name": "f?£¨>.ºl\tE:#qC#5:ª\u000f×ñ+ý8",
+                            "id": 23
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-10T00:00:01.011Z",
+                        "name": "\u000509{k",
+                        "id": -15
+                    }
+                },
+                {
+                    "subject": "çB{ÎizQ$áA¨",
+                    "students": [
+                        {
+                            "created": "1864-04-17T00:00:01.011Z",
+                            "name": "ÌÙo|ø\u0006\u0018:xd\u001aV\u0004A\u001d",
+                            "id": -20
+                        },
+                        {
+                            "created": "1864-04-10T00:00:01.011Z",
+                            "name": null,
+                            "id": 30
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-22T00:00:01.011Z",
+                        "name": "DÂr-\u001b\u0002\u0001iA$L",
+                        "id": 19
+                    }
+                },
+                {
+                    "subject": "\u000f\u00175!Ð½ÌE?¯",
+                    "students": [
+                        {
+                            "created": "1864-04-16T00:00:01.011Z",
+                            "name": "è\u0006t#\u001a\u0019,\u001bm\u0018/f7Z",
+                            "id": 29
+                        },
+                        {
+                            "created": "1864-05-21T00:00:01.011Z",
+                            "name": ":\u0018u}\u0004G\u0006\u0001TLQr=Þ\u001a",
+                            "id": -27
+                        },
+                        {
+                            "created": "1864-05-03T00:00:01.011Z",
+                            "name": null,
+                            "id": 13
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-11T00:00:01.011Z",
+                        "name": ",H/Zã\u0012¬",
+                        "id": 2
+                    }
+                },
+                {
+                    "subject": "",
+                    "students": [
+                        {
+                            "created": "1864-05-18T00:00:01.011Z",
+                            "name": "|\u001c",
+                            "id": 24
+                        },
+                        {
+                            "created": "1864-05-31T00:00:01.011Z",
+                            "name": "4O)áTSe±K|í§Ýc?V'»,{'z\tÿ\u000c´",
+                            "id": 12
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-21T00:00:01.011Z",
+                        "name": null,
+                        "id": 8
+                    }
+                },
+                {
+                    "subject": "\u0018¼¢óh(/\u001fµBg_+ÜKCv=mK©N(",
+                    "students": [
+                        {
+                            "created": "1864-05-20T00:00:01.011Z",
+                            "name": "U f¶;DñBbú>\u0005<v",
+                            "id": 7
+                        },
+                        {
+                            "created": "1864-06-07T00:00:01.011Z",
+                            "name": "\u0014ûûQ\u0008<\"FÌ;jri\u001a#AÂ\u0014",
+                            "id": 21
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-06-06T00:00:01.011Z",
+                        "name": "\u000e)7KY3%-ê(î~VPK\u001c",
+                        "id": 14
+                    }
+                },
+                {
+                    "subject": "\u0001þ\u000cÛ\u001e",
+                    "students": [
+                        {
+                            "created": "1864-05-04T00:00:01.011Z",
+                            "name": "6¸Y\nivÌ\r\u0004a\u001a\tN",
+                            "id": -6
+                        },
+                        {
+                            "created": "1864-04-11T00:00:01.011Z",
+                            "name": null,
+                            "id": -10
+                        },
+                        {
+                            "created": "1864-05-31T00:00:01.011Z",
+                            "name": null,
+                            "id": -19
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-24T00:00:01.011Z",
+                        "name": null,
+                        "id": 16
+                    }
+                },
+                {
+                    "subject": "°Ü*",
+                    "students": [
+                        {
+                            "created": "1864-04-23T00:00:01.011Z",
+                            "name": "h\u0018QçuÚè»\u001cZ\u0004\u0001aY\u0014\\\u001cQ©Wh«\u00000,AëI",
+                            "id": 5
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-09T00:00:01.011Z",
+                        "name": "uc¤]¾Æw!OxG}{[n^f",
+                        "id": -10
+                    }
+                }
+            ]
+        },
+        {
+            "administrator": {
+                "created": "1864-05-15T00:00:01.011Z",
+                "name": "#ÏC\u0011\u001b\u001est¿Í¥÷",
+                "id": 23
+            },
+            "schoolName": "y{Q4Ò\u000eGs\u0002oV¼]\u001d?Í\u001f}v5aÿÃc'SZ ",
+            "classes": [
+                {
+                    "subject": "(g",
+                    "students": [
+                        {
+                            "created": "1864-05-29T00:00:01.011Z",
+                            "name": "­\u0014#;?í+à",
+                            "id": -2
+                        },
+                        {
+                            "created": "1864-05-30T00:00:01.011Z",
+                            "name": null,
+                            "id": -24
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-17T00:00:01.011Z",
+                        "name": "\u0006ÞNgT&TlÕ>Q®\u000bÕëIvÂq",
+                        "id": 5
+                    }
+                },
+                {
+                    "subject": "\u0011\u0007K{",
+                    "students": [
+                        {
+                            "created": "1864-04-13T00:00:01.011Z",
+                            "name": null,
+                            "id": -24
+                        },
+                        {
+                            "created": "1864-05-16T00:00:01.011Z",
+                            "name": "m*c«|1]\u0003\u0002.\u000bç\u001a75qn2",
+                            "id": -17
+                        },
+                        {
+                            "created": "1864-04-25T00:00:01.011Z",
+                            "name": "",
+                            "id": -29
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-17T00:00:01.011Z",
+                        "name": "",
+                        "id": 23
+                    }
+                },
+                {
+                    "subject": "(N",
+                    "students": [
+                        {
+                            "created": "1864-05-24T00:00:01.011Z",
+                            "name": "",
+                            "id": -7
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-29T00:00:01.011Z",
+                        "name": null,
+                        "id": 13
+                    }
+                },
+                {
+                    "subject": "=^\t",
+                    "students": [
+                        {
+                            "created": "1864-04-14T00:00:01.011Z",
+                            "name": "cO\u001c\u001eï \u0005\rpÄ\u001d\u0019ó\"Yvn)\u0010",
+                            "id": 16
+                        },
+                        {
+                            "created": "1864-06-05T00:00:01.011Z",
+                            "name": null,
+                            "id": -3
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-06-07T00:00:01.011Z",
+                        "name": "M_I~¦þ'ªMN\u0004g¢DÙ\u001e¾\u00107,\u0006AzL5\"F",
+                        "id": 19
+                    }
+                },
+                {
+                    "subject": "­d¤1\u0005=ö\u0004",
+                    "students": [
+                        {
+                            "created": "1864-04-26T00:00:01.011Z",
+                            "name": "[¦%jq)c\u0019",
+                            "id": -8
+                        },
+                        {
+                            "created": "1864-05-24T00:00:01.011Z",
+                            "name": "6O.",
+                            "id": -29
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-02T00:00:01.011Z",
+                        "name": "©°ªVfêU\u001eCM-ÍM",
+                        "id": -27
+                    }
+                },
+                {
+                    "subject": "jJ\u001e/Èpí\tE \u0006ã9",
+                    "students": [
+                        {
+                            "created": "1864-04-13T00:00:01.011Z",
+                            "name": null,
+                            "id": -6
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-05T00:00:01.011Z",
+                        "name": null,
+                        "id": -7
+                    }
+                },
+                {
+                    "subject": " °©ª\u0001I%\t8\u0014L\tp\u000f6\u0013ä\u0002s¢ÍQzA\u000ef",
+                    "students": [
+                        {
+                            "created": "1864-04-26T00:00:01.011Z",
+                            "name": "\t",
+                            "id": 9
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-04-29T00:00:01.011Z",
+                        "name": null,
+                        "id": 4
+                    }
+                },
+                {
+                    "subject": "\u0005Ö\u001ew&÷q\u0014\u0008¡%]C·\u0019",
+                    "students": [
+                        {
+                            "created": "1864-04-30T00:00:01.011Z",
+                            "name": "/;TP|ë\u000c`4Eë\u0013ÝÞóR\u001aÇ",
+                            "id": 15
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-06-08T00:00:01.011Z",
+                        "name": "ÖÙZÍ\u0018Å\u0010ÂB&ØhOVF7`;¸d[\rç\u0008U",
+                        "id": -6
+                    }
+                },
+                {
+                    "subject": "\u000b`K\u001dS\u0011ÃzyBQf\\k©",
+                    "students": [
+                        {
+                            "created": "1864-05-24T00:00:01.011Z",
+                            "name": null,
+                            "id": -1
+                        },
+                        {
+                            "created": "1864-04-12T00:00:01.011Z",
+                            "name": null,
+                            "id": 24
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-06-01T00:00:01.011Z",
+                        "name": "h\u0010~*·_\"Oqop-¨Û)\u000e\u0015a\u0004",
+                        "id": 19
+                    }
+                },
+                {
+                    "subject": "x\u000b>b\u0000\u0004\u001d¨Õ#ð{IN\rUÚ\u0014\u0012\u001c!6*l",
+                    "students": [
+                        {
+                            "created": "1864-05-13T00:00:01.011Z",
+                            "name": "Ál$²C{cdÖ\tNÝ£\u0016w\u001b@I=y×\tjª",
+                            "id": -22
+                        },
+                        {
+                            "created": "1864-06-04T00:00:01.011Z",
+                            "name": null,
+                            "id": -27
+                        },
+                        {
+                            "created": "1864-05-25T00:00:01.011Z",
+                            "name": "R\u001b\u0010\u0004å&\u0016\u0017p\npßRj\u0012/",
+                            "id": -17
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-06-08T00:00:01.011Z",
+                        "name": "³\u0014¦,Ë]j",
+                        "id": -27
+                    }
+                },
+                {
+                    "subject": "4\u0015s£ÓáGd",
+                    "students": [
+                        {
+                            "created": "1864-05-02T00:00:01.011Z",
+                            "name": "Qeybï\u001f=¹V¢¸1S\\Uvá@",
+                            "id": -2
+                        },
+                        {
+                            "created": "1864-05-20T00:00:01.011Z",
+                            "name": null,
+                            "id": 20
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-31T00:00:01.011Z",
+                        "name": null,
+                        "id": -22
+                    }
+                },
+                {
+                    "subject": "\u0017¯b\r\u0011M]x+8+>Ã;)",
+                    "students": [
+                        {
+                            "created": "1864-05-19T00:00:01.011Z",
+                            "name": null,
+                            "id": -13
+                        },
+                        {
+                            "created": "1864-04-24T00:00:01.011Z",
+                            "name": null,
+                            "id": -29
+                        },
+                        {
+                            "created": "1864-05-01T00:00:01.011Z",
+                            "name": "\u000b\u001d}Û",
+                            "id": 19
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-06T00:00:01.011Z",
+                        "name": null,
+                        "id": -16
+                    }
+                },
+                {
+                    "subject": "bT[ÝÞ+íÜ­2<\u0014^=y\u0003>§T",
+                    "students": [
+                        {
+                            "created": "1864-04-30T00:00:01.011Z",
+                            "name": "\u001e\u0014ô­Æ\u001e]\u000f\u001b [\u0017[ãjx",
+                            "id": -24
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-13T00:00:01.011Z",
+                        "name": "W%%-\u0007wF\u0008e[{u`oZkb",
+                        "id": 1
+                    }
+                },
+                {
+                    "subject": "ç7^k¾õ\u0004\u0003#kz{\\¨Lf\u0016¹",
+                    "students": [
+                        {
+                            "created": "1864-05-31T00:00:01.011Z",
+                            "name": ".fùE<6Ìá7ì·>}nc\u0013¤",
+                            "id": -19
+                        },
+                        {
+                            "created": "1864-04-30T00:00:01.011Z",
+                            "name": "BYÈ~3B\u0002}3Ö\u001a¿5\u0003v\u000f\u0012A?9^6l\u0007GEN)t",
+                            "id": -25
+                        }
+                    ],
+                    "professor": {
+                        "created": "1864-05-01T00:00:01.011Z",
+                        "name": "Z",
+                        "id": -13
+                    }
+                }
+            ]
+        }
+    ]
+}

@@ -1,5 +1,5 @@
 {
-  "name": "playground",
+  "name": "ocaml-export-spec",
   "private": true,
   "version": "0.0.0",
   "description": "",
@@ -17,9 +17,8 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "bs-fetch": "git+ssh://git@github.com/plow-technologies/bs-fetch.git#01202669fb57a2e179e327bd816c2aa1db3dfdc3",
-    "bs-aeson": "git+ssh://git@github.com/plow-technologies/bs-aeson.git#8e7938ce32cdef2e14dbf060f466f776331e3d55",
-    "bs-aeson-spec": "git+ssh://git@github.com/plow-technologies/bs-aeson-spec.git#cdd41a17e372bd0176169bb2a02c4419d76f5d3b",
+    "bs-aeson": "^1.1.0",
+    "bs-aeson-spec": "^1.1.0",
     "bs-node": "github:buckletypes/bs-node",
     "bs-node-fetch": "^0.1.2"
   },

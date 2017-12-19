@@ -33,15 +33,15 @@ import qualified Data.Aeson.Types as Aeson (Options(..))
 import qualified Data.Map.Strict as Map
 
 -- text
-import           Data.Text (Text)
+import Data.Text (Text)
 import qualified Data.Text as T
 
 -- wl-pprint
-import           Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
+import Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
 
 -- ocaml-export
-import           OCaml.BuckleScript.Types hiding (getOCamlValues)
-import           OCaml.Common
+import OCaml.BuckleScript.Types hiding (getOCamlValues)
+import OCaml.Internal.Common
 
 
 -- | Render OCamlDatatype into an OCaml declaration

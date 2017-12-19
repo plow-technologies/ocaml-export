@@ -15,20 +15,31 @@
 
 module Product where
 
-import Data.Aeson (FromJSON, ToJSON)
+-- base
 import Data.Monoid ((<>))
-import Data.Proxy
+import GHC.Generics
+-- text
 import Data.Text (Text)
+-- time
 import Data.Time
 import Data.Time.Clock.POSIX
-import GHC.Generics
-import OCaml.Export
-import Test.Hspec
-import Test.QuickCheck
-import Test.QuickCheck.Arbitrary.ADT
-import Test.Aeson.Internal.ADT.GoldenSpecs
-import Util
+-- containers
 import qualified Data.Map as Map
+
+-- aeson
+import Data.Aeson (FromJSON, ToJSON)
+
+-- hspec
+import Test.Hspec
+-- QuickCheck
+import Test.QuickCheck
+-- quickcheck-arbitrary-adt
+import Test.QuickCheck.Arbitrary.ADT
+-- hspec-golden-aeson
+import Test.Aeson.Internal.ADT.GoldenSpecs
+-- ocaml-export
+import OCaml.Export hiding (mkGoldenFiles)
+import Util
 
 type ProductPackage
   = OCamlPackage "product" NoDependency

@@ -7,33 +7,35 @@
 
 module File where
 
-import Data.Aeson
+-- base
 import Data.Proxy
 import GHC.Generics (Generic)
-import OCaml.Export
+
+-- aeson
+import Data.Aeson
+
+-- hspec
 import Test.Hspec
-import Test.QuickCheck
-import Test.QuickCheck.Arbitrary.ADT
+
+-- hspec-golden-aeson
 import Test.Aeson.Internal.ADT.GoldenSpecs
 
+-- QuickCheck
+import Test.QuickCheck
+
+-- quickcheck-arbitrary-adt
+import Test.QuickCheck.Arbitrary.ADT
+
+-- ocaml-export
+import OCaml.Export
 
 type FilePackage = OCamlPackage "" NoDependency :>
   (OCamlModule '["File"]
     :> OCamlTypeInFile Person "test/ocaml/Person"
     :> Automobile
     :> OCamlTypeInFile Business "test/ocaml/Business"
+    :> OCamlTypeInFile (Wrapper TypeParameterRef0 TypeParameterRef1) "test/ocaml/Wrapper"
   )
-
-
-mkGolden :: forall a. (ToADTArbitrary a, ToJSON a) => Proxy a -> IO ()
-mkGolden Proxy = mkGoldenFileForType 10 (Proxy :: Proxy a) "test/interface/golden/golden/file"
-
-mkGoldenFiles :: IO ()
-mkGoldenFiles = do
-  mkGolden (Proxy :: Proxy Person)
-  mkGolden (Proxy :: Proxy Automobile)
-  mkGolden (Proxy :: Proxy Business)
-
 
 data Person = Person
   { id :: Int
@@ -71,3 +73,14 @@ instance Arbitrary Business where
     Business <$> arbitrary <*> arbitrary <*> vector employeeCount <*> arbitrary
 
 instance ToADTArbitrary Business
+
+data Wrapper a b = Wrapper
+  { wrapperA :: a
+  , wrapperB :: b
+  , wrapperC :: String
+  } deriving (Show, Eq, Generic, FromJSON, ToJSON)
+
+instance (Arbitrary a, Arbitrary b) => Arbitrary (Wrapper a b) where
+  arbitrary = Wrapper <$> arbitrary <*> arbitrary <*> arbitrary
+
+instance (ToADTArbitrary a, ToADTArbitrary b) => ToADTArbitrary (Wrapper a b)

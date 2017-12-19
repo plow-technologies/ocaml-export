@@ -1,1 +1,0 @@
-__tests__/product/Person_spec.cmj : product/Person.cmj

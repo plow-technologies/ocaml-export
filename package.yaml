@@ -46,7 +46,7 @@ library:
   - wl-pprint-text
   ghc-options:
   - -Wall
-  - -Werror
+#  - -Werror
   - -Wredundant-constraints
   - -fprint-potential-instances
 

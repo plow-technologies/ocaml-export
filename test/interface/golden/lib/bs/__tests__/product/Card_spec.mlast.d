@@ -1,1 +1,0 @@
-__tests__/product/Card_spec.cmj : product/Card.cmj

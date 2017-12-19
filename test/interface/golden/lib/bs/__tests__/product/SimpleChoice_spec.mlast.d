@@ -1,1 +1,0 @@
-__tests__/product/SimpleChoice_spec.cmj : product/SimpleChoice.cmj

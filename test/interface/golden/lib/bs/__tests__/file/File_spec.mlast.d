@@ -1,1 +1,0 @@
-__tests__/file/File_spec.cmj : file/File.cmj

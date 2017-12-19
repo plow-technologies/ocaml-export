@@ -1,7 +1,7 @@
 .stack-work
 node_modules
 .merlin
-test/nointerface/golden/lib/
+lib
 \#*#
 .#*
 *.log

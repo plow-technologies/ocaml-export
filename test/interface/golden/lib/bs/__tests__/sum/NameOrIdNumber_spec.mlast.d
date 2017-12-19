@@ -1,1 +1,0 @@
-__tests__/sum/NameOrIdNumber_spec.cmj : sum/NameOrIdNumber.cmj

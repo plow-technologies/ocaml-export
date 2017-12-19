@@ -1,1 +1,0 @@
-__tests__/sum/NewType_spec.cmj : sum/NewType.cmj

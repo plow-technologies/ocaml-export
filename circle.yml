@@ -10,6 +10,9 @@ machine:
     - sudo apt-get install stack -y
     - sudo apt-get update
     - sudo apt-get install ocaml
+  
+  node:
+    version: 6.11.4
     
   environment:
     PATH: $HOME/.cabal/bin:$CIRCLE_ARTIFACTS:$PATH:$HOME/$CIRCLE_PROJECT_REPONAME/.cabal-sandbox/bin

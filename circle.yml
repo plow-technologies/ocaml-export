@@ -10,7 +10,6 @@ machine:
     - sudo apt-get install stack -y
     - sudo apt-get update
     - sudo apt-get install ocaml
-    - sudo npm install --save-dev jest
     
   environment:
     PATH: $HOME/.cabal/bin:$CIRCLE_ARTIFACTS:$PATH:$HOME/$CIRCLE_PROJECT_REPONAME/.cabal-sandbox/bin

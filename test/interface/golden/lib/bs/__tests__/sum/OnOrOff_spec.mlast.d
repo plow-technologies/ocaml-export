@@ -1,0 +1,1 @@
+__tests__/sum/OnOrOff_spec.cmj : sum/OnOrOff.cmj

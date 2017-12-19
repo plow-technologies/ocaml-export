@@ -1,0 +1,1 @@
+__tests__/sum/SumWithRecord_spec.cmj : sum/SumWithRecord.cmj

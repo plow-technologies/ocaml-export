@@ -1,0 +1,1 @@
+__tests__/product/TwoTypeParameters_spec.cmj : product/TwoTypeParameters.cmj

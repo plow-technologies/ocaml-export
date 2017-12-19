@@ -1,0 +1,1 @@
+__tests__/product/SubTypeParameter_spec.cmj : product/SubTypeParameter.cmj

@@ -1,0 +1,1 @@
+__tests__/sum/Result_spec.cmj : sum/Result.cmj

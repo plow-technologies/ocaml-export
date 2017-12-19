@@ -2,7 +2,6 @@ machine:
   pre:
     - sudo apt-get update
     - sudo apt-get install ocaml
-    - curl -sSL https://get.haskellstack.org/ | sh
   
   node:
     version: 6.11.4
@@ -18,7 +17,6 @@ dependencies:
   override:
     - stack setup
     - stack build --only-dependencies
-    - npm install node-fetch --save
     - npm install --prefix test/interface/golden
     - npm run build --prefix test/interface/golden
 

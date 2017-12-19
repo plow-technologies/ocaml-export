@@ -23,8 +23,9 @@
     "bs-node-fetch": "^0.1.2"
   },
   "devDependencies": {
-    "bs-platform": "^2.0.0",
     "bs-jest": "reasonml-community/bs-jest",
-    "concurrently": "^3.5.0"
+    "bs-platform": "^2.0.0",
+    "concurrently": "^3.5.0",
+    "jest": "^22.0.1"
   }
 }

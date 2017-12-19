@@ -6,10 +6,9 @@ machine:
     - gcc --version
     - echo 'deb http://download.fpcomplete.com/ubuntu precise main'|sudo tee /etc/apt/sources.list.d/fpco.list
     - sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 575159689BEFB442
-    - sudo apt-get update
     - sudo apt-get install stack -y
-    - sudo apt-get update
     - sudo apt-get install ocaml
+    - sudo npm install --save-dev jest
     
   environment:
     PATH: $HOME/.cabal/bin:$CIRCLE_ARTIFACTS:$PATH:$HOME/$CIRCLE_PROJECT_REPONAME/.cabal-sandbox/bin

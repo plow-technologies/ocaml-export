@@ -25,13 +25,13 @@ dependencies:
   override:
     - stack setup
     - stack build --only-dependencies
+    - npm install node-fetch --save
     - npm install --prefix test/interface/golden
     - npm run build --prefix test/interface/golden
 
 
 test:
   override:
-    - bash test.sh
     - stack test:
         background: true
     - sleep 5

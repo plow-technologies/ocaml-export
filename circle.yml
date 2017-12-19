@@ -23,7 +23,6 @@ dependencies:
 
 test:
   override:
-    - bash test.sh
     - stack test:
         background: true
     - sleep 5

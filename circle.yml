@@ -1,0 +1,24 @@
+machine:
+  pre:
+    - sudo apt-get update
+    - sudo apt-get install gcc-4.8
+    - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 90
+    - gcc --version
+    - echo 'deb http://download.fpcomplete.com/ubuntu precise main'|sudo tee /etc/apt/sources.list.d/fpco.list
+    - sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 575159689BEFB442
+    - sudo apt-get update
+    - sudo apt-get install stack -y
+
+  environment:
+    PATH: $HOME/.cabal/bin:$CIRCLE_ARTIFACTS:$PATH:$HOME/$CIRCLE_PROJECT_REPONAME/.cabal-sandbox/bin
+
+dependencies:
+  cache_directories:
+    - ".stack-work"
+    - "~/.stack"
+  override:
+    - stack setup
+
+test:
+  override:
+    - bash test.sh

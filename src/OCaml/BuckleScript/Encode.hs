@@ -161,7 +161,9 @@ instance HasEncoder OCamlConstructor where
   render (OCamlValueConstructor (NamedConstructor _name OCamlEmpty)) =
     pure $ "Aeson.Encode.list []"
 
-  -- Single constructor, multiple values: create array with values
+  -- Single constructor
+  -- if there is a single value: encode the single value
+  -- if there are multiple values: create array with values
   render (OCamlValueConstructor (NamedConstructor name value)) = do
     let constructorParams = constructorParameters 0 value
     (encoders, _) <- renderVariable constructorParams value

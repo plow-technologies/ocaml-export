@@ -1,0 +1,195 @@
+{
+    "seed": 2861981648554240470,
+    "samples": [
+        {
+            "abc": "\u0004jm\u0019\u0005!\u0014\u001b\u0015w\u00004",
+            "bbBusiness": {
+                "taxId": "hvÏ",
+                "owner": {
+                    "name": "Z=/ØE\u0014\u000bsk{A\n)f",
+                    "id": 12
+                },
+                "companyVehicle": null,
+                "employees": [
+                    {
+                        "name": "eQÏ=1\u000b¢s2ª%",
+                        "id": 29
+                    },
+                    {
+                        "name": "\u0000¼|3\u000e)\u0001A¯*a\u0015â_|\u001f£àQ©gPþn\u0017\u0014ºD\u0008",
+                        "id": 20
+                    },
+                    {
+                        "name": "É\u001fBXä:×¨Zs×\u0013",
+                        "id": 22
+                    }
+                ]
+            }
+        },
+        {
+            "abc": "Yn.4\u0019",
+            "bbBusiness": {
+                "taxId": "ä7Áu#\u000c\u0001°ha}\u0011]\u000fA\nq:",
+                "owner": {
+                    "name": "\u000b+É\u0008¡\u000c~7c(+\u000c3¢T\u0014ù\u0019ØHF¿¿dº r",
+                    "id": -1
+                },
+                "companyVehicle": {
+                    "year": 11,
+                    "model": "Ù.o0J\u000f|U\u0001] \n\u0007\t\u0006\u001c·",
+                    "make": "\"*%\u0011C>D/@/\n@N0¸Wºê7"
+                },
+                "employees": []
+            }
+        },
+        {
+            "abc": "J.ëoj(u¡\u0003Y&»_\t5Arsô½Aõ!^-\u000c;\rU",
+            "bbBusiness": {
+                "taxId": "[ì\tshHVOoÖÈ\u001ei\u0007:\u0007&\u00039@\u0010\u0007\u0013xªx;T",
+                "owner": {
+                    "name": ",\n¡Ü£\u0012,ñ",
+                    "id": -19
+                },
+                "companyVehicle": {
+                    "year": 0,
+                    "model": "Z@ ó2_E¡Ã\u0015( j",
+                    "make": "DoH#tÓÛi\ttt³/"
+                },
+                "employees": []
+            }
+        },
+        {
+            "abc": "?&Nß<JCf\u0015*",
+            "bbBusiness": {
+                "taxId": "-p²¼Ü\u0006wÍ(¿\u0014Ò\u0014 K+)",
+                "owner": {
+                    "name": "Q\u00045W",
+                    "id": -11
+                },
+                "companyVehicle": null,
+                "employees": [
+                    {
+                        "name": "C\u0000Ç",
+                        "id": 0
+                    },
+                    {
+                        "name": "Zh!\u0011\u0014 *ÈmW^",
+                        "id": -14
+                    }
+                ]
+            }
+        },
+        {
+            "abc": "Yì(\u0018[JM\u0001Ç3t{\u001dXwº}&3\u0016",
+            "bbBusiness": {
+                "taxId": "\u0007º\u000edå÷W\u0001%îx4\u0012¸Xeî\u0002âWg",
+                "owner": {
+                    "name": "{Lm08mDEV0F\u0001t\u000f(\u0013PA",
+                    "id": 0
+                },
+                "companyVehicle": null,
+                "employees": [
+                    {
+                        "name": "ãf\t{\nQÉ`",
+                        "id": -17
+                    }
+                ]
+            }
+        },
+        {
+            "abc": "7½",
+            "bbBusiness": {
+                "taxId": "H0©",
+                "owner": {
+                    "name": null,
+                    "id": -16
+                },
+                "companyVehicle": {
+                    "year": 20,
+                    "model": "\"G#\u0006ww5Oá\u001a\u0014\u0013<\nÁ<OÛògI2*",
+                    "make": ""
+                },
+                "employees": []
+            }
+        },
+        {
+            "abc": "¹=$\u0003DU&&§ *",
+            "bbBusiness": {
+                "taxId": "\u000bBQrmRl\t\u0001\u001a\u000e\u000f;º",
+                "owner": {
+                    "name": "'Éi\u000f\u001a6hþí×ÍM~ßBÙN{\u0017J\u0019\u0012`Îd",
+                    "id": 3
+                },
+                "companyVehicle": null,
+                "employees": [
+                    {
+                        "name": null,
+                        "id": 18
+                    }
+                ]
+            }
+        },
+        {
+            "abc": "!Ñ©Ðzw+W- è",
+            "bbBusiness": {
+                "taxId": "\u0001",
+                "owner": {
+                    "name": "\u0017lQ^l\u000c\\",
+                    "id": -6
+                },
+                "companyVehicle": {
+                    "year": -19,
+                    "model": "§\u001eÆf¦C!= isºÌ/¢C\u00163-9oÔPeªM",
+                    "make": "\u0004\u001c\"\u001d1Ì\u001cÜk!CC"
+                },
+                "employees": [
+                    {
+                        "name": null,
+                        "id": 10
+                    },
+                    {
+                        "name": "z^\u0018pX+3\u0011\u0011F}w\u000fÞ\u001d\u0005\u0013ó",
+                        "id": 29
+                    },
+                    {
+                        "name": "|-ù\u0004\u0008\u001eÆHã;7L\u0003c@_áÉ1´Î\t\"\"",
+                        "id": -2
+                    }
+                ]
+            }
+        },
+        {
+            "abc": "n÷",
+            "bbBusiness": {
+                "taxId": "Ú%?9.\u0018l.)ÏNH\u000biiuäqÞèjÕÓgù",
+                "owner": {
+                    "name": null,
+                    "id": -23
+                },
+                "companyVehicle": null,
+                "employees": [
+                    {
+                        "name": "»V",
+                        "id": -26
+                    }
+                ]
+            }
+        },
+        {
+            "abc": "{\u001f8ä|ç\r\u001c%#nqÛ",
+            "bbBusiness": {
+                "taxId": "\u001cä?1^l{?",
+                "owner": {
+                    "name": null,
+                    "id": -30
+                },
+                "companyVehicle": {
+                    "year": -4,
+                    "model": "w'M>j¿\u0006\u0012z`s\u001fBa\u0008sxÞ\u00056\rÒ",
+                    "make": "!ôÑ\u0014\u0006*Üµi\u0000Ní*rAD}bô\u0013;HQD"
+                },
+                "employees": []
+            }
+        }
+    ]
+}

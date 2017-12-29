@@ -57,11 +57,8 @@ renderTypeParameterValsAux size =
   else
     ("","")
   where
---    size = length $ getTypeParameterRefNames ocamlValues
     mkDecoders _ = "AesonSpec.decodeIntWithResult"
     mkEncoders _ = "Aeson.Encode.int"
-    -- body i = "(fun (x : Js_json.t) -> Aeson.Decode.wrapResult (Aeson.Decode.singleEnumerator Aeson.Helper.TypeParameterRef" <> (T.pack . show $ i) <> ") x)"
-    -- body2 i = "(fun _x -> Aeson.Encode.singleEnumerator Aeson.Helper.TypeParameterRef" <> (T.pack . show $ i) <> ")"
     
 getOCamlValues :: ValueConstructor -> [OCamlValue]
 getOCamlValues (NamedConstructor     _ value) = [value]
@@ -75,6 +72,7 @@ toOCamlSpec a modules url fp =
 -- | OCamlTypeInFile do not require an instance of OCamlType since they are
 --   hand written OCaml files for Haskell types. Use typeable to get the
 --   type name.
+{-
 typeInFileToOCamlSpec :: Text -> Int -> [Text] -> Text -> Text -> Text
 typeInFileToOCamlSpec aTyConName typeParameterRefCount modules url fp =
   pprinter $ mkSampleServerAndGoldenSpec
@@ -84,9 +82,12 @@ typeInFileToOCamlSpec aTyConName typeParameterRefCount modules url fp =
     modules
     url
     fp
-
-{-
-toOCamlSpec2 :: Text -> [Text] -> Text -> Text -> Text
-toOCamlSpec2 a modules url fp =
-  pprinter $ mkSampleServerAndGoldenSpec (OCamlDatatype (HaskellTypeMetaData a "" "") a $ OCamlValueConstructor $ NamedConstructor a $ OCamlEmpty) modules url fp
 -}
+typeInFileToOCamlSpec :: OCamlType a => a -> Int -> [Text] -> Text -> Text -> Text
+typeInFileToOCamlSpec a typeParameterRefCount modules url fp =
+  pprinter $ mkSampleServerAndGoldenSpec
+    (toOCamlType a)
+    (Just typeParameterRefCount)
+    modules
+    url
+    fp

@@ -91,7 +91,7 @@ spec = do
     compareInterfaceFiles "TwoTypeParameters"
     compareInterfaceFiles "ThreeTypeParameters"
     compareInterfaceFiles "SubTypeParameter"
-    -- compareInterfaceFiles "UnnamedProduct"
+    compareInterfaceFiles "UnnamedProduct"
     
   let dir2 = "test/nointerface/temp"
   runIO $ mkPackage (Proxy :: Proxy ProductPackage) (PackageOptions dir2 "product" Map.empty False Nothing)

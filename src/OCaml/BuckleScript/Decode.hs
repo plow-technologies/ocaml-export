@@ -167,13 +167,35 @@ instance HasDecoderRef OCamlDatatype where
 
   renderRef (OCamlPrimitive primitive) = renderRef primitive
 
+
+-- | Variable names for the members of constructors
+--   Used in pattern matches
+constructorParameters :: Int -> OCamlValue -> [Doc]
+constructorParameters _ OCamlEmpty = [ empty ]
+constructorParameters i (Values l r) =
+    left ++ right
+  where
+    left = constructorParameters i l
+    right = constructorParameters (length left + i) r
+constructorParameters i _ = [ "y" <> int i ]
+
 instance HasDecoder OCamlConstructor where
   render (OCamlValueConstructor (NamedConstructor name value)) = do
     decoder <- render value
-    return $ indent 2 $ "match Aeson.Decode." <> decoder <+> "json" <+> "with"
+    let constructorParams = constructorParameters 0 value
+    v <- mk name 0 $ (Just <$> flattenOCamlValue value) ++ [Nothing]
+    pure $
+      if length constructorParams > 1
+      then
+        indent 2 $ "match Js.Json.decodeArray json with"
+        <$$> "| Some v ->"
+        <$$> (indent 2 v)
+        <$$> "| None -> Js_result.Error (\"" <> (stext name) <+> "expected an array.\")"
+      else
+        indent 2 $ "match Aeson.Decode." <> decoder <+> "json" <+> "with"
         <$$> "| v -> Js_result.Ok" <+> parens (stext name <+> "v")
         <$$> "| exception Aeson.Decode.DecodeError msg -> Js_result.Error (\"decode" <> (stext . textUppercaseFirst $ name) <> ": \" ^ msg)"
-           
+
   render (OCamlValueConstructor (RecordConstructor name value)) = do
     decoders <- render value
     pure

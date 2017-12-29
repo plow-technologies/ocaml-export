@@ -1,6 +1,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators #-}
@@ -35,6 +36,7 @@ type FilePackage = OCamlPackage "" NoDependency :>
     :> Automobile
     :> OCamlTypeInFile Business "test/ocaml/Business"
     :> OCamlTypeInFile (Wrapper TypeParameterRef0 TypeParameterRef1) "test/ocaml/Wrapper"
+    :> AutoDependingOnManual
   )
 
 data Person = Person
@@ -47,6 +49,8 @@ instance Arbitrary Person where
 
 instance ToADTArbitrary Person
 
+instance OCamlType Person where
+  toOCamlType _ = typeableToOCamlType (Proxy :: Proxy Person)
 
 data Automobile = Automobile
   { make :: String
@@ -58,7 +62,6 @@ instance Arbitrary Automobile where
   arbitrary = Automobile <$> arbitrary <*> arbitrary <*> arbitrary
 
 instance ToADTArbitrary Automobile
-
 
 data Business = Business
   { taxId :: String
@@ -74,6 +77,9 @@ instance Arbitrary Business where
 
 instance ToADTArbitrary Business
 
+instance OCamlType Business where
+  toOCamlType _ = typeableToOCamlType (Proxy :: Proxy Business)
+
 data Wrapper a b = Wrapper
   { wrapperA :: a
   , wrapperB :: b
@@ -84,3 +90,16 @@ instance (Arbitrary a, Arbitrary b) => Arbitrary (Wrapper a b) where
   arbitrary = Wrapper <$> arbitrary <*> arbitrary <*> arbitrary
 
 instance (ToADTArbitrary a, ToADTArbitrary b) => ToADTArbitrary (Wrapper a b)
+
+instance OCamlType (Wrapper TypeParameterRef0 TypeParameterRef1) where
+  toOCamlType _ = typeableToOCamlType (Proxy :: Proxy (Wrapper TypeParameterRef0 TypeParameterRef1))
+
+data AutoDependingOnManual = AutoDependingOnManual
+  { abc :: String
+  , bbBusiness :: Business
+  } deriving (Show, Eq, Generic, OCamlType, FromJSON, ToJSON)
+
+instance Arbitrary AutoDependingOnManual where
+  arbitrary = AutoDependingOnManual <$> arbitrary <*> arbitrary
+
+instance ToADTArbitrary AutoDependingOnManual

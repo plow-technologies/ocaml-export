@@ -40,3 +40,12 @@ val encodeWrapper : ('a -> Js_json.t) -> ('b -> Js_json.t) -> ('a, 'b) wrapper -
 
 val decodeWrapper : (Js_json.t -> ('a, string) Js_result.t) -> (Js_json.t -> ('b, string) Js_result.t) -> Js_json.t -> (('a, 'b) wrapper, string) Js_result.t
 
+
+type autoDependingOnManual =
+  { abc : string
+  ; bbBusiness : business
+  }
+
+val encodeAutoDependingOnManual : autoDependingOnManual -> Js_json.t
+
+val decodeAutoDependingOnManual : Js_json.t -> (autoDependingOnManual, string) Js_result.t

@@ -92,3 +92,23 @@ let decodeWrapper a b json =
   | v -> Js_result.Ok v
   | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeWrapper: " ^ message)
 
+
+type autoDependingOnManual =
+  { abc : string
+  ; bbBusiness : business
+  }
+
+let encodeAutoDependingOnManual x =
+  Aeson.Encode.object_
+    [ ( "abc", Aeson.Encode.string x.abc )
+    ; ( "bbBusiness", encodeBusiness x.bbBusiness )
+    ]
+
+let decodeAutoDependingOnManual json =
+  match Aeson.Decode.
+    { abc = field "abc" string json
+    ; bbBusiness = field "bbBusiness" (fun a -> unwrapResult (decodeBusiness a)) json
+    }
+  with
+  | v -> Js_result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeAutoDependingOnManual: " ^ message)

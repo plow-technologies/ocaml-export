@@ -151,7 +151,7 @@ instance (HasOCamlType a, HasOCamlType b) => HasOCamlType' 3 (a :> b) where
   mkInterface' _ Proxy options fileMap = (mkInterface (Proxy :: Proxy a) options fileMap) <> (mkInterface (Proxy :: Proxy b) options fileMap)
   mkSpec' _ Proxy options modules url goldendir fileMap = (mkSpec (Proxy :: Proxy a) options modules url goldendir fileMap) <> (mkSpec (Proxy :: Proxy b) options modules url goldendir fileMap)
 
-instance (Typeable a) => HasOCamlType' 2 (OCamlTypeInFile a b) where
+instance (OCamlType a, Typeable a) => HasOCamlType' 2 (OCamlTypeInFile a b) where
   mkType' _ Proxy _options _ fileMap = do
     let typeName = tyConName . typeRepTyCon $ typeRep (Proxy :: Proxy a)
     case eocDeclaration <$> Map.lookup typeName fileMap of
@@ -165,7 +165,7 @@ instance (Typeable a) => HasOCamlType' 2 (OCamlTypeInFile a b) where
       _ -> fail $ "Unable to find the embedded file for " ++ typeName
 
   mkSpec' _ Proxy _options modules url goldendir _fileMap = 
-    [typeInFileToOCamlSpec (T.pack . tyConName . typeRepTyCon $ typeRep (Proxy :: Proxy a)) typeParameterRefCount modules url goldendir]
+    [typeInFileToOCamlSpec (Proxy :: Proxy a) typeParameterRefCount modules url goldendir]
     where
       parameters = fmap show . snd . splitTyConApp $ typeRep (Proxy :: Proxy a)
       inParameters = flip elem parameters

@@ -26,3 +26,10 @@ let () =
     "wrapper"
     "http://localhost:8083/File/Wrapper"
     "golden/file/Wrapper";
+
+  AesonSpec.sampleGoldenAndServerSpec
+    File.decodeAutoDependingOnManual
+    File.encodeAutoDependingOnManual
+    "autoDependingOnManual"
+    "http://localhost:8083/File/AutoDependingOnManual"
+    "golden/file/AutoDependingOnManual";

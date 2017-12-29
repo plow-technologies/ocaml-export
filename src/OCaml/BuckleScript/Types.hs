@@ -32,7 +32,8 @@ module OCaml.BuckleScript.Types
   , OCamlType (..)
   , HaskellTypeMetaData (..)
   , OCamlTypeMetaData (..)
-  
+
+  , typeableToOCamlType
   -- fill type parameters of a proxy when calling toOCamlType
   -- so the kind is *
   -- e.g. `toOCamlType (Proxy :: Proxy (Either TypeParameterRef0 TypeParameterRef1))`
@@ -58,6 +59,7 @@ import Data.Maybe (catMaybes)
 import Data.Monoid ((<>))
 import Data.Proxy
 import Data.Time
+import Data.Typeable
 import Data.Word (Word, Word8, Word16, Word32, Word64)
 import GHC.Generics
 import GHC.TypeLits (symbolVal, KnownSymbol)
@@ -379,6 +381,17 @@ instance (OCamlType a) =>
 -- Const Tagged, Dual, First, Last, tuple up to length of 15
 -}
 
+typeableToOCamlType :: forall a. Typeable a => Proxy a -> OCamlDatatype
+typeableToOCamlType Proxy =
+  OCamlDatatype
+    (HaskellTypeMetaData aTyConName aTyConModule aTyConPackage)
+    aTyConName
+    (OCamlValueConstructor . NamedConstructor aTyConName $ OCamlEmpty)
+  where
+    aTyCon = typeRepTyCon $ typeRep (Proxy :: Proxy a)
+    aTyConName = T.pack . tyConName $ aTyCon
+    aTyConModule = T.pack . tyConModule $ aTyCon
+    aTyConPackage = T.pack . tyConPackage $ aTyCon
 
 -- | Used to fill the type parameters of proxy types. `Proxy :: Proxy (Maybe TypeParameterRef0)`, `Proxy :: Proxy Either TypeParameterRef0 TypeParameterRef1`. JSON representation is as an Int to simplify the automated tests.
 newtype TypeParameterRef0 = TypeParameterRef0 Int deriving (Read, Show, Eq, Generic)

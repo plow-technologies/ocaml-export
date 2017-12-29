@@ -26,6 +26,7 @@
     "bs-jest": "reasonml-community/bs-jest",
     "bs-platform": "^2.0.0",
     "concurrently": "^3.5.0",
-    "jest": "^22.0.1"
+    "jest": "^22.0.1",
+    "node-fetch": "^1.7.3"
   }
 }

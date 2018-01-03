@@ -212,17 +212,99 @@ instance (OCamlModuleTypeCount a) => OCamlPackageTypeCount' 'False a where
   ocamlPackageTypeCount' _ Proxy = [ocamlModuleTypeCount (Proxy :: Proxy a)]
 
 
+-- type family TypeName a :: Symbol
+
 -- | Convert a type into a Symbol at the type level.
 type family TypeName a :: Symbol where
   -- Types which don't have a Generic instance
+  TypeName Bool   = "Bool"
   TypeName Double = "Double"
-  TypeName Int    = "Int"
+  TypeName Int = "Int"
+  TypeName Integer = "Integer"
   TypeName String = "String"
-  TypeName Text   = "Text"
-
+  TypeName Text = "Text"
+  
   -- Generic instances
   TypeName (M1 D ('MetaData name _ _ _) f ()) = name
+
+--  TypeName (Rep a b) = TypeName (Rep1 a ())
   TypeName a = TypeName (Rep a ())
+--  TypeName (M1 D ('MetaData name _ _ _) f ()) = name
+--  TypeName (S1 _ _ a) = TypeName (Rep a ())
+--  TypeName (S1 _ _ a) = TypeName (Rep a ())
+  {-
+S1 ('MetaSel 'Nothing
+                         'NoSourceUnpackedness
+                         'NoSourceStrictness
+                         'DecidedLazy)
+               (Rec0 (Tree a))))
+-}
+  -- TypeName (Rep a ()) = TypeName (Rep a ())
+--  TypeName a = TypeName (Rep a ())
+  -- TypeName a = TypeName' a
+  
+-- open
+type family TypeName' a :: Symbol
+type instance TypeName' Bool = "Bool"
+
+--type instance TypeName' a = ""
+type instance TypeName' Int = "Int"
+
+{-
+
+λ> :t from On
+from On
+  :: D1
+       ('MetaData "OnOrOff" "Ghci2" "interactive" 'False)
+       (C1 ('MetaCons "On" 'PrefixI 'False) U1
+        :+: C1 ('MetaCons "Off" 'PrefixI 'False) U1)
+       x
+λ> :t from (T 1)
+from (T 1)
+  :: D1
+       ('MetaData "T" "Ghci1" "interactive" 'False)
+       (C1
+          ('MetaCons "T" 'PrefixI 'False)
+          (S1
+             ('MetaSel
+                'Nothing 'NoSourceUnpackedness 'NoSourceStrictness 'DecidedLazy)
+             (Rec0 Int)))
+       x
+
+
+class Print a where
+  tprint :: a -> Symbol
+
+instance (TShow a ~ flag, Print' flag a) => Print a where
+  tprint = print' (Proxy :: Proxy flag)
+
+class Print' flag a where
+  print' :: flag -> a -> Symbol
+
+instance Print' HTrue a where
+  print' _ x = tprint (Rep a ())
+
+instance Print' HFalse (M1 D ('MetaData name a b c) f ()) where
+  print' _ x = (name :: Symbol)
+
+--type family TShow a :: Symbol
+type family TShow a
+type instance TShow Bool = HTrue
+
+data HTrue
+data HFalse
+{-
+type instance TShow Bool = "Bool"
+type instance TShow Double = "Double"
+type instance TShow Int = "Int"
+type instance TShow Integer = "Integer"
+type instance TShow String = "String"
+type instance TShow Text = "Text"
+type instance TShow (M1 D ('MetaData name _ _ _) f ()) = name
+-}
+-- type instance TShow a = TypeName (Rep a ())
+--  TypeName a = TypeName (Rep a ())
+-}
 
 -- | Append two type level lists.
 type family Append xy ys where

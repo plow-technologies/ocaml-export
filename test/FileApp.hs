@@ -1,5 +1,4 @@
 {-# LANGUAGE DataKinds #-}
-
 {-# LANGUAGE TemplateHaskell #-}
 
 module FileApp where

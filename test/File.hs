@@ -10,7 +10,7 @@ module File where
 
 -- base
 import Data.Proxy
-import GHC.Generics (Generic)
+import GHC.Generics -- (Generic)
 
 -- aeson
 import Data.Aeson
@@ -37,6 +37,7 @@ type FilePackage = OCamlPackage "" NoDependency :>
     :> OCamlTypeInFile Business "test/ocaml/Business"
     :> OCamlTypeInFile (Wrapper TypeParameterRef0 TypeParameterRef1) "test/ocaml/Wrapper"
     :> AutoDependingOnManual
+    :> OCamlTypeInFile NonGenericSumTypeInFile "test/ocaml/NonGenericSumTypeInFile"
   )
 
 data Person = Person
@@ -89,7 +90,7 @@ data Wrapper a b = Wrapper
 instance (Arbitrary a, Arbitrary b) => Arbitrary (Wrapper a b) where
   arbitrary = Wrapper <$> arbitrary <*> arbitrary <*> arbitrary
 
-instance (ToADTArbitrary a, ToADTArbitrary b) => ToADTArbitrary (Wrapper a b)
+instance (Arbitrary a, ToADTArbitrary a, Arbitrary b, ToADTArbitrary b) => ToADTArbitrary (Wrapper a b)
 
 instance OCamlType (Wrapper TypeParameterRef0 TypeParameterRef1) where
   toOCamlType _ = typeableToOCamlType (Proxy :: Proxy (Wrapper TypeParameterRef0 TypeParameterRef1))
@@ -103,3 +104,56 @@ instance Arbitrary AutoDependingOnManual where
   arbitrary = AutoDependingOnManual <$> arbitrary <*> arbitrary
 
 instance ToADTArbitrary AutoDependingOnManual
+
+data NonGenericSumTypeInFile
+  = NGSumTypeA String Int
+  | NGSumTypeB Int Double
+  deriving (Show, Eq)
+
+instance ToJSON NonGenericSumTypeInFile where
+  toJSON (NGSumTypeA a b) =
+    object
+      [ "tag" .= ("NGSumTypeA" :: String)
+      , "a"   .= a
+      , "b"   .= b
+      ]
+
+  toJSON (NGSumTypeB a b) =
+    object
+      [ "tag" .= ("NGSumTypeB" :: String)
+      , "a"   .= a
+      , "b"   .= b
+      ]
+
+instance FromJSON NonGenericSumTypeInFile where
+  parseJSON = withObject "NonGenericSumTypeInFile" $ \o -> do
+    result <- o .: "tag"
+    case result of
+      String "NGSumTypeA" ->
+        NGSumTypeA <$> o .: "a"
+                   <*> o .: "b"
+      String "NGSumTypeB" ->
+        NGSumTypeB <$> o .: "a"
+                   <*> o .: "b"
+      _ -> fail "Valid tag not found"
+
+instance ToADTArbitrary NonGenericSumTypeInFile where
+  toADTArbitrarySingleton Proxy =
+    ADTArbitrarySingleton "File" "NonGenericSumTypeInFile"
+      <$> oneof
+        [ ConstructorArbitraryPair "NGSumTypeA" <$> (NGSumTypeA <$> arbitrary <*> arbitrary)
+        , ConstructorArbitraryPair "NGSumTypeB" <$> (NGSumTypeB <$> arbitrary <*> arbitrary)
+        ]
+
+  toADTArbitrary Proxy =
+    ADTArbitrary "File" "NonGenericSumTypeInFile"
+      <$> sequence
+        [ ConstructorArbitraryPair "NGSumTypeA" <$> (NGSumTypeA <$> arbitrary <*> arbitrary)
+        , ConstructorArbitraryPair "NGSumTypeB" <$> (NGSumTypeB <$> arbitrary <*> arbitrary)
+        ]
+
+instance OCamlType NonGenericSumTypeInFile where
+  toOCamlType _ = typeableToOCamlType (Proxy :: Proxy NonGenericSumTypeInFile)
+
+--instance Generic NonGenericSumTypeInFile where
+--  from _ = M1 D (MetaData "Tree" "Main" "package-name" False) _ _

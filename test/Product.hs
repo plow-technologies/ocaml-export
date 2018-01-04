@@ -52,7 +52,8 @@ type ProductPackage
   :<|> OCamlModule '["TwoTypeParameters"] :> TwoTypeParameters TypeParameterRef0 TypeParameterRef1
   :<|> OCamlModule '["ThreeTypeParameters"] :> Three TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
   :<|> OCamlModule '["SubTypeParameter"] :> SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
-  :<|> OCamlModule '["UnnamedProduct"] :> UnnamedProduct)
+  :<|> OCamlModule '["UnnamedProduct"] :> UnnamedProduct
+  :<|> OCamlModule '["ComplexProduct"] :> ComplexProduct)
 
 mkGolden :: forall a. (ToADTArbitrary a, ToJSON a) => Proxy a -> IO ()
 mkGolden Proxy = mkGoldenFileForType 10 (Proxy :: Proxy a) "test/interface/golden/golden/product"
@@ -70,7 +71,8 @@ mkGoldenFiles = do
   mkGolden (Proxy :: Proxy (Three TypeParameterRef0 TypeParameterRef1 TypeParameterRef2))
   mkGolden (Proxy :: Proxy (SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2))
   mkGolden (Proxy :: Proxy UnnamedProduct)
-  
+  mkGolden (Proxy :: Proxy ComplexProduct)
+
 compareInterfaceFiles = compareFiles "test/interface" "product" True
 
 compareNoInterfaceFiles = compareFiles "test/nointerface" "product" False
@@ -92,6 +94,7 @@ spec = do
     compareInterfaceFiles "ThreeTypeParameters"
     compareInterfaceFiles "SubTypeParameter"
     compareInterfaceFiles "UnnamedProduct"
+    compareInterfaceFiles "ComplexProduct"
     
   let dir2 = "test/nointerface/temp"
   runIO $ mkPackage (Proxy :: Proxy ProductPackage) (PackageOptions dir2 "product" Map.empty False Nothing)
@@ -231,3 +234,43 @@ instance Arbitrary UnnamedProduct where
   arbitrary = UnnamedProduct <$> arbitrary <*> arbitrary
 
 instance ToADTArbitrary UnnamedProduct
+
+data ComplexProduct =
+  ComplexProduct
+    { cp1 :: [(Int, Either String Double)]
+    } deriving (Eq,Show,Generic,OCamlType,FromJSON,ToJSON)
+
+instance Arbitrary ComplexProduct where
+  arbitrary = do
+    k <- choose (1,3)
+    v <- vector k
+    ComplexProduct <$> pure v
+
+instance ToADTArbitrary ComplexProduct
+{-
+data VPCalcResponse = VPCalcResponse
+  { vpcalcresp_value :: [(Int, Either String ExportableValue)]
+  } deriving (Generic)
+
+instance ToJSON VPCalcResponse
+instance FromJSON VPCalcResponse
+
+
+type vPCalcResponse =
+  { vpcalcresp_value : ((int * (string, exportableValue) Aeson.Compatibility.Either.t)) list
+  }
+
+let encodeVPCalcResponse x =
+  Aeson.Encode.object_
+    [ ( "vpcalcresp_value", (Aeson.Encode.list (Aeson.Encode.pair Aeson.Encode.int (Aeson.Encode.either Aeson.Encode.string encodeExportableValue))) x.vpcalcresp_value )
+    ]
+
+let decodeVPCalcResponse json =
+  match Aeson.Decode.
+    { vpcalcresp_value = field "vpcalcresp_value" (list (pair int (either string (fun a -> unwrapResult (decodeExportableValue a))))) json
+    }
+  with
+  | v -> Js_result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeVPCalcResponse: " ^ message)
+
+-}

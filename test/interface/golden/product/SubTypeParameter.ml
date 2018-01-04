@@ -7,8 +7,8 @@ type ('a0, 'a1, 'a2) subTypeParameter =
 let encodeSubTypeParameter encodeA0 encodeA1 encodeA2 x =
   Aeson.Encode.object_
     [ ( "listA", (Aeson.Encode.list encodeA0) x.listA )
-    ; ( "maybeB", Aeson.Encode.optional encodeA1 x.maybeB )
-    ; ( "tupleC", Aeson.Encode.pair encodeA2 encodeA1 x.tupleC )
+    ; ( "maybeB", (Aeson.Encode.optional encodeA1) x.maybeB )
+    ; ( "tupleC", (Aeson.Encode.pair encodeA2 encodeA1) x.tupleC )
     ]
 
 let decodeSubTypeParameter decodeA0 decodeA1 decodeA2 json =

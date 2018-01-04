@@ -20,7 +20,7 @@ let encodeSumVariant x =
   | HasSingleTuple y0 ->
      Aeson.Encode.object_
        [ ( "tag", Aeson.Encode.string "HasSingleTuple" )
-       ; ( "contents", Aeson.Encode.pair Aeson.Encode.int Aeson.Encode.int y0 )
+       ; ( "contents", (Aeson.Encode.pair Aeson.Encode.int Aeson.Encode.int) y0 )
        ]
   | HasMultipleInts (y0,y1) ->
      Aeson.Encode.object_
@@ -30,7 +30,7 @@ let encodeSumVariant x =
   | HasMultipleTuples (y0,y1) ->
      Aeson.Encode.object_
        [ ( "tag", Aeson.Encode.string "HasMultipleTuples" )
-       ; ( "contents", Aeson.Encode.array [| Aeson.Encode.pair Aeson.Encode.int Aeson.Encode.int y0 ; Aeson.Encode.pair Aeson.Encode.int Aeson.Encode.int y1 |] )
+       ; ( "contents", Aeson.Encode.array [| (Aeson.Encode.pair Aeson.Encode.int Aeson.Encode.int) y0 ; (Aeson.Encode.pair Aeson.Encode.int Aeson.Encode.int) y1 |] )
        ]
   | HasMixed (y0,y1,y2) ->
      Aeson.Encode.object_

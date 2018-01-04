@@ -274,9 +274,8 @@ instance HasDecoderRef OCamlPrimitive where
   renderRef OInt = pure "int"
   renderRef OBool = pure "bool"
   renderRef OChar = pure "char"
-  renderRef OFloat = pure "float"
+  renderRef OFloat = pure "Aeson.Decode.float" -- this is to prevent overshadowing
   renderRef OString = pure "string"
-
   renderRef (OList (OCamlPrimitive OChar)) = pure "string"
 
   renderRef (OList datatype@(OCamlDatatype typeRef name _)) =
@@ -428,7 +427,7 @@ mk name i (x:xs) =
       renderedVal <- render x'
       renderedInternal <- mk name (i+1) xs
       let iDoc = (stext . T.pack . show $ i)
-      pure $ indent 1 $ "(match Aeson.Decode." <> renderedVal <+> ("v." <> parens iDoc) <+> "with"
+      pure $ indent 1 $ "(match" <+> (if oCamlValueIsFloat x' then "" else "Aeson.Decode.") <> renderedVal <+> ("v." <> parens iDoc) <+> "with"
         <$$>
           indent 1
             ("| v" <> iDoc <+> "->" <$$> (indent 2 renderedInternal)

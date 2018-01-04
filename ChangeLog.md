@@ -1,5 +1,9 @@
 # Revision history for ocaml-export
 
+## 0.3.0.0 -- 2018-01-04
+
+* 'OCaml.BuckleScript.Encode.renderRef' now add parentheses when rendering: list, optional, either, pair, tuple3, tuple4, tuple5, tuple6.
+
 ## 0.2.0.0 -- 2017-12-29
 
 * `HasDecoder` properly supports Haskell types like `data X = X String Int`, product type with multiple unnamed records.

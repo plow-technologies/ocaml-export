@@ -13,7 +13,7 @@ OCaml type to JSON (aeson) encoder.
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module OCaml.BuckleScript.Encode 
+module OCaml.BuckleScript.Encode
   ( toOCamlEncoderSourceWith
   , toOCamlEncoderInterfaceWith
   ) where
@@ -339,34 +339,34 @@ instance HasEncoderRef OCamlPrimitive where
 
   renderRef (OList datatype) = do
     dd <- renderRef datatype
-    return . parens $ "Aeson.Encode.list" <+> dd
+    pure . parens $ "Aeson.Encode.list" <+> dd
 
   renderRef (OOption datatype) = do
     dd <- renderRef datatype
-    return $ "Aeson.Encode.optional" <+> dd
+    pure . parens $ "Aeson.Encode.optional" <+> dd
 
   renderRef (OEither t0 t1) = do
     dt0 <- renderRef t0
     dt1 <- renderRef t1
-    return $ "Aeson.Encode.either" <+> dt0 <+> dt1
+    pure . parens $ "Aeson.Encode.either" <+> dt0 <+> dt1
 
   renderRef (OTuple2 t0 t1) = do
     dt0 <- renderRef t0
     dt1 <- renderRef t1
-    return $ "Aeson.Encode.pair" <+> dt0 <+> dt1
+    pure . parens $ "Aeson.Encode.pair" <+> dt0 <+> dt1
 
   renderRef (OTuple3 t0 t1 t2) = do
     dt0 <- renderRef t0
     dt1 <- renderRef t1
     dt2 <- renderRef t2
-    return $ "Aeson.Encode.tuple3" <+> dt0 <+> dt1 <+> dt2
+    pure . parens $ "Aeson.Encode.tuple3" <+> dt0 <+> dt1 <+> dt2
 
   renderRef (OTuple4 t0 t1 t2 t3) = do
     dt0 <- renderRef t0
     dt1 <- renderRef t1
     dt2 <- renderRef t2
     dt3 <- renderRef t3
-    return $ "Aeson.Encode.tuple4" <+> dt0 <+> dt1 <+> dt2 <+> dt3
+    pure . parens $ "Aeson.Encode.tuple4" <+> dt0 <+> dt1 <+> dt2 <+> dt3
     
   renderRef (OTuple5 t0 t1 t2 t3 t4) = do
     dt0 <- renderRef t0
@@ -374,7 +374,7 @@ instance HasEncoderRef OCamlPrimitive where
     dt2 <- renderRef t2
     dt3 <- renderRef t3
     dt4 <- renderRef t4
-    return $ "Aeson.Encode.tuple5" <+> dt0 <+> dt1 <+> dt2 <+> dt3 <+> dt4
+    pure . parens $ "Aeson.Encode.tuple5" <+> dt0 <+> dt1 <+> dt2 <+> dt3 <+> dt4
 
   renderRef (OTuple6 t0 t1 t2 t3 t4 t5) = do
     dt0 <- renderRef t0
@@ -383,7 +383,7 @@ instance HasEncoderRef OCamlPrimitive where
     dt3 <- renderRef t3
     dt4 <- renderRef t4
     dt5 <- renderRef t5
-    return $ "Aeson.Encode.tuple6" <+> dt0 <+> dt1 <+> dt2 <+> dt3 <+> dt4 <+> dt5
+    pure . parens $ "Aeson.Encode.tuple6" <+> dt0 <+> dt1 <+> dt2 <+> dt3 <+> dt4 <+> dt5
 
 -- | Variable names for the members of constructors
 --   Used in pattern matches

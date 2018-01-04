@@ -238,39 +238,18 @@ instance ToADTArbitrary UnnamedProduct
 data ComplexProduct =
   ComplexProduct
     { cp1 :: [(Int, Either String Double)]
+    , cp2 :: [[Int]]
+    , cp3 :: Maybe [Int]
     } deriving (Eq,Show,Generic,OCamlType,FromJSON,ToJSON)
 
 instance Arbitrary ComplexProduct where
   arbitrary = do
-    k <- choose (1,3)
-    v <- vector k
-    ComplexProduct <$> pure v
+    k0 <- choose (1,3)
+    v0 <- vector k0
+
+    k1 <- choose (1,3)
+    v1 <- vector k1
+    
+    ComplexProduct <$> pure v0 <*> pure v1 <*> arbitrary
 
 instance ToADTArbitrary ComplexProduct
-{-
-data VPCalcResponse = VPCalcResponse
-  { vpcalcresp_value :: [(Int, Either String ExportableValue)]
-  } deriving (Generic)
-
-instance ToJSON VPCalcResponse
-instance FromJSON VPCalcResponse
-
-
-type vPCalcResponse =
-  { vpcalcresp_value : ((int * (string, exportableValue) Aeson.Compatibility.Either.t)) list
-  }
-
-let encodeVPCalcResponse x =
-  Aeson.Encode.object_
-    [ ( "vpcalcresp_value", (Aeson.Encode.list (Aeson.Encode.pair Aeson.Encode.int (Aeson.Encode.either Aeson.Encode.string encodeExportableValue))) x.vpcalcresp_value )
-    ]
-
-let decodeVPCalcResponse json =
-  match Aeson.Decode.
-    { vpcalcresp_value = field "vpcalcresp_value" (list (pair int (either string (fun a -> unwrapResult (decodeExportableValue a))))) json
-    }
-  with
-  | v -> Js_result.Ok v
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeVPCalcResponse: " ^ message)
-
--}

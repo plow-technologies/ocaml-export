@@ -3,6 +3,8 @@
 ## 0.3.0.0 -- 2018-01-04
 
 * 'OCaml.BuckleScript.Encode.renderRef' now add parentheses when rendering: list, optional, either, pair, tuple3, tuple4, tuple5, tuple6.
+* Support 'HasEmbeddedFile' for '(:<|>)'.
+* 'HasDecoder' now unwraps all OCamlDatatype.
 
 ## 0.2.0.0 -- 2017-12-29
 

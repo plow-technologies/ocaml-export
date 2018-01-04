@@ -65,7 +65,7 @@ import OCaml.BuckleScript.Spec
 import OCaml.BuckleScript.Types
 
 -- servant
-import Servant.API ((:>))
+import Servant.API ((:>), (:<|>))
 
 -- template-haskell
 import Language.Haskell.TH
@@ -106,11 +106,8 @@ data EmbeddedOCamlFiles =
     { eocDeclaration :: ByteString
     , eocInterface   :: Maybe ByteString
     , eocSpec        :: Maybe ByteString
-    }
-
-
-
-
+    } deriving (Show)
+    
 
 -- ==============================================
 -- Type Level Functions
@@ -215,6 +212,9 @@ instance (HasEmbeddedFile' api) => HasEmbeddedFile api where
 -- | Help function for HasEmbeddedFile.
 class HasEmbeddedFile' api where
   mkFiles' :: Bool -> Bool -> Proxy api -> Q [Exp]
+
+instance (HasEmbeddedFile' a, HasEmbeddedFile' b) => HasEmbeddedFile' (a :<|> b) where
+  mkFiles' includeInterface includeSpec Proxy = (<>) <$> mkFiles' includeInterface includeSpec (Proxy :: Proxy a) <*> mkFiles' includeInterface includeSpec (Proxy :: Proxy b)
 
 instance (HasEmbeddedFile' a, HasEmbeddedFile' b) => HasEmbeddedFile' (a :> b) where
   mkFiles' includeInterface includeSpec Proxy = (<>) <$> mkFiles' includeInterface includeSpec (Proxy :: Proxy a) <*> mkFiles' includeInterface includeSpec (Proxy :: Proxy b)

@@ -235,7 +235,7 @@ instance HasDecoder OCamlValue where
         case Map.lookup typeRef ds of
           Just parOCamlTypeMetaData -> do
             let prefix = stext $ mkModulePrefix decOCamlTypeMetaData parOCamlTypeMetaData
-            pure $ "(fun a -> unwrapResult (" <> prefix  <> "decode" <> (stext . textUppercaseFirst $ name) <+> "a))"             
+            pure $ "(fun a -> unwrapResult (" <> prefix  <> "decode" <> (stext . textUppercaseFirst $ name) <+> "a))"
 
           -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
           -- within the same file as the sum. These products will not be in the dependencies map.
@@ -267,80 +267,83 @@ instance HasDecoder OCamlValue where
 
 instance HasDecoder EnumeratorConstructor where
   render (EnumeratorConstructor name) = pure $ "| Some \"" <> stext name <> "\" -> Js_result.Ok" <+> stext name
-  
+
 instance HasDecoderRef OCamlPrimitive where
   renderRef OUnit = pure $ parens "()"
   renderRef ODate = pure "date"
   renderRef OInt = pure "int"
   renderRef OBool = pure "bool"
   renderRef OChar = pure "char"
-  renderRef OFloat = pure "Aeson.Decode.float" -- this is to prevent overshadowing
+  renderRef OFloat = pure "Aeson.Decode.float" -- this is to prevent overshadowing warning
   renderRef OString = pure "string"
   renderRef (OList (OCamlPrimitive OChar)) = pure "string"
 
-  renderRef (OList datatype@(OCamlDatatype typeRef name _)) =
-    if isTypeParameterRef datatype
-    then
-      pure . parens $ "list" <+> (parens $ "fun a -> unwrapResult (decode" <> (stext . textUppercaseFirst $ name) <+> "a)")
-    else do
-      mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData
-      case mOCamlTypeMetaData of
-        Nothing -> fail $ "OCaml.BuckleScript.Decode (HasDecoderRef (OList (OCamlDatatype typeRep name _))) mOCamlTypeMetaData is Nothing:\n\n" ++ (show datatype)
-        Just decOCamlTypeMetaData -> do
-          ds <- asks (dependencies . userOptions)
-          case Map.lookup typeRef ds of
-            Just parOCamlTypeMetaData -> do
-              let prefix = stext $ mkModulePrefix decOCamlTypeMetaData parOCamlTypeMetaData
-              pure . parens $ "list" <+> (parens $ "fun a -> unwrapResult (" <> prefix <> "decode" <> (stext . textUppercaseFirst $ name) <+> "a)")
-            Nothing -> fail ("OCaml.BuckleScript.Decode (HasDecoderRef (OList (OCamlDatatype typeRep name _))) expected to find dependency:\n\n" ++ show typeRef ++ "\n\nin\n\n" ++ show ds)
-
   renderRef (OList datatype) = do
-    dt <- renderRef datatype
+    dt <- renderRefWithUnwrapResult datatype
     pure . parens $ "list" <+> dt
 
   renderRef (OOption _) = pure ""
 
   renderRef (OEither v0 v1) = do
-    dv0 <- renderRef v0
-    dv1 <- renderRef v1
+    dv0 <- renderRefWithUnwrapResult v0
+    dv1 <- renderRefWithUnwrapResult v1
     pure $ parens $ "either" <+> dv0 <+> dv1
 
   renderRef (OTuple2 v0 v1) = do
-    dv0 <- renderRef v0
-    dv1 <- renderRef v1
+    dv0 <- renderRefWithUnwrapResult v0
+    dv1 <- renderRefWithUnwrapResult v1
     pure $ parens $ "pair" <+> dv0 <+> dv1
 
   renderRef (OTuple3 v0 v1 v2) = do
-    dv0 <- renderRef v0
-    dv1 <- renderRef v1
-    dv2 <- renderRef v2
+    dv0 <- renderRefWithUnwrapResult v0
+    dv1 <- renderRefWithUnwrapResult v1
+    dv2 <- renderRefWithUnwrapResult v2
     pure $ parens $ "tuple3" <+> dv0 <+> dv1 <+> dv2
 
   renderRef (OTuple4 v0 v1 v2 v3) = do
-    dv0 <- renderRef v0
-    dv1 <- renderRef v1
-    dv2 <- renderRef v2
-    dv3 <- renderRef v3
+    dv0 <- renderRefWithUnwrapResult v0
+    dv1 <- renderRefWithUnwrapResult v1
+    dv2 <- renderRefWithUnwrapResult v2
+    dv3 <- renderRefWithUnwrapResult v3
     pure $ parens $ "tuple4" <+> dv0 <+> dv1 <+> dv2 <+> dv3
 
   renderRef (OTuple5 v0 v1 v2 v3 v4) = do
-    dv0 <- renderRef v0
-    dv1 <- renderRef v1
-    dv2 <- renderRef v2
-    dv3 <- renderRef v3
-    dv4 <- renderRef v4
+    dv0 <- renderRefWithUnwrapResult v0
+    dv1 <- renderRefWithUnwrapResult v1
+    dv2 <- renderRefWithUnwrapResult v2
+    dv3 <- renderRefWithUnwrapResult v3
+    dv4 <- renderRefWithUnwrapResult v4
     pure $ parens $ "tuple5" <+> dv0 <+> dv1 <+> dv2 <+> dv3 <+> dv4
 
   renderRef (OTuple6 v0 v1 v2 v3 v4 v5) = do
-    dv0 <- renderRef v0
-    dv1 <- renderRef v1
-    dv2 <- renderRef v2
-    dv3 <- renderRef v3
-    dv4 <- renderRef v4
-    dv5 <- renderRef v5
+    dv0 <- renderRefWithUnwrapResult v0
+    dv1 <- renderRefWithUnwrapResult v1
+    dv2 <- renderRefWithUnwrapResult v2
+    dv3 <- renderRefWithUnwrapResult v3
+    dv4 <- renderRefWithUnwrapResult v4
+    dv5 <- renderRefWithUnwrapResult v5
     pure $ parens $ "tuple6" <+> dv0 <+> dv1 <+> dv2 <+> dv3 <+> dv4 <+> dv5
 
 -- Util
+
+renderRefWithUnwrapResult :: OCamlDatatype -> Reader TypeMetaData Doc
+renderRefWithUnwrapResult datatype@(OCamlDatatype typeRef name _) = do
+  if isTypeParameterRef datatype
+  then
+    pure . parens $ "fun a -> unwrapResult (decode" <> (stext . textUppercaseFirst $ name) <+> "a)"
+  else do
+    mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData
+    case mOCamlTypeMetaData of
+      Nothing -> fail $ "OCaml.BuckleScript.Decode.renderRefWithUnwrapResult mOCamlTypeMetaData is Nothing:\n\n" ++ (show datatype)
+      Just decOCamlTypeMetaData -> do
+        ds <- asks (dependencies . userOptions)
+        case Map.lookup typeRef ds of
+          Just parOCamlTypeMetaData -> do
+            let prefix = stext $ mkModulePrefix decOCamlTypeMetaData parOCamlTypeMetaData
+            pure . parens $ "fun a -> unwrapResult (" <> prefix <> "decode" <> (stext . textUppercaseFirst $ name) <+> "a)"
+          Nothing -> fail ("OCaml.BuckleScript.Decode.renderRefWithUnwrapResult expected to find dependency:\n\n" ++ show typeRef ++ "\n\nin\n\n" ++ show ds)
+renderRefWithUnwrapResult ref = renderRef ref
+
     
 -- | "<name>" -> decode <name>
 renderSumCondition :: T.Text -> Doc -> Reader TypeMetaData Doc

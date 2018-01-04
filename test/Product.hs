@@ -53,60 +53,11 @@ type ProductPackage
   :<|> OCamlModule '["ThreeTypeParameters"] :> Three TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
   :<|> OCamlModule '["SubTypeParameter"] :> SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
   :<|> OCamlModule '["UnnamedProduct"] :> UnnamedProduct
-  :<|> OCamlModule '["ComplexProduct"] :> ComplexProduct)
-
-mkGolden :: forall a. (ToADTArbitrary a, ToJSON a) => Proxy a -> IO ()
-mkGolden Proxy = mkGoldenFileForType 10 (Proxy :: Proxy a) "test/interface/golden/golden/product"
-
-mkGoldenFiles :: IO ()
-mkGoldenFiles = do
-  mkGolden (Proxy :: Proxy SimpleChoice)
-  mkGolden (Proxy :: Proxy Person)
-  mkGolden (Proxy :: Proxy Company)
-  mkGolden (Proxy :: Proxy Suit)
-  mkGolden (Proxy :: Proxy Card)
-  mkGolden (Proxy :: Proxy Company2)
-  mkGolden (Proxy :: Proxy (OneTypeParameter TypeParameterRef0))
-  mkGolden (Proxy :: Proxy (TwoTypeParameters TypeParameterRef0 TypeParameterRef1))
-  mkGolden (Proxy :: Proxy (Three TypeParameterRef0 TypeParameterRef1 TypeParameterRef2))
-  mkGolden (Proxy :: Proxy (SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2))
-  mkGolden (Proxy :: Proxy UnnamedProduct)
-  mkGolden (Proxy :: Proxy ComplexProduct)
+  :<|> OCamlModule '["ComplexProduct"] :> OCamlTypeInFile Simple "test/ocaml/Simple" :> ComplexProduct)
 
 compareInterfaceFiles = compareFiles "test/interface" "product" True
 
 compareNoInterfaceFiles = compareFiles "test/nointerface" "product" False
-
-
-spec :: Spec
-spec = do
-  runIO $ mkGoldenFiles
-  
-  let dir = "test/interface/temp"
-  runIO $ mkPackage (Proxy :: Proxy ProductPackage) (PackageOptions dir "product" Map.empty True $ Just $ SpecOptions "__tests__/product" "golden/product" "http://localhost:8081")
-  
-  describe "OCaml Declaration with Interface: Product Types" $ do
-    compareInterfaceFiles "Person"
-    compareInterfaceFiles "Company"
-    compareInterfaceFiles "Card"
-    compareInterfaceFiles "OneTypeParameter"
-    compareInterfaceFiles "TwoTypeParameters"
-    compareInterfaceFiles "ThreeTypeParameters"
-    compareInterfaceFiles "SubTypeParameter"
-    compareInterfaceFiles "UnnamedProduct"
-    compareInterfaceFiles "ComplexProduct"
-    
-  let dir2 = "test/nointerface/temp"
-  runIO $ mkPackage (Proxy :: Proxy ProductPackage) (PackageOptions dir2 "product" Map.empty False Nothing)
-
-  describe "OCaml Declaration without Interface: Product Types" $ do
-    compareNoInterfaceFiles "Person"
-    compareNoInterfaceFiles "Company"
-    compareNoInterfaceFiles "Card"
-    compareNoInterfaceFiles "OneTypeParameter"
-    compareNoInterfaceFiles "TwoTypeParameters"
-    compareNoInterfaceFiles "ThreeTypeParameters"
-    compareNoInterfaceFiles "SubTypeParameter"
 
 data SimpleChoice =
   SimpleChoice
@@ -235,11 +186,26 @@ instance Arbitrary UnnamedProduct where
 
 instance ToADTArbitrary UnnamedProduct
 
+data Simple =
+  Simple
+    { sa :: Int
+    , sb :: String
+    } deriving (Eq,Show,Generic,FromJSON,ToJSON)
+
+instance OCamlType Simple where
+  toOCamlType _ = typeableToOCamlType (Proxy :: Proxy Simple)
+
+instance ToADTArbitrary Simple
+instance Arbitrary Simple where
+  arbitrary = Simple <$> arbitrary <*> arbitrary
+
 data ComplexProduct =
   ComplexProduct
-    { cp1 :: [(Int, Either String Double)]
+    { cp0 :: Either Person [Int]
+    , cp1 :: [(Int, Either String Double)]
     , cp2 :: [[Int]]
     , cp3 :: Maybe [Int]
+    , cp4 :: Either Simple Int
     } deriving (Eq,Show,Generic,OCamlType,FromJSON,ToJSON)
 
 instance Arbitrary ComplexProduct where
@@ -250,6 +216,6 @@ instance Arbitrary ComplexProduct where
     k1 <- choose (1,3)
     v1 <- vector k1
     
-    ComplexProduct <$> pure v0 <*> pure v1 <*> arbitrary
+    ComplexProduct <$> arbitrary <*> pure v0 <*> pure v1 <*> arbitrary <*> arbitrary
 
 instance ToADTArbitrary ComplexProduct

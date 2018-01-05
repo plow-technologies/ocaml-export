@@ -1,18 +1,13 @@
 {-# LANGUAGE DataKinds #-}
-
 {-# LANGUAGE TemplateHaskell #-}
 
 module FileApp where
-
 -- containers
 import qualified Data.Map as Map
-
 -- hspec
 import Test.Hspec
-
 -- servant-server
 import Servant
-
 -- ocaml-export
 import OCaml.Export
 import File
@@ -23,6 +18,7 @@ $(mkOCamlSpecServer "FilePackage" (Proxy :: Proxy FilePackage))
 fileMap :: Map.Map String EmbeddedOCamlFiles
 fileMap = Map.fromList $(mkFiles True False (Proxy :: Proxy FilePackage))
 
+compareInterfaceFiles :: FilePath -> SpecWith ()
 compareInterfaceFiles = compareFiles "test/interface" "file" True
 
 spec :: Spec

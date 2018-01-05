@@ -1,12 +1,10 @@
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE OverloadedStrings #-}
-
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE TypeOperators #-}
-
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeOperators #-}
 
 module Sum where
 
@@ -50,8 +48,10 @@ type SumPackage
   :<|> OCamlModule '["Result"] :> Result TypeParameterRef0 TypeParameterRef1
   :<|> OCamlModule '["NewType"] :> NewType)
 
+compareInterfaceFiles :: FilePath -> SpecWith ()
 compareInterfaceFiles = compareFiles "test/interface" "sum" True
 
+compareNoInterfaceFiles :: FilePath -> SpecWith ()
 compareNoInterfaceFiles = compareFiles "test/nointerface" "sum" False
 
 mkGolden :: forall a. (ToADTArbitrary a, ToJSON a) => Proxy a -> IO ()

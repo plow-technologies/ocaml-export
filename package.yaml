@@ -47,8 +47,8 @@ library:
   ghc-options:
   - -Wall
   - -Werror
-  - -Wredundant-constraints
-  - -fprint-potential-instances
+#  - -Wredundant-constraints
+#  - -fprint-potential-instances
 
 tests:
   spec:
@@ -78,4 +78,5 @@ tests:
     - warp
     - typelits-witnesses
     ghc-options:
-    - -fprint-potential-instances
+    - -Wall
+#    - -fprint-potential-instances

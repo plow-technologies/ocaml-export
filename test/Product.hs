@@ -1,42 +1,25 @@
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-
-{-# LANGUAGE FlexibleInstances #-}
-
-
--- for OCaml Module
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeOperators #-}
 
-{-# LANGUAGE TemplateHaskell #-}
-
-
 module Product where
-
 -- base
-import Data.Monoid ((<>))
 import GHC.Generics
--- text
-import Data.Text (Text)
 -- time
 import Data.Time
-import Data.Time.Clock.POSIX
--- containers
-import qualified Data.Map as Map
-
 -- aeson
 import Data.Aeson (FromJSON, ToJSON)
-
 -- hspec
-import Test.Hspec
+import Test.Hspec (SpecWith)
 -- QuickCheck
 import Test.QuickCheck
 -- quickcheck-arbitrary-adt
 import Test.QuickCheck.Arbitrary.ADT
--- hspec-golden-aeson
-import Test.Aeson.Internal.ADT.GoldenSpecs
 -- ocaml-export
 import OCaml.Export hiding (mkGoldenFiles)
 import Util
@@ -55,8 +38,10 @@ type ProductPackage
   :<|> OCamlModule '["UnnamedProduct"] :> UnnamedProduct
   :<|> OCamlModule '["ComplexProduct"] :> OCamlTypeInFile Simple "test/ocaml/Simple" :> ComplexProduct)
 
+compareInterfaceFiles :: FilePath -> SpecWith ()
 compareInterfaceFiles = compareFiles "test/interface" "product" True
 
+compareNoInterfaceFiles :: FilePath -> SpecWith ()
 compareNoInterfaceFiles = compareFiles "test/nointerface" "product" False
 
 data SimpleChoice =

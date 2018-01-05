@@ -7,26 +7,15 @@
 {-# LANGUAGE TypeOperators #-}
 
 module File where
-
 -- base
 import Data.Proxy
 import GHC.Generics (Generic)
-
 -- aeson
 import Data.Aeson
-
--- hspec
-import Test.Hspec
-
--- hspec-golden-aeson
-import Test.Aeson.Internal.ADT.GoldenSpecs
-
 -- QuickCheck
 import Test.QuickCheck
-
 -- quickcheck-arbitrary-adt
 import Test.QuickCheck.Arbitrary.ADT
-
 -- ocaml-export
 import OCaml.Export
 

@@ -5,47 +5,21 @@
 {-# LANGUAGE TypeOperators #-}
 
 module Dependency where
-
 -- base
-import Data.Monoid ((<>))
 import GHC.Generics (Generic)
-
 -- aeson
 import Data.Aeson (FromJSON, ToJSON)
-
 -- containers
 import Data.Map as Map
-
 -- hspec
 import Test.Hspec
-
--- hspec-aeson-golden
-import Test.Aeson.Internal.ADT.GoldenSpecs
-
 -- QuickCheck
 import Test.QuickCheck
-
 -- quickcheck-arbitrary-adt
 import Test.QuickCheck.Arbitrary.ADT
-
--- text
-import Data.Text (Text)
-
--- time
-import Data.Time
-import Data.Time.Clock.POSIX
-
 -- ocaml-export
 import OCaml.Export
 import Product (ProductPackage, Person)
-import Util
-
---mkGolden :: forall a. (ToADTArbitrary a, ToJSON a) => Proxy a -> IO ()
---mkGolden Proxy = mkGoldenFileForType 10 (Proxy :: Proxy a) "test/interface/golden/golden/dependency"
-
---mkGoldenFiles :: IO ()
---mkGoldenFiles = do
---  mkGolden (Proxy :: Proxy Class)
 
 type DependencyPackage
   =    OCamlPackage "dependency" '[ProductPackage] :> (
@@ -58,17 +32,7 @@ type DependencyPackageWithoutProduct
 type SchoolPackage
   =    OCamlPackage "school" '[DependencyPackage] :> (
        OCamlModule '["School"] :> School)
-{-
-data Person = Person
-  { id :: Int
-  , name :: Maybe String
-  } deriving (Show, Eq, Generic, OCamlType, FromJSON, ToJSON)
 
-instance Arbitrary Person where
-  arbitrary = Person <$> arbitrary <*> arbitrary
-
-instance ToADTArbitrary Person
--}
 data Class = Class
   { subject   :: String
   , students  :: [Person] -- from another package
@@ -139,7 +103,6 @@ instance Arbitrary E where
 
 type SubsPackage = OCamlPackage "subs" NoDependency :>
   (OCamlModule '["AtoE"] :> A :> (OCamlSubModule "One" :> B :> (OCamlSubModule "Two" :> C) :> D) :> E)
---   (OCamlModule '["AtoE"] :> OCamlSubModule '["One"] :> A)
 
 spec :: Spec
 spec = do

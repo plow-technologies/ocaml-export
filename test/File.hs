@@ -89,7 +89,7 @@ data Wrapper a b = Wrapper
 instance (Arbitrary a, Arbitrary b) => Arbitrary (Wrapper a b) where
   arbitrary = Wrapper <$> arbitrary <*> arbitrary <*> arbitrary
 
-instance (ToADTArbitrary a, ToADTArbitrary b) => ToADTArbitrary (Wrapper a b)
+instance (Arbitrary a, ToADTArbitrary a, Arbitrary b, ToADTArbitrary b) => ToADTArbitrary (Wrapper a b)
 
 instance OCamlType (Wrapper TypeParameterRef0 TypeParameterRef1) where
   toOCamlType _ = typeableToOCamlType (Proxy :: Proxy (Wrapper TypeParameterRef0 TypeParameterRef1))

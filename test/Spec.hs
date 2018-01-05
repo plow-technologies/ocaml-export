@@ -57,7 +57,7 @@ import qualified File as File
 import qualified FileApp as File
 import qualified Options as Options
 import qualified Product as Product
-import ProductApp
+import ProductApp as Product
 import qualified Sum as Sum
 import SumApp
 
@@ -68,14 +68,11 @@ logAllMiddleware app req respond = do
     print $ d
     app req respond
 
--- npm start --prefix path/to/your/app
-
 main :: IO ()
 main = do
   hspec Product.spec
   hspec Sum.spec
   hspec File.spec
---  hspec Options.spec
   hspec D.spec
 
   hspec $
@@ -84,14 +81,8 @@ main = do
         (mkOCamlTypeMetaData (Proxy :: Proxy Product.ProductPackage)) <> (mkOCamlTypeMetaData (Proxy :: Proxy D.DependencyPackageWithoutProduct))
           `shouldBe` mkOCamlTypeMetaData (Proxy :: Proxy D.DependencyPackage)
 
---  print $ ocamlPackageTypeCount (Proxy :: Proxy Product.ProductPackage)
-
---  print $ mkOCamlTypeMetaData (Proxy :: Proxy Product.ProductPackage)
   print $ mkOCamlTypeMetaData (Proxy :: Proxy D.SubsPackage)
   
   _ <- forkIO $ run 8081 productPackageApp
   _ <- forkIO $ run 8082 sumPackageApp
   run 8083 File.filePackageApp
-
--- curl -i -d '"hi"' -H 'Content-type: application/json' -X POST http://localhost:8081/x/y
- 

@@ -50,6 +50,7 @@ module OCaml.BuckleScript.Types
   , getTypeParameters
   , isTypeParameterRef
   , mkModulePrefix
+  , oCamlValueIsFloat
   ) where
 
 -- base
@@ -562,3 +563,9 @@ zipWithRightRemainder :: [a] -> [b] -> ([(a,b)], [b])
 zipWithRightRemainder [] bs = ([], bs)
 zipWithRightRemainder _ab [] = ([], [])
 zipWithRightRemainder (a:as) (b:bs) = ([(a,b)], []) <> zipWithRightRemainder as bs
+
+-- | BuckleScript has a 'float' type that conflicts when you do 'open Aeson.Decode'
+--   float must be appended with 'Aeson.Decode'. 
+oCamlValueIsFloat :: OCamlValue -> Bool
+oCamlValueIsFloat (OCamlPrimitiveRef OFloat) = True
+oCamlValueIsFloat _ = False

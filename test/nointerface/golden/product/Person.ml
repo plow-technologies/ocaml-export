@@ -7,7 +7,7 @@ type person =
 let encodePerson (x : person) :Js_json.t =
   Aeson.Encode.object_
     [ ( "id", Aeson.Encode.int x.id )
-    ; ( "name", Aeson.Encode.optional Aeson.Encode.string x.name )
+    ; ( "name", (Aeson.Encode.optional Aeson.Encode.string) x.name )
     ; ( "created", Aeson.Encode.date x.created )
     ]
 

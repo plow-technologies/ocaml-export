@@ -105,6 +105,7 @@ type family (HasMkGoldenFilesFlag a) :: Nat where
   HasMkGoldenFilesFlag ((OCamlModule a :> b) :<|> c) = 6
   HasMkGoldenFilesFlag (OCamlModule a :> b) = 5
   HasMkGoldenFilesFlag (OCamlSubModule a :> b) = 4
+  HasMkGoldenFilesFlag (HaskellTypeName a (OCamlTypeInFile b c)) = 3
   HasMkGoldenFilesFlag (OCamlTypeInFile a b) = 3
   HasMkGoldenFilesFlag (a :> b) = 2
   HasMkGoldenFilesFlag a = 1
@@ -125,6 +126,9 @@ instance (HasMkGoldenFiles a) => HasMkGoldenFiles' 5 (OCamlModule modules :> a) 
 
 instance (HasMkGoldenFiles a) => HasMkGoldenFiles' 4 (OCamlSubModule subModule :> a) where
   mkGoldenFiles' _ Proxy size fp = mkGoldenFiles (Proxy :: Proxy a) size fp
+
+instance (ToADTArbitrary b, ToJSON b) => HasMkGoldenFiles' 3 (HaskellTypeName a (OCamlTypeInFile b c)) where
+  mkGoldenFiles' _ Proxy size fp = mkGoldenFileForType size (Proxy :: Proxy b) fp
 
 instance (ToADTArbitrary a, ToJSON a) => HasMkGoldenFiles' 3 (OCamlTypeInFile a b) where
   mkGoldenFiles' _ Proxy size fp = mkGoldenFileForType size (Proxy :: Proxy a) fp
@@ -151,12 +155,13 @@ type family MkOCamlSpecAPI a :: * where
 type family MkOCamlSpecAPI' modules subModules api :: * where
   MkOCamlSpecAPI' modules subModules ((OCamlSubModule restSubModules) :> a) = MkOCamlSpecAPI' modules (Append subModules '[restSubModules]) a
   MkOCamlSpecAPI' modules subModules (a :> b) = MkOCamlSpecAPI' modules subModules a :<|> MkOCamlSpecAPI' modules subModules b
-  MkOCamlSpecAPI' modules subModules (OCamlTypeInFile api _typeFilePath) = OCamlSpecAPI modules subModules api
-  MkOCamlSpecAPI' modules subModules api = OCamlSpecAPI modules subModules api
+  MkOCamlSpecAPI' modules subModules (HaskellTypeName name (OCamlTypeInFile api _typeFilePath)) = OCamlSpecAPI modules subModules api ('Just name)
+  MkOCamlSpecAPI' modules subModules (OCamlTypeInFile api _typeFilePath) = OCamlSpecAPI modules subModules api 'Nothing
+  MkOCamlSpecAPI' modules subModules api = OCamlSpecAPI modules subModules api 'Nothing
 
 -- | A servant route for a testing an OCaml type's encoder and decoder
-type OCamlSpecAPI (modules :: [Symbol]) (subModules :: [Symbol]) typ =
-  ConcatSymbols (Insert (TypeName typ) (Append modules subModules)) (ReqBody '[JSON] [typ] :> Post '[JSON] [typ])
+type OCamlSpecAPI (modules :: [Symbol]) (subModules :: [Symbol]) typ (mType :: Maybe Symbol) =
+  ConcatSymbols (Insert mType (TypeName typ) (Append modules subModules)) (ReqBody '[JSON] [typ] :> Post '[JSON] [typ])
 
 class OCamlModuleTypeCount api where
   ocamlModuleTypeCount :: Proxy api -> Int
@@ -235,9 +240,10 @@ type family Length xs :: Nat where
   Length (x ': xs) = 1 + Length xs
 
 -- | Insert type into type level list
-type family Insert a xs where
-  Insert a '[]       = a ': '[]
-  Insert a (x ': xs) = x ': (Insert a xs)
+type family Insert a b xs where
+  Insert ('Just a) b '[]       = a ': '[]
+  Insert 'Nothing b '[]       = b ': '[]
+  Insert a b (x ': xs) = x ': (Insert a b xs)
 
 -- | Concat a Symbol the end of a list of Symbols.
 type family ConcatSymbols xs rhs :: * where

@@ -14,6 +14,7 @@ module OCaml.Export
   , OCamlModule
   , OCamlSubModule
   , OCamlTypeInFile
+  , HaskellTypeName
 
   , PackageOptions (..)
   , defaultPackageOptions

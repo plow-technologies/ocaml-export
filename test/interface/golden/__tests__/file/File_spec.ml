@@ -33,3 +33,10 @@ let () =
     "autoDependingOnManual"
     "http://localhost:8083/File/AutoDependingOnManual"
     "golden/file/AutoDependingOnManual";
+
+  AesonSpec.sampleGoldenAndServerSpec
+    File.decodeNonGenericType
+    File.encodeNonGenericType
+    "nonGenericType"
+    "http://localhost:8083/File/NonGenericType"
+    "golden/file/NonGenericType";

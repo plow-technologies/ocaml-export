@@ -229,6 +229,7 @@ instance HasOCamlTypeMetaData '[] where
 type family (HasOCamlTypeMetaDataFlag a) :: Nat where
   HasOCamlTypeMetaDataFlag (OCamlSubModule a :> b) = 4
   HasOCamlTypeMetaDataFlag (a :> b) = 3
+  HasOCamlTypeMetaDataFlag (HaskellTypeName a (OCamlTypeInFile b c)) = 2
   HasOCamlTypeMetaDataFlag (OCamlTypeInFile a b) = 2
   HasOCamlTypeMetaDataFlag a = 1
 
@@ -248,6 +249,8 @@ instance (KnownSymbol subModule, HasOCamlTypeMetaData' b) => HasOCamlTypeMetaDat
 instance (HasOCamlTypeMetaData' a, HasOCamlTypeMetaData' b) => HasOCamlTypeMetaData'' 3 (a :> b) where
   mkOCamlTypeMetaData'' _ modul subModul Proxy = (mkOCamlTypeMetaData' modul subModul (Proxy :: Proxy a)) <> (mkOCamlTypeMetaData' modul subModul (Proxy :: Proxy b))
 
+instance (HasOCamlTypeMetaData' (OCamlTypeInFile a b)) => HasOCamlTypeMetaData'' 2 (HaskellTypeName typName (OCamlTypeInFile a b)) where
+  mkOCamlTypeMetaData'' _ modul subModul Proxy = (mkOCamlTypeMetaData' modul subModul (Proxy :: Proxy (OCamlTypeInFile a b)))
 
 instance (Typeable a) => HasOCamlTypeMetaData'' 2 (OCamlTypeInFile a b) where
   mkOCamlTypeMetaData'' _ modul subModul Proxy =

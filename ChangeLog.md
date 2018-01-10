@@ -1,5 +1,11 @@
 # Revision history for ocaml-export
 
+## 0.4.0.0 -- 2018-01-10
+
+* Add 'OCamlType' instance for ByteString.
+* Add 'HaskellTypeName' to support servant test server for types without Generic. You must manually provide the type's name as a symbol.
+
+
 ## 0.3.0.0 -- 2018-01-04
 
 * 'OCaml.BuckleScript.Encode.renderRef' now add parentheses when rendering: list, optional, either, pair, tuple3, tuple4, tuple5, tuple6.

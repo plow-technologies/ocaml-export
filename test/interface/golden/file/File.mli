@@ -49,3 +49,13 @@ type autoDependingOnManual =
 val encodeAutoDependingOnManual : autoDependingOnManual -> Js_json.t
 
 val decodeAutoDependingOnManual : Js_json.t -> (autoDependingOnManual, string) Js_result.t
+
+type nonGenericType =
+  { ngA : string
+  ; ngB : int
+  }
+
+val encodeNonGenericType : nonGenericType -> Js_json.t
+
+val decodeNonGenericType : Js_json.t -> (nonGenericType, string) Js_result.t
+

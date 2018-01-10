@@ -25,6 +25,7 @@ module OCaml.BuckleScript.Internal.Module
     OCamlModule
   , OCamlSubModule
   , OCamlTypeInFile
+  , HaskellTypeName
 
   , EmbeddedOCamlFiles (..)
 
@@ -95,6 +96,10 @@ data OCamlSubModule (subModules :: Symbol)
 data OCamlTypeInFile a (filePath :: Symbol)
   deriving Typeable
 
+-- | In case Generic is not derived, manually provide the type name
+--   user is responsible for making sure it is correct. otherwise it
+--   may lead to a compile error.
+data HaskellTypeName (name :: Symbol) a
 
 -- ==============================================
 -- Data Types
@@ -127,6 +132,7 @@ instance (HasOCamlTypeFlag a ~ flag, HasOCamlType' flag (a :: *)) => HasOCamlTyp
 type family (HasOCamlTypeFlag a) :: Nat where
   HasOCamlTypeFlag (OCamlSubModule a :> b) = 4
   HasOCamlTypeFlag (a :> b) = 3
+  HasOCamlTypeFlag (HaskellTypeName a (OCamlTypeInFile b c)) = 2
   HasOCamlTypeFlag (OCamlTypeInFile a b) = 2
   HasOCamlTypeFlag a = 1
 
@@ -147,6 +153,11 @@ instance (HasOCamlType a, HasOCamlType b) => HasOCamlType' 3 (a :> b) where
   mkType' _ Proxy options interface fileMap = (mkType (Proxy :: Proxy a) options interface fileMap) <> (mkType (Proxy :: Proxy b) options interface fileMap)
   mkInterface' _ Proxy options fileMap = (mkInterface (Proxy :: Proxy a) options fileMap) <> (mkInterface (Proxy :: Proxy b) options fileMap)
   mkSpec' _ Proxy options modules url goldendir fileMap = (mkSpec (Proxy :: Proxy a) options modules url goldendir fileMap) <> (mkSpec (Proxy :: Proxy b) options modules url goldendir fileMap)
+
+instance (HasOCamlType (OCamlTypeInFile a b)) => HasOCamlType' 2 (HaskellTypeName typSymbol (OCamlTypeInFile a b)) where
+  mkType' _ Proxy options interface fileMap = (mkType (Proxy :: Proxy (OCamlTypeInFile a b)) options interface fileMap)
+  mkInterface' _ Proxy options fileMap = (mkInterface (Proxy :: Proxy (OCamlTypeInFile a b)) options fileMap)
+  mkSpec' _ Proxy options modules url goldendir fileMap = (mkSpec (Proxy :: Proxy (OCamlTypeInFile a b)) options modules url goldendir fileMap)
 
 instance (OCamlType a, Typeable a) => HasOCamlType' 2 (OCamlTypeInFile a b) where
   mkType' _ Proxy _options _ fileMap = do
@@ -218,6 +229,9 @@ instance (HasEmbeddedFile' a, HasEmbeddedFile' b) => HasEmbeddedFile' (a :<|> b)
 
 instance (HasEmbeddedFile' a, HasEmbeddedFile' b) => HasEmbeddedFile' (a :> b) where
   mkFiles' includeInterface includeSpec Proxy = (<>) <$> mkFiles' includeInterface includeSpec (Proxy :: Proxy a) <*> mkFiles' includeInterface includeSpec (Proxy :: Proxy b)
+
+instance (HasEmbeddedFile' (OCamlTypeInFile a b)) => HasEmbeddedFile' (HaskellTypeName typSymbol (OCamlTypeInFile a b)) where
+  mkFiles' includeInterface includeSpec Proxy = mkFiles' includeInterface includeSpec (Proxy :: Proxy (OCamlTypeInFile a b))
 
 instance (Typeable a, KnownSymbol b) => HasEmbeddedFile' (OCamlTypeInFile a b) where
   mkFiles' includeInterface includeSpec Proxy = do

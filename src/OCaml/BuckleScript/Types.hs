@@ -68,7 +68,8 @@ import Prelude
 
 -- aeson
 import Data.Aeson (ToJSON, FromJSON)
-
+-- bytestring
+import Data.ByteString (ByteString)
 -- text
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -284,6 +285,9 @@ instance OCamlType () where
   toOCamlType _ = OCamlPrimitive OUnit
 
 instance OCamlType Text where
+  toOCamlType _ = OCamlPrimitive OString
+
+instance OCamlType ByteString where
   toOCamlType _ = OCamlPrimitive OString
 
 instance OCamlType Day where

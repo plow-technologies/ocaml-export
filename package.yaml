@@ -1,5 +1,5 @@
 name: ocaml-export
-version: 0.3.0.0
+version: 0.4.0.0
 synopsis: Convert Haskell types in OCaml types
 description: README.md
 category: Web

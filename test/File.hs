@@ -26,6 +26,7 @@ type FilePackage = OCamlPackage "" NoDependency :>
     :> OCamlTypeInFile Business "test/ocaml/Business"
     :> OCamlTypeInFile (Wrapper TypeParameterRef0 TypeParameterRef1) "test/ocaml/Wrapper"
     :> AutoDependingOnManual
+    :> HaskellTypeName "NonGenericType" (OCamlTypeInFile NonGenericType "test/ocaml/NonGenericType")
   )
 
 data Person = Person
@@ -92,3 +93,30 @@ instance Arbitrary AutoDependingOnManual where
   arbitrary = AutoDependingOnManual <$> arbitrary <*> arbitrary
 
 instance ToADTArbitrary AutoDependingOnManual
+
+data NonGenericType =
+  NonGenericType
+    { ngA :: String
+    , ngB :: Int
+    } deriving (Show, Eq)
+
+instance ToJSON NonGenericType where
+  toJSON ng = object [ "ngA" .= ngA ng, "ngB" .= ngB ng]
+
+instance FromJSON NonGenericType where
+  parseJSON = withObject "NonGenericType" $ \o ->
+    NonGenericType <$> o .: "ngA" <*> o .: "ngB"
+
+instance ToADTArbitrary NonGenericType where
+  toADTArbitrarySingleton Proxy =
+    ADTArbitrarySingleton "File" "NonGenericType"
+      <$> (ConstructorArbitraryPair "NonGenericType" <$> (NonGenericType <$> arbitrary <*> arbitrary))
+
+  toADTArbitrary Proxy =
+    ADTArbitrary "File" "NonGenericType"
+      <$> sequence
+        [ ConstructorArbitraryPair "NonGenericType" <$> (NonGenericType <$> arbitrary <*> arbitrary)
+        ]
+
+instance OCamlType NonGenericType where
+  toOCamlType _ = typeableToOCamlType (Proxy :: Proxy NonGenericType)

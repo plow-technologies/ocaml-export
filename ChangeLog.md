@@ -1,10 +1,13 @@
 # Revision history for ocaml-export
 
+## 0.5.0.0 -- 2018-01-16
+
+* Fix 'OCaml.BuckleScript.Encode.renderRef' for OBool.
+
 ## 0.4.0.0 -- 2018-01-10
 
 * Add 'OCamlType' instance for ByteString.
 * Add 'HaskellTypeName' to support servant test server for types without Generic. You must manually provide the type's name as a symbol.
-
 
 ## 0.3.0.0 -- 2018-01-04
 

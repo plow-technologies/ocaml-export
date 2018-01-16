@@ -332,7 +332,7 @@ instance HasEncoderRef OCamlPrimitive where
   renderRef OUnit   = pure "Aeson.Encode.null"
   renderRef OInt    = pure "Aeson.Encode.int"
   renderRef OChar   = pure "Aeson.Encode.string"
-  renderRef OBool   = pure "Aeson.Encode.boolean"
+  renderRef OBool   = pure "Aeson.Encode.bool"
   renderRef OFloat  = pure "Aeson.Encode.float"
   renderRef OString = pure "Aeson.Encode.string"
   renderRef (OList (OCamlPrimitive OChar)) = pure "Aeson.Encode.string"

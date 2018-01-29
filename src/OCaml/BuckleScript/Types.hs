@@ -155,8 +155,9 @@ data OCamlValue
   | OCamlPrimitiveRef OCamlPrimitive -- ^ A primitive OCaml type like `int`, `string`, etc.
   | OCamlField Text OCamlValue -- ^ A field name and its type from a record
   | Values OCamlValue OCamlValue -- ^ Used for multiple types in a sum type
+  | OCamlRefApp HaskellTypeMetaData Text [HaskellTypeMetaData] -- ^ A type constructor that takes other types
   deriving (Show, Eq)
-
+--  -- ^
 ------------------------------------------------------------
 -- | Create an OCaml type from a Haskell type. Use the Generic
 --   definition when possible. It also expects `ToJSON` and `FromJSON`
@@ -209,8 +210,6 @@ instance (KnownSymbol typ, KnownSymbol package, KnownSymbol modul, GenericValueC
               then transformToSumOfRecord (T.pack (datatypeName datatype)) ocamlConstructor
               else ocamlConstructor
 
-
-
 ------------------------------------------------------------
 class GenericValueConstructor f where
   genericToValueConstructor :: f a -> ValueConstructor
@@ -259,16 +258,21 @@ instance GenericOCamlValue U1 where
   genericToOCamlValue _ = OCamlEmpty
 
 -- | Handle type parameter.
-instance OCamlType a => GenericOCamlValue (Rec0 a) where
+instance (OCamlType a, Typeable a) => GenericOCamlValue (Rec0 a) where
   genericToOCamlValue _ =
     case toOCamlType (Proxy :: Proxy a) of
       OCamlPrimitive primitive -> OCamlPrimitiveRef primitive
       OCamlDatatype haskellTypeMetaData name _ -> mkRef haskellTypeMetaData name
     where
       typeParameterRefs = (T.append) <$> ["a"] <*> (T.pack . show <$> ([0..5] :: [Int]))
-      mkRef haskellTypeMetaData n
-        | n `elem` typeParameterRefs = OCamlTypeParameterRef n
-        | otherwise = OCamlRef haskellTypeMetaData n
+      typeParams = snd . splitTyConApp $ typeRep (Proxy :: Proxy a)
+      mkRef haskellTypeMetaData n =
+          if n `elem` typeParameterRefs
+          then OCamlTypeParameterRef n
+          else
+            if length typeParams == 0
+            then OCamlRef haskellTypeMetaData n
+            else OCamlRefApp haskellTypeMetaData n (typeRepToHaskellTypeMetaData <$> typeParams)
 
 -- OCamlType instances for primitives
 
@@ -371,7 +375,6 @@ instance (OCamlType a, OCamlType b, OCamlType c, OCamlType d, OCamlType e, OCaml
     OTuple6 (toOCamlType (Proxy :: Proxy a)) (toOCamlType (Proxy :: Proxy b))
             (toOCamlType (Proxy :: Proxy c)) (toOCamlType (Proxy :: Proxy d))
             (toOCamlType (Proxy :: Proxy e)) (toOCamlType (Proxy :: Proxy f))
-
 
 instance (OCamlType a) =>
          OCamlType (Proxy a) where
@@ -573,3 +576,10 @@ zipWithRightRemainder (a:as) (b:bs) = ([(a,b)], []) <> zipWithRightRemainder as 
 oCamlValueIsFloat :: OCamlValue -> Bool
 oCamlValueIsFloat (OCamlPrimitiveRef OFloat) = True
 oCamlValueIsFloat _ = False
+
+typeRepToHaskellTypeMetaData :: TypeRep -> HaskellTypeMetaData
+typeRepToHaskellTypeMetaData aTypeRep =
+  HaskellTypeMetaData
+    (T.pack . tyConName . typeRepTyCon $ aTypeRep)
+    (T.pack . tyConModule . typeRepTyCon $ aTypeRep)
+    (T.pack . tyConPackage . typeRepTyCon $ aTypeRep)

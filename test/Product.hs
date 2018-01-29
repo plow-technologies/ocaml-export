@@ -9,6 +9,7 @@
 
 module Product where
 -- base
+import Data.Typeable
 import GHC.Generics
 -- time
 import Data.Time
@@ -115,24 +116,28 @@ data OneTypeParameter a =
   OneTypeParameter
     { otpId :: Int
     , otpFirst :: a
-    } deriving (Eq,Show,Generic,OCamlType,FromJSON,ToJSON)
+    } deriving (Eq,Show,Generic,FromJSON,ToJSON)
 
 instance Arbitrary (OneTypeParameter TypeParameterRef0) where
   arbitrary = OneTypeParameter <$> arbitrary <*> arbitrary
 
 instance ToADTArbitrary (OneTypeParameter TypeParameterRef0)
 
+instance (Typeable a, OCamlType a) => (OCamlType (OneTypeParameter a))
+
 data TwoTypeParameters a b =
   TwoTypeParameters
     { ttpId :: Int
     , ttpFirst :: a
     , ttpSecond :: b
-    } deriving (Eq,Show,Generic,OCamlType,FromJSON,ToJSON)
+    } deriving (Eq,Show,Generic,FromJSON,ToJSON)
 
 instance Arbitrary (TwoTypeParameters TypeParameterRef0 TypeParameterRef1) where
   arbitrary = TwoTypeParameters <$> arbitrary <*> arbitrary <*> arbitrary
 
 instance ToADTArbitrary (TwoTypeParameters TypeParameterRef0 TypeParameterRef1)
+
+instance (Typeable a, OCamlType a, Typeable b, OCamlType b) => (OCamlType (TwoTypeParameters a b))
 
 data Three a b c =
   Three
@@ -141,19 +146,21 @@ data Three a b c =
     , threeSecond :: b
     , threeThird :: c
     , threeString :: String
-    } deriving (Eq,Show,Generic,OCamlType,FromJSON,ToJSON)
+    } deriving (Eq,Show,Generic,FromJSON,ToJSON)
 
 instance Arbitrary (Three TypeParameterRef0 TypeParameterRef1 TypeParameterRef2) where
   arbitrary = Three <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
 
 instance ToADTArbitrary (Three TypeParameterRef0 TypeParameterRef1 TypeParameterRef2)
 
+instance (Typeable a, OCamlType a, Typeable b, OCamlType b, Typeable c, OCamlType c) => (OCamlType (Three a b c))
+
 data SubTypeParameter a b c =
   SubTypeParameter
     { listA :: [a]
     , maybeB :: Maybe b
     , tupleC :: (c,b)
-    } deriving (Eq,Show,Generic,OCamlType,FromJSON,ToJSON)
+    } deriving (Eq,Show,Generic,FromJSON,ToJSON)
 
 instance Arbitrary (SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2) where
   arbitrary = do
@@ -162,6 +169,8 @@ instance Arbitrary (SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypePar
     SubTypeParameter <$> pure v <*> arbitrary <*> arbitrary
 
 instance ToADTArbitrary (SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2)
+
+instance (Typeable a, OCamlType a, Typeable b, OCamlType b, Typeable c, OCamlType c) => (OCamlType (SubTypeParameter a b c))
 
 data UnnamedProduct = UnnamedProduct String Int
   deriving (Eq, Read, Show, Generic, OCamlType, FromJSON, ToJSON)

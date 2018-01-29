@@ -122,8 +122,30 @@ instance HasType ValueConstructor where
 instance HasType EnumeratorConstructor where
   render (EnumeratorConstructor name) = pure (stext name)
 
+
+haskellTypeMetaDataToOCamlTypeMetaData :: Map.Map HaskellTypeMetaData OCamlTypeMetaData -> OCamlTypeMetaData -> HaskellTypeMetaData -> Text -> Text
+haskellTypeMetaDataToOCamlTypeMetaData m o h name =
+  case Map.lookup h m of
+    Just parOCamlTypeMetaData -> 
+      (mkModulePrefix o parOCamlTypeMetaData) <> (textLowercaseFirst name)
+    Nothing -> textLowercaseFirst name
+      
 instance HasType OCamlValue where
   render ref@(OCamlRef typeRef name) = do
+    mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData
+    case mOCamlTypeMetaData of
+      Nothing -> fail $ "OCaml.BuckleScript.Record (HasType (OCamlDatatype typeRep name)) mOCamlTypeMetaData is Nothing:\n\n" ++ (show ref)
+      Just decOCamlTypeMetaData -> do
+        ds <- asks (dependencies . userOptions)
+        case Map.lookup typeRef ds of
+          Just parOCamlTypeMetaData -> do
+            let prefix = stext $ mkModulePrefix decOCamlTypeMetaData parOCamlTypeMetaData
+            pure $ prefix <> (stext . textLowercaseFirst $ name)
+          -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
+          -- within the same file as the sum. These products will not be in the dependencies map.
+          Nothing -> pure . stext . textLowercaseFirst $ name
+
+  render ref@(OCamlRefApp typeRef name typeRefs) = do
     mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData
     case mOCamlTypeMetaData of
       Nothing -> fail $ "OCaml.BuckleScript.Record (HasType (OCamlDatatype typeRep name)) mOCamlTypeMetaData is Nothing:\n\n" ++ (show ref)
@@ -147,6 +169,8 @@ instance HasType OCamlValue where
   render (OCamlField name value) = do
     dv <- renderRecord value
     return $ stext name <+> ":" <+> dv
+
+
 
 instance HasRecordType OCamlValue where
   renderRecord (OCamlPrimitiveRef primitive) = renderRef primitive

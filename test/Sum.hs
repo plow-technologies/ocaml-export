@@ -10,7 +10,7 @@ module Sum where
 
 -- base
 import GHC.Generics
-
+import Data.Typeable
 -- aeson
 import Data.Aeson (FromJSON, ToJSON)
 
@@ -29,9 +29,6 @@ import Test.Aeson.Internal.ADT.GoldenSpecs
 
 -- servant
 import Servant.API
-
--- servant-server
-import Servant
 
 -- ocaml-export
 import OCaml.Export hiding (mkGoldenFiles)
@@ -114,12 +111,14 @@ instance ToADTArbitrary NameOrIdNumber
 data Result a b
   = Success a
   | Error b
-  deriving (Show, Eq, Generic, OCamlType, ToJSON, FromJSON)
+  deriving (Show, Eq, Generic, ToJSON, FromJSON)
 
 instance Arbitrary (Result TypeParameterRef0 TypeParameterRef1) where
   arbitrary = oneof [Success <$> arbitrary, Error <$> arbitrary]
 
 instance ToADTArbitrary (Result TypeParameterRef0 TypeParameterRef1)
+
+instance (Typeable a, OCamlType a, Typeable b, OCamlType b) => (OCamlType (Result a b))
 
 data SumVariant
   = HasNothing

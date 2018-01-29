@@ -321,6 +321,8 @@ instance HasEncoder OCamlValue where
           -- within the same file as the sum. These products will not be in the dependencies map.
           Nothing -> pure $ "encode" <> (stext . textUppercaseFirst $ name)
 
+  render ref@(OCamlRefApp typeRep name typeReps) = pure $ stext "unimplemented"
+
   render (Values x y) = do
     dx <- render x
     dy <- render y
@@ -420,6 +422,9 @@ renderVariable ds (Values l r) = do
 renderVariable ds f@(OCamlField _ _) = do
   f' <- render f
   return (f', ds)
+
+renderVariable _ds (OCamlRefApp _ _ _) = pure ("unimplemented", [])
+  
 renderVariable [] _ = error "Amount of variables does not match variables."
 
 -- Util

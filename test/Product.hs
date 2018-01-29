@@ -37,7 +37,9 @@ type ProductPackage
   :<|> OCamlModule '["ThreeTypeParameters"] :> Three TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
   :<|> OCamlModule '["SubTypeParameter"] :> SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
   :<|> OCamlModule '["UnnamedProduct"] :> UnnamedProduct
-  :<|> OCamlModule '["ComplexProduct"] :> OCamlTypeInFile Simple "test/ocaml/Simple" :> ComplexProduct)
+  :<|> OCamlModule '["ComplexProduct"] :> OCamlTypeInFile Simple "test/ocaml/Simple" :> ComplexProduct
+  :<|> OCamlModule '["Wrapper"] :> Wrapper TypeParameterRef0 :> MaybeWrapped :> EitherWrapped :> ComplexWrapped
+       )
 
 compareInterfaceFiles :: FilePath -> SpecWith ()
 compareInterfaceFiles = compareFiles "test/interface" "product" True
@@ -213,3 +215,50 @@ instance Arbitrary ComplexProduct where
     ComplexProduct <$> arbitrary <*> pure v0 <*> pure v1 <*> arbitrary <*> arbitrary
 
 instance ToADTArbitrary ComplexProduct
+
+data Wrapper a =
+  Wrapper
+    { wpa :: a
+    } deriving (Eq,Show,Generic,ToJSON,FromJSON)
+
+{-
+instance Arbitrary (Wrapper TypeParameterRef0) where
+  arbitrary = Wrapper <$> arbitrary
+instance ToADTArbitrary (Wrapper TypeParameterRef0)
+instance (Typeable a, OCamlType a) => (OCamlType (Wrapper a))
+-}
+
+
+instance (ToADTArbitrary a, Arbitrary a) => ToADTArbitrary (Wrapper a)
+instance (Arbitrary a) => Arbitrary (Wrapper a) where
+  arbitrary = Wrapper <$> arbitrary
+instance (Typeable a, OCamlType a) => (OCamlType (Wrapper a))
+
+
+data MaybeWrapped =
+  MaybeWrapped
+    { mw :: Wrapper (Maybe Int)
+    } deriving (Eq,Show,Generic,OCamlType,ToJSON,FromJSON)
+
+instance ToADTArbitrary MaybeWrapped
+instance Arbitrary MaybeWrapped where
+  arbitrary = MaybeWrapped <$> arbitrary
+
+data EitherWrapped =
+  EitherWrapped
+    { ew :: Wrapper (Either Int Double)
+    } deriving (Eq,Show,Generic,OCamlType,ToJSON,FromJSON)
+
+instance ToADTArbitrary EitherWrapped
+instance Arbitrary EitherWrapped where
+  arbitrary = EitherWrapped <$> arbitrary
+
+
+data ComplexWrapped =
+  ComplexWrapped
+    { cw :: Wrapper (Either (Maybe Char) Double)
+    } deriving (Eq,Show,Generic,OCamlType,ToJSON,FromJSON)
+
+instance ToADTArbitrary ComplexWrapped
+instance Arbitrary ComplexWrapped where
+  arbitrary = ComplexWrapped <$> arbitrary

@@ -23,6 +23,7 @@ import Data.List (nub)
 import Data.Maybe (catMaybes)
 import Data.Monoid
 import Data.Proxy (Proxy (..))
+import Data.Typeable
 
 -- containers
 import qualified Data.Map.Strict as Map
@@ -123,41 +124,84 @@ instance HasType EnumeratorConstructor where
   render (EnumeratorConstructor name) = pure (stext name)
 
 
-haskellTypeMetaDataToOCamlTypeMetaData :: Map.Map HaskellTypeMetaData OCamlTypeMetaData -> OCamlTypeMetaData -> HaskellTypeMetaData -> Text -> Text
-haskellTypeMetaDataToOCamlTypeMetaData m o h name =
+appendModule :: Map.Map HaskellTypeMetaData OCamlTypeMetaData -> OCamlTypeMetaData -> HaskellTypeMetaData -> Text -> Text
+appendModule m o h name =
   case Map.lookup h m of
     Just parOCamlTypeMetaData -> 
       (mkModulePrefix o parOCamlTypeMetaData) <> (textLowercaseFirst name)
+    -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
+    -- within the same file as the sum. These products will not be in the dependencies map.
     Nothing -> textLowercaseFirst name
-      
+
+renderC 
+  :: Map.Map HaskellTypeMetaData OCamlTypeMetaData
+  -> OCamlTypeMetaData
+  -> Text
+  -> TypeRep
+  -> Text
+renderC m o name t =
+  if length rst == 0
+  then    
+    r
+  else
+    (T.intercalate " " $ (\x -> (renderC m o (T.pack . show $ x) x)) <$> rst) <> " " <> r
+    
+  where
+  (hd,rst) = splitTyConApp $ t
+  r =
+    case Map.lookup hd primitiveTypeRepToOCamlTypeText of
+      Just typ -> typ
+      Nothing  -> appendModule m o (typeRepToHaskellTypeMetaData t) name
+{-
+renderC 
+  :: Map.Map HaskellTypeMetaData OCamlTypeMetaData
+  -> OCamlTypeMetaData
+  -> Text
+  -> TypeRep
+  -> [TypeRep]
+  -> Text
+renderC m o name t _ds =
+  if length rst == 0
+  then    
+    if length ds > 0
+    then (renderC m o (T.pack . show $ head ds) (head ds) (tail ds) ) <> " " <> r
+    else r
+  else
+    if length ds > 0
+    then (renderC m o (T.pack . show $ head ds) (head ds) (tail ds) ) <> " " <> (renderC m o (T.pack . show $ head rst) (head rst) (tail rst)) <> " " <> r
+    else (renderC m o (T.pack . show $ head rst) (head rst) (tail rst)) <> " " <> r
+    
+  where
+  (hd,rst) = splitTyConApp $ t
+  r =
+    case Map.lookup t primitiveTypeRepToOCamlTypeText of
+      Just typ -> typ
+      Nothing  -> appendModule m o (typeRepToHaskellTypeMetaData t) name
+-}    
+      {-
+  case t of
+    (typeRep (Proxy :: Proxy Maybe)) -> "maybe"
+    _ -> "int"
+      if length (snd ds) == 1
+      then "(" <> (show $ head ds) <> ")" <> " option"
+      else "int"
+-}
 instance HasType OCamlValue where
   render ref@(OCamlRef typeRef name) = do
     mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData
     case mOCamlTypeMetaData of
       Nothing -> fail $ "OCaml.BuckleScript.Record (HasType (OCamlDatatype typeRep name)) mOCamlTypeMetaData is Nothing:\n\n" ++ (show ref)
-      Just decOCamlTypeMetaData -> do
+      Just ocamlTypeRef -> do
         ds <- asks (dependencies . userOptions)
-        case Map.lookup typeRef ds of
-          Just parOCamlTypeMetaData -> do
-            let prefix = stext $ mkModulePrefix decOCamlTypeMetaData parOCamlTypeMetaData
-            pure $ prefix <> (stext . textLowercaseFirst $ name)
-          -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
-          -- within the same file as the sum. These products will not be in the dependencies map.
-          Nothing -> pure . stext . textLowercaseFirst $ name
+        pure . stext $ appendModule ds ocamlTypeRef typeRef name
 
-  render ref@(OCamlRefApp typeRef name typeRefs) = do
+  render ref@(OCamlRefApp typeRep name typeReps) = do
     mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData
     case mOCamlTypeMetaData of
       Nothing -> fail $ "OCaml.BuckleScript.Record (HasType (OCamlDatatype typeRep name)) mOCamlTypeMetaData is Nothing:\n\n" ++ (show ref)
-      Just decOCamlTypeMetaData -> do
+      Just ocamlTypeRef -> do
         ds <- asks (dependencies . userOptions)
-        case Map.lookup typeRef ds of
-          Just parOCamlTypeMetaData -> do
-            let prefix = stext $ mkModulePrefix decOCamlTypeMetaData parOCamlTypeMetaData
-            pure $ prefix <> (stext . textLowercaseFirst $ name)
-          -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
-          -- within the same file as the sum. These products will not be in the dependencies map.
-          Nothing -> pure . stext . textLowercaseFirst $ name
+        pure . stext $ renderC ds ocamlTypeRef name typeRep
 
   render (OCamlTypeParameterRef name) = pure (stext ("'" <> name))
   render (OCamlPrimitiveRef primitive) = ocamlRefParens primitive <$> renderRef primitive

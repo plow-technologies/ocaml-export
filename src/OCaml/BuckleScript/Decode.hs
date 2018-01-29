@@ -241,6 +241,8 @@ instance HasDecoder OCamlValue where
           -- within the same file as the sum. These products will not be in the dependencies map.
           Nothing -> pure $ "(fun a -> unwrapResult (decode" <> (stext . textUppercaseFirst $ name) <+> "a))" 
 
+  render ref@(OCamlRefApp typeRep name typeReps) = pure $ stext "unimplemented"
+
   render (OCamlPrimitiveRef primitive) = renderRef primitive
 
   render (OCamlTypeParameterRef name) =

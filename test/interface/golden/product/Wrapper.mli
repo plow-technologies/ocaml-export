@@ -7,7 +7,7 @@ val encodeWrapper : ('a0 -> Js_json.t) -> 'a0 wrapper -> Js_json.t
 val decodeWrapper : (Js_json.t -> ('a0, string) Js_result.t) -> Js_json.t -> ('a0 wrapper, string) Js_result.t
 
 type intWrapped =
-  { iw : int wrapper
+  { iw : (int) wrapper
   }
 
 val encodeIntWrapped : intWrapped -> Js_json.t
@@ -21,7 +21,6 @@ type maybeWrapped =
 val encodeMaybeWrapped : maybeWrapped -> Js_json.t
 
 val decodeMaybeWrapped : Js_json.t -> (maybeWrapped, string) Js_result.t
-
 
 type eitherWrapped =
   { ew : ((int, float) Aeson.Compatibility.Either.t) wrapper

@@ -151,6 +151,7 @@ renderC m o name t =
   (hd,rst) = splitTyConApp $ t
   r =
     case Map.lookup hd primitiveTypeRepToOCamlTypeText of
+      Just "either" -> "Aeson.Compatibility.Either.t"
       Just typ -> typ
       Nothing  -> appendModule m o (typeRepToHaskellTypeMetaData t) name
 

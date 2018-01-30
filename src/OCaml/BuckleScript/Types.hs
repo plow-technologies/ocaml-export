@@ -279,69 +279,34 @@ instance (OCamlType a, Typeable a) => GenericOCamlValue (Rec0 a) where
             if length typeParams == 0
             then OCamlRef haskellTypeMetaData n
             else OCamlRefApp (typeRep (Proxy :: Proxy a)) n typeParams
---            else OCamlRefApp haskellTypeMetaData n (typeRepToHaskellTypeMetaData <$> typeParams)
-
-
-{-
-data OCamlPrimitive
-  = OInt -- ^ int
-  | OBool -- ^ bool, boolean
-  | OChar -- ^ char, it gets interpreted as a string because OCaml char does not support UTF-8
-  | ODate -- ^ Js_date.t
-  | OFloat -- ^ float
-  | OString -- ^ string
-  | OUnit -- ^ ()
-  | OList OCamlDatatype -- ^ 'a list, 'a Js_array.t
-  | OOption OCamlDatatype -- ^ 'a option
-  | OEither OCamlDatatype OCamlDatatype -- ^ 'l 'r Aeson.Compatibility.Either.t
-  | OTuple2 OCamlDatatype OCamlDatatype -- ^ (*)
-  | OTuple3 OCamlDatatype OCamlDatatype OCamlDatatype -- ^ (**)
-  | OTuple4 OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype -- ^ (***)
-  | OTuple5 OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype -- ^ (****)
-  | OTuple6 OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype -- ^ (*****)
-  deriving (Show, Eq)
--}
-
-{-
-occ :: Map.Map TypeRep OCamlDatatype
-occ =
-  Map.fromList
-    [( typeRep (Proxy :: Proxy Char) , toOCamlType (Proxy :: Proxy Char) )]
--}
 
 
 primitiveTypeRepToOCamlTypeText :: Map.Map TyCon Text
 primitiveTypeRepToOCamlTypeText = Map.fromList
-  [ ( typeRepTyCon $ typeRep (Proxy :: Proxy []),     "list" )
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Maybe),  "option" )
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Either), "Aeson.Compatibility.either" )
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy ()),     "unit" )
-
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Text),       "string" )
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy ByteString), "string" )
-
+  [ ( typeRepTyCon $ typeRep (Proxy :: Proxy []        ), "list")
+  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Maybe     ), "option")
+  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Either    ), "either")
+  , ( typeRepTyCon $ typeRep (Proxy :: Proxy ()        ), "unit")
+  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Text      ), "string")
+  , ( typeRepTyCon $ typeRep (Proxy :: Proxy ByteString), "string")
   , ( typeRepTyCon $ typeRep (Proxy :: Proxy Day),        "Js_date.t")
   , ( typeRepTyCon $ typeRep (Proxy :: Proxy UTCTime),    "Js_date.t")
-
   , ( typeRepTyCon $ typeRep (Proxy :: Proxy Float),      "float")
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Double),     "double")
-
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Int8), "int")
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Int16), "int")
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Int32), "int")
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Int64), "int")
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Int), "int")
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Integer), "int")
-
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Word), "int")
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Word8), "int")
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Word16), "int")
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Word32), "int")
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Word64), "int")
-
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy [Char]), "string")
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Char), "string")
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Bool), "boolean")
+  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Double),     "float")
+  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Int8),       "int")
+  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Int16),      "int")
+  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Int32),      "int")
+  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Int64),      "int")
+  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Int),        "int")
+  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Integer),    "int")
+  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Word),       "int")
+  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Word8),      "int")
+  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Word16),     "int")
+  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Word32),     "int")
+  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Word64),     "int")
+  , ( typeRepTyCon $ typeRep (Proxy :: Proxy [Char]),     "string")
+  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Char),       "string")
+  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Bool),       "boolean")
   ]
 
 -- OCamlType instances for primitives

@@ -38,7 +38,7 @@ type ProductPackage
   :<|> OCamlModule '["SubTypeParameter"] :> SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
   :<|> OCamlModule '["UnnamedProduct"] :> UnnamedProduct
   :<|> OCamlModule '["ComplexProduct"] :> OCamlTypeInFile Simple "test/ocaml/Simple" :> ComplexProduct
-  :<|> OCamlModule '["Wrapper"] :> Wrapper TypeParameterRef0 :> MaybeWrapped :> EitherWrapped :> ComplexWrapped
+  :<|> OCamlModule '["Wrapper"] :> Wrapper TypeParameterRef0 :> IntWrapped :> MaybeWrapped :> EitherWrapped :> ComplexWrapped
        )
 
 compareInterfaceFiles :: FilePath -> SpecWith ()
@@ -221,19 +221,19 @@ data Wrapper a =
     { wpa :: a
     } deriving (Eq,Show,Generic,ToJSON,FromJSON)
 
-{-
-instance Arbitrary (Wrapper TypeParameterRef0) where
-  arbitrary = Wrapper <$> arbitrary
-instance ToADTArbitrary (Wrapper TypeParameterRef0)
-instance (Typeable a, OCamlType a) => (OCamlType (Wrapper a))
--}
-
-
 instance (ToADTArbitrary a, Arbitrary a) => ToADTArbitrary (Wrapper a)
 instance (Arbitrary a) => Arbitrary (Wrapper a) where
   arbitrary = Wrapper <$> arbitrary
 instance (Typeable a, OCamlType a) => (OCamlType (Wrapper a))
 
+data IntWrapped =
+  IntWrapped
+    { iw :: Wrapper Int
+    } deriving (Eq,Show,Generic,OCamlType,ToJSON,FromJSON)
+
+instance ToADTArbitrary IntWrapped
+instance Arbitrary IntWrapped where
+  arbitrary = IntWrapped <$> arbitrary
 
 data MaybeWrapped =
   MaybeWrapped

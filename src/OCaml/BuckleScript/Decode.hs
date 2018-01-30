@@ -25,6 +25,7 @@ import qualified Data.List as L
 import Data.Maybe (catMaybes)
 import Data.Monoid
 import Data.Proxy (Proxy (..))        
+import Data.Typeable
 
 -- aeson
 import qualified Data.Aeson.Types as Aeson (Options(..))
@@ -225,23 +226,77 @@ renderResult jsonFieldname datatype@(OCamlPrimitive _primitive) = do
   dv <- renderRef datatype
   pure $ "(field" <+> dquotes (stext jsonFieldname) <+> dv <> ")"
 
+wrapIfHasNext :: Bool -> TypeRep -> Text -> Text
+wrapIfHasNext parentIsCustom typ t =  
+  let (hd, n) = splitTyConApp $ typ in
+  if length n > 0
+  then
+    if parentIsCustom
+    then
+      case Map.lookup hd primitiveTypeRepToOCamlTypeText of
+        Just _  -> "(wrapResult (" <> t <> "))"
+        Nothing -> "(" <> t <> ")"
+    else
+      "(" <> t <> ")"
+  else
+    if parentIsCustom
+    then
+      case Map.lookup hd primitiveTypeRepToOCamlTypeText of
+        Just _  -> "(wrapResult " <> t <> ")"
+        Nothing -> t
+    else
+      t
+
+renderC 
+  :: Map.Map HaskellTypeMetaData OCamlTypeMetaData
+  -> OCamlTypeMetaData
+  -> Text
+  -> TypeRep
+  -> Text
+renderC m o name t =
+  if length rst == 0
+  then    
+    r (\_ -> "")
+  else
+    r (\b -> (T.intercalate " " $ (\x -> wrapIfHasNext b x (renderC m o (T.pack . show $ x) x)) <$> rst))
+    
+  where
+  (hd,rst) = splitTyConApp $ t
+  r nxt =
+    let addSpace t = if t == "" then "" else " " <> t in
+    case Map.lookup hd primitiveTypeRepToOCamlTypeText of
+      Just "float" -> "Aeson.Decode.float" <> (addSpace $ nxt False)
+      Just "option" -> "optional" <> (addSpace $ nxt False)
+      Just typ -> typ <> (addSpace $ nxt False)
+      -- need to add unwrapResult if parent is custom serialization function and child is primitive serialization function
+      Nothing -> appendModule m o (typeRepToHaskellTypeMetaData t) name (addSpace $ nxt True)
+
+appendModule :: Map.Map HaskellTypeMetaData OCamlTypeMetaData -> OCamlTypeMetaData -> HaskellTypeMetaData -> Text -> Text -> Text
+appendModule m o h name nxt =
+  case Map.lookup h m of
+    Just parOCamlTypeMetaData -> 
+      "(fun a -> unwrapResult (" <> (mkModulePrefix o parOCamlTypeMetaData) <> "decode" <> (textUppercaseFirst name) <> nxt <> " a))"
+    -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
+    -- within the same file as the sum. These products will not be in the dependencies map.
+    Nothing -> "(fun a -> unwrapResult (decode"  <> textUppercaseFirst name <> nxt <> " a))"
+    
 instance HasDecoder OCamlValue where
   render ref@(OCamlRef typeRef name) = do
     mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData
     case mOCamlTypeMetaData of
       Nothing -> fail $ "OCaml.BuckleScript.Decode (HasDecoder (OCamlRef typeRep name )) mOCamlTypeMetaData is Nothing:\n\n" ++ (show ref)
-      Just decOCamlTypeMetaData -> do
+      Just ocamlTypeRef -> do
         ds <- asks (dependencies . userOptions)
-        case Map.lookup typeRef ds of
-          Just parOCamlTypeMetaData -> do
-            let prefix = stext $ mkModulePrefix decOCamlTypeMetaData parOCamlTypeMetaData
-            pure $ "(fun a -> unwrapResult (" <> prefix  <> "decode" <> (stext . textUppercaseFirst $ name) <+> "a))"
+        pure . stext $ appendModule ds ocamlTypeRef typeRef name ""
 
-          -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
-          -- within the same file as the sum. These products will not be in the dependencies map.
-          Nothing -> pure $ "(fun a -> unwrapResult (decode" <> (stext . textUppercaseFirst $ name) <+> "a))" 
+  render ref@(OCamlRefApp typeRep name typeReps) = do
+    mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData
+    case mOCamlTypeMetaData of
+      Nothing -> fail $ "OCaml.BuckleScript.Record (HasType (OCamlDatatype typeRep name)) mOCamlTypeMetaData is Nothing:\n\n" ++ (show ref)
+      Just ocamlTypeRef -> do
+        ds <- asks (dependencies . userOptions)
+        pure . stext $ renderC ds ocamlTypeRef name typeRep
 
-  render ref@(OCamlRefApp typeRep name typeReps) = pure $ stext "unimplemented"
 
   render (OCamlPrimitiveRef primitive) = renderRef primitive
 

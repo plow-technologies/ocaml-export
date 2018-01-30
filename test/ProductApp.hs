@@ -31,6 +31,7 @@ spec = do
     compareInterfaceFiles "SubTypeParameter"
     compareInterfaceFiles "UnnamedProduct"
     compareInterfaceFiles "ComplexProduct"
+    compareInterfaceFiles "Wrapper"
     
   let dir2 = "test/nointerface/temp"
   runIO $ mkPackage (Proxy :: Proxy ProductPackage) (PackageOptions dir2 "product" fileMap False Nothing)

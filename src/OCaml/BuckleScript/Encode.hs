@@ -305,6 +305,13 @@ appendModule m o h name =
     -- within the same file as the sum. These products will not be in the dependencies map.
     Nothing -> "encode" <> textUppercaseFirst name
 
+wrapIfHasNext :: TypeRep -> Text -> Text
+wrapIfHasNext typ t =
+  let n = snd . splitTyConApp $ typ in
+  if length n > 0
+  then "(" <> t <> ")"
+  else t
+
 -- | split kind
 renderC 
   :: Map.Map HaskellTypeMetaData OCamlTypeMetaData
@@ -317,13 +324,14 @@ renderC m o name t =
   then    
     r
   else
-    "(" <> (T.intercalate ", " $ (\x -> (renderC m o (T.pack . show $ x) x)) <$> rst) <> ") " <> r
+    r <> " " <> (T.intercalate " " $ (\x -> wrapIfHasNext x (renderC m o (T.pack . show $ x) x)) <$> rst)
     
   where
   (hd,rst) = splitTyConApp $ t
   r =
     case Map.lookup hd primitiveTypeRepToOCamlTypeText of
-      Just typ -> textUppercaseFirst typ
+      Just "option" -> "Aeson.Encode.optional"
+      Just typ -> "Aeson.Encode." <> typ
       Nothing  -> appendModule m o (typeRepToHaskellTypeMetaData t) name
 
 instance HasEncoder OCamlValue where
@@ -344,16 +352,7 @@ instance HasEncoder OCamlValue where
       Just ocamlTypeRef -> do
         ds <- asks (dependencies . userOptions)
         pure . stext $ appendModule ds ocamlTypeRef typeRef name
-{-        
-        case Map.lookup typeRef ds of
-          Just parOCamlTypeMetaData -> do
-            let prefix = stext $ mkModulePrefix decOCamlTypeMetaData parOCamlTypeMetaData
-            pure $ prefix <> "encode" <> (stext . textUppercaseFirst $ name)
 
-          -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
-          -- within the same file as the sum. These products will not be in the dependencies map.
-          Nothing -> pure $ "encode" <> (stext . textUppercaseFirst $ name)
--}
   render ref@(OCamlRefApp typeRep name typeReps) = do
     mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData
     case mOCamlTypeMetaData of

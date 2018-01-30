@@ -133,6 +133,7 @@ appendModule m o h name =
     -- within the same file as the sum. These products will not be in the dependencies map.
     Nothing -> textLowercaseFirst name
 
+-- | split kind
 renderC 
   :: Map.Map HaskellTypeMetaData OCamlTypeMetaData
   -> OCamlTypeMetaData
@@ -144,7 +145,7 @@ renderC m o name t =
   then    
     r
   else
-    (T.intercalate " " $ (\x -> (renderC m o (T.pack . show $ x) x)) <$> rst) <> " " <> r
+    "(" <> (T.intercalate ", " $ (\x -> (renderC m o (T.pack . show $ x) x)) <$> rst) <> ") " <> r
     
   where
   (hd,rst) = splitTyConApp $ t
@@ -152,40 +153,7 @@ renderC m o name t =
     case Map.lookup hd primitiveTypeRepToOCamlTypeText of
       Just typ -> typ
       Nothing  -> appendModule m o (typeRepToHaskellTypeMetaData t) name
-{-
-renderC 
-  :: Map.Map HaskellTypeMetaData OCamlTypeMetaData
-  -> OCamlTypeMetaData
-  -> Text
-  -> TypeRep
-  -> [TypeRep]
-  -> Text
-renderC m o name t _ds =
-  if length rst == 0
-  then    
-    if length ds > 0
-    then (renderC m o (T.pack . show $ head ds) (head ds) (tail ds) ) <> " " <> r
-    else r
-  else
-    if length ds > 0
-    then (renderC m o (T.pack . show $ head ds) (head ds) (tail ds) ) <> " " <> (renderC m o (T.pack . show $ head rst) (head rst) (tail rst)) <> " " <> r
-    else (renderC m o (T.pack . show $ head rst) (head rst) (tail rst)) <> " " <> r
-    
-  where
-  (hd,rst) = splitTyConApp $ t
-  r =
-    case Map.lookup t primitiveTypeRepToOCamlTypeText of
-      Just typ -> typ
-      Nothing  -> appendModule m o (typeRepToHaskellTypeMetaData t) name
--}    
-      {-
-  case t of
-    (typeRep (Proxy :: Proxy Maybe)) -> "maybe"
-    _ -> "int"
-      if length (snd ds) == 1
-      then "(" <> (show $ head ds) <> ")" <> " option"
-      else "int"
--}
+
 instance HasType OCamlValue where
   render ref@(OCamlRef typeRef name) = do
     mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData

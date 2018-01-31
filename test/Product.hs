@@ -38,7 +38,7 @@ type ProductPackage
   :<|> OCamlModule '["SubTypeParameter"] :> SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
   :<|> OCamlModule '["UnnamedProduct"] :> UnnamedProduct
   :<|> OCamlModule '["ComplexProduct"] :> OCamlTypeInFile Simple "test/ocaml/Simple" :> ComplexProduct
-  :<|> OCamlModule '["Wrapper"] :> Wrapper TypeParameterRef0 :> IntWrapped :> MaybeWrapped :> EitherWrapped :> ComplexWrapped :> SumWrapped
+  :<|> OCamlModule '["Wrapper"] :> Wrapper TypeParameterRef0 :> IntWrapped :> MaybeWrapped :> EitherWrapped :> ComplexWrapped :> SumWrapped :> HalfWrapped TypeParameterRef0
        )
 
 compareInterfaceFiles :: FilePath -> SpecWith ()
@@ -253,7 +253,6 @@ instance ToADTArbitrary EitherWrapped
 instance Arbitrary EitherWrapped where
   arbitrary = EitherWrapped <$> arbitrary
 
-
 data ComplexWrapped =
   ComplexWrapped
     { cw :: Wrapper (Either (Maybe Char) Double)
@@ -279,3 +278,15 @@ instance Arbitrary SumWrapped where
       , SW3 <$> arbitrary
       , SW4 <$> arbitrary
       ]
+
+data HalfWrapped a =
+  HalfWrapped
+    { hw :: Wrapper (Either Int a)
+    } deriving (Eq,Show,Generic,ToJSON,FromJSON)
+
+instance Arbitrary (HalfWrapped TypeParameterRef0) where
+  arbitrary = HalfWrapped <$> arbitrary
+
+instance ToADTArbitrary (HalfWrapped TypeParameterRef0)
+
+instance (Typeable a, OCamlType a) => (OCamlType (HalfWrapped a))

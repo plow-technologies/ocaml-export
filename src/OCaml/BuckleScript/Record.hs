@@ -152,13 +152,16 @@ renderC m o name t =
   where
   (hd,rst) = splitTyConApp $ t
   r =
-    case Map.lookup hd primitiveTypeRepToOCamlTypeText of
-      Just "either" -> "Aeson.Compatibility.Either.t"
-      Just typ -> typ
-      Nothing  -> appendModule m o (typeRepToHaskellTypeMetaData t) name
+    case Map.lookup hd typeParameterRefTypeRepToOCamlTypeText of
+      Just ptyp -> "'" <> ptyp
+      Nothing -> 
+        case Map.lookup hd primitiveTypeRepToOCamlTypeText of
+          Just "either" -> "Aeson.Compatibility.Either.t"
+          Just typ -> typ
+          Nothing  -> appendModule m o (typeRepToHaskellTypeMetaData t) name
   
 -- isString
-
+-- typeParameterRefTypeRepToOCamlTypeText
 instance HasType OCamlValue where
   render ref@(OCamlRef typeRef name) = do
     mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData
@@ -168,7 +171,7 @@ instance HasType OCamlValue where
         ds <- asks (dependencies . userOptions)
         pure . stext $ appendModule ds ocamlTypeRef typeRef name
 
-  render ref@(OCamlRefApp typeRep name typeReps) = do
+  render ref@(OCamlRefApp typeRep name) = do
     mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData
     case mOCamlTypeMetaData of
       Nothing -> fail $ "OCaml.BuckleScript.Record (HasType (OCamlDatatype typeRep name)) mOCamlTypeMetaData is Nothing:\n\n" ++ (show ref)

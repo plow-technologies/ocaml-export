@@ -40,3 +40,10 @@ let () =
     "sumWrapped"
     "http://localhost:8081/Wrapper/SumWrapped"
     "golden/product/SumWrapped";
+
+  AesonSpec.sampleGoldenAndServerSpec
+    (Wrapper.decodeHalfWrapped AesonSpec.decodeIntWithResult)
+    (Wrapper.encodeHalfWrapped Aeson.Encode.int)
+    "halfWrapped"
+    "http://localhost:8081/Wrapper/HalfWrapped"
+    "golden/product/HalfWrapped";

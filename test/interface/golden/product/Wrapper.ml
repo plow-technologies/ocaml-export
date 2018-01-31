@@ -134,3 +134,20 @@ let decodeSumWrapped json =
      )
   | err -> Js_result.Error ("Unknown tag value found '" ^ err ^ "'.")
   | exception Aeson.Decode.DecodeError message -> Js_result.Error message
+
+type 'a0 halfWrapped =
+  { hw : ((int, 'a0) Aeson.Compatibility.Either.t) wrapper
+  }
+
+let encodeHalfWrapped encodeA0 x =
+  Aeson.Encode.object_
+    [ ( "hw", encodeWrapper (Aeson.Encode.either Aeson.Encode.int encodeA0) x.hw )
+    ]
+
+let decodeHalfWrapped decodeA0 json =
+  match Aeson.Decode.
+    { hw = field "hw" (fun a -> unwrapResult (decodeWrapper (wrapResult (either int (fun a -> unwrapResult (decodeA0 a)))) a)) json
+    }
+  with
+  | v -> Js_result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeHalfWrapped: " ^ message)

@@ -55,6 +55,7 @@ module OCaml.BuckleScript.Types
   , primitiveTypeRepToOCamlTypeText
   , typeRepToHaskellTypeMetaData
   , typeRepIsString
+  , typeParameterRefTypeRepToOCamlTypeText
   ) where
 
 -- base
@@ -156,13 +157,13 @@ data EnumeratorConstructor
 -- | Expected types of a constructor
 data OCamlValue
   = OCamlRef HaskellTypeMetaData Text -- ^ The name of a non-primitive data type
+  | OCamlRefApp TypeRep Text -- ^ A type constructor that has at least one type parameter filled
   | OCamlTypeParameterRef Text -- ^ Type parameters like `a` in `Maybe a`
   | OCamlEmpty -- ^ a place holder for OCaml value. It can represent the end of a list or an Enumerator in a mixed sum
   | OCamlPrimitiveRef OCamlPrimitive -- ^ A primitive OCaml type like `int`, `string`, etc.
   | OCamlField Text OCamlValue -- ^ A field name and its type from a record
   | Values OCamlValue OCamlValue -- ^ Used for multiple types in a sum type
-  | OCamlRefApp TypeRep Text [TypeRep] -- ^ A type constructor that takes other types
---  | OCamlRefApp HaskellTypeMetaData Text [HaskellTypeMetaData] -- ^ A type constructor that takes other types
+
   deriving (Show, Eq)
 --  -- ^
 ------------------------------------------------------------
@@ -279,7 +280,7 @@ instance (OCamlType a, Typeable a) => GenericOCamlValue (Rec0 a) where
           else
             if length typeParams == 0
             then OCamlRef haskellTypeMetaData n
-            else OCamlRefApp (typeRep (Proxy :: Proxy a)) n typeParams
+            else OCamlRefApp (typeRep (Proxy :: Proxy a)) n
 
 -- OCamlType instances for primitives
 
@@ -525,6 +526,7 @@ getTypeParameterRefNames = nub . concat . (fmap match)
 
     match value =
       case value of
+        (OCamlRefApp typeRep _) -> getTypeParamterRefNameForTypeRep typeRep
         (OCamlTypeParameterRef name) -> [name]
         (Values v1 v2) -> match v1 ++ match v2
         (OCamlField _ v1) -> match v1
@@ -554,6 +556,23 @@ getTypeParameters _ = []
 isTypeParameterRef :: OCamlDatatype -> Bool
 isTypeParameterRef (OCamlDatatype _ _ (OCamlValueConstructor (NamedConstructor _ (OCamlTypeParameterRef _)))) = True
 isTypeParameterRef _ = False
+
+-- | When there is a record that has its type parameters partially filled, it will should have TypeParameterRef0-5 as the
+--   unfilled type parameters. This function properly pushes the TypeParameterRef0-5 to the type signature of an OCaml
+--   type.
+getTypeParamterRefNameForTypeRep :: TypeRep -> [Text]
+getTypeParamterRefNameForTypeRep t =
+  if length rst == 0
+  then    
+    r
+  else
+    r <> concat (getTTT <$> rst)
+  where
+  (hd,rst) = splitTyConApp $ t
+  r =
+    case Map.lookup hd typeParameterRefTypeRepToOCamlTypeText of
+      Just p -> [p]
+      Nothing -> []
 
 -- | Make OCaml module prefix for a value based on the declaration's and parameter's meta data.
 mkModulePrefix :: OCamlTypeMetaData -> OCamlTypeMetaData -> Text
@@ -622,3 +641,13 @@ typeRepIsString :: TypeRep -> Bool
 typeRepIsString t =
   let (hd, rst) = splitTyConApp t in
   show hd == "[]" && length rst == 1 && ((show $ head rst) == "Char")
+
+typeParameterRefTypeRepToOCamlTypeText :: Map.Map TyCon Text
+typeParameterRefTypeRepToOCamlTypeText = Map.fromList
+  [ ( typeRepTyCon $ typeRep (Proxy :: Proxy TypeParameterRef0), "a0")
+  , ( typeRepTyCon $ typeRep (Proxy :: Proxy TypeParameterRef1), "a1")
+  , ( typeRepTyCon $ typeRep (Proxy :: Proxy TypeParameterRef2), "a2")
+  , ( typeRepTyCon $ typeRep (Proxy :: Proxy TypeParameterRef3), "a3")
+  , ( typeRepTyCon $ typeRep (Proxy :: Proxy TypeParameterRef4), "a4")
+  , ( typeRepTyCon $ typeRep (Proxy :: Proxy TypeParameterRef5), "a5")
+  ]

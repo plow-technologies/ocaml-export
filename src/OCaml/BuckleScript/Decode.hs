@@ -268,12 +268,15 @@ renderC m o name t =
   (hd,rst) = splitTyConApp $ t
   r nxt =
     let addSpace t = if t == "" then "" else " " <> t in
-    case Map.lookup hd primitiveTypeRepToOCamlTypeText of
-      Just "float" -> "Aeson.Decode.float" <> (addSpace $ nxt False)
-      Just "option" -> "optional" <> (addSpace $ nxt False)
-      Just typ -> typ <> (addSpace $ nxt False)
-      -- need to add unwrapResult if parent is custom serialization function and child is primitive serialization function
-      Nothing -> appendModule m o (typeRepToHaskellTypeMetaData t) name (addSpace $ nxt True)
+    case Map.lookup hd typeParameterRefTypeRepToOCamlTypeText of
+      Just ptyp -> "(fun a -> unwrapResult (decode" <> textUppercaseFirst ptyp <> " a))"
+      Nothing ->
+        case Map.lookup hd primitiveTypeRepToOCamlTypeText of
+          Just "float" -> "Aeson.Decode.float" <> (addSpace $ nxt False)
+          Just "option" -> "optional" <> (addSpace $ nxt False)
+          Just typ -> typ <> (addSpace $ nxt False)
+          -- need to add unwrapResult if parent is custom serialization function and child is primitive serialization function
+          Nothing -> appendModule m o (typeRepToHaskellTypeMetaData t) name (addSpace $ nxt True)
 
 appendModule :: Map.Map HaskellTypeMetaData OCamlTypeMetaData -> OCamlTypeMetaData -> HaskellTypeMetaData -> Text -> Text -> Text
 appendModule m o h name nxt =
@@ -293,7 +296,7 @@ instance HasDecoder OCamlValue where
         ds <- asks (dependencies . userOptions)
         pure . stext $ appendModule ds ocamlTypeRef typeRef name ""
 
-  render ref@(OCamlRefApp typeRep name typeReps) = do
+  render ref@(OCamlRefApp typeRep name) = do
     mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData
     case mOCamlTypeMetaData of
       Nothing -> fail $ "OCaml.BuckleScript.Record (HasType (OCamlDatatype typeRep name)) mOCamlTypeMetaData is Nothing:\n\n" ++ (show ref)

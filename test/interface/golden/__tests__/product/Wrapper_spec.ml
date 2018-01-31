@@ -33,3 +33,10 @@ let () =
     "complexWrapped"
     "http://localhost:8081/Wrapper/ComplexWrapped"
     "golden/product/ComplexWrapped";
+
+  AesonSpec.sampleGoldenAndServerSpec
+    Wrapper.decodeSumWrapped
+    Wrapper.encodeSumWrapped
+    "sumWrapped"
+    "http://localhost:8081/Wrapper/SumWrapped"
+    "golden/product/SumWrapped";

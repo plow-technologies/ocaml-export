@@ -313,7 +313,7 @@ wrapIfHasNext typ t =
   else t
 
 -- | split kind
-renderC 
+renderC
   :: Map.Map HaskellTypeMetaData OCamlTypeMetaData
   -> OCamlTypeMetaData
   -> Text
@@ -324,7 +324,11 @@ renderC m o name t =
   then    
     r
   else
-    r <> " " <> (T.intercalate " " $ (\x -> wrapIfHasNext x (renderC m o (T.pack . show $ x) x)) <$> rst)
+    if typeRepIsString t
+    then
+      "Aeson.Encode.string"
+    else
+      r <> " " <> (T.intercalate " " $ (\x -> wrapIfHasNext x (renderC m o (T.pack . show $ x) x)) <$> rst)
     
   where
   (hd,rst) = splitTyConApp $ t
@@ -444,6 +448,9 @@ renderVariable :: [Doc] -> OCamlValue -> Reader TypeMetaData (Doc, [Doc])
 renderVariable (d : ds) v@(OCamlRef {}) = do
   v' <- render v
   return (v' <+> d, ds)
+renderVariable (d : ds) v@(OCamlRefApp {}) = do
+  v' <- render v
+  return (v' <+> d, ds)
 renderVariable ds OCamlEmpty = return (empty, ds)
 renderVariable (_ : ds) (OCamlPrimitiveRef OUnit) =
   return ("Aeson.Encode.null", ds)
@@ -460,8 +467,6 @@ renderVariable ds (Values l r) = do
 renderVariable ds f@(OCamlField _ _) = do
   f' <- render f
   return (f', ds)
-
-renderVariable _ds (OCamlRefApp _ _ _) = pure ("unimplemented", [])
   
 renderVariable [] _ = error "Amount of variables does not match variables."
 

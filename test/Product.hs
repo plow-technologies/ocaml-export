@@ -38,7 +38,7 @@ type ProductPackage
   :<|> OCamlModule '["SubTypeParameter"] :> SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
   :<|> OCamlModule '["UnnamedProduct"] :> UnnamedProduct
   :<|> OCamlModule '["ComplexProduct"] :> OCamlTypeInFile Simple "test/ocaml/Simple" :> ComplexProduct
-  :<|> OCamlModule '["Wrapper"] :> Wrapper TypeParameterRef0 :> IntWrapped :> MaybeWrapped :> EitherWrapped :> ComplexWrapped
+  :<|> OCamlModule '["Wrapper"] :> Wrapper TypeParameterRef0 :> IntWrapped :> MaybeWrapped :> EitherWrapped :> ComplexWrapped :> SumWrapped
        )
 
 compareInterfaceFiles :: FilePath -> SpecWith ()
@@ -262,3 +262,20 @@ data ComplexWrapped =
 instance ToADTArbitrary ComplexWrapped
 instance Arbitrary ComplexWrapped where
   arbitrary = ComplexWrapped <$> arbitrary
+
+data SumWrapped
+  = SW1
+  | SW2 (Wrapper Int)
+  | SW3 (Wrapper (Maybe String))
+  | SW4 (Wrapper (Either Int String))
+  deriving (Eq,Show,Generic,OCamlType,ToJSON,FromJSON)
+
+instance ToADTArbitrary SumWrapped
+instance Arbitrary SumWrapped where
+  arbitrary =
+    oneof
+      [ pure SW1
+      , SW2 <$> arbitrary
+      , SW3 <$> arbitrary
+      , SW4 <$> arbitrary
+      ]

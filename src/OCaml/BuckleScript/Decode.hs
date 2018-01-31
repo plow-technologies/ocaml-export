@@ -258,7 +258,11 @@ renderC m o name t =
   then    
     r (\_ -> "")
   else
-    r (\b -> (T.intercalate " " $ (\x -> wrapIfHasNext b x (renderC m o (T.pack . show $ x) x)) <$> rst))
+    if typeRepIsString t
+    then
+      "string"
+    else
+      r (\b -> (T.intercalate " " $ (\x -> wrapIfHasNext b x (renderC m o (T.pack . show $ x) x)) <$> rst))
     
   where
   (hd,rst) = splitTyConApp $ t

@@ -145,7 +145,9 @@ renderC m o name t =
   then    
     r
   else
-    "(" <> (T.intercalate ", " $ (\x -> (renderC m o (T.pack . show $ x) x)) <$> rst) <> ") " <> r
+    if typeRepIsString t
+    then "string"
+    else "(" <> (T.intercalate ", " $ (\x -> (renderC m o (T.pack . show $ x) x)) <$> rst) <> ") " <> r
     
   where
   (hd,rst) = splitTyConApp $ t
@@ -154,6 +156,8 @@ renderC m o name t =
       Just "either" -> "Aeson.Compatibility.Either.t"
       Just typ -> typ
       Nothing  -> appendModule m o (typeRepToHaskellTypeMetaData t) name
+  
+-- isString
 
 instance HasType OCamlValue where
   render ref@(OCamlRef typeRef name) = do

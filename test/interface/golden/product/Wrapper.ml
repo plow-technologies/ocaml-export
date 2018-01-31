@@ -82,3 +82,55 @@ let decodeComplexWrapped json =
   with
   | v -> Js_result.Ok v
   | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeComplexWrapped: " ^ message)
+
+type sumWrapped =
+  | SW1
+  | SW2 of (int) wrapper
+  | SW3 of ((string) option) wrapper
+  | SW4 of ((int, string) Aeson.Compatibility.Either.t) wrapper
+
+let encodeSumWrapped x =
+  match x with
+  | SW1 ->
+     Aeson.Encode.object_
+       [ ( "tag", Aeson.Encode.string "SW1" )
+       ]
+  | SW2 y0 ->
+     Aeson.Encode.object_
+       [ ( "tag", Aeson.Encode.string "SW2" )
+       ; ( "contents", encodeWrapper Aeson.Encode.int y0 )
+       ]
+  | SW3 y0 ->
+     Aeson.Encode.object_
+       [ ( "tag", Aeson.Encode.string "SW3" )
+       ; ( "contents", encodeWrapper (Aeson.Encode.optional (Aeson.Encode.string)) y0 )
+       ]
+  | SW4 y0 ->
+     Aeson.Encode.object_
+       [ ( "tag", Aeson.Encode.string "SW4" )
+       ; ( "contents", encodeWrapper (Aeson.Encode.either Aeson.Encode.int (Aeson.Encode.string)) y0 )
+       ]
+
+let decodeSumWrapped json =
+  match Aeson.Decode.(field "tag" string json) with
+  | "SW1" ->
+     Js_result.Ok SW1
+
+  | "SW2" ->
+     (match Aeson.Decode.(field "contents" (fun a -> unwrapResult (decodeWrapper (wrapResult int) a)) json) with
+      | v -> Js_result.Ok (SW2 v)
+      | exception Aeson.Decode.DecodeError message -> Js_result.Error ("SW2: " ^ message)
+     )
+  | "SW3" ->
+     (match Aeson.Decode.(field "contents" (fun a -> unwrapResult (decodeWrapper (wrapResult (optional (string))) a)) json) with
+      | v -> Js_result.Ok (SW3 v)
+      | exception Aeson.Decode.DecodeError message -> Js_result.Error ("SW3: " ^ message)
+     )
+
+  | "SW4" ->
+     (match Aeson.Decode.(field "contents" (fun a -> unwrapResult (decodeWrapper (wrapResult (either int (string))) a)) json) with
+      | v -> Js_result.Ok (SW4 v)
+      | exception Aeson.Decode.DecodeError message -> Js_result.Error ("SW4: " ^ message)
+     )
+  | err -> Js_result.Error ("Unknown tag value found '" ^ err ^ "'.")
+  | exception Aeson.Decode.DecodeError message -> Js_result.Error message

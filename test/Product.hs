@@ -38,7 +38,17 @@ type ProductPackage
   :<|> OCamlModule '["SubTypeParameter"] :> SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
   :<|> OCamlModule '["UnnamedProduct"] :> UnnamedProduct
   :<|> OCamlModule '["ComplexProduct"] :> OCamlTypeInFile Simple "test/ocaml/Simple" :> ComplexProduct
-  :<|> OCamlModule '["Wrapper"] :> Wrapper TypeParameterRef0 :> IntWrapped :> MaybeWrapped :> EitherWrapped :> ComplexWrapped :> SumWrapped :> HalfWrapped TypeParameterRef0 :> ScrambledTypeParameterRefs TypeParameterRef0 TypeParameterRef1 TypeParameterRef2 TypeParameterRef3 TypeParameterRef4 TypeParameterRef5
+  :<|> OCamlModule '["Wrapper"]
+         :> Wrapper TypeParameterRef0
+         :> IntWrapped
+         :> MaybeWrapped
+         :> EitherWrapped
+         :> ComplexWrapped
+         :> SumWrapped
+         :> TupleWrapped
+         :> HalfWrapped TypeParameterRef0
+--         :> PartiallyWrapped TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
+         :> ScrambledTypeParameterRefs TypeParameterRef0 TypeParameterRef1 TypeParameterRef2 TypeParameterRef3 TypeParameterRef4 TypeParameterRef5
        )
 
 compareInterfaceFiles :: FilePath -> SpecWith ()
@@ -262,6 +272,15 @@ instance ToADTArbitrary ComplexWrapped
 instance Arbitrary ComplexWrapped where
   arbitrary = ComplexWrapped <$> arbitrary
 
+data TupleWrapped =
+  TupleWrapped
+    { tw :: Wrapper (Int,String,Double)
+    } deriving (Eq,Show,Generic,OCamlType,ToJSON,FromJSON)
+
+instance ToADTArbitrary TupleWrapped
+instance Arbitrary TupleWrapped where
+  arbitrary = TupleWrapped <$> arbitrary
+
 data SumWrapped
   = SW1
   | SW2 (Wrapper Int)
@@ -290,6 +309,18 @@ instance Arbitrary (HalfWrapped TypeParameterRef0) where
 instance ToADTArbitrary (HalfWrapped TypeParameterRef0)
 
 instance (Typeable a, OCamlType a) => (OCamlType (HalfWrapped a))
+
+data PartiallyWrapped a b c =
+  PartiallyWrapped
+    { pw :: Wrapper (Either Int (String,b,Double,c,Float,a))
+    } deriving (Eq,Show,Generic,ToJSON,FromJSON)
+
+instance Arbitrary (PartiallyWrapped TypeParameterRef0 TypeParameterRef1 TypeParameterRef2) where
+  arbitrary = PartiallyWrapped <$> arbitrary
+
+instance ToADTArbitrary (PartiallyWrapped TypeParameterRef0 TypeParameterRef1 TypeParameterRef2)
+
+instance (Typeable a, OCamlType a, Typeable b, OCamlType b, Typeable c, OCamlType c) => (OCamlType (PartiallyWrapped a b c))
 
 -- | type parameter declaration and use order are different
 data ScrambledTypeParameterRefs a b c d e f =

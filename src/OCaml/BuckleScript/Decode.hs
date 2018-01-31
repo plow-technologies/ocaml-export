@@ -519,25 +519,23 @@ appendModule m o h name nxt =
     Nothing -> "(fun a -> unwrapResult (decode"  <> textUppercaseFirst name <> nxt <> " a))"
 
 wrapIfHasNext :: Bool -> TypeRep -> Text -> Text
-wrapIfHasNext parentIsCustom typ t =  
+wrapIfHasNext parentIsCustom typ txt =  
   let (hd, n) = splitTyConApp $ typ in
-  if length n > 0
+  if length n > 0 && (not ((show hd == "[]") && ((show $ head n) == "Char")))
   then
     if parentIsCustom
     then
       case Map.lookup hd primitiveTyConToOCamlTypeText of
-        Just _  -> "(wrapResult (" <> t <> "))"
-        Nothing -> "(" <> t <> ")"
-    else
-      "(" <> t <> ")"
+        Just _  -> "(wrapResult (" <> txt <> "))"
+        Nothing -> "(" <> txt <> ")"
+    else "(" <> txt <> ")"
   else
     if parentIsCustom
     then
       case Map.lookup hd primitiveTyConToOCamlTypeText of
-        Just _  -> "(wrapResult " <> t <> ")"
-        Nothing -> t
-    else
-      t
+        Just _  -> "(wrapResult " <> txt <> ")"
+        Nothing -> txt
+    else txt
 
 renderRowWithTypeParameterDecoders
   :: Map.Map HaskellTypeMetaData OCamlTypeMetaData
@@ -558,13 +556,15 @@ renderRowWithTypeParameterDecoders m o name t =
   (hd,rst) = splitTyConApp $ t
   typeParameters nxt =
     let addSpace t' = if t' == "" then "" else " " <> t' in
-    case Map.lookup hd typeParameterRefTyConToOCamlTypeText of
-      Just ptyp -> "(fun a -> unwrapResult (decode" <> textUppercaseFirst ptyp <> " a))"
-      Nothing ->
-        case Map.lookup hd primitiveTyConToOCamlTypeText of
-          Just "float" -> "Aeson.Decode.float" <> (addSpace $ nxt False)
-          Just "option" -> "optional" <> (addSpace $ nxt False)
-          Just typ -> typ <> (addSpace $ nxt False)
-          -- need to add unwrapResult if parent is custom serialization function and child is primitive serialization function
-          Nothing -> appendModule m o (typeRepToHaskellTypeMetaData t) name (addSpace $ nxt True)
-
+    case Map.lookup hd tupleTyConToSize of
+      Just len -> "wrapResult (tuple" <> (T.pack . show $ len) <> (addSpace $ nxt False) <> ")"
+      Nothing -> 
+        case Map.lookup hd typeParameterRefTyConToOCamlTypeText of
+          Just ptyp -> "(fun a -> unwrapResult (decode" <> textUppercaseFirst ptyp <> " a))"
+          Nothing ->
+            case Map.lookup hd primitiveTyConToOCamlTypeText of
+              Just "float" -> "Aeson.Decode.float" <> (addSpace $ nxt False)
+              Just "option" -> "optional" <> (addSpace $ nxt False)
+              Just typ -> typ <> (addSpace $ nxt False)
+              -- need to add unwrapResult if parent is custom serialization function and child is primitive serialization function
+              Nothing -> appendModule m o (typeRepToHaskellTypeMetaData t) name (addSpace $ nxt True)

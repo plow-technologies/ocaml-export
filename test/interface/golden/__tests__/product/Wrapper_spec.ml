@@ -42,6 +42,13 @@ let () =
     "golden/product/SumWrapped";
 
   AesonSpec.sampleGoldenAndServerSpec
+    Wrapper.decodeTupleWrapped
+    Wrapper.encodeTupleWrapped
+    "tupleWrapped"
+    "http://localhost:8081/Wrapper/TupleWrapped"
+    "golden/product/TupleWrapped";
+
+  AesonSpec.sampleGoldenAndServerSpec
     (Wrapper.decodeHalfWrapped AesonSpec.decodeIntWithResult)
     (Wrapper.encodeHalfWrapped Aeson.Encode.int)
     "halfWrapped"

@@ -516,8 +516,9 @@ appendModule m o h name =
 
 wrapIfHasNext :: TypeRep -> Text -> Text
 wrapIfHasNext typ t =
-  let n = snd . splitTyConApp $ typ in
-  if length n > 0
+  let (hd, n) = splitTyConApp typ in
+  -- check for string ([], [Char, ...])
+  if length n > 0 && (not ((show hd == "[]") && ((show $ head n) == "Char")))
   then "(" <> t <> ")"
   else t
 
@@ -531,22 +532,23 @@ renderRowWithTypeParameterEncoders
   -> Text
 renderRowWithTypeParameterEncoders m o name t =
   if length rst == 0
-  then    
-    r
+  then typeParameters
   else
     if typeRepIsString t
-    then
-      "Aeson.Encode.string"
+    then "Aeson.Encode.string"
     else
-      r <> " " <> (T.intercalate " " $ (\x -> wrapIfHasNext x (renderRowWithTypeParameterEncoders m o (T.pack . show $ x) x)) <$> rst)
+      typeParameters <> " " <> (T.intercalate " " $ (\x -> wrapIfHasNext x (renderRowWithTypeParameterEncoders m o (T.pack . show $ x) x)) <$> rst)
     
   where
   (hd,rst) = splitTyConApp $ t
-  r =
-    case Map.lookup hd typeParameterRefTyConToOCamlTypeText of
-      Just ptyp -> "encode" <> textUppercaseFirst ptyp
-      Nothing ->
-        case Map.lookup hd primitiveTyConToOCamlTypeText of
-          Just "option" -> "Aeson.Encode.optional"
-          Just typ -> "Aeson.Encode." <> typ
-          Nothing  -> appendModule m o (typeRepToHaskellTypeMetaData t) name
+  typeParameters =
+    case Map.lookup hd tupleTyConToSize of
+      Just len -> "Aeson.Encode.tuple" <> (T.pack . show $ len)
+      Nothing -> 
+        case Map.lookup hd typeParameterRefTyConToOCamlTypeText of
+          Just ptyp -> "encode" <> textUppercaseFirst ptyp
+          Nothing ->
+            case Map.lookup hd primitiveTyConToOCamlTypeText of
+              Just "option" -> "Aeson.Encode.optional"
+              Just typ -> "Aeson.Encode." <> typ
+              Nothing  -> appendModule m o (typeRepToHaskellTypeMetaData t) name

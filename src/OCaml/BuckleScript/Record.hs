@@ -278,13 +278,15 @@ renderRowTypeParameters
   -> TypeRep
   -> Text
 renderRowTypeParameters m o name t =
-  if length rst == 0
-  then typeParameters
-  else
-    if typeRepIsString t
-    then "string"
-    else "(" <> (T.intercalate ", " $ (\x -> (renderRowTypeParameters m o (T.pack . show $ x) x)) <$> rst) <> ") " <> typeParameters
-    
+  case Map.lookup hd tupleTyConToSize of
+    Just _ -> (T.intercalate " * " $ (\x -> (renderRowTypeParameters m o (T.pack . show $ x) x)) <$> rst)
+    Nothing -> 
+      if length rst == 0
+      then typeParameters
+      else
+        if typeRepIsString t
+        then "string"
+        else "(" <> (T.intercalate ", " $ (\x -> (renderRowTypeParameters m o (T.pack . show $ x) x)) <$> rst) <> ") " <> typeParameters
   where
   (hd,rst) = splitTyConApp $ t
   typeParameters =

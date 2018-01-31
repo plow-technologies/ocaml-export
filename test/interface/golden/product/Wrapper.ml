@@ -103,12 +103,12 @@ let encodeSumWrapped x =
   | SW3 y0 ->
      Aeson.Encode.object_
        [ ( "tag", Aeson.Encode.string "SW3" )
-       ; ( "contents", encodeWrapper (Aeson.Encode.optional (Aeson.Encode.string)) y0 )
+       ; ( "contents", encodeWrapper (Aeson.Encode.optional Aeson.Encode.string) y0 )
        ]
   | SW4 y0 ->
      Aeson.Encode.object_
        [ ( "tag", Aeson.Encode.string "SW4" )
-       ; ( "contents", encodeWrapper (Aeson.Encode.either Aeson.Encode.int (Aeson.Encode.string)) y0 )
+       ; ( "contents", encodeWrapper (Aeson.Encode.either Aeson.Encode.int Aeson.Encode.string) y0 )
        ]
 
 let decodeSumWrapped json =
@@ -122,18 +122,35 @@ let decodeSumWrapped json =
       | exception Aeson.Decode.DecodeError message -> Js_result.Error ("SW2: " ^ message)
      )
   | "SW3" ->
-     (match Aeson.Decode.(field "contents" (fun a -> unwrapResult (decodeWrapper (wrapResult (optional (string))) a)) json) with
+     (match Aeson.Decode.(field "contents" (fun a -> unwrapResult (decodeWrapper (wrapResult (optional string)) a)) json) with
       | v -> Js_result.Ok (SW3 v)
       | exception Aeson.Decode.DecodeError message -> Js_result.Error ("SW3: " ^ message)
      )
 
   | "SW4" ->
-     (match Aeson.Decode.(field "contents" (fun a -> unwrapResult (decodeWrapper (wrapResult (either int (string))) a)) json) with
+     (match Aeson.Decode.(field "contents" (fun a -> unwrapResult (decodeWrapper (wrapResult (either int string)) a)) json) with
       | v -> Js_result.Ok (SW4 v)
       | exception Aeson.Decode.DecodeError message -> Js_result.Error ("SW4: " ^ message)
      )
   | err -> Js_result.Error ("Unknown tag value found '" ^ err ^ "'.")
   | exception Aeson.Decode.DecodeError message -> Js_result.Error message
+
+type tupleWrapped =
+  { tw : (int * string * float) wrapper
+  }
+
+let encodeTupleWrapped x =
+  Aeson.Encode.object_
+    [ ( "tw", encodeWrapper (Aeson.Encode.tuple3 Aeson.Encode.int Aeson.Encode.string Aeson.Encode.float) x.tw )
+    ]
+
+let decodeTupleWrapped json =
+  match Aeson.Decode.
+    { tw = field "tw" (fun a -> unwrapResult (decodeWrapper (wrapResult (tuple3 int string Aeson.Decode.float)) a)) json
+    }
+  with
+  | v -> Js_result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeTupleWrapped: " ^ message)
 
 type 'a0 halfWrapped =
   { hw : ((int, 'a0) Aeson.Compatibility.Either.t) wrapper

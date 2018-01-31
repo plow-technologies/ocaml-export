@@ -48,6 +48,14 @@ val encodeSumWrapped : sumWrapped -> Js_json.t
 
 val decodeSumWrapped : Js_json.t -> (sumWrapped, string) Js_result.t
 
+type tupleWrapped =
+  { tw : (int * string * float) wrapper
+  }
+
+val encodeTupleWrapped : tupleWrapped -> Js_json.t
+
+val decodeTupleWrapped : Js_json.t -> (tupleWrapped, string) Js_result.t
+
 type 'a0 halfWrapped =
   { hw : ((int, 'a0) Aeson.Compatibility.Either.t) wrapper
   }

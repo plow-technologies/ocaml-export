@@ -55,6 +55,7 @@ module OCaml.BuckleScript.Types
   -- Typeable functions
   , primitiveTyConToOCamlTypeText
   , typeParameterRefTyConToOCamlTypeText
+  , tupleTyConToSize
   , typeRepIsString
   , typeRepToHaskellTypeMetaData
   ) where
@@ -650,6 +651,15 @@ primitiveTyConToOCamlTypeText = Map.fromList
   , ( typeRepTyCon $ typeRep (Proxy :: Proxy Word64    ), "int")
   , ( typeRepTyCon $ typeRep (Proxy :: Proxy Char      ), "string")
   , ( typeRepTyCon $ typeRep (Proxy :: Proxy Bool      ), "boolean")
+  ]
+
+tupleTyConToSize :: Map.Map TyCon Int
+tupleTyConToSize = Map.fromList
+  [ ( typeRepTyCon $ typeRep (Proxy :: Proxy (,)      ), 2)
+  , ( typeRepTyCon $ typeRep (Proxy :: Proxy (,,)     ), 3)
+  , ( typeRepTyCon $ typeRep (Proxy :: Proxy (,,,)    ), 4)
+  , ( typeRepTyCon $ typeRep (Proxy :: Proxy (,,,,)   ), 5)
+  , ( typeRepTyCon $ typeRep (Proxy :: Proxy (,,,,,)  ), 6)
   ]
 
 -- | match type parameter reference 'TyCon's (accessible from a TypeRep) to their equivalent OCaml types.

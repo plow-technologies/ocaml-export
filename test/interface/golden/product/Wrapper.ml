@@ -169,6 +169,23 @@ let decodeHalfWrapped decodeA0 json =
   | v -> Js_result.Ok v
   | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeHalfWrapped: " ^ message)
 
+type ('a0, 'a1, 'a2) partiallyWrapped =
+  { pw : ((int, string * 'a1 * float * 'a2 * 'a0) Aeson.Compatibility.Either.t) wrapper
+  }
+
+let encodePartiallyWrapped encodeA0 encodeA1 encodeA2 x =
+  Aeson.Encode.object_
+    [ ( "pw", encodeWrapper (Aeson.Encode.either Aeson.Encode.int (Aeson.Encode.tuple5 Aeson.Encode.string encodeA1 Aeson.Encode.float encodeA2 encodeA0)) x.pw )
+    ]
+
+let decodePartiallyWrapped decodeA0 decodeA1 decodeA2 json =
+  match Aeson.Decode.
+    { pw = field "pw" (fun a -> unwrapResult (decodeWrapper (wrapResult (either int (tuple5 string (fun a -> unwrapResult (decodeA1 a)) Aeson.Decode.float (fun a -> unwrapResult (decodeA2 a)) (fun a -> unwrapResult (decodeA0 a))))) a)) json
+    }
+  with
+  | v -> Js_result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodePartiallyWrapped: " ^ message)
+
 type ('a0, 'a1, 'a2, 'a3, 'a4, 'a5) scrambledTypeParameterRefs =
   { stprb : 'a1
   ; stprd : 'a3

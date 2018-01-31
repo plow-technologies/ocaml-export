@@ -525,16 +525,22 @@ wrapIfHasNext parentIsCustom typ txt =
   then
     if parentIsCustom
     then
-      case Map.lookup hd primitiveTyConToOCamlTypeText of
-        Just _  -> "(wrapResult (" <> txt <> "))"
-        Nothing -> "(" <> txt <> ")"
+      case Map.lookup hd tupleTyConToSize of
+        Just _ -> "(wrapResult (" <> txt <> "))"
+        Nothing ->
+          case Map.lookup hd primitiveTyConToOCamlTypeText of
+          Just _  -> "(wrapResult (" <> txt <> "))"
+          Nothing -> "(" <> txt <> ")"
     else "(" <> txt <> ")"
   else
     if parentIsCustom
     then
-      case Map.lookup hd primitiveTyConToOCamlTypeText of
-        Just _  -> "(wrapResult " <> txt <> ")"
-        Nothing -> txt
+      case Map.lookup hd tupleTyConToSize of
+        Just _ -> "(wrapResult " <> txt <> ")"
+        Nothing ->
+          case Map.lookup hd primitiveTyConToOCamlTypeText of
+            Just _  -> "(wrapResult " <> txt <> ")"
+            Nothing -> txt
     else txt
 
 renderRowWithTypeParameterDecoders
@@ -557,7 +563,7 @@ renderRowWithTypeParameterDecoders m o name t =
   typeParameters nxt =
     let addSpace t' = if t' == "" then "" else " " <> t' in
     case Map.lookup hd tupleTyConToSize of
-      Just len -> "wrapResult (tuple" <> (T.pack . show $ len) <> (addSpace $ nxt False) <> ")"
+      Just len -> "tuple" <> (T.pack . show $ len) <> (addSpace $ nxt False)
       Nothing -> 
         case Map.lookup hd typeParameterRefTyConToOCamlTypeText of
           Just ptyp -> "(fun a -> unwrapResult (decode" <> textUppercaseFirst ptyp <> " a))"

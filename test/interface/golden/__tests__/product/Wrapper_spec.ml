@@ -56,6 +56,13 @@ let () =
     "golden/product/HalfWrapped";
 
   AesonSpec.sampleGoldenAndServerSpec
+    (Wrapper.decodePartiallyWrapped AesonSpec.decodeIntWithResult AesonSpec.decodeIntWithResult AesonSpec.decodeIntWithResult)
+    (Wrapper.encodePartiallyWrapped Aeson.Encode.int Aeson.Encode.int Aeson.Encode.int)
+    "partiallyWrapped"
+    "http://localhost:8081/Wrapper/PartiallyWrapped"
+    "golden/product/PartiallyWrapped";
+
+  AesonSpec.sampleGoldenAndServerSpec
     (Wrapper.decodeScrambledTypeParameterRefs AesonSpec.decodeIntWithResult AesonSpec.decodeIntWithResult AesonSpec.decodeIntWithResult AesonSpec.decodeIntWithResult AesonSpec.decodeIntWithResult AesonSpec.decodeIntWithResult)
     (Wrapper.encodeScrambledTypeParameterRefs Aeson.Encode.int Aeson.Encode.int Aeson.Encode.int Aeson.Encode.int Aeson.Encode.int Aeson.Encode.int)
     "scrambledTypeParameterRefs"

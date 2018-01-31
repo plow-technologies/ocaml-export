@@ -64,6 +64,14 @@ val encodeHalfWrapped : ('a0 -> Js_json.t) -> 'a0 halfWrapped -> Js_json.t
 
 val decodeHalfWrapped : (Js_json.t -> ('a0, string) Js_result.t) -> Js_json.t -> ('a0 halfWrapped, string) Js_result.t
 
+type ('a0, 'a1, 'a2) partiallyWrapped =
+  { pw : ((int, string * 'a1 * float * 'a2 * 'a0) Aeson.Compatibility.Either.t) wrapper
+  }
+
+val encodePartiallyWrapped : ('a0 -> Js_json.t) -> ('a1 -> Js_json.t) -> ('a2 -> Js_json.t) -> ('a0, 'a1, 'a2) partiallyWrapped -> Js_json.t
+
+val decodePartiallyWrapped : (Js_json.t -> ('a0, string) Js_result.t) -> (Js_json.t -> ('a1, string) Js_result.t) -> (Js_json.t -> ('a2, string) Js_result.t) -> Js_json.t -> (('a0, 'a1, 'a2) partiallyWrapped, string) Js_result.t
+
 type ('a0, 'a1, 'a2, 'a3, 'a4, 'a5) scrambledTypeParameterRefs =
   { stprb : 'a1
   ; stprd : 'a3

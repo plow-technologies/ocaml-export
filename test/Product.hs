@@ -47,7 +47,7 @@ type ProductPackage
          :> SumWrapped
          :> TupleWrapped
          :> HalfWrapped TypeParameterRef0
---         :> PartiallyWrapped TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
+         :> PartiallyWrapped TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
          :> ScrambledTypeParameterRefs TypeParameterRef0 TypeParameterRef1 TypeParameterRef2 TypeParameterRef3 TypeParameterRef4 TypeParameterRef5
        )
 
@@ -312,7 +312,7 @@ instance (Typeable a, OCamlType a) => (OCamlType (HalfWrapped a))
 
 data PartiallyWrapped a b c =
   PartiallyWrapped
-    { pw :: Wrapper (Either Int (String,b,Double,c,Float,a))
+    { pw :: Wrapper (Either Int (String,b,Double,c,a))
     } deriving (Eq,Show,Generic,ToJSON,FromJSON)
 
 instance Arbitrary (PartiallyWrapped TypeParameterRef0 TypeParameterRef1 TypeParameterRef2) where

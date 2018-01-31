@@ -1,5 +1,5 @@
 name: ocaml-export
-version: 0.5.0.0
+version: 0.6.0.0
 synopsis: Convert Haskell types in OCaml types
 description: README.md
 category: Web
@@ -46,9 +46,9 @@ library:
   - wl-pprint-text
   ghc-options:
   - -Wall
-#  - -Werror
-#  - -Wredundant-constraints
-#  - -fprint-potential-instances
+  - -Werror
+  - -Wredundant-constraints
+  - -fprint-potential-instances
 
 tests:
   spec:
@@ -79,4 +79,4 @@ tests:
     - typelits-witnesses
     ghc-options:
     - -Wall
-#    - -fprint-potential-instances
+    - -Werror

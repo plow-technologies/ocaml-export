@@ -1,0 +1,85 @@
+{
+    "seed": 3711347212009762416,
+    "samples": [
+        {
+            "stprb": 10,
+            "stpre": -10,
+            "stprd": -1,
+            "stpra": 22,
+            "stprf": 9,
+            "stprc": 29
+        },
+        {
+            "stprb": -8,
+            "stpre": -9,
+            "stprd": -4,
+            "stpra": 29,
+            "stprf": 15,
+            "stprc": 1
+        },
+        {
+            "stprb": -21,
+            "stpre": -7,
+            "stprd": 25,
+            "stpra": 25,
+            "stprf": 29,
+            "stprc": -15
+        },
+        {
+            "stprb": 2,
+            "stpre": -1,
+            "stprd": 14,
+            "stpra": -6,
+            "stprf": -30,
+            "stprc": -26
+        },
+        {
+            "stprb": 20,
+            "stpre": 4,
+            "stprd": -20,
+            "stpra": 26,
+            "stprf": 8,
+            "stprc": -27
+        },
+        {
+            "stprb": 26,
+            "stpre": 9,
+            "stprd": -23,
+            "stpra": 10,
+            "stprf": 11,
+            "stprc": -4
+        },
+        {
+            "stprb": 4,
+            "stpre": -12,
+            "stprd": -20,
+            "stpra": 6,
+            "stprf": 10,
+            "stprc": -16
+        },
+        {
+            "stprb": -25,
+            "stpre": 14,
+            "stprd": -2,
+            "stpra": 29,
+            "stprf": 25,
+            "stprc": 24
+        },
+        {
+            "stprb": 17,
+            "stpre": 23,
+            "stprd": 6,
+            "stpra": -18,
+            "stprf": -13,
+            "stprc": -20
+        },
+        {
+            "stprb": 22,
+            "stpre": 28,
+            "stprd": -2,
+            "stpra": -18,
+            "stprf": -15,
+            "stprc": -29
+        }
+    ]
+}

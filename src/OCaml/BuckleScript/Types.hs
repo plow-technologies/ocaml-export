@@ -52,10 +52,11 @@ module OCaml.BuckleScript.Types
   , mkModulePrefix
   , oCamlValueIsFloat
 
-  , primitiveTypeRepToOCamlTypeText
-  , typeRepToHaskellTypeMetaData
+  -- Typeable functions
+  , primitiveTyConToOCamlTypeText
+  , typeParameterRefTyConToOCamlTypeText
   , typeRepIsString
-  , typeParameterRefTypeRepToOCamlTypeText
+  , typeRepToHaskellTypeMetaData
   ) where
 
 -- base
@@ -265,7 +266,8 @@ instance (GenericOCamlValue f, GenericOCamlValue g) =>
 instance GenericOCamlValue U1 where
   genericToOCamlValue _ = OCamlEmpty
 
--- | Handle type parameter.
+-- | Handle type parameter. There are found in the order of declaration on the right hand side of a type.
+--   Reordering may be necessary for TypeParameterRefs.
 instance (OCamlType a, Typeable a) => GenericOCamlValue (Rec0 a) where
   genericToOCamlValue _ =
     case toOCamlType (Proxy :: Proxy a) of
@@ -392,10 +394,18 @@ instance (OCamlType a) =>
 -- ToJSON and FromJSON instances are provided for the following types in aeson
 -- not currently defined here
 -- Map, LocalTime, ZonedTime, IntSet, CTime, Version, Natural
--- TimeOfDay, UTCTime, NominalDiffTime, Day, DiffTime, UUID, DotNetTime
+-- TimeOfDay, NominalDiffTime, Day, DiffTime, UUID, DotNetTime
 -- Value, Dual, First, Last, IntMap, Tree, Seq, Vector, HashSet, Proxy
 -- Const Tagged, Dual, First, Last, tuple up to length of 15
 -}
+
+-- | for any type that does not use the same serialization as Generic Aeson
+--   and has a manually written OCaml definition, should manually derive OCamlType
+--   using this function for convenience.
+-- 
+--   instance OCamlType X where
+--      toOCamlType _ = typeableToOCamlType (Proxy :: Proxy X)
+--
 
 typeableToOCamlType :: forall a. Typeable a => Proxy a -> OCamlDatatype
 typeableToOCamlType Proxy =
@@ -526,7 +536,7 @@ getTypeParameterRefNames = nub . concat . (fmap match)
 
     match value =
       case value of
-        (OCamlRefApp typeRep _) -> getTypeParamterRefNameForTypeRep typeRep
+        (OCamlRefApp typRep _) -> getTypeParameterRefNameForTypeRep typRep
         (OCamlTypeParameterRef name) -> [name]
         (Values v1 v2) -> match v1 ++ match v2
         (OCamlField _ v1) -> match v1
@@ -545,7 +555,7 @@ getOCamlValues (NamedConstructor     _ value) = [value]
 getOCamlValues (RecordConstructor    _ value) = [value]
 getOCamlValues (MultipleConstructors cs)      = concat $ getOCamlValues <$> cs
 
--- | getTypePar
+-- | get all of the type parameters from an OCamlConstructor.
 getTypeParameters :: OCamlConstructor -> [Text]
 getTypeParameters (OCamlValueConstructor vc) = getTypeParameterRefNames . getOCamlValues $ vc
 getTypeParameters (OCamlSumOfRecordConstructor _ vc) = getTypeParameterRefNames . getOCamlValues $ vc
@@ -560,18 +570,16 @@ isTypeParameterRef _ = False
 -- | When there is a record that has its type parameters partially filled, it will should have TypeParameterRef0-5 as the
 --   unfilled type parameters. This function properly pushes the TypeParameterRef0-5 to the type signature of an OCaml
 --   type.
-getTypeParamterRefNameForTypeRep :: TypeRep -> [Text]
-getTypeParamterRefNameForTypeRep t =
+getTypeParameterRefNameForTypeRep :: TypeRep -> [Text]
+getTypeParameterRefNameForTypeRep t =
   if length rst == 0
-  then    
-    r
-  else
-    r <> concat (getTTT <$> rst)
+  then typeParamterRefText
+  else typeParamterRefText <> concat (getTypeParameterRefNameForTypeRep <$> rst)
   where
   (hd,rst) = splitTyConApp $ t
-  r =
-    case Map.lookup hd typeParameterRefTypeRepToOCamlTypeText of
-      Just p -> [p]
+  typeParamterRefText =
+    case Map.lookup hd typeParameterRefTyConToOCamlTypeText of
+      Just typeParamterRefText' -> [typeParamterRefText']
       Nothing -> []
 
 -- | Make OCaml module prefix for a value based on the declaration's and parameter's meta data.
@@ -603,8 +611,22 @@ oCamlValueIsFloat :: OCamlValue -> Bool
 oCamlValueIsFloat (OCamlPrimitiveRef OFloat) = True
 oCamlValueIsFloat _ = False
 
-primitiveTypeRepToOCamlTypeText :: Map.Map TyCon Text
-primitiveTypeRepToOCamlTypeText = Map.fromList
+
+-- Typeable related functions
+-- when a row is a type with type parameters and those type parameters are filled,
+-- we need a way to extract what those type parameters are. This is not possible with
+-- Generics, but it can be done with Typeable.
+
+-- | necessary because the TypeRep for 'String' is '([], [Char])', but we want
+--   it to be reduced to an OCaml 'string'.
+typeRepIsString :: TypeRep -> Bool
+typeRepIsString t =
+  let (hd, rst) = splitTyConApp t in
+  show hd == "[]" && length rst == 1 && ((show $ head rst) == "Char")
+
+-- | match 'TyCon's (accessible from a TypeRep) to their equivalent OCaml types.
+primitiveTyConToOCamlTypeText :: Map.Map TyCon Text
+primitiveTyConToOCamlTypeText = Map.fromList
   [ ( typeRepTyCon $ typeRep (Proxy :: Proxy []        ), "list")
   , ( typeRepTyCon $ typeRep (Proxy :: Proxy Maybe     ), "option")
   , ( typeRepTyCon $ typeRep (Proxy :: Proxy Either    ), "either")
@@ -630,20 +652,9 @@ primitiveTypeRepToOCamlTypeText = Map.fromList
   , ( typeRepTyCon $ typeRep (Proxy :: Proxy Bool      ), "boolean")
   ]
 
-typeRepToHaskellTypeMetaData :: TypeRep -> HaskellTypeMetaData
-typeRepToHaskellTypeMetaData aTypeRep =
-  HaskellTypeMetaData
-    (T.pack . tyConName . typeRepTyCon $ aTypeRep)
-    (T.pack . tyConModule . typeRepTyCon $ aTypeRep)
-    (T.pack . tyConPackage . typeRepTyCon $ aTypeRep)
-
-typeRepIsString :: TypeRep -> Bool
-typeRepIsString t =
-  let (hd, rst) = splitTyConApp t in
-  show hd == "[]" && length rst == 1 && ((show $ head rst) == "Char")
-
-typeParameterRefTypeRepToOCamlTypeText :: Map.Map TyCon Text
-typeParameterRefTypeRepToOCamlTypeText = Map.fromList
+-- | match type parameter reference 'TyCon's (accessible from a TypeRep) to their equivalent OCaml types.
+typeParameterRefTyConToOCamlTypeText :: Map.Map TyCon Text
+typeParameterRefTyConToOCamlTypeText = Map.fromList
   [ ( typeRepTyCon $ typeRep (Proxy :: Proxy TypeParameterRef0), "a0")
   , ( typeRepTyCon $ typeRep (Proxy :: Proxy TypeParameterRef1), "a1")
   , ( typeRepTyCon $ typeRep (Proxy :: Proxy TypeParameterRef2), "a2")
@@ -651,3 +662,10 @@ typeParameterRefTypeRepToOCamlTypeText = Map.fromList
   , ( typeRepTyCon $ typeRep (Proxy :: Proxy TypeParameterRef4), "a4")
   , ( typeRepTyCon $ typeRep (Proxy :: Proxy TypeParameterRef5), "a5")
   ]
+
+typeRepToHaskellTypeMetaData :: TypeRep -> HaskellTypeMetaData
+typeRepToHaskellTypeMetaData aTypeRep =
+  HaskellTypeMetaData
+    (T.pack . tyConName . typeRepTyCon $ aTypeRep)
+    (T.pack . tyConModule . typeRepTyCon $ aTypeRep)
+    (T.pack . tyConPackage . typeRepTyCon $ aTypeRep)

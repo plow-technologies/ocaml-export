@@ -47,3 +47,10 @@ let () =
     "halfWrapped"
     "http://localhost:8081/Wrapper/HalfWrapped"
     "golden/product/HalfWrapped";
+
+  AesonSpec.sampleGoldenAndServerSpec
+    (Wrapper.decodeScrambledTypeParameterRefs AesonSpec.decodeIntWithResult AesonSpec.decodeIntWithResult AesonSpec.decodeIntWithResult AesonSpec.decodeIntWithResult AesonSpec.decodeIntWithResult AesonSpec.decodeIntWithResult)
+    (Wrapper.encodeScrambledTypeParameterRefs Aeson.Encode.int Aeson.Encode.int Aeson.Encode.int Aeson.Encode.int Aeson.Encode.int Aeson.Encode.int)
+    "scrambledTypeParameterRefs"
+    "http://localhost:8081/Wrapper/ScrambledTypeParameterRefs"
+    "golden/product/ScrambledTypeParameterRefs";

@@ -1,5 +1,10 @@
 # Revision history for ocaml-export
 
+## 0.6.0.0 -- 2018-01-31
+
+* Properly handle rows that have type parameters.
+* Fix cases when the order of type parameter declarations differs from the order they appear in right hand side of the type declaration.
+
 ## 0.5.0.0 -- 2018-01-16
 
 * Fix 'OCaml.BuckleScript.Encode.renderRef' for OBool.

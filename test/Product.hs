@@ -38,7 +38,7 @@ type ProductPackage
   :<|> OCamlModule '["SubTypeParameter"] :> SubTypeParameter TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
   :<|> OCamlModule '["UnnamedProduct"] :> UnnamedProduct
   :<|> OCamlModule '["ComplexProduct"] :> OCamlTypeInFile Simple "test/ocaml/Simple" :> ComplexProduct
-  :<|> OCamlModule '["Wrapper"] :> Wrapper TypeParameterRef0 :> IntWrapped :> MaybeWrapped :> EitherWrapped :> ComplexWrapped :> SumWrapped :> HalfWrapped TypeParameterRef0
+  :<|> OCamlModule '["Wrapper"] :> Wrapper TypeParameterRef0 :> IntWrapped :> MaybeWrapped :> EitherWrapped :> ComplexWrapped :> SumWrapped :> HalfWrapped TypeParameterRef0 :> ScrambledTypeParameterRefs TypeParameterRef0 TypeParameterRef1 TypeParameterRef2 TypeParameterRef3 TypeParameterRef4 TypeParameterRef5
        )
 
 compareInterfaceFiles :: FilePath -> SpecWith ()
@@ -290,3 +290,21 @@ instance Arbitrary (HalfWrapped TypeParameterRef0) where
 instance ToADTArbitrary (HalfWrapped TypeParameterRef0)
 
 instance (Typeable a, OCamlType a) => (OCamlType (HalfWrapped a))
+
+-- | type parameter declaration and use order are different
+data ScrambledTypeParameterRefs a b c d e f =
+  ScrambledTypeParameterRefs
+    { stprb :: b
+    , stprd :: d
+    , stpre :: e
+    , stpra :: a
+    , stprf :: f
+    , stprc :: c
+    } deriving (Eq,Show,Generic,ToJSON,FromJSON)
+
+instance Arbitrary (ScrambledTypeParameterRefs TypeParameterRef0 TypeParameterRef1 TypeParameterRef2 TypeParameterRef3 TypeParameterRef4 TypeParameterRef5) where
+  arbitrary = ScrambledTypeParameterRefs <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
+
+instance ToADTArbitrary (ScrambledTypeParameterRefs TypeParameterRef0 TypeParameterRef1 TypeParameterRef2 TypeParameterRef3 TypeParameterRef4 TypeParameterRef5)
+
+instance (Typeable a, OCamlType a, Typeable b, OCamlType b, Typeable c, OCamlType c, Typeable d, OCamlType d, Typeable e, OCamlType e, Typeable f, OCamlType f) => (OCamlType (ScrambledTypeParameterRefs a b c d e f))

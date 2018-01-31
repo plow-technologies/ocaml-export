@@ -151,3 +151,35 @@ let decodeHalfWrapped decodeA0 json =
   with
   | v -> Js_result.Ok v
   | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeHalfWrapped: " ^ message)
+
+type ('a0, 'a1, 'a2, 'a3, 'a4, 'a5) scrambledTypeParameterRefs =
+  { stprb : 'a1
+  ; stprd : 'a3
+  ; stpre : 'a4
+  ; stpra : 'a0
+  ; stprf : 'a5
+  ; stprc : 'a2
+  }
+
+let encodeScrambledTypeParameterRefs encodeA0 encodeA1 encodeA2 encodeA3 encodeA4 encodeA5 x =
+  Aeson.Encode.object_
+    [ ( "stprb", encodeA1 x.stprb )
+    ; ( "stprd", encodeA3 x.stprd )
+    ; ( "stpre", encodeA4 x.stpre )
+    ; ( "stpra", encodeA0 x.stpra )
+    ; ( "stprf", encodeA5 x.stprf )
+    ; ( "stprc", encodeA2 x.stprc )
+    ]
+
+let decodeScrambledTypeParameterRefs decodeA0 decodeA1 decodeA2 decodeA3 decodeA4 decodeA5 json =
+  match Aeson.Decode.
+    { stprb = field "stprb" (fun a -> unwrapResult (decodeA1 a)) json
+    ; stprd = field "stprd" (fun a -> unwrapResult (decodeA3 a)) json
+    ; stpre = field "stpre" (fun a -> unwrapResult (decodeA4 a)) json
+    ; stpra = field "stpra" (fun a -> unwrapResult (decodeA0 a)) json
+    ; stprf = field "stprf" (fun a -> unwrapResult (decodeA5 a)) json
+    ; stprc = field "stprc" (fun a -> unwrapResult (decodeA2 a)) json
+    }
+  with
+  | v -> Js_result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeScrambledTypeParameterRefs: " ^ message)

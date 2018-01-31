@@ -55,3 +55,16 @@ type 'a0 halfWrapped =
 val encodeHalfWrapped : ('a0 -> Js_json.t) -> 'a0 halfWrapped -> Js_json.t
 
 val decodeHalfWrapped : (Js_json.t -> ('a0, string) Js_result.t) -> Js_json.t -> ('a0 halfWrapped, string) Js_result.t
+
+type ('a0, 'a1, 'a2, 'a3, 'a4, 'a5) scrambledTypeParameterRefs =
+  { stprb : 'a1
+  ; stprd : 'a3
+  ; stpre : 'a4
+  ; stpra : 'a0
+  ; stprf : 'a5
+  ; stprc : 'a2
+  }
+
+val encodeScrambledTypeParameterRefs : ('a0 -> Js_json.t) -> ('a1 -> Js_json.t) -> ('a2 -> Js_json.t) -> ('a3 -> Js_json.t) -> ('a4 -> Js_json.t) -> ('a5 -> Js_json.t) -> ('a0, 'a1, 'a2, 'a3, 'a4, 'a5) scrambledTypeParameterRefs -> Js_json.t
+
+val decodeScrambledTypeParameterRefs : (Js_json.t -> ('a0, string) Js_result.t) -> (Js_json.t -> ('a1, string) Js_result.t) -> (Js_json.t -> ('a2, string) Js_result.t) -> (Js_json.t -> ('a3, string) Js_result.t) -> (Js_json.t -> ('a4, string) Js_result.t) -> (Js_json.t -> ('a5, string) Js_result.t) -> Js_json.t -> (('a0, 'a1, 'a2, 'a3, 'a4, 'a5) scrambledTypeParameterRefs, string) Js_result.t

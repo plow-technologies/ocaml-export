@@ -138,7 +138,7 @@ instance HasDecoder OCamlDatatype where
     if ocamlInterface
       then do
         let typeParameters = getTypeParameters constructor
-            renderedTypeParameters = foldl (<>) "" $ stext <$> L.intersperse " " ((\t -> "decode" <> (textUppercaseFirst t)) <$> typeParameters)
+            renderedTypeParameters = foldl (<>) "" $ stext <$> L.intersperse " " ((\t -> "decode" <> (textUppercaseFirst t)) <$> (L.sort typeParameters))
         pure $ "let" <+> fnName <+> renderedTypeParameters <+> "json" <+> "=" <$$> fnBody
       else do
         let (typeParameterSignatures,typeParameters) = renderTypeParameters constructor
@@ -167,7 +167,6 @@ instance HasDecoderRef OCamlDatatype where
             Nothing -> fail ("OCaml.BuckleScript.Decode (HasDecoderRef OCamlDataType) expected to find dependency:\n\n" ++ show typeRef ++ "\n\nin\n\n" ++ show ds)
 
   renderRef (OCamlPrimitive primitive) = renderRef primitive
-
 
 -- | Variable names for the members of constructors
 --   Used in pattern matches
@@ -225,67 +224,6 @@ renderResult jsonFieldname (OCamlDatatype _ datatypeName _constructor) =
 renderResult jsonFieldname datatype@(OCamlPrimitive _primitive) = do
   dv <- renderRef datatype
   pure $ "(field" <+> dquotes (stext jsonFieldname) <+> dv <> ")"
-
-wrapIfHasNext :: Bool -> TypeRep -> Text -> Text
-wrapIfHasNext parentIsCustom typ t =  
-  let (hd, n) = splitTyConApp $ typ in
-  if length n > 0
-  then
-    if parentIsCustom
-    then
-      case Map.lookup hd primitiveTypeRepToOCamlTypeText of
-        Just _  -> "(wrapResult (" <> t <> "))"
-        Nothing -> "(" <> t <> ")"
-    else
-      "(" <> t <> ")"
-  else
-    if parentIsCustom
-    then
-      case Map.lookup hd primitiveTypeRepToOCamlTypeText of
-        Just _  -> "(wrapResult " <> t <> ")"
-        Nothing -> t
-    else
-      t
-
-renderC 
-  :: Map.Map HaskellTypeMetaData OCamlTypeMetaData
-  -> OCamlTypeMetaData
-  -> Text
-  -> TypeRep
-  -> Text
-renderC m o name t =
-  if length rst == 0
-  then    
-    r (\_ -> "")
-  else
-    if typeRepIsString t
-    then
-      "string"
-    else
-      r (\b -> (T.intercalate " " $ (\x -> wrapIfHasNext b x (renderC m o (T.pack . show $ x) x)) <$> rst))
-    
-  where
-  (hd,rst) = splitTyConApp $ t
-  r nxt =
-    let addSpace t = if t == "" then "" else " " <> t in
-    case Map.lookup hd typeParameterRefTypeRepToOCamlTypeText of
-      Just ptyp -> "(fun a -> unwrapResult (decode" <> textUppercaseFirst ptyp <> " a))"
-      Nothing ->
-        case Map.lookup hd primitiveTypeRepToOCamlTypeText of
-          Just "float" -> "Aeson.Decode.float" <> (addSpace $ nxt False)
-          Just "option" -> "optional" <> (addSpace $ nxt False)
-          Just typ -> typ <> (addSpace $ nxt False)
-          -- need to add unwrapResult if parent is custom serialization function and child is primitive serialization function
-          Nothing -> appendModule m o (typeRepToHaskellTypeMetaData t) name (addSpace $ nxt True)
-
-appendModule :: Map.Map HaskellTypeMetaData OCamlTypeMetaData -> OCamlTypeMetaData -> HaskellTypeMetaData -> Text -> Text -> Text
-appendModule m o h name nxt =
-  case Map.lookup h m of
-    Just parOCamlTypeMetaData -> 
-      "(fun a -> unwrapResult (" <> (mkModulePrefix o parOCamlTypeMetaData) <> "decode" <> (textUppercaseFirst name) <> nxt <> " a))"
-    -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
-    -- within the same file as the sum. These products will not be in the dependencies map.
-    Nothing -> "(fun a -> unwrapResult (decode"  <> textUppercaseFirst name <> nxt <> " a))"
     
 instance HasDecoder OCamlValue where
   render ref@(OCamlRef typeRef name) = do
@@ -296,13 +234,13 @@ instance HasDecoder OCamlValue where
         ds <- asks (dependencies . userOptions)
         pure . stext $ appendModule ds ocamlTypeRef typeRef name ""
 
-  render ref@(OCamlRefApp typeRep name) = do
+  render ref@(OCamlRefApp typRep name) = do
     mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData
     case mOCamlTypeMetaData of
       Nothing -> fail $ "OCaml.BuckleScript.Record (HasType (OCamlDatatype typeRep name)) mOCamlTypeMetaData is Nothing:\n\n" ++ (show ref)
       Just ocamlTypeRef -> do
         ds <- asks (dependencies . userOptions)
-        pure . stext $ renderC ds ocamlTypeRef name typeRep
+        pure . stext $ renderRowWithTypeParameterDecoders ds ocamlTypeRef name typRep
 
 
   render (OCamlPrimitiveRef primitive) = renderRef primitive
@@ -506,7 +444,7 @@ mk _name _i [] = pure ""
 
 renderTypeParameterValsAux :: [OCamlValue] -> (Doc,Doc)
 renderTypeParameterValsAux ocamlValues =
-  let typeParameterNames = (<>) "'" <$> getTypeParameterRefNames ocamlValues
+  let typeParameterNames = (<>) "'" <$> (L.sort $ getTypeParameterRefNames ocamlValues)
       typeDecs = (foldl (<>) "" $ L.intersperse " -> " $ (\t -> "(Js_json.t -> (" <> (stext t) <> ", string) Js_result.t)") <$> typeParameterNames) <> " -> "
   in
       if length typeParameterNames > 0
@@ -568,3 +506,65 @@ toOCamlDecoderSourceWith options a =
         Just ocamlTypeMetaData -> pprinter $ runReader (render (toOCamlType a)) (TypeMetaData (Just ocamlTypeMetaData) options)
         Nothing -> ""
     _ -> pprinter $ runReader (render (toOCamlType a)) (TypeMetaData Nothing options)
+
+-- | If this type comes from a different OCaml module, then add the appropriate module prefix and add unwrapResult to make the
+--   types match
+appendModule :: Map.Map HaskellTypeMetaData OCamlTypeMetaData -> OCamlTypeMetaData -> HaskellTypeMetaData -> Text -> Text -> Text
+appendModule m o h name nxt =
+  case Map.lookup h m of
+    Just parOCamlTypeMetaData -> 
+      "(fun a -> unwrapResult (" <> (mkModulePrefix o parOCamlTypeMetaData) <> "decode" <> (textUppercaseFirst name) <> nxt <> " a))"
+    -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
+    -- within the same file as the sum. These products will not be in the dependencies map.
+    Nothing -> "(fun a -> unwrapResult (decode"  <> textUppercaseFirst name <> nxt <> " a))"
+
+wrapIfHasNext :: Bool -> TypeRep -> Text -> Text
+wrapIfHasNext parentIsCustom typ t =  
+  let (hd, n) = splitTyConApp $ typ in
+  if length n > 0
+  then
+    if parentIsCustom
+    then
+      case Map.lookup hd primitiveTyConToOCamlTypeText of
+        Just _  -> "(wrapResult (" <> t <> "))"
+        Nothing -> "(" <> t <> ")"
+    else
+      "(" <> t <> ")"
+  else
+    if parentIsCustom
+    then
+      case Map.lookup hd primitiveTyConToOCamlTypeText of
+        Just _  -> "(wrapResult " <> t <> ")"
+        Nothing -> t
+    else
+      t
+
+renderRowWithTypeParameterDecoders
+  :: Map.Map HaskellTypeMetaData OCamlTypeMetaData
+  -> OCamlTypeMetaData
+  -> Text
+  -> TypeRep
+  -> Text
+renderRowWithTypeParameterDecoders m o name t =
+  if length rst == 0
+  then typeParameters (\_ -> "")
+  else
+    if typeRepIsString t
+    then "string"
+    else
+      typeParameters
+        (\b -> (T.intercalate " " $ (\x -> wrapIfHasNext b x (renderRowWithTypeParameterDecoders m o (T.pack . show $ x) x)) <$> rst))
+  where
+  (hd,rst) = splitTyConApp $ t
+  typeParameters nxt =
+    let addSpace t' = if t' == "" then "" else " " <> t' in
+    case Map.lookup hd typeParameterRefTyConToOCamlTypeText of
+      Just ptyp -> "(fun a -> unwrapResult (decode" <> textUppercaseFirst ptyp <> " a))"
+      Nothing ->
+        case Map.lookup hd primitiveTyConToOCamlTypeText of
+          Just "float" -> "Aeson.Decode.float" <> (addSpace $ nxt False)
+          Just "option" -> "optional" <> (addSpace $ nxt False)
+          Just typ -> typ <> (addSpace $ nxt False)
+          -- need to add unwrapResult if parent is custom serialization function and child is primitive serialization function
+          Nothing -> appendModule m o (typeRepToHaskellTypeMetaData t) name (addSpace $ nxt True)
+

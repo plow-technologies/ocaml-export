@@ -20,7 +20,9 @@ dependencies:
     - npm install --prefix test/interface/golden
     - npm run build --prefix test/interface/golden
 
-
+test:
+  override:
+    - stack test --no-run-tests
 #test:
 #  override:
 #    - stack test:

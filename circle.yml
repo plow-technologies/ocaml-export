@@ -25,5 +25,5 @@ test:
   override:
     - stack test:
         background: true
-    - sleep 120
+    - wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 10 http://localhost:8083
     - npm run test --prefix test/interface/golden

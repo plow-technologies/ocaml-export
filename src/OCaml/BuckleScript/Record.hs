@@ -95,6 +95,20 @@ instance HasTypeRef OCamlDatatype where
 
   renderRef (OCamlPrimitive primitive) = renderRef primitive
 
+instance HasTypeRef OCamlValue where
+  renderRef (Values x y) = do
+    dx <- render x
+    dy <- render y
+    pure $ dx <+> dy
+
+  renderRef _ = pure ""  
+{-
+  render (Values x y) = do
+    dx <- render x
+    dy <- render y
+    return $ dx <+> "*" <+> dy
+-}
+            
 instance HasType OCamlConstructor where
   render (OCamlValueConstructor value) = render value
   render (OCamlSumOfRecordConstructor _ value) = render value
@@ -133,14 +147,20 @@ instance HasType OCamlValue where
         ds <- asks (dependencies . userOptions)
         pure . stext $ appendModule ds ocamlTypeRef typeRef name
 
-  render ref@(OCamlRefApp typRep name) = do
+  render ref@(OCamlRefApp typRep values) = do
+    dx <- renderRef values
+    pure $ (parens dx) <+> (stext . textLowercaseFirst . T.pack . show $ typeRepTyCon typRep)
+    -- ds <- asks (dependencies . userOptions)
+    -- renderRowTypeParameters ds typRep
+    {-
     mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData
+    
     case mOCamlTypeMetaData of
       Nothing -> fail $ "OCaml.BuckleScript.Record (HasType (OCamlDatatype typeRep name)) mOCamlTypeMetaData is Nothing:\n\n" ++ (show ref)
       Just ocamlTypeRef -> do
         ds <- asks (dependencies . userOptions)
         pure . stext $ renderRowTypeParameters ds ocamlTypeRef typRep
-
+    -}
   render (OCamlTypeParameterRef name) = pure (stext ("'" <> name))
   render (OCamlPrimitiveRef primitive) = ocamlRefParens primitive <$> renderRef primitive
   render OCamlEmpty = pure (text "")
@@ -271,6 +291,7 @@ appendModule m o h name =
 
 -- | for records (of non-primitive types) with type parameters, write the corresponding OCaml types.
 --   This uses TypeRep instead of data derived from Generics.
+{-
 renderRowTypeParameters
   :: Map.Map HaskellTypeMetaData OCamlTypeMetaData
   -> OCamlTypeMetaData
@@ -296,3 +317,45 @@ renderRowTypeParameters m o t =
           Just "either" -> "Aeson.Compatibility.Either.t"
           Just typ -> typ
           Nothing  -> appendModule m o (typeRepToHaskellTypeMetaData t) (T.pack . show $ hd)
+
+a -> Reader TypeMetaData Doc
+
+appendModule :: Map.Map HaskellTypeMetaData OCamlTypeMetaData -> OCamlTypeMetaData -> HaskellTypeMetaData -> Text -> Text
+appendModule m o h name =
+  case Map.lookup h m of
+    Just parOCamlTypeMetaData -> 
+      (mkModulePrefix o parOCamlTypeMetaData) <> (textLowercaseFirst name)
+    -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
+    -- within the same file as the sum. These products will not be in the dependencies map.
+    Nothing -> textLowercaseFirst name
+
+typeRepToHaskellTypeMetaData
+-}
+renderRowTypeParameters
+  :: Map.Map HaskellTypeMetaData OCamlTypeMetaData
+  -> TypeRep
+  -> Reader TypeMetaData Doc
+renderRowTypeParameters m t =
+  if length rst == 0
+  then pure $ stext typeParameters
+  else
+    if typeRepIsString t
+    then pure $ "string"
+    else do
+      docs <- mkDocListP <$> (sequence $ ((\x -> renderRowTypeParameters m x) <$> rst))
+      pure $ docs <+> stext typeParameters 
+
+  where
+    (hd,rst) = splitTyConApp $ t
+    haskellTypeMetaData = tyConToHaskellTypeMetaData hd
+    typeParameters =
+      case Map.lookup hd typeParameterRefTyConToOCamlTypeText of
+        Just ptyp -> "'" <> ptyp
+        Nothing -> 
+          case Map.lookup hd primitiveTyConToOCamlTypeText of
+            Just "either" -> "Aeson.Compatibility.Either.t"
+            Just typ -> typ
+            Nothing  ->
+              case Map.lookup haskellTypeMetaData m of
+                Nothing -> "not found"
+                Just o -> appendModule m o (typeRepToHaskellTypeMetaData t) (T.pack . show $ hd)

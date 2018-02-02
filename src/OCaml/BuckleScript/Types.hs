@@ -58,6 +58,7 @@ module OCaml.BuckleScript.Types
   , tupleTyConToSize
   , typeRepIsString
   , typeRepToHaskellTypeMetaData
+  , tyConToHaskellTypeMetaData
   , ocamlDatatypeHasTypeParameter
   ) where
 
@@ -160,7 +161,7 @@ data EnumeratorConstructor
 -- | Expected types of a constructor
 data OCamlValue
   = OCamlRef HaskellTypeMetaData Text -- ^ The name of a non-primitive data type
-  | OCamlRefApp TypeRep Text -- ^ A type constructor that has at least one type parameter filled
+  | OCamlRefApp TypeRep OCamlValue -- ^ A type constructor that has at least one type parameter filled
   | OCamlTypeParameterRef Text -- ^ Type parameters like `a` in `Maybe a`
   | OCamlEmpty -- ^ a place holder for OCaml value. It can represent the end of a list or an Enumerator in a mixed sum
   | OCamlPrimitiveRef OCamlPrimitive -- ^ A primitive OCaml type like `int`, `string`, etc.
@@ -271,12 +272,13 @@ instance GenericOCamlValue U1 where
 -- | Handle type parameter. There are found in the order of declaration on the right hand side of a type.
 --   Reordering may be necessary for TypeParameterRefs.
 instance (OCamlType a, Typeable a) => GenericOCamlValue (Rec0 a) where
-  genericToOCamlValue _ =
+  genericToOCamlValue _ = typeRepToOCamlValue $ typeRep (Proxy :: Proxy a)
+{-    
     if length typeParams > 0
     then
       case toOCamlType (Proxy :: Proxy a) of
-        OCamlPrimitive _ -> OCamlRefApp (typeRep (Proxy :: Proxy a)) (T.pack . show $ hd)
-        OCamlDatatype haskellTypeMetaData name _ -> OCamlRefApp (typeRep (Proxy :: Proxy a)) name
+        OCamlPrimitive _ -> OCamlRefApp (typeRep (Proxy :: Proxy a)) OCamlEmpty
+        OCamlDatatype haskellTypeMetaData name _ -> OCamlRefApp (typeRep (Proxy :: Proxy a)) OCamlEmpty
     else
       case toOCamlType (Proxy :: Proxy a) of
         OCamlPrimitive primitive -> OCamlPrimitiveRef primitive
@@ -288,39 +290,145 @@ instance (OCamlType a, Typeable a) => GenericOCamlValue (Rec0 a) where
           if n `elem` typeParameterRefs
           then OCamlTypeParameterRef n
           else OCamlRef haskellTypeMetaData n
+-}
 
-{-
-            else OCamlRefApp (typeRep (Proxy :: Proxy a)) n
+typeRepToOCamlValue :: TypeRep -> OCamlValue
+typeRepToOCamlValue t =
+  -- check if the type is a primitive
+  case primitiveTypeRepToOCamlPrimitive t of
+    Just primitive -> OCamlPrimitiveRef primitive
+    Nothing ->
+      -- if it has no typeParams then it mkRef
+      if length typeParams == 0
+      then mkRef (tyConToHaskellTypeMetaData hd) (T.pack . show $ hd)
+      else OCamlRefApp t (mkValues)
+  where
+    (hd, typeParams) = splitTyConApp t
 
-primitiveTyConToOCamlTypeText
-primitiveTyConToTypeRep
-  genericToOCamlValue _ =
-    case toOCamlType (Proxy :: Proxy a) of
-      OCamlPrimitive primitive -> OCamlPrimitiveRef primitive
-      OCamlDatatype haskellTypeMetaData name _ -> mkRef haskellTypeMetaData name
-    where
-      typeParameterRefs = (T.append) <$> ["a"] <*> (T.pack . show <$> ([0..5] :: [Int]))
-      typeParams = snd . splitTyConApp $ typeRep (Proxy :: Proxy a)
-      mkRef haskellTypeMetaData n =
-          if n `elem` typeParameterRefs
-          then OCamlTypeParameterRef n
+    typeParameterRefs = (T.append) <$> ["a"] <*> (T.pack . show <$> ([0..5] :: [Int]))
+
+    mkRef haskellTypeMetaData n =
+      if n `elem` typeParameterRefs
+      then OCamlTypeParameterRef n
+      else OCamlRef haskellTypeMetaData n
+
+    mkValues =
+      if length typeParams == 0
+      then OCamlEmpty
+      else
+        if length typeParams == 1
+        then Values (typeRepToOCamlValue $ head typeParams) OCamlEmpty
+        else
+          if length typeParams == 2
+          then Values (typeRepToOCamlValue $ head typeParams) (typeRepToOCamlValue $ head $ tail typeParams)
+          else Values (typeRepToOCamlValue $ head typeParams) (foldl (\b a -> Values b (typeRepToOCamlValue a)) (typeRepToOCamlValue $ head $ tail typeParams) (tail $ tail typeParams))
+
+primitiveTypeRepToOCamlPrimitive :: TypeRep -> Maybe OCamlPrimitive
+primitiveTypeRepToOCamlPrimitive t =
+  mkOCamlPrimitive $ length typeParams
+  where
+    (hd, typeParams) = splitTyConApp t
+    mkOCamlPrimitive l
+      | l == 0 = Map.lookup hd zero
+      | l == 1 = one hd (typeParams !! 0)
+      | l == 2 = two hd (typeParams !! 0) (typeParams !! 1)
+      | l == 3 = three hd (typeParams !! 0) (typeParams !! 1) (typeParams !! 2)
+      | l == 4 = four hd (typeParams !! 0) (typeParams !! 1) (typeParams !! 2) (typeParams !! 3)
+      | l == 5 = five hd (typeParams !! 0) (typeParams !! 1) (typeParams !! 2) (typeParams !! 3) (typeParams !! 4)
+      | l == 6 = six hd (typeParams !! 0) (typeParams !! 1) (typeParams !! 2) (typeParams !! 3) (typeParams !! 4) (typeParams !! 5)
+      | otherwise = Nothing
+    
+    zero :: Map.Map TyCon OCamlPrimitive
+    zero = Map.fromList
+      [ ( typeRepTyCon $ typeRep (Proxy :: Proxy Int), OInt)
+      , ( typeRepTyCon $ typeRep (Proxy :: Proxy Int8), OInt)
+      , ( typeRepTyCon $ typeRep (Proxy :: Proxy Int16), OInt)
+      , ( typeRepTyCon $ typeRep (Proxy :: Proxy Int32), OInt)
+      , ( typeRepTyCon $ typeRep (Proxy :: Proxy Int64), OInt)
+      , ( typeRepTyCon $ typeRep (Proxy :: Proxy Integer), OInt)
+      , ( typeRepTyCon $ typeRep (Proxy :: Proxy Word), OInt)
+      , ( typeRepTyCon $ typeRep (Proxy :: Proxy Word8), OInt)
+      , ( typeRepTyCon $ typeRep (Proxy :: Proxy Word16), OInt)
+      , ( typeRepTyCon $ typeRep (Proxy :: Proxy Word32), OInt)
+      , ( typeRepTyCon $ typeRep (Proxy :: Proxy Word64), OInt)   
+      , ( typeRepTyCon $ typeRep (Proxy :: Proxy Bool), OBool)
+      , ( typeRepTyCon $ typeRep (Proxy :: Proxy Char), OChar)
+      , ( typeRepTyCon $ typeRep (Proxy :: Proxy UTCTime), ODate)
+      , ( typeRepTyCon $ typeRep (Proxy :: Proxy Float), OFloat)
+      , ( typeRepTyCon $ typeRep (Proxy :: Proxy Double), OFloat)
+      , ( typeRepTyCon $ typeRep (Proxy :: Proxy Text), OString)
+      , ( typeRepTyCon $ typeRep (Proxy :: Proxy ByteString), OString)
+      , ( typeRepTyCon $ typeRep (Proxy :: Proxy String), OString)
+      , ( typeRepTyCon $ typeRep (Proxy :: Proxy ()), OUnit)
+      ]
+
+    one :: TyCon -> TypeRep -> Maybe OCamlPrimitive
+    one tyCon t0 =
+      if tyCon == (typeRepTyCon $ typeRep (Proxy :: Proxy []))
+      then Just $ OList $ mkOCamlDatatype t0
+      else
+        if tyCon == (typeRepTyCon $ typeRep (Proxy :: Proxy Maybe))
+        then Just $ OOption $ mkOCamlDatatype t0
+        else Nothing
+
+    two :: TyCon -> TypeRep -> TypeRep -> Maybe OCamlPrimitive
+    two tyCon t0 t1 =
+      if tyCon == (typeRepTyCon $ typeRep (Proxy :: Proxy Either))
+      then Just $ OEither (mkOCamlDatatype t0) (mkOCamlDatatype t1)
+      else
+        if tyCon == (typeRepTyCon $ typeRep (Proxy :: Proxy (,)))
+        then Just $ OTuple2 (mkOCamlDatatype t0) (mkOCamlDatatype t1)
+        else Nothing
+
+    three :: TyCon -> TypeRep -> TypeRep -> TypeRep -> Maybe OCamlPrimitive
+    three tyCon t0 t1 t2 =
+      if tyCon == (typeRepTyCon $ typeRep (Proxy :: Proxy (,,)))
+      then Just $ OTuple3 (mkOCamlDatatype t0) (mkOCamlDatatype t1) (mkOCamlDatatype t2)
+      else Nothing
+
+    four :: TyCon -> TypeRep -> TypeRep -> TypeRep -> TypeRep -> Maybe OCamlPrimitive
+    four tyCon t0 t1 t2 t3 =
+      if tyCon == (typeRepTyCon $ typeRep (Proxy :: Proxy (,,,)))
+      then Just $ OTuple4 (mkOCamlDatatype t0) (mkOCamlDatatype t1) (mkOCamlDatatype t2) (mkOCamlDatatype t3)
+      else Nothing
+
+    five :: TyCon -> TypeRep -> TypeRep -> TypeRep -> TypeRep -> TypeRep -> Maybe OCamlPrimitive
+    five tyCon t0 t1 t2 t3 t4 =
+      if tyCon == (typeRepTyCon $ typeRep (Proxy :: Proxy (,,,,)))
+      then Just $ OTuple5 (mkOCamlDatatype t0) (mkOCamlDatatype t1) (mkOCamlDatatype t2) (mkOCamlDatatype t3) (mkOCamlDatatype t4)
+      else Nothing
+
+    six :: TyCon -> TypeRep -> TypeRep -> TypeRep -> TypeRep -> TypeRep -> TypeRep -> Maybe OCamlPrimitive
+    six tyCon t0 t1 t2 t3 t4 t5 =
+      if tyCon == (typeRepTyCon $ typeRep (Proxy :: Proxy (,,,,,)))
+      then Just $ OTuple6 (mkOCamlDatatype t0) (mkOCamlDatatype t1) (mkOCamlDatatype t2) (mkOCamlDatatype t3) (mkOCamlDatatype t4) (mkOCamlDatatype t5)
+      else Nothing
+
+    typeParameterRefs = (T.append) <$> ["TypeParameterRef"] <*> (T.pack . show <$> ([0..5] :: [Int]))
+
+    mkTypeParameterRef x =
+      case x of
+        "TypeParameterRef0" -> toOCamlType (Proxy :: Proxy TypeParameterRef0)
+        "TypeParameterRef1" -> toOCamlType (Proxy :: Proxy TypeParameterRef1)
+        "TypeParameterRef2" -> toOCamlType (Proxy :: Proxy TypeParameterRef2)
+        "TypeParameterRef3" -> toOCamlType (Proxy :: Proxy TypeParameterRef3)
+        "TypeParameterRef4" -> toOCamlType (Proxy :: Proxy TypeParameterRef4)
+        "TypeParameterRef5" -> toOCamlType (Proxy :: Proxy TypeParameterRef5)
+
+    mkOCamlDatatype x =
+      case primitiveTypeRepToOCamlPrimitive x of
+        Just primitive -> OCamlPrimitive primitive
+        Nothing ->
+          if aTyConName `elem` typeParameterRefs
+          then mkTypeParameterRef (show tyc)
           else
-            if length typeParams == 0
-            then OCamlRef haskellTypeMetaData n
-            else OCamlRefApp (typeRep (Proxy :: Proxy a)) n
--}
--- need to recurse on splitTyConApp, check for non primitives, and non TypeParameterRefs
-
-{-
-need recursion
-
-if no typeParams, easy, just return the
-    case toOCamlType (Proxy :: Proxy a) of
-      OCamlPrimitive primitive -> OCamlPrimitiveRef primitive
-      OCamlDatatype haskellTypeMetaData name _ -> mkRef haskellTypeMetaData name
-if fst non primitive, easy, use current code
-if fst is 
--}
+            OCamlDatatype
+              (tyConToHaskellTypeMetaData tyc)
+              aTyConName
+              (OCamlValueConstructor . NamedConstructor aTyConName $ typeRepToOCamlValue x)
+      where
+        tyc = typeRepTyCon x
+        aTyConName = T.pack . show $ tyc
 
 -- OCamlType instances for primitives
 
@@ -739,11 +847,14 @@ typeParameterRefTyConToOCamlTypeText = Map.fromList
   ]
 
 typeRepToHaskellTypeMetaData :: TypeRep -> HaskellTypeMetaData
-typeRepToHaskellTypeMetaData aTypeRep =
+typeRepToHaskellTypeMetaData = tyConToHaskellTypeMetaData . typeRepTyCon
+
+tyConToHaskellTypeMetaData :: TyCon -> HaskellTypeMetaData
+tyConToHaskellTypeMetaData aTypeCon =
   HaskellTypeMetaData
-    (T.pack . tyConName . typeRepTyCon $ aTypeRep)
-    (T.pack . tyConModule . typeRepTyCon $ aTypeRep)
-    (T.pack . tyConPackage . typeRepTyCon $ aTypeRep)
+    (T.pack . tyConName    $ aTypeCon)
+    (T.pack . tyConModule  $ aTypeCon)
+    (T.pack . tyConPackage $ aTypeCon)
 
 -- isPhantomTypeParameter :: TypeRep -> Bool
 

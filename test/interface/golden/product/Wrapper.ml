@@ -217,3 +217,20 @@ let decodeScrambledTypeParameterRefs decodeA0 decodeA1 decodeA2 decodeA3 decodeA
   with
   | v -> Js_result.Ok v
   | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeScrambledTypeParameterRefs: " ^ message)
+
+type wrappedWrapper =
+  { ww : (((int) option) wrapper) option
+  }
+
+let encodeWrappedWrapper x =
+  Aeson.Encode.object_
+    [ ( "ww", Aeson.Encode.optional (encodeWrapper (Aeson.Encode.optional Aeson.Encode.int)) x.ww )
+    ]
+
+let decodeWrappedWrapper json =
+  match Aeson.Decode.
+    { ww = field "ww" (optional ((fun a -> unwrapResult (decodeWrapper (wrapResult (optional int)) a)))) json
+    }
+  with
+  | v -> Js_result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeWrappedWrapper: " ^ message)

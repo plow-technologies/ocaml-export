@@ -240,7 +240,7 @@ instance HasDecoder OCamlValue where
       Nothing -> fail $ "OCaml.BuckleScript.Record (HasType (OCamlDatatype typeRep name)) mOCamlTypeMetaData is Nothing:\n\n" ++ (show ref)
       Just ocamlTypeRef -> do
         ds <- asks (dependencies . userOptions)
-        pure . stext $ renderRowWithTypeParameterDecoders ds ocamlTypeRef name typRep
+        pure . stext $ renderRowWithTypeParameterDecoders ds ocamlTypeRef typRep
 
 
   render (OCamlPrimitiveRef primitive) = renderRef primitive
@@ -546,10 +546,9 @@ wrapIfHasNext parentIsCustom typ txt =
 renderRowWithTypeParameterDecoders
   :: Map.Map HaskellTypeMetaData OCamlTypeMetaData
   -> OCamlTypeMetaData
-  -> Text
   -> TypeRep
   -> Text
-renderRowWithTypeParameterDecoders m o name t =
+renderRowWithTypeParameterDecoders m o t =
   if length rst == 0
   then typeParameters (\_ -> "")
   else
@@ -557,7 +556,7 @@ renderRowWithTypeParameterDecoders m o name t =
     then "string"
     else
       typeParameters
-        (\b -> (T.intercalate " " $ (\x -> wrapIfHasNext b x (renderRowWithTypeParameterDecoders m o (T.pack . show $ x) x)) <$> rst))
+        (\b -> (T.intercalate " " $ (\x -> wrapIfHasNext b x (renderRowWithTypeParameterDecoders m o x)) <$> rst))
   where
   (hd,rst) = splitTyConApp $ t
   typeParameters nxt =
@@ -573,4 +572,4 @@ renderRowWithTypeParameterDecoders m o name t =
               Just "option" -> "optional" <> (addSpace $ nxt False)
               Just typ -> typ <> (addSpace $ nxt False)
               -- need to add unwrapResult if parent is custom serialization function and child is primitive serialization function
-              Nothing -> appendModule m o (typeRepToHaskellTypeMetaData t) name (addSpace $ nxt True)
+              Nothing -> appendModule m o (typeRepToHaskellTypeMetaData t) (T.pack . show $ hd) (addSpace $ nxt True)

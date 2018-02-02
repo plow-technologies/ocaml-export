@@ -49,6 +49,7 @@ type ProductPackage
          :> HalfWrapped TypeParameterRef0
          :> PartiallyWrapped TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
          :> ScrambledTypeParameterRefs TypeParameterRef0 TypeParameterRef1 TypeParameterRef2 TypeParameterRef3 TypeParameterRef4 TypeParameterRef5
+         :> WrappedWrapper
        )
 
 compareInterfaceFiles :: FilePath -> SpecWith ()
@@ -339,3 +340,37 @@ instance Arbitrary (ScrambledTypeParameterRefs TypeParameterRef0 TypeParameterRe
 instance ToADTArbitrary (ScrambledTypeParameterRefs TypeParameterRef0 TypeParameterRef1 TypeParameterRef2 TypeParameterRef3 TypeParameterRef4 TypeParameterRef5)
 
 instance (Typeable a, OCamlType a, Typeable b, OCamlType b, Typeable c, OCamlType c, Typeable d, OCamlType d, Typeable e, OCamlType e, Typeable f, OCamlType f) => (OCamlType (ScrambledTypeParameterRefs a b c d e f))
+
+data WrappedWrapper =
+  WrappedWrapper
+--    { ww :: Maybe (Wrapper (Maybe String))
+    { ww :: Maybe (Wrapper (Maybe Int))
+    } deriving (Eq,Show,Generic,ToJSON,FromJSON,OCamlType)
+
+instance Arbitrary WrappedWrapper where
+  arbitrary = WrappedWrapper <$> arbitrary
+
+instance ToADTArbitrary WrappedWrapper
+
+{-
+
+{-# LANGUAGE TypeApplication #-}
+
+proxyToTypeRep :: forall a. (Typeable a) => Proxy a -> TypeRep a
+proxyToTypeRep Proxy = typeRep @a
+
+λ> toOCamlType (Proxy :: Proxy WrappedWrapper)
+
+OCamlDatatype (HaskellTypeMetaData "WrappedWrapper" "Ghci3" "interactive") "WrappedWrapper" (OCamlValueConstructor (RecordConstructor "WrappedWrapper" (OCamlField "ww" (OCamlPrimitiveRef (OOption (OCamlDatatype (HaskellTypeMetaData "Wrapper" "Ghci2" "interactive") "Wrapper" (OCamlValueConstructor (RecordConstructor "Wrapper" (OCamlField "wpa" (OCamlPrimitiveRef (OOption (OCamlPrimitive (OList (OCamlPrimitive OChar))))))))))))))
+
+λ> toOCamlType (Proxy :: Proxy (Wrapper (Maybe Int)))
+
+OCamlDatatype (HaskellTypeMetaData "Wrapper" "Ghci2" "interactive") "Wrapper" (OCamlValueConstructor (RecordConstructor "Wrapper" (OCamlField "wpa" (OCamlPrimitiveRef (OOption (OCamlPrimitive OInt))))))
+
+λ> toOCamlType (Proxy :: Proxy (MaybeWrapped))
+OCamlDatatype (HaskellTypeMetaData "MaybeWrapped" "Ghci7" "interactive") "MaybeWrapped" (OCamlValueConstructor (RecordConstructor "MaybeWrapped" (OCamlField "mw" (OCamlRefApp (Wrapper (Maybe Int)) "Wrapper"))))
+
+(OCamlPrimitiveRef (OOption (OCamlPrimitive (OList (OCamlPrimitive OChar)))))
+(OCamlRefApp (Wrapper (Maybe Int))
+(OCamlPrimitiveRef (OOption (OCamlDatatype (HaskellTypeMetaData "Wrapper" "Ghci2" "interactive") "Wrapper" (OCamlValueConstructor (RecordConstructor "Wrapper" (OCamlField "wpa" (OCamlPrimitiveRef (OOption (OCamlPrimitive (OList (OCamlPrimitive OChar)))))))))))
+-}

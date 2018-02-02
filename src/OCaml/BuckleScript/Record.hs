@@ -139,7 +139,7 @@ instance HasType OCamlValue where
       Nothing -> fail $ "OCaml.BuckleScript.Record (HasType (OCamlDatatype typeRep name)) mOCamlTypeMetaData is Nothing:\n\n" ++ (show ref)
       Just ocamlTypeRef -> do
         ds <- asks (dependencies . userOptions)
-        pure . stext $ renderRowTypeParameters ds ocamlTypeRef name typRep
+        pure . stext $ renderRowTypeParameters ds ocamlTypeRef typRep
 
   render (OCamlTypeParameterRef name) = pure (stext ("'" <> name))
   render (OCamlPrimitiveRef primitive) = ocamlRefParens primitive <$> renderRef primitive
@@ -274,19 +274,18 @@ appendModule m o h name =
 renderRowTypeParameters
   :: Map.Map HaskellTypeMetaData OCamlTypeMetaData
   -> OCamlTypeMetaData
-  -> Text
   -> TypeRep
   -> Text
-renderRowTypeParameters m o name t =
+renderRowTypeParameters m o t =
   case Map.lookup hd tupleTyConToSize of
-    Just _ -> (T.intercalate " * " $ (\x -> (renderRowTypeParameters m o (T.pack . show $ x) x)) <$> rst)
+    Just _ -> (T.intercalate " * " $ (\x -> (renderRowTypeParameters m o x)) <$> rst)
     Nothing -> 
       if length rst == 0
       then typeParameters
       else
         if typeRepIsString t
         then "string"
-        else "(" <> (T.intercalate ", " $ (\x -> (renderRowTypeParameters m o (T.pack . show $ x) x)) <$> rst) <> ") " <> typeParameters
+        else "(" <> (T.intercalate ", " $ (\x -> (renderRowTypeParameters m o x)) <$> rst) <> ") " <> typeParameters
   where
   (hd,rst) = splitTyConApp $ t
   typeParameters =
@@ -296,4 +295,4 @@ renderRowTypeParameters m o name t =
         case Map.lookup hd primitiveTyConToOCamlTypeText of
           Just "either" -> "Aeson.Compatibility.Either.t"
           Just typ -> typ
-          Nothing  -> appendModule m o (typeRepToHaskellTypeMetaData t) name
+          Nothing  -> appendModule m o (typeRepToHaskellTypeMetaData t) (T.pack . show $ hd)

@@ -52,7 +52,7 @@ class HasTypeRef a where
 instance HasType OCamlDatatype where
   render datatype@(OCamlDatatype _mOCamlTypeDataType typeName constructor@(OCamlSumOfRecordConstructor _ (MultipleConstructors constructors))) = do
     -- For each constructor, if it is a record constructor, declare a type for that record
-    -- before and separate form the main sum type.
+    -- before and separate from the main sum type.
     sumRecordsData <- catMaybes <$> sequence (renderSumRecord typeName <$> constructors)
     let sumRecords = msuffix (line <> line) (fst <$> sumRecordsData)
         newConstructors = replaceRecordConstructors (snd <$> sumRecordsData) <$> constructors
@@ -76,6 +76,10 @@ instance HasType OCamlDatatype where
   render (OCamlPrimitive primitive) = renderRef primitive
 
 instance HasTypeRef OCamlDatatype where
+  renderRef (OCamlDatatype typeRef typeName (OCamlValueConstructor (NamedConstructor _ (OCamlRefApp typRep values)))) = do
+    dx <- renderRef values
+    pure $ (parens dx) <+> (stext . textLowercaseFirst . T.pack . show $ typeRepTyCon typRep)
+
   renderRef datatype@(OCamlDatatype typeRef typeName _) = do
     if isTypeParameterRef datatype
     then
@@ -100,14 +104,12 @@ instance HasTypeRef OCamlValue where
     dx <- render x
     dy <- render y
     pure $ dx <+> dy
-
-  renderRef _ = pure ""  
 {-
-  render (Values x y) = do
-    dx <- render x
-    dy <- render y
-    return $ dx <+> "*" <+> dy
+  renderRef (OCamlRefApp typRep values) = do
+    dx <- renderRef values
+    pure $ (parens dx) <+> (stext . textLowercaseFirst . T.pack . show $ typeRepTyCon typRep)
 -}
+  renderRef _ = pure ""  
             
 instance HasType OCamlConstructor where
   render (OCamlValueConstructor value) = render value
@@ -137,7 +139,6 @@ instance HasType ValueConstructor where
 instance HasType EnumeratorConstructor where
   render (EnumeratorConstructor name) = pure (stext name)
   
-
 instance HasType OCamlValue where
   render ref@(OCamlRef typeRef name) = do
     mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData
@@ -149,6 +150,9 @@ instance HasType OCamlValue where
 
   render ref@(OCamlRefApp typRep values) = do
     dx <- renderRef values
+    -- case Map.lookup typRep typeParameterToRef of
+    --  Just p  ->
+    --  Nothing ->
     pure $ (parens dx) <+> (stext . textLowercaseFirst . T.pack . show $ typeRepTyCon typRep)
     -- ds <- asks (dependencies . userOptions)
     -- renderRowTypeParameters ds typRep
@@ -174,6 +178,7 @@ instance HasType OCamlValue where
 
 
 instance HasRecordType OCamlValue where
+--  renderRecord (OCamlTypeParameterRef a) = pure $ stext ("'" <> a)
   renderRecord (OCamlPrimitiveRef primitive) = renderRef primitive
   renderRecord (Values x y) = do
     dx <- renderRecord x

@@ -60,6 +60,8 @@ module OCaml.BuckleScript.Types
   , typeRepToHaskellTypeMetaData
   , tyConToHaskellTypeMetaData
   , ocamlDatatypeHasTypeParameter
+
+  , typeParameterToRef
   ) where
 
 -- base
@@ -295,13 +297,16 @@ instance (OCamlType a, Typeable a) => GenericOCamlValue (Rec0 a) where
 typeRepToOCamlValue :: TypeRep -> OCamlValue
 typeRepToOCamlValue t =
   -- check if the type is a primitive
-  case primitiveTypeRepToOCamlPrimitive t of
-    Just primitive -> OCamlPrimitiveRef primitive
+  case Map.lookup hd typeParameterRefTyConToOCamlTypeText of
+    Just p -> OCamlTypeParameterRef p
     Nothing ->
-      -- if it has no typeParams then it mkRef
-      if length typeParams == 0
-      then mkRef (tyConToHaskellTypeMetaData hd) (T.pack . show $ hd)
-      else OCamlRefApp t (mkValues)
+      case primitiveTypeRepToOCamlPrimitive t of
+        Just primitive -> OCamlPrimitiveRef primitive
+        Nothing ->
+          -- if it has no typeParams then it mkRef
+          if length typeParams == 0
+          then mkRef (tyConToHaskellTypeMetaData hd) (T.pack . show $ hd)
+          else OCamlRefApp t (mkValues)
   where
     (hd, typeParams) = splitTyConApp t
 
@@ -322,6 +327,17 @@ typeRepToOCamlValue t =
           if length typeParams == 2
           then Values (typeRepToOCamlValue $ head typeParams) (typeRepToOCamlValue $ head $ tail typeParams)
           else Values (typeRepToOCamlValue $ head typeParams) (foldl (\b a -> Values b (typeRepToOCamlValue a)) (typeRepToOCamlValue $ head $ tail typeParams) (tail $ tail typeParams))
+
+
+typeParameterToRef :: Map.Map TypeRep Text
+typeParameterToRef = Map.fromList
+  [ ( typeRep (Proxy :: Proxy TypeParameterRef0), "a0")
+  , ( typeRep (Proxy :: Proxy TypeParameterRef1), "a1")
+  , ( typeRep (Proxy :: Proxy TypeParameterRef2), "a2")
+  , ( typeRep (Proxy :: Proxy TypeParameterRef3), "a3")
+  , ( typeRep (Proxy :: Proxy TypeParameterRef4), "a4")
+  , ( typeRep (Proxy :: Proxy TypeParameterRef5), "a5")
+  ]
 
 primitiveTypeRepToOCamlPrimitive :: TypeRep -> Maybe OCamlPrimitive
 primitiveTypeRepToOCamlPrimitive t =

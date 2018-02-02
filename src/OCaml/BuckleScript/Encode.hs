@@ -536,7 +536,7 @@ renderRowWithTypeParameterEncoders m o t =
     if typeRepIsString t
     then "Aeson.Encode.string"
     else
-      typeParameters <> " " <> (T.intercalate " " $ (\x -> wrapIfHasNext x (renderRowWithTypeParameterEncoders m o x)) <$> rst)
+      "(" <> typeParameters <> " " <> (T.intercalate " " $ (\x -> wrapIfHasNext x (renderRowWithTypeParameterEncoders m o x)) <$> rst) <> ")"
     
   where
   (hd,rst) = splitTyConApp $ t
@@ -552,6 +552,7 @@ renderRowWithTypeParameterEncoders m o t =
               Just typ -> "Aeson.Encode." <> typ
               Nothing  -> appendModule m o (typeRepToHaskellTypeMetaData t) (T.pack . show $ hd)
 
+{-
 renderRowWithTypeParameterEncoders'
   :: Map.Map HaskellTypeMetaData OCamlTypeMetaData
   -> Map.Map OCamlTypeMetaData OCamlDatatype
@@ -603,3 +604,4 @@ appendModule' m dd o h name =
           Nothing -> "encode" <> textUppercaseFirst name
       else
         ""
+-}

@@ -555,8 +555,8 @@ renderRowWithTypeParameterDecoders m o t =
     if typeRepIsString t
     then "string"
     else
-      typeParameters
-        (\b -> (T.intercalate " " $ (\x -> wrapIfHasNext b x (renderRowWithTypeParameterDecoders m o x)) <$> rst))
+      "(" <> typeParameters
+        (\b -> (T.intercalate " " $ (\x -> wrapIfHasNext b x (renderRowWithTypeParameterDecoders m o x)) <$> rst)) <> ")"
   where
   (hd,rst) = splitTyConApp $ t
   typeParameters nxt =

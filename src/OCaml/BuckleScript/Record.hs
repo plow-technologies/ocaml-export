@@ -278,7 +278,7 @@ renderRowTypeParameters
   -> Text
 renderRowTypeParameters m o t =
   case Map.lookup hd tupleTyConToSize of
-    Just _ -> (T.intercalate " * " $ (\x -> (renderRowTypeParameters m o x)) <$> rst)
+    Just _ -> "(" <> (T.intercalate " * " $ (\x -> (renderRowTypeParameters m o x)) <$> rst) <> ")"
     Nothing -> 
       if length rst == 0
       then typeParameters

@@ -137,7 +137,7 @@ instance HasEncoder OCamlDatatype where
 -- | produce encode function name for data types and primitives
 instance HasEncoderRef OCamlDatatype where
   -- when ocamlrefapp is reference by a primitive
-  renderRef (OCamlDatatype typeRef typeName (OCamlValueConstructor (NamedConstructor _ (OCamlRefApp typRep values)))) = do
+  renderRef (OCamlDatatype _ _ (OCamlValueConstructor (NamedConstructor _ (OCamlRefApp typRep values)))) = do
     let name = "encode" <> (stext $ textUppercaseFirst $ T.pack $ show $ fst $ splitTyConApp typRep)
     dx <- renderRef values
 

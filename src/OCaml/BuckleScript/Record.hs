@@ -76,7 +76,7 @@ instance HasType OCamlDatatype where
   render (OCamlPrimitive primitive) = renderRef primitive
 
 instance HasTypeRef OCamlDatatype where
-  renderRef (OCamlDatatype typeRef typeName (OCamlValueConstructor (NamedConstructor _ (OCamlRefApp typRep values)))) = do
+  renderRef (OCamlDatatype _ _ (OCamlValueConstructor (NamedConstructor _ (OCamlRefApp typRep values)))) = do
     dx <- renderRef values
     pure $ (parens dx) <+> (stext . textLowercaseFirst . T.pack . show $ typeRepTyCon typRep)
 
@@ -144,7 +144,7 @@ instance HasType OCamlValue where
         ds <- asks (dependencies . userOptions)
         pure . stext $ appendModule ds ocamlTypeRef typeRef name
 
-  render ref@(OCamlRefApp typRep values) = do
+  render (OCamlRefApp typRep values) = do
     dx <- renderRef values
     pure $ (parens dx) <+> (stext . textLowercaseFirst . T.pack . show $ typeRepTyCon typRep)
 
@@ -275,74 +275,3 @@ appendModule m o h name =
     -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
     -- within the same file as the sum. These products will not be in the dependencies map.
     Nothing -> textLowercaseFirst name
-
--- | for records (of non-primitive types) with type parameters, write the corresponding OCaml types.
---   This uses TypeRep instead of data derived from Generics.
-{-
-renderRowTypeParameters
-  :: Map.Map HaskellTypeMetaData OCamlTypeMetaData
-  -> OCamlTypeMetaData
-  -> TypeRep
-  -> Text
-renderRowTypeParameters m o t =
-  case Map.lookup hd tupleTyConToSize of
-    Just _ -> "(" <> (T.intercalate " * " $ (\x -> (renderRowTypeParameters m o x)) <$> rst) <> ")"
-    Nothing -> 
-      if length rst == 0
-      then typeParameters
-      else
-        if typeRepIsString t
-        then "string"
-        else "(" <> (T.intercalate ", " $ (\x -> (renderRowTypeParameters m o x)) <$> rst) <> ") " <> typeParameters
-  where
-  (hd,rst) = splitTyConApp $ t
-  typeParameters =
-    case Map.lookup hd typeParameterRefTyConToOCamlTypeText of
-      Just ptyp -> "'" <> ptyp
-      Nothing -> 
-        case Map.lookup hd primitiveTyConToOCamlTypeText of
-          Just "either" -> "Aeson.Compatibility.Either.t"
-          Just typ -> typ
-          Nothing  -> appendModule m o (typeRepToHaskellTypeMetaData t) (T.pack . show $ hd)
-
-a -> Reader TypeMetaData Doc
-
-appendModule :: Map.Map HaskellTypeMetaData OCamlTypeMetaData -> OCamlTypeMetaData -> HaskellTypeMetaData -> Text -> Text
-appendModule m o h name =
-  case Map.lookup h m of
-    Just parOCamlTypeMetaData -> 
-      (mkModulePrefix o parOCamlTypeMetaData) <> (textLowercaseFirst name)
-    -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
-    -- within the same file as the sum. These products will not be in the dependencies map.
-    Nothing -> textLowercaseFirst name
-
-typeRepToHaskellTypeMetaData
--}
-renderRowTypeParameters
-  :: Map.Map HaskellTypeMetaData OCamlTypeMetaData
-  -> TypeRep
-  -> Reader TypeMetaData Doc
-renderRowTypeParameters m t =
-  if length rst == 0
-  then pure $ stext typeParameters
-  else
-    if typeRepIsString t
-    then pure $ "string"
-    else do
-      docs <- mkDocListP <$> (sequence $ ((\x -> renderRowTypeParameters m x) <$> rst))
-      pure $ docs <+> stext typeParameters 
-
-  where
-    (hd,rst) = splitTyConApp $ t
-    haskellTypeMetaData = tyConToHaskellTypeMetaData hd
-    typeParameters =
-      case Map.lookup hd typeParameterRefTyConToOCamlTypeText of
-        Just ptyp -> "'" <> ptyp
-        Nothing -> 
-          case Map.lookup hd primitiveTyConToOCamlTypeText of
-            Just "either" -> "Aeson.Compatibility.Either.t"
-            Just typ -> typ
-            Nothing  ->
-              case Map.lookup haskellTypeMetaData m of
-                Nothing -> "not found"
-                Just o -> appendModule m o (typeRepToHaskellTypeMetaData t) (T.pack . show $ hd)

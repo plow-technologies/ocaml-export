@@ -273,7 +273,7 @@ instance GenericOCamlValue U1 where
 
 -- | Handle type parameter. There are found in the order of declaration on the right hand side of a type.
 --   Reordering may be necessary for TypeParameterRefs.
-instance (OCamlType a, Typeable a) => GenericOCamlValue (Rec0 a) where
+instance Typeable a => GenericOCamlValue (Rec0 a) where
   genericToOCamlValue _ = typeRepToOCamlValue $ typeRep (Proxy :: Proxy a)
 
 typeRepToOCamlValue :: TypeRep -> OCamlValue
@@ -402,28 +402,26 @@ primitiveTypeRepToOCamlPrimitive t =
       then Just $ OTuple6 (mkOCamlDatatype t0) (mkOCamlDatatype t1) (mkOCamlDatatype t2) (mkOCamlDatatype t3) (mkOCamlDatatype t4) (mkOCamlDatatype t5)
       else Nothing
 
-    typeParameterRefs = (T.append) <$> ["TypeParameterRef"] <*> (T.pack . show <$> ([0..5] :: [Int]))
-
-    mkTypeParameterRef x =
-      case x of
-        "TypeParameterRef0" -> toOCamlType (Proxy :: Proxy TypeParameterRef0)
-        "TypeParameterRef1" -> toOCamlType (Proxy :: Proxy TypeParameterRef1)
-        "TypeParameterRef2" -> toOCamlType (Proxy :: Proxy TypeParameterRef2)
-        "TypeParameterRef3" -> toOCamlType (Proxy :: Proxy TypeParameterRef3)
-        "TypeParameterRef4" -> toOCamlType (Proxy :: Proxy TypeParameterRef4)
-        "TypeParameterRef5" -> toOCamlType (Proxy :: Proxy TypeParameterRef5)
+    typeParameterRefMap = Map.fromList
+      [ ("TypeParameterRef0", toOCamlType (Proxy :: Proxy TypeParameterRef0))
+      , ("TypeParameterRef1", toOCamlType (Proxy :: Proxy TypeParameterRef1))
+      , ("TypeParameterRef2", toOCamlType (Proxy :: Proxy TypeParameterRef2))
+      , ("TypeParameterRef3", toOCamlType (Proxy :: Proxy TypeParameterRef3))
+      , ("TypeParameterRef4", toOCamlType (Proxy :: Proxy TypeParameterRef4))
+      , ("TypeParameterRef5", toOCamlType (Proxy :: Proxy TypeParameterRef5))
+      ]
 
     mkOCamlDatatype x =
       case primitiveTypeRepToOCamlPrimitive x of
         Just primitive -> OCamlPrimitive primitive
         Nothing ->
-          if aTyConName `elem` typeParameterRefs
-          then mkTypeParameterRef (show tyc)
-          else
-            OCamlDatatype
-              (tyConToHaskellTypeMetaData tyc)
-              aTyConName
-              (OCamlValueConstructor . NamedConstructor aTyConName $ typeRepToOCamlValue x)
+          case Map.lookup aTyConName typeParameterRefMap of
+            Just tref -> tref
+            Nothing ->
+              OCamlDatatype
+                (tyConToHaskellTypeMetaData tyc)
+                aTyConName
+                (OCamlValueConstructor . NamedConstructor aTyConName $ typeRepToOCamlValue x)
       where
         tyc = typeRepTyCon x
         aTyConName = T.pack . show $ tyc
@@ -768,34 +766,6 @@ typeRepIsString t =
   let (hd, rst) = splitTyConApp t in
   show hd == "[]" && length rst == 1 && ((show $ head rst) == "Char")
 
-primitiveTyConToTypeRep :: Map.Map TyCon TypeRep
-primitiveTyConToTypeRep = Map.fromList
-  [ ( typeRepTyCon $ typeRep (Proxy :: Proxy []        ), (typeRep (Proxy :: Proxy []         )))
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Maybe     ), (typeRep (Proxy :: Proxy Maybe      )))
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Either    ), (typeRep (Proxy :: Proxy Either     )))
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy ()        ), (typeRep (Proxy :: Proxy ()         )))
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Text      ), (typeRep (Proxy :: Proxy Text       )))
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy ByteString), (typeRep (Proxy :: Proxy ByteString )))
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Day       ), (typeRep (Proxy :: Proxy Day        )))
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy UTCTime   ), (typeRep (Proxy :: Proxy UTCTime    )))
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Float     ), (typeRep (Proxy :: Proxy Float      )))
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Double    ), (typeRep (Proxy :: Proxy Double     )))
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Int8      ), (typeRep (Proxy :: Proxy Int8       )))
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Int16     ), (typeRep (Proxy :: Proxy Int16      )))
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Int32     ), (typeRep (Proxy :: Proxy Int32      )))
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Int64     ), (typeRep (Proxy :: Proxy Int64      )))
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Int       ), (typeRep (Proxy :: Proxy Int        )))
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Integer   ), (typeRep (Proxy :: Proxy Integer    )))
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Word      ), (typeRep (Proxy :: Proxy Word       )))
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Word8     ), (typeRep (Proxy :: Proxy Word8      )))
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Word16    ), (typeRep (Proxy :: Proxy Word16     )))
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Word32    ), (typeRep (Proxy :: Proxy Word32     )))
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Word64    ), (typeRep (Proxy :: Proxy Word64     )))
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Char      ), (typeRep (Proxy :: Proxy Char       )))
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy Bool      ), (typeRep (Proxy :: Proxy Bool       )))
-  ]
-
-
 -- | match 'TyCon's (accessible from a TypeRep) to their equivalent OCaml types.
 primitiveTyConToOCamlTypeText :: Map.Map TyCon Text
 primitiveTyConToOCamlTypeText = Map.fromList
@@ -885,54 +855,3 @@ ocamlDatatypeHasTypeParameter ocamlDatatype index = ocamlDatatypeHasTypeParamete
     ocamlValueHasTypeParameter (OCamlField _ v) = ocamlValueHasTypeParameter v
     ocamlValueHasTypeParameter (Values v0 v1) = ocamlValueHasTypeParameter v0 || ocamlValueHasTypeParameter v1
     ocamlValueHasTypeParameter _ = False
-
-    
-{-
-hasTypeParameter''' :: OCamlValue -> OCamlPrimitive -> Bool
-hasTypeParameter''' v (OList d0) = hasTypeParameter'' v d0
-hasTypeParameter''' v _ = False
-
-hasTypeParameter'' :: OCamlValue -> OCamlDatatype -> Bool
-hasTypeParameter'' v (OCamlDatatype _ _ ocamlConstructor) = hasTypeParameter' v ocamlConstructor
-hasTypeParameter'' v (OCamlPrimitive ocamlPrimitive) = hasTypeParameter''' v ocamlPrimitive
-
-hasTypeParameter' :: OCamlValue -> OCamlConstructor -> Bool
-hasTypeParameter' v (OCamlValueConstructor valueConstructor) = hasTypeParameter v valueConstructor
-hasTypeParameter' v (OCamlSumOfRecordConstructor _ valueConstructor) = hasTypeParameter v valueConstructor
-hasTypeParameter' _ _ = False
-
-hasTypeParameter :: OCamlValue -> ValueConstructor -> Bool
-hasTypeParameter vv (NamedConstructor _ v) = isOCamlValue vv v
-hasTypeParameter vv (RecordConstructor _ v) = isOCamlValue vv v
-hasTypeParameter vv (MultipleConstructors vs) = or $ hasTypeParameter vv <$> vs
-
-isOCamlValue :: OCamlValue -> OCamlValue -> Bool
-isOCamlValue vv (OCamlPrimitiveRef p) = hasTypeParameter''' vv p
-isOCamlValue vv o@(OCamlTypeParameterRef _) = vv == o
-isOCamlValue vv (OCamlField _ v) = isOCamlValue vv v
-isOCamlValue vv (Values v0 v1) = isOCamlValue vv v0 || isOCamlValue vv v1
-isOCamlValue _ _ = False
--}
-{-
-toOCamlType _ = OCamlDatatype (HaskellTypeMetaData "a0" "OCaml.BuckleScript.Types" "ocaml-export") "a0" $ OCamlValueConstructor $ NamedConstructor "a0" $ OCamlTypeParameterRef "a0"
-
-
-
-
-λ> data Key a b = Key { key :: String, things :: [b] } deriving (Eq,Read,Show,Generic)
-λ> data Zed b = Zed {ab :: Double, kk :: Key Int b} deriving (Eq,Read,Show,Generic)
-λ> instance (OCamlType b, Typeable b) => OCamlType (Zed b)
-λ> data Xed = Xed {xx :: Double, kkx :: Key Int String} deriving (Eq,Read,Show,Generic, OCamlType)
-
-λ> toOCamlType (Proxy :: Proxy (Key TypeParameterRef0 TypeParameterRef1))
-
-OCamlDatatype (HaskellTypeMetaData "Key" "Ghci1" "interactive") "Key" (OCamlValueConstructor (RecordConstructor "Key" (Values (OCamlField "key" (OCamlPrimitiveRef (OList (OCamlPrimitive OChar)))) (OCamlField "things" (OCamlPrimitiveRef (OList (OCamlDatatype (HaskellTypeMetaData "a1" "OCaml.BuckleScript.Types" "ocaml-export") "a1" (OCamlValueConstructor (NamedConstructor "a1" (OCamlTypeParameterRef "a1"))))))))))
-
-λ> toOCamlType (Proxy :: Proxy (Zed TypeParameterRef0))
-
-OCamlDatatype (HaskellTypeMetaData "Zed" "Ghci4" "interactive") "Zed" (OCamlValueConstructor (RecordConstructor "Zed" (Values (OCamlField "ab" (OCamlPrimitiveRef OFloat)) (OCamlField "kk" (OCamlRefApp (Key Int TypeParameterRef0) "Key")))))
-
-λ> toOCamlType (Proxy :: Proxy Xed)
-
-OCamlDatatype (HaskellTypeMetaData "Xed" "Ghci7" "interactive") "Xed" (OCamlValueConstructor (RecordConstructor "Xed" (Values (OCamlField "xx" (OCamlPrimitiveRef OFloat)) (OCamlField "kkx" (OCamlRefApp (Key Int [Char]) "Key")))))
--}

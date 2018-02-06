@@ -143,7 +143,7 @@ instance HasDecoder OCamlDatatype where
   render (OCamlPrimitive primitive) = renderRef primitive
 
 instance HasDecoderRef OCamlDatatype where
-  renderRef (OCamlDatatype typeRef typeName (OCamlValueConstructor (NamedConstructor _ (OCamlRefApp typRep values)))) = do
+  renderRef (OCamlDatatype typeRef _ (OCamlValueConstructor (NamedConstructor _ (OCamlRefApp typRep values)))) = do
     let name = "decode" <> (stext $ textUppercaseFirst $ T.pack $ show $ fst $ splitTyConApp typRep)
     dx <- renderRef values
 
@@ -225,15 +225,6 @@ instance HasDecoder OCamlConstructor where
             <$$> "| exception Aeson.Decode.DecodeError message -> Js_result.Error message"
 
   render _ = pure ""
-
-renderResult :: Text -> OCamlDatatype -> Reader TypeMetaData Doc
-renderResult jsonFieldname (OCamlDatatype _ datatypeName _constructor) =
-  pure
-    $ "(field" <+> dquotes (stext jsonFieldname)
-    <+> "(fun a -> unwrapResult (decode" <> (stext . textUppercaseFirst $ datatypeName) <+> "a)))"
-renderResult jsonFieldname datatype@(OCamlPrimitive _primitive) = do
-  dv <- renderRef datatype
-  pure $ "(field" <+> dquotes (stext jsonFieldname) <+> dv <> ")"
     
 instance HasDecoder OCamlValue where
   render ref@(OCamlRef typeRef name) = do
@@ -262,13 +253,7 @@ instance HasDecoder OCamlValue where
     dx <- render x
     dy <- render y
     return $ dx <$$> ";" <+> dy
-{-
-  render (OCamlField name (OCamlPrimitiveRef (OOption datatype))) = do
-    ao <- asks (aesonOptions . userOptions)
-    let jsonFieldname = T.pack . Aeson.fieldLabelModifier ao . T.unpack $ name
-    optional <- renderResult jsonFieldname datatype
-    return $ (stext name) <+> "=" <+> "optional" <+> optional <+> "json"
--}
+
   render (OCamlField name value) = do
     ao <- asks (aesonOptions . userOptions)
     let jsonFieldname = T.pack . Aeson.fieldLabelModifier ao . T.unpack $ name    
@@ -349,7 +334,7 @@ instance HasDecoderRef OCamlPrimitive where
 -- Util
 
 renderRefWithUnwrapResult :: OCamlDatatype -> Reader TypeMetaData Doc
-renderRefWithUnwrapResult (OCamlDatatype typeRef typeName (OCamlValueConstructor (NamedConstructor _ (OCamlRefApp typRep values)))) = do
+renderRefWithUnwrapResult (OCamlDatatype typeRef _ (OCamlValueConstructor (NamedConstructor _ (OCamlRefApp typRep values)))) = do
   let name = "decode" <> (stext $ textUppercaseFirst $ T.pack $ show $ fst $ splitTyConApp typRep)
   dx <- renderRef values
 

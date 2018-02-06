@@ -46,9 +46,9 @@ library:
   - wl-pprint-text
   ghc-options:
   - -Wall
-#  - -Werror
-#  - -Wredundant-constraints
-#  - -fprint-potential-instances
+  - -Werror
+  - -Wredundant-constraints
+  - -fprint-potential-instances
 
 tests:
   spec:
@@ -79,4 +79,4 @@ tests:
     - typelits-witnesses
     ghc-options:
     - -Wall
-#    - -Werror
+    - -Werror

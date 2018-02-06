@@ -275,24 +275,6 @@ instance GenericOCamlValue U1 where
 --   Reordering may be necessary for TypeParameterRefs.
 instance (OCamlType a, Typeable a) => GenericOCamlValue (Rec0 a) where
   genericToOCamlValue _ = typeRepToOCamlValue $ typeRep (Proxy :: Proxy a)
-{-    
-    if length typeParams > 0
-    then
-      case toOCamlType (Proxy :: Proxy a) of
-        OCamlPrimitive _ -> OCamlRefApp (typeRep (Proxy :: Proxy a)) OCamlEmpty
-        OCamlDatatype haskellTypeMetaData name _ -> OCamlRefApp (typeRep (Proxy :: Proxy a)) OCamlEmpty
-    else
-      case toOCamlType (Proxy :: Proxy a) of
-        OCamlPrimitive primitive -> OCamlPrimitiveRef primitive
-        OCamlDatatype haskellTypeMetaData name _ -> mkRef haskellTypeMetaData name
-    where
-      typeParameterRefs = (T.append) <$> ["a"] <*> (T.pack . show <$> ([0..5] :: [Int]))
-      (hd, typeParams) = splitTyConApp $ typeRep (Proxy :: Proxy a)
-      mkRef haskellTypeMetaData n =
-          if n `elem` typeParameterRefs
-          then OCamlTypeParameterRef n
-          else OCamlRef haskellTypeMetaData n
--}
 
 typeRepToOCamlValue :: TypeRep -> OCamlValue
 typeRepToOCamlValue t =

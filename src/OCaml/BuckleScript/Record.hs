@@ -104,11 +104,7 @@ instance HasTypeRef OCamlValue where
     dx <- render x
     dy <- render y
     pure $ dx <+> dy
-{-
-  renderRef (OCamlRefApp typRep values) = do
-    dx <- renderRef values
-    pure $ (parens dx) <+> (stext . textLowercaseFirst . T.pack . show $ typeRepTyCon typRep)
--}
+
   renderRef _ = pure ""  
             
 instance HasType OCamlConstructor where
@@ -150,21 +146,8 @@ instance HasType OCamlValue where
 
   render ref@(OCamlRefApp typRep values) = do
     dx <- renderRef values
-    -- case Map.lookup typRep typeParameterToRef of
-    --  Just p  ->
-    --  Nothing ->
     pure $ (parens dx) <+> (stext . textLowercaseFirst . T.pack . show $ typeRepTyCon typRep)
-    -- ds <- asks (dependencies . userOptions)
-    -- renderRowTypeParameters ds typRep
-    {-
-    mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData
-    
-    case mOCamlTypeMetaData of
-      Nothing -> fail $ "OCaml.BuckleScript.Record (HasType (OCamlDatatype typeRep name)) mOCamlTypeMetaData is Nothing:\n\n" ++ (show ref)
-      Just ocamlTypeRef -> do
-        ds <- asks (dependencies . userOptions)
-        pure . stext $ renderRowTypeParameters ds ocamlTypeRef typRep
-    -}
+
   render (OCamlTypeParameterRef name) = pure (stext ("'" <> name))
   render (OCamlPrimitiveRef primitive) = ocamlRefParens primitive <$> renderRef primitive
   render OCamlEmpty = pure (text "")
@@ -178,7 +161,6 @@ instance HasType OCamlValue where
 
 
 instance HasRecordType OCamlValue where
---  renderRecord (OCamlTypeParameterRef a) = pure $ stext ("'" <> a)
   renderRecord (OCamlPrimitiveRef primitive) = renderRef primitive
   renderRecord (Values x y) = do
     dx <- renderRecord x

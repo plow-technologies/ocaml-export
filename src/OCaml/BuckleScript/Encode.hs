@@ -136,6 +136,51 @@ instance HasEncoder OCamlDatatype where
 
 -- | produce encode function name for data types and primitives
 instance HasEncoderRef OCamlDatatype where
+  -- when ocamlrefapp is reference by a primitive
+  renderRef (OCamlDatatype typeRef typeName (OCamlValueConstructor (NamedConstructor _ (OCamlRefApp typRep values)))) = do
+    let name = "encode" <> (stext $ textUppercaseFirst $ T.pack $ show $ fst $ splitTyConApp typRep)
+    dx <- renderRef values
+    -- pure $ (parens dx) <+> (stext . textLowercaseFirst . T.pack . show $ typeRepTyCon typRep)
+
+    mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData 
+    case mOCamlTypeMetaData of
+      Nothing -> pure $ parens $ name <+> dx
+      Just decOCamlTypeMetaData -> do
+        ds <- asks (dependencies . userOptions)
+        case Map.lookup (typeRepToHaskellTypeMetaData typRep) ds of
+          Just parOCamlTypeMetaData -> do
+            let prefix = stext $ mkModulePrefix decOCamlTypeMetaData parOCamlTypeMetaData
+            pure $ parens $ prefix <> name <+> dx
+            -- pure $ prefix <> "encode" <> (stext . textUppercaseFirst $ name)
+
+            -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
+            -- within the same file as the sum. These products will not be in the dependencies map.
+          Nothing -> pure $ parens $ name <+> dx
+
+
+{-
+  render ref@(OCamlRefApp typRep values) = do
+    mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData
+    case mOCamlTypeMetaData of
+      Nothing -> fail $ "OCaml.BuckleScript.Encode (HasEncoder (OCamlRef typeRep name)) mOCamlTypeMetaData is Nothing:\n\n" ++ (show ref)
+      Just ocamlTypeRef -> do
+        ds <- asks (dependencies . userOptions)
+        dx <- renderRef values
+        pure $ parens $
+          (stext $ appendModule ds ocamlTypeRef (typeRepToHaskellTypeMetaData typRep)
+           (T.pack $ show $ fst $ splitTyConApp typRep))
+          <+> dx
+
+
+    mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData
+    case mOCamlTypeMetaData of
+      Nothing -> fail $ "OCaml.BuckleScript.Encode (HasEncoder (OCamlRef typeRep name)) mOCamlTypeMetaData is Nothing:\n\n" ++ (show ref)
+      Just ocamlTypeRef -> do
+        ds <- asks (dependencies . userOptions)
+        pure . stext $ appendModule ds ocamlTypeRef typeRef name
+
+-}
+
   renderRef datatype@(OCamlDatatype typeRef name _) = do
     if isTypeParameterRef datatype
     then
@@ -304,9 +349,12 @@ instance HasEncoder OCamlValue where
     return . spaceparens $
       dquotes (stext jsonFieldname) <> comma <+>
       (valueBody <+> "x." <> stext name)
+
   render (OCamlTypeParameterRef name) =
     pure $ "encode" <> (stext . textUppercaseFirst $ name)
+
   render (OCamlPrimitiveRef primitive) = renderRef primitive
+
   render ref@(OCamlRef typeRef name) = do
     mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData
     case mOCamlTypeMetaData of
@@ -315,19 +363,32 @@ instance HasEncoder OCamlValue where
         ds <- asks (dependencies . userOptions)
         pure . stext $ appendModule ds ocamlTypeRef typeRef name
 
-  render ref@(OCamlRefApp typRep name) = do
+  render ref@(OCamlRefApp typRep values) = do
     mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData
     case mOCamlTypeMetaData of
-      Nothing -> fail $ "OCaml.BuckleScript.Record (HasType (OCamlDatatype typeRep name)) mOCamlTypeMetaData is Nothing:\n\n" ++ (show ref)
+      Nothing -> fail $ "OCaml.BuckleScript.Encode (HasEncoder (OCamlRef typeRep name)) mOCamlTypeMetaData is Nothing:\n\n" ++ (show ref)
       Just ocamlTypeRef -> do
         ds <- asks (dependencies . userOptions)
-        pure . stext $ renderRowWithTypeParameterEncoders ds ocamlTypeRef typRep
+        dx <- renderRef values
+        pure $ parens $
+          (stext $ appendModule ds ocamlTypeRef (typeRepToHaskellTypeMetaData typRep)
+           (T.pack $ show $ fst $ splitTyConApp typRep))
+          <+> dx
 
   render (Values x y) = do
     dx <- render x
     dy <- render y
     return $ dx <$$> ";" <+> dy
-  render _ = error "HasEncoderRef OCamlValue: should not happen"
+
+  render OCamlEmpty = pure (text "")
+
+instance HasEncoderRef OCamlValue where
+  renderRef (Values x y) = do
+    dx <- render x
+    dy <- render y
+    pure $ dx <+> dy
+
+  renderRef _ = pure ""  
 
 instance HasEncoderRef OCamlPrimitive where
   renderRef ODate   = pure "Aeson.Encode.date"
@@ -551,57 +612,3 @@ renderRowWithTypeParameterEncoders m o t =
               Just "option" -> "Aeson.Encode.optional"
               Just typ -> "Aeson.Encode." <> typ
               Nothing  -> appendModule m o (typeRepToHaskellTypeMetaData t) (T.pack . show $ hd)
-
-{-
-renderRowWithTypeParameterEncoders'
-  :: Map.Map HaskellTypeMetaData OCamlTypeMetaData
-  -> Map.Map OCamlTypeMetaData OCamlDatatype
-  -> OCamlTypeMetaData
-  -> Text
-  -> TypeRep
-  -> Text
-renderRowWithTypeParameterEncoders' m pm o name t =
-  if length rst == 0
-  then typeParameters
-  else
-    if typeRepIsString t
-    then "Aeson.Encode.string"
-    else
-      typeParameters <> " " <> (T.intercalate " " $ (\x -> wrapIfHasNext x (renderRowWithTypeParameterEncoders m o x)) <$> rst)
-    
-  where
-  (hd,rst) = splitTyConApp $ t
-  typeParameters =
-    case Map.lookup hd tupleTyConToSize of
-      Just len -> "Aeson.Encode.tuple" <> (T.pack . show $ len)
-      Nothing -> 
-        case Map.lookup hd typeParameterRefTyConToOCamlTypeText of
-          Just ptyp -> "encode" <> textUppercaseFirst ptyp
-          Nothing ->
-            case Map.lookup hd primitiveTyConToOCamlTypeText of
-              Just "option" -> "Aeson.Encode.optional"
-              Just typ -> "Aeson.Encode." <> typ
-              Nothing  -> appendModule' m pm o (typeRepToHaskellTypeMetaData t) name
-
-appendModule' :: Map.Map HaskellTypeMetaData OCamlTypeMetaData -> Map.Map OCamlTypeMetaData OCamlDatatype -> OCamlTypeMetaData -> HaskellTypeMetaData -> Text -> Text
-appendModule' m dd o h name =
-  case Map.lookup o dd of
-    Nothing ->                         
-      case Map.lookup h m of
-        Just parOCamlTypeMetaData -> 
-          (mkModulePrefix o parOCamlTypeMetaData) <>  "encode" <> (textUppercaseFirst name)
-          -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
-          -- within the same file as the sum. These products will not be in the dependencies map.
-        Nothing -> "encode" <> textUppercaseFirst name
-    Just od ->
-      if (ocamlDatatypeHasTypeParameter od 0)
-      then
-        case Map.lookup h m of
-          Just parOCamlTypeMetaData -> 
-            (mkModulePrefix o parOCamlTypeMetaData) <>  "encode" <> (textUppercaseFirst name)
-            -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
-            -- within the same file as the sum. These products will not be in the dependencies map.
-          Nothing -> "encode" <> textUppercaseFirst name
-      else
-        ""
--}

@@ -21,7 +21,6 @@
       "subdirs": true,
       "type": "dev"
     },
-/*
     {
       "dir": "__tests__/sum",
       "subdirs": true,
@@ -32,6 +31,5 @@
       "subdirs": true,
       "type": "dev"
     }
-*/
   ]
 }

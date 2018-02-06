@@ -217,17 +217,17 @@ instance (OCamlType a) => HasOCamlType' 1 a where
 class HasEmbeddedFile api where
   mkFiles :: Bool -> Bool -> Proxy api -> Q Exp
 
-instance HasEmbeddedFile api where
+instance (HasEmbeddedFile' api) => HasEmbeddedFile api where
   mkFiles includeInterface includeSpec Proxy = ListE <$> mkFiles' includeInterface includeSpec (Proxy :: Proxy api)
 
 -- | Help function for HasEmbeddedFile.
 class HasEmbeddedFile' api where
   mkFiles' :: Bool -> Bool -> Proxy api -> Q [Exp]
 
-instance HasEmbeddedFile' (a :<|> b) where
+instance (HasEmbeddedFile' a, HasEmbeddedFile' b) => HasEmbeddedFile' (a :<|> b) where
   mkFiles' includeInterface includeSpec Proxy = (<>) <$> mkFiles' includeInterface includeSpec (Proxy :: Proxy a) <*> mkFiles' includeInterface includeSpec (Proxy :: Proxy b)
 
-instance HasEmbeddedFile' (a :> b) where
+instance (HasEmbeddedFile' a, HasEmbeddedFile' b) => HasEmbeddedFile' (a :> b) where
   mkFiles' includeInterface includeSpec Proxy = (<>) <$> mkFiles' includeInterface includeSpec (Proxy :: Proxy a) <*> mkFiles' includeInterface includeSpec (Proxy :: Proxy b)
 
 instance (HasEmbeddedFile' (OCamlTypeInFile a b)) => HasEmbeddedFile' (HaskellTypeName typSymbol (OCamlTypeInFile a b)) where

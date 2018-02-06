@@ -1,55 +1,95 @@
 {
-    "seed": 5302962452834671751,
+    "seed": 1476930007050195571,
     "samples": [
         {
-            "ttpFirst": 5,
+            "ttpFirst": 14,
+            "ttpSecond": -24,
+            "ttpId": 10,
+            "ttpThird": [
+                25,
+                20
+            ]
+        },
+        {
+            "ttpFirst": 3,
             "ttpSecond": 9,
-            "ttpId": 0
-        },
-        {
-            "ttpFirst": -2,
-            "ttpSecond": 7,
-            "ttpId": -15
-        },
-        {
-            "ttpFirst": 1,
-            "ttpSecond": -18,
-            "ttpId": -7
-        },
-        {
-            "ttpFirst": -16,
-            "ttpSecond": 8,
-            "ttpId": 13
-        },
-        {
-            "ttpFirst": 7,
-            "ttpSecond": -28,
-            "ttpId": -3
+            "ttpId": -12,
+            "ttpThird": [
+                -23,
+                20
+            ]
         },
         {
             "ttpFirst": 6,
+            "ttpSecond": -26,
+            "ttpId": -14,
+            "ttpThird": [
+                19,
+                -20
+            ]
+        },
+        {
+            "ttpFirst": 3,
+            "ttpSecond": -20,
+            "ttpId": -28,
+            "ttpThird": [
+                -22,
+                -15
+            ]
+        },
+        {
+            "ttpFirst": 9,
             "ttpSecond": 22,
-            "ttpId": 20
+            "ttpId": 1,
+            "ttpThird": [
+                -1,
+                18
+            ]
         },
         {
-            "ttpFirst": 20,
-            "ttpSecond": 6,
-            "ttpId": 29
+            "ttpFirst": -18,
+            "ttpSecond": -24,
+            "ttpId": 10,
+            "ttpThird": [
+                -10,
+                -3
+            ]
         },
         {
-            "ttpFirst": 12,
-            "ttpSecond": 5,
-            "ttpId": -20
+            "ttpFirst": -4,
+            "ttpSecond": 20,
+            "ttpId": 3,
+            "ttpThird": [
+                -12,
+                17
+            ]
         },
         {
-            "ttpFirst": 0,
-            "ttpSecond": -10,
-            "ttpId": 1
+            "ttpFirst": 13,
+            "ttpSecond": -15,
+            "ttpId": -29,
+            "ttpThird": [
+                21,
+                -30
+            ]
         },
         {
-            "ttpFirst": 23,
-            "ttpSecond": -29,
-            "ttpId": 4
+            "ttpFirst": -16,
+            "ttpSecond": -17,
+            "ttpId": 2,
+            "ttpThird": [
+                6,
+                -28
+            ]
+        },
+        {
+            "ttpFirst": 29,
+            "ttpSecond": -23,
+            "ttpId": -18,
+            "ttpThird": [
+                26,
+                21
+            ]
         }
     ]
 }

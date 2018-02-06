@@ -92,3 +92,32 @@ type wrappedWrapper =
 val encodeWrappedWrapper : wrappedWrapper -> Js_json.t
 
 val decodeWrappedWrapper : Js_json.t -> (wrappedWrapper, string) Js_result.t
+
+type ('a0, 'a1, 'a2) wrapThree =
+  { wp2a : 'a0
+  ; wp2b : 'a1
+  ; wp2ab : ('a0 * 'a1)
+  ; wp2cb : ('a2 * 'a1)
+  }
+
+val encodeWrapThree : ('a0 -> Js_json.t) -> ('a1 -> Js_json.t) -> ('a2 -> Js_json.t) -> ('a0, 'a1, 'a2) wrapThree -> Js_json.t
+
+val decodeWrapThree : (Js_json.t -> ('a0, string) Js_result.t) -> (Js_json.t -> ('a1, string) Js_result.t) -> (Js_json.t -> ('a2, string) Js_result.t) -> Js_json.t -> (('a0, 'a1, 'a2) wrapThree, string) Js_result.t
+
+type ('a0, 'a1, 'a2) wrapThreeUnfilled =
+  { zed : string
+  ; unfilled : ('a0, 'a1, 'a2) wrapThree
+  }
+
+val encodeWrapThreeUnfilled : ('a0 -> Js_json.t) -> ('a1 -> Js_json.t) -> ('a2 -> Js_json.t) -> ('a0, 'a1, 'a2) wrapThreeUnfilled -> Js_json.t
+
+val decodeWrapThreeUnfilled : (Js_json.t -> ('a0, string) Js_result.t) -> (Js_json.t -> ('a1, string) Js_result.t) -> (Js_json.t -> ('a2, string) Js_result.t) -> Js_json.t -> (('a0, 'a1, 'a2) wrapThreeUnfilled, string) Js_result.t
+
+type wrapThreeFilled =
+  { foo : string
+  ; filled : (int, float, string) wrapThree
+  }
+
+val encodeWrapThreeFilled : wrapThreeFilled -> Js_json.t
+
+val decodeWrapThreeFilled : Js_json.t -> (wrapThreeFilled, string) Js_result.t

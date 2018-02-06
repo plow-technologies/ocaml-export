@@ -2,6 +2,7 @@ type ('a0, 'a1) twoTypeParameters =
   { ttpId : int
   ; ttpFirst : 'a0
   ; ttpSecond : 'a1
+  ; ttpThird : ('a0 * 'a1)
   }
 
 val encodeTwoTypeParameters : ('a0 -> Js_json.t) -> ('a1 -> Js_json.t) -> ('a0, 'a1) twoTypeParameters -> Js_json.t

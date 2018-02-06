@@ -50,6 +50,9 @@ type ProductPackage
          :> PartiallyWrapped TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
          :> ScrambledTypeParameterRefs TypeParameterRef0 TypeParameterRef1 TypeParameterRef2 TypeParameterRef3 TypeParameterRef4 TypeParameterRef5
          :> WrappedWrapper
+         :> WrapThree TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
+         :> WrapThreeUnfilled TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
+         :> WrapThreeFilled
        )
 
 compareInterfaceFiles :: FilePath -> SpecWith ()
@@ -140,10 +143,11 @@ data TwoTypeParameters a b =
     { ttpId :: Int
     , ttpFirst :: a
     , ttpSecond :: b
+    , ttpThird :: (a, b)
     } deriving (Eq,Show,Generic,FromJSON,ToJSON)
 
 instance Arbitrary (TwoTypeParameters TypeParameterRef0 TypeParameterRef1) where
-  arbitrary = TwoTypeParameters <$> arbitrary <*> arbitrary <*> arbitrary
+  arbitrary = TwoTypeParameters <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
 
 instance ToADTArbitrary (TwoTypeParameters TypeParameterRef0 TypeParameterRef1)
 
@@ -349,25 +353,37 @@ instance Arbitrary WrappedWrapper where
 
 instance ToADTArbitrary WrappedWrapper
 
-{-
+data WrapThree a b c =
+  WrapThree
+    { wp2a :: a
+    , wp2b :: b
+    , wp2ab :: (a, b)
+    , wp2cb :: (c, b)
+    } deriving (Eq,Show,Generic,ToJSON,FromJSON)
 
-{-# LANGUAGE TypeApplication #-}
+instance (ToADTArbitrary a, Arbitrary a, ToADTArbitrary b, Arbitrary b, ToADTArbitrary c, Arbitrary c) => ToADTArbitrary (WrapThree a b c)
+instance (Arbitrary a, Arbitrary b, Arbitrary c) => Arbitrary (WrapThree a b c) where
+  arbitrary = WrapThree <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
+instance (Typeable a, OCamlType a, Typeable b, OCamlType b, Typeable c, OCamlType c) => (OCamlType (WrapThree a b c))
 
-proxyToTypeRep :: forall a. (Typeable a) => Proxy a -> TypeRep a
-proxyToTypeRep Proxy = typeRep @a
+data WrapThreeUnfilled a b c =
+  WrapThreeUnfilled
+    { zed :: String
+    , unfilled :: WrapThree a b c
+    } deriving (Eq,Show,Generic,ToJSON,FromJSON)
 
-λ> toOCamlType (Proxy :: Proxy WrappedWrapper)
+instance (ToADTArbitrary a, Arbitrary a, ToADTArbitrary b, Arbitrary b, ToADTArbitrary c, Arbitrary c) => ToADTArbitrary (WrapThreeUnfilled a b c)
+instance (Arbitrary a, Arbitrary b, Arbitrary c) => Arbitrary (WrapThreeUnfilled a b c) where
+  arbitrary = WrapThreeUnfilled <$> arbitrary <*> arbitrary
+instance (Typeable a, OCamlType a, Typeable b, OCamlType b, Typeable c, OCamlType c) => (OCamlType (WrapThreeUnfilled a b c))
 
-OCamlDatatype (HaskellTypeMetaData "WrappedWrapper" "Ghci3" "interactive") "WrappedWrapper" (OCamlValueConstructor (RecordConstructor "WrappedWrapper" (OCamlField "ww" (OCamlPrimitiveRef (OOption (OCamlDatatype (HaskellTypeMetaData "Wrapper" "Ghci2" "interactive") "Wrapper" (OCamlValueConstructor (RecordConstructor "Wrapper" (OCamlField "wpa" (OCamlPrimitiveRef (OOption (OCamlPrimitive (OList (OCamlPrimitive OChar))))))))))))))
+data WrapThreeFilled =
+  WrapThreeFilled
+    { foo :: String
+    , filled :: WrapThree Int Double String
+    } deriving (Eq,Show,Generic,ToJSON,FromJSON)
 
-λ> toOCamlType (Proxy :: Proxy (Wrapper (Maybe Int)))
-
-OCamlDatatype (HaskellTypeMetaData "Wrapper" "Ghci2" "interactive") "Wrapper" (OCamlValueConstructor (RecordConstructor "Wrapper" (OCamlField "wpa" (OCamlPrimitiveRef (OOption (OCamlPrimitive OInt))))))
-
-λ> toOCamlType (Proxy :: Proxy (MaybeWrapped))
-OCamlDatatype (HaskellTypeMetaData "MaybeWrapped" "Ghci7" "interactive") "MaybeWrapped" (OCamlValueConstructor (RecordConstructor "MaybeWrapped" (OCamlField "mw" (OCamlRefApp (Wrapper (Maybe Int)) "Wrapper"))))
-
-(OCamlPrimitiveRef (OOption (OCamlPrimitive (OList (OCamlPrimitive OChar)))))
-(OCamlRefApp (Wrapper (Maybe Int))
-(OCamlPrimitiveRef (OOption (OCamlDatatype (HaskellTypeMetaData "Wrapper" "Ghci2" "interactive") "Wrapper" (OCamlValueConstructor (RecordConstructor "Wrapper" (OCamlField "wpa" (OCamlPrimitiveRef (OOption (OCamlPrimitive (OList (OCamlPrimitive OChar)))))))))))
--}
+instance ToADTArbitrary WrapThreeFilled
+instance Arbitrary WrapThreeFilled where
+  arbitrary = WrapThreeFilled <$> arbitrary <*> arbitrary
+instance OCamlType WrapThreeFilled

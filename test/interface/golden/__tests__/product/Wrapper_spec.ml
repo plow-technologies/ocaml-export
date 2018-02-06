@@ -75,3 +75,24 @@ let () =
     "wrappedWrapper"
     "http://localhost:8081/Wrapper/WrappedWrapper"
     "golden/product/WrappedWrapper";
+
+  AesonSpec.sampleGoldenAndServerSpec
+    (Wrapper.decodeWrapThree AesonSpec.decodeIntWithResult AesonSpec.decodeIntWithResult AesonSpec.decodeIntWithResult)
+    (Wrapper.encodeWrapThree Aeson.Encode.int Aeson.Encode.int Aeson.Encode.int)
+    "wrapThree"
+    "http://localhost:8081/Wrapper/WrapThree"
+    "golden/product/WrapThree";
+
+  AesonSpec.sampleGoldenAndServerSpec
+    (Wrapper.decodeWrapThreeUnfilled AesonSpec.decodeIntWithResult AesonSpec.decodeIntWithResult AesonSpec.decodeIntWithResult)
+    (Wrapper.encodeWrapThreeUnfilled Aeson.Encode.int Aeson.Encode.int Aeson.Encode.int)
+    "wrapThreeUnfilled"
+    "http://localhost:8081/Wrapper/WrapThreeUnfilled"
+    "golden/product/WrapThreeUnfilled";
+
+  AesonSpec.sampleGoldenAndServerSpec
+    Wrapper.decodeWrapThreeFilled
+    Wrapper.encodeWrapThreeFilled
+    "wrapThreeFilled"
+    "http://localhost:8081/Wrapper/WrapThreeFilled"
+    "golden/product/WrapThreeFilled";

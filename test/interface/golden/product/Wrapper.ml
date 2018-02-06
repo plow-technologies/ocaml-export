@@ -234,3 +234,69 @@ let decodeWrappedWrapper json =
   with
   | v -> Js_result.Ok v
   | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeWrappedWrapper: " ^ message)
+
+type ('a0, 'a1, 'a2) wrapThree =
+  { wp2a : 'a0
+  ; wp2b : 'a1
+  ; wp2ab : ('a0 * 'a1)
+  ; wp2cb : ('a2 * 'a1)
+  }
+
+let encodeWrapThree encodeA0 encodeA1 encodeA2 x =
+  Aeson.Encode.object_
+    [ ( "wp2a", encodeA0 x.wp2a )
+    ; ( "wp2b", encodeA1 x.wp2b )
+    ; ( "wp2ab", (Aeson.Encode.pair encodeA0 encodeA1) x.wp2ab )
+    ; ( "wp2cb", (Aeson.Encode.pair encodeA2 encodeA1) x.wp2cb )
+    ]
+
+let decodeWrapThree decodeA0 decodeA1 decodeA2 json =
+  match Aeson.Decode.
+    { wp2a = field "wp2a" (fun a -> unwrapResult (decodeA0 a)) json
+    ; wp2b = field "wp2b" (fun a -> unwrapResult (decodeA1 a)) json
+    ; wp2ab = field "wp2ab" (pair (fun a -> unwrapResult (decodeA0 a)) (fun a -> unwrapResult (decodeA1 a))) json
+    ; wp2cb = field "wp2cb" (pair (fun a -> unwrapResult (decodeA2 a)) (fun a -> unwrapResult (decodeA1 a))) json
+    }
+  with
+  | v -> Js_result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeWrapThree: " ^ message)
+
+type ('a0, 'a1, 'a2) wrapThreeUnfilled =
+  { zed : string
+  ; unfilled : ('a0, 'a1, 'a2) wrapThree
+  }
+
+let encodeWrapThreeUnfilled encodeA0 encodeA1 encodeA2 x =
+  Aeson.Encode.object_
+    [ ( "zed", Aeson.Encode.string x.zed )
+    ; ( "unfilled", (encodeWrapThree encodeA0 encodeA1 encodeA2) x.unfilled )
+    ]
+
+let decodeWrapThreeUnfilled decodeA0 decodeA1 decodeA2 json =
+  match Aeson.Decode.
+    { zed = field "zed" string json
+    ; unfilled = field "unfilled" (fun a -> unwrapResult (decodeWrapThree decodeA0 decodeA1 decodeA2 a)) json
+    }
+  with
+  | v -> Js_result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeWrapThreeUnfilled: " ^ message)
+
+type wrapThreeFilled =
+  { foo : string
+  ; filled : (int, float, string) wrapThree
+  }
+
+let encodeWrapThreeFilled x =
+  Aeson.Encode.object_
+    [ ( "foo", Aeson.Encode.string x.foo )
+    ; ( "filled", (encodeWrapThree Aeson.Encode.int Aeson.Encode.float Aeson.Encode.string) x.filled )
+    ]
+
+let decodeWrapThreeFilled json =
+  match Aeson.Decode.
+    { foo = field "foo" string json
+    ; filled = field "filled" (fun a -> unwrapResult (decodeWrapThree (wrapResult int) (wrapResult Aeson.Decode.float) (wrapResult string) a)) json
+    }
+  with
+  | v -> Js_result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeWrapThreeFilled: " ^ message)

@@ -30,17 +30,5 @@ spec = do
     compareInterfaceFiles "ThreeTypeParameters"
     compareInterfaceFiles "SubTypeParameter"
     compareInterfaceFiles "UnnamedProduct"
-    compareInterfaceFiles "ComplexProduct"
+--    compareInterfaceFiles "ComplexProduct"
     compareInterfaceFiles "Wrapper"
-    
-  let dir2 = "test/nointerface/temp"
-  runIO $ mkPackage (Proxy :: Proxy ProductPackage) (PackageOptions dir2 "product" fileMap False Nothing)
-
-  describe "OCaml Declaration without Interface: Product Types" $ do
-    compareNoInterfaceFiles "Person"
-    compareNoInterfaceFiles "Company"
-    compareNoInterfaceFiles "Card"
-    compareNoInterfaceFiles "OneTypeParameter"
-    compareNoInterfaceFiles "TwoTypeParameters"
-    compareNoInterfaceFiles "ThreeTypeParameters"
-    compareNoInterfaceFiles "SubTypeParameter"

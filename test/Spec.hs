@@ -26,8 +26,8 @@ main :: IO ()
 main = do
   hspec Product.spec
   hspec Sum.spec
-  hspec File.spec
-  hspec D.spec
+--  hspec File.spec
+--  hspec D.spec
 
   hspec $
     describe "mkOCamlTypeMetaData" $
@@ -36,7 +36,9 @@ main = do
           `shouldBe` mkOCamlTypeMetaData (Proxy :: Proxy D.DependencyPackage)
 
   print $ mkOCamlTypeMetaData (Proxy :: Proxy D.SubsPackage)
-  
-  _ <- forkIO $ run 8081 Product.productPackageApp
-  _ <- forkIO $ run 8082 sumPackageApp
-  run 8083 File.filePackageApp
+
+  run 8081 Product.productPackageApp
+--  _ <- forkIO $ run 8081 Product.productPackageApp
+--  _ <- forkIO $ run 8082 sumPackageApp
+--  run 8083 File.filePackageApp
+  pure ()

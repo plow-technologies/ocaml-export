@@ -21,7 +21,7 @@ type intWrapped =
 
 let encodeIntWrapped x =
   Aeson.Encode.object_
-    [ ( "iw", encodeWrapper Aeson.Encode.int x.iw )
+    [ ( "iw", (encodeWrapper Aeson.Encode.int) x.iw )
     ]
 
 let decodeIntWrapped json =
@@ -33,12 +33,12 @@ let decodeIntWrapped json =
   | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeIntWrapped: " ^ message)
 
 type maybeWrapped =
-  { mw : ((int) option) wrapper
+  { mw : (((int) option)) wrapper
   }
 
 let encodeMaybeWrapped x =
   Aeson.Encode.object_
-    [ ( "mw", encodeWrapper (Aeson.Encode.optional Aeson.Encode.int) x.mw )
+    [ ( "mw", (encodeWrapper (Aeson.Encode.optional Aeson.Encode.int)) x.mw )
     ]
 
 let decodeMaybeWrapped json =
@@ -55,7 +55,7 @@ type eitherWrapped =
 
 let encodeEitherWrapped x =
   Aeson.Encode.object_
-    [ ( "ew", encodeWrapper (Aeson.Encode.either Aeson.Encode.int Aeson.Encode.float) x.ew )
+    [ ( "ew", (encodeWrapper (Aeson.Encode.either Aeson.Encode.int Aeson.Encode.float)) x.ew )
     ]
 
 let decodeEitherWrapped json =
@@ -72,7 +72,7 @@ type complexWrapped =
 
 let encodeComplexWrapped x =
   Aeson.Encode.object_
-    [ ( "cw", encodeWrapper (Aeson.Encode.either (Aeson.Encode.optional Aeson.Encode.string) Aeson.Encode.float) x.cw )
+    [ ( "cw", (encodeWrapper (Aeson.Encode.either (Aeson.Encode.optional Aeson.Encode.string) Aeson.Encode.float)) x.cw )
     ]
 
 let decodeComplexWrapped json =
@@ -86,7 +86,7 @@ let decodeComplexWrapped json =
 type sumWrapped =
   | SW1
   | SW2 of (int) wrapper
-  | SW3 of ((string) option) wrapper
+  | SW3 of (((string) option)) wrapper
   | SW4 of ((int, string) Aeson.Compatibility.Either.t) wrapper
 
 let encodeSumWrapped x =
@@ -98,17 +98,17 @@ let encodeSumWrapped x =
   | SW2 y0 ->
      Aeson.Encode.object_
        [ ( "tag", Aeson.Encode.string "SW2" )
-       ; ( "contents", encodeWrapper Aeson.Encode.int y0 )
+       ; ( "contents", (encodeWrapper Aeson.Encode.int) y0 )
        ]
   | SW3 y0 ->
      Aeson.Encode.object_
        [ ( "tag", Aeson.Encode.string "SW3" )
-       ; ( "contents", encodeWrapper (Aeson.Encode.optional Aeson.Encode.string) y0 )
+       ; ( "contents", (encodeWrapper (Aeson.Encode.optional Aeson.Encode.string)) y0 )
        ]
   | SW4 y0 ->
      Aeson.Encode.object_
        [ ( "tag", Aeson.Encode.string "SW4" )
-       ; ( "contents", encodeWrapper (Aeson.Encode.either Aeson.Encode.int Aeson.Encode.string) y0 )
+       ; ( "contents", (encodeWrapper (Aeson.Encode.either Aeson.Encode.int Aeson.Encode.string)) y0 )
        ]
 
 let decodeSumWrapped json =
@@ -136,12 +136,12 @@ let decodeSumWrapped json =
   | exception Aeson.Decode.DecodeError message -> Js_result.Error message
 
 type tupleWrapped =
-  { tw : (int * string * float) wrapper
+  { tw : ((int * string * float)) wrapper
   }
 
 let encodeTupleWrapped x =
   Aeson.Encode.object_
-    [ ( "tw", encodeWrapper (Aeson.Encode.tuple3 Aeson.Encode.int Aeson.Encode.string Aeson.Encode.float) x.tw )
+    [ ( "tw", (encodeWrapper (Aeson.Encode.tuple3 Aeson.Encode.int Aeson.Encode.string Aeson.Encode.float)) x.tw )
     ]
 
 let decodeTupleWrapped json =
@@ -158,7 +158,7 @@ type 'a0 halfWrapped =
 
 let encodeHalfWrapped encodeA0 x =
   Aeson.Encode.object_
-    [ ( "hw", encodeWrapper (Aeson.Encode.either Aeson.Encode.int encodeA0) x.hw )
+    [ ( "hw", (encodeWrapper (Aeson.Encode.either Aeson.Encode.int encodeA0)) x.hw )
     ]
 
 let decodeHalfWrapped decodeA0 json =
@@ -170,12 +170,12 @@ let decodeHalfWrapped decodeA0 json =
   | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeHalfWrapped: " ^ message)
 
 type ('a0, 'a1, 'a2) partiallyWrapped =
-  { pw : ((int, string * 'a1 * float * 'a2 * 'a0) Aeson.Compatibility.Either.t) wrapper
+  { pw : ((int, (string * 'a1 * float * 'a2 * 'a0)) Aeson.Compatibility.Either.t) wrapper
   }
 
 let encodePartiallyWrapped encodeA0 encodeA1 encodeA2 x =
   Aeson.Encode.object_
-    [ ( "pw", encodeWrapper (Aeson.Encode.either Aeson.Encode.int (Aeson.Encode.tuple5 Aeson.Encode.string encodeA1 Aeson.Encode.float encodeA2 encodeA0)) x.pw )
+    [ ( "pw", (encodeWrapper (Aeson.Encode.either Aeson.Encode.int (Aeson.Encode.tuple5 Aeson.Encode.string encodeA1 Aeson.Encode.float encodeA2 encodeA0))) x.pw )
     ]
 
 let decodePartiallyWrapped decodeA0 decodeA1 decodeA2 json =
@@ -219,17 +219,17 @@ let decodeScrambledTypeParameterRefs decodeA0 decodeA1 decodeA2 decodeA3 decodeA
   | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeScrambledTypeParameterRefs: " ^ message)
 
 type wrappedWrapper =
-  { ww : (((int) option) wrapper) option
+  { ww : ((((int) option)) wrapper) option
   }
 
 let encodeWrappedWrapper x =
   Aeson.Encode.object_
-    [ ( "ww", Aeson.Encode.optional (encodeWrapper (Aeson.Encode.optional Aeson.Encode.int)) x.ww )
+    [ ( "ww", (Aeson.Encode.optional (encodeWrapper (Aeson.Encode.optional Aeson.Encode.int))) x.ww )
     ]
 
 let decodeWrappedWrapper json =
   match Aeson.Decode.
-    { ww = field "ww" (optional ((fun a -> unwrapResult (decodeWrapper (wrapResult (optional int)) a)))) json
+    { ww = field "ww" (optional (fun a -> unwrapResult (decodeWrapper (wrapResult (optional int)) a))) json
     }
   with
   | v -> Js_result.Ok v

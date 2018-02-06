@@ -68,3 +68,10 @@ let () =
     "scrambledTypeParameterRefs"
     "http://localhost:8081/Wrapper/ScrambledTypeParameterRefs"
     "golden/product/ScrambledTypeParameterRefs";
+
+  AesonSpec.sampleGoldenAndServerSpec
+    Wrapper.decodeWrappedWrapper
+    Wrapper.encodeWrappedWrapper
+    "wrappedWrapper"
+    "http://localhost:8081/Wrapper/WrappedWrapper"
+    "golden/product/WrappedWrapper";

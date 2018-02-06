@@ -8,14 +8,14 @@ let encodeSubTypeParameter encodeA0 encodeA1 encodeA2 x =
   Aeson.Encode.object_
     [ ( "listA", (Aeson.Encode.list encodeA0) x.listA )
     ; ( "maybeB", (Aeson.Encode.optional encodeA1) x.maybeB )
-    ; ( "tupleC", (Aeson.Encode.tuple2 encodeA2 encodeA1) x.tupleC )
+    ; ( "tupleC", (Aeson.Encode.pair encodeA2 encodeA1) x.tupleC )
     ]
 
 let decodeSubTypeParameter decodeA0 decodeA1 decodeA2 json =
   match Aeson.Decode.
     { listA = field "listA" (list (fun a -> unwrapResult (decodeA0 a))) json
     ; maybeB = field "maybeB" (optional (fun a -> unwrapResult (decodeA1 a))) json
-    ; tupleC = field "tupleC" (tuple2 (fun a -> unwrapResult (decodeA2 a)) (fun a -> unwrapResult (decodeA1 a))) json
+    ; tupleC = field "tupleC" (pair (fun a -> unwrapResult (decodeA2 a)) (fun a -> unwrapResult (decodeA1 a))) json
     }
   with
   | v -> Js_result.Ok v

@@ -55,9 +55,6 @@ type ProductPackage
 compareInterfaceFiles :: FilePath -> SpecWith ()
 compareInterfaceFiles = compareFiles "test/interface" "product" True
 
-compareNoInterfaceFiles :: FilePath -> SpecWith ()
-compareNoInterfaceFiles = compareFiles "test/nointerface" "product" False
-
 data SimpleChoice =
   SimpleChoice
     { choice :: Either String Int

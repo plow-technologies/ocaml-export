@@ -300,3 +300,26 @@ let decodeWrapThreeFilled json =
   with
   | v -> Js_result.Ok v
   | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeWrapThreeFilled: " ^ message)
+
+type 'a0 wrapThreePartiallyFilled =
+  { bar : string
+  ; bar2 : (int) list
+  ; partiallyFilled : (float, 'a0, float) wrapThree
+  }
+
+let encodeWrapThreePartiallyFilled encodeA0 x =
+  Aeson.Encode.object_
+    [ ( "bar", Aeson.Encode.string x.bar )
+    ; ( "bar2", (Aeson.Encode.list Aeson.Encode.int) x.bar2 )
+    ; ( "partiallyFilled", (encodeWrapThree Aeson.Encode.float encodeA0 Aeson.Encode.float) x.partiallyFilled )
+    ]
+
+let decodeWrapThreePartiallyFilled decodeA0 json =
+  match Aeson.Decode.
+    { bar = field "bar" string json
+    ; bar2 = field "bar2" (list int) json
+    ; partiallyFilled = field "partiallyFilled" (fun a -> unwrapResult (decodeWrapThree (wrapResult Aeson.Decode.float) decodeA0 (wrapResult Aeson.Decode.float) a)) json
+    }
+  with
+  | v -> Js_result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeWrapThreePartiallyFilled: " ^ message)

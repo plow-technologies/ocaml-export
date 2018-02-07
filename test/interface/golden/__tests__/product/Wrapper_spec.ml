@@ -96,3 +96,10 @@ let () =
     "wrapThreeFilled"
     "http://localhost:8081/Wrapper/WrapThreeFilled"
     "golden/product/WrapThreeFilled";
+
+  AesonSpec.sampleGoldenAndServerSpec
+    (Wrapper.decodeWrapThreePartiallyFilled AesonSpec.decodeIntWithResult)
+    (Wrapper.encodeWrapThreePartiallyFilled Aeson.Encode.int)
+    "wrapThreePartiallyFilled"
+    "http://localhost:8081/Wrapper/WrapThreePartiallyFilled"
+    "golden/product/WrapThreePartiallyFilled";

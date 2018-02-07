@@ -42,7 +42,7 @@ type SumPackage
   :<|> OCamlModule '["SumVariant"] :> SumVariant
   :<|> OCamlModule '["WithTuple"] :> WithTuple
   :<|> OCamlModule '["SumWithRecord"] :> SumWithRecord
-  :<|> OCamlModule '["Result"] :> Result TypeParameterRef0 TypeParameterRef1
+  :<|> OCamlModule '["Result"] :> Result TypeParameterRef0 TypeParameterRef1 :> ComplexResult TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
   :<|> OCamlModule '["NewType"] :> NewType)
 
 compareInterfaceFiles :: FilePath -> SpecWith ()
@@ -78,19 +78,6 @@ spec = do
     compareInterfaceFiles "SumWithRecord"
     compareInterfaceFiles "Result"
     compareInterfaceFiles "NewType"
-{-
-  let dir2 = "test/nointerface/temp"
-  runIO $ mkPackage (Proxy :: Proxy SumPackage) (PackageOptions dir2 "sum" Map.empty False Nothing)
-
-  describe "Sum Types" $ do
-    compareNoInterfaceFiles "OnOrOff"
-    compareNoInterfaceFiles "NameOrIdNumber"
-    compareNoInterfaceFiles "SumVariant"
-    compareNoInterfaceFiles "WithTuple"
-    compareNoInterfaceFiles "SumWithRecord"
-    compareNoInterfaceFiles "Result"
-    compareNoInterfaceFiles "NewType"
--}
     
 data OnOrOff = On | Off
   deriving (Show,Eq,Generic,OCamlType,ToJSON,FromJSON)
@@ -119,6 +106,30 @@ instance Arbitrary (Result TypeParameterRef0 TypeParameterRef1) where
 instance ToADTArbitrary (Result TypeParameterRef0 TypeParameterRef1)
 
 instance (Typeable a, OCamlType a, Typeable b, OCamlType b) => (OCamlType (Result a b))
+
+data ComplexResult a b c
+  = CR0 a
+  | CR1 a b
+  | CR2 b (c,a)
+  | CR3 String b Int a
+  | CR4 { cr4b :: b, cr4ac :: (a,c) }
+  | CR5
+  deriving (Show, Eq, Generic, ToJSON, FromJSON)
+
+instance Arbitrary (ComplexResult TypeParameterRef0 TypeParameterRef1 TypeParameterRef2) where
+  arbitrary =
+    oneof
+      [ TR0 <$> arbitrary
+      , TR1 <$> arbitrary <*> arbitrary
+      , TR2 <$> arbitrary <*> arbitrary
+      , TR3 <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
+      , TR4 <$> arbitrary <*> arbitrary
+      , pure TR5
+      ]
+
+instance ToADTArbitrary (ComplexResult TypeParameterRef0 TypeParameterRef1 TypeParameterRef2)
+
+instance (Typeable a, OCamlType a, Typeable b, OCamlType b, Typeable c, OCamlType c) => (OCamlType (ComplexResult a b c))
 
 data SumVariant
   = HasNothing

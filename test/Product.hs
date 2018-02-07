@@ -53,6 +53,7 @@ type ProductPackage
          :> WrapThree TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
          :> WrapThreeUnfilled TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
          :> WrapThreeFilled
+         :> WrapThreePartiallyFilled TypeParameterRef0
        )
 
 compareInterfaceFiles :: FilePath -> SpecWith ()
@@ -387,3 +388,15 @@ instance ToADTArbitrary WrapThreeFilled
 instance Arbitrary WrapThreeFilled where
   arbitrary = WrapThreeFilled <$> arbitrary <*> arbitrary
 instance OCamlType WrapThreeFilled
+
+data WrapThreePartiallyFilled a =
+  WrapThreePartiallyFilled
+    { bar :: String
+    , bar2 :: [Int]
+    , partiallyFilled :: WrapThree Float a Double
+    } deriving (Eq,Show,Generic,ToJSON,FromJSON)
+
+instance (ToADTArbitrary a, Arbitrary a) => ToADTArbitrary (WrapThreePartiallyFilled a)
+instance Arbitrary a => Arbitrary (WrapThreePartiallyFilled a) where
+  arbitrary = WrapThreePartiallyFilled <$> arbitrary <*> arbitrary <*> arbitrary
+instance (Typeable a, OCamlType a) => OCamlType (WrapThreePartiallyFilled a)

@@ -121,3 +121,13 @@ type wrapThreeFilled =
 val encodeWrapThreeFilled : wrapThreeFilled -> Js_json.t
 
 val decodeWrapThreeFilled : Js_json.t -> (wrapThreeFilled, string) Js_result.t
+
+type 'a0 wrapThreePartiallyFilled =
+  { bar : string
+  ; bar2 : (int) list
+  ; partiallyFilled : (float, 'a0, float) wrapThree
+  }
+
+val encodeWrapThreePartiallyFilled : ('a0 -> Js_json.t) -> 'a0 wrapThreePartiallyFilled -> Js_json.t
+
+val decodeWrapThreePartiallyFilled : (Js_json.t -> ('a0, string) Js_result.t) -> Js_json.t -> ('a0 wrapThreePartiallyFilled, string) Js_result.t

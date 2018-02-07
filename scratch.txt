@@ -1,15 +1,6 @@
-data VPCalcAddress = VPCalcAddress String Int deriving (Eq, Generic, Show)
+https://hackage.haskell.org/package/base-4.10.1.0/docs/Type-Reflection.html
 
-type vPCalcAddress =
-  | VPCalcAddress of string * int
+proxyToTypeRep :: forall a. (Typeable a) => Proxy a -> TypeRep a
+proxyToTypeRep Proxy = typeRep @a
 
-let encodeVPCalcAddress x =
-  match x with
-  | VPCalcAddress (y0,y1) ->
-     Aeson.Encode.array [| Aeson.Encode.string y0 ; Aeson.Encode.int y1 |]
-
-let decodeVPCalcAddress json =
-  match Aeson.Decode.string
-  ; int json with
-  | v -> Js_result.Ok (VPCalcAddress v)
-  | exception Aeson.Decode.DecodeError msg -> Js_result.Error ("decodeVPCalcAddress: " ^ msg)
+typeRepKind $ proxyToTypeRep (Proxy :: Proxy Maybe)

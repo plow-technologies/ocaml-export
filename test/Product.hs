@@ -54,6 +54,8 @@ type ProductPackage
          :> WrapThreeUnfilled TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
          :> WrapThreeFilled
          :> WrapThreePartiallyFilled TypeParameterRef0
+--         :> TypeSynonymKey TypeParameterRef0
+--         :> NewTypeKey TypeParameterRef0         
        )
 
 compareInterfaceFiles :: FilePath -> SpecWith ()
@@ -400,3 +402,28 @@ instance (ToADTArbitrary a, Arbitrary a) => ToADTArbitrary (WrapThreePartiallyFi
 instance Arbitrary a => Arbitrary (WrapThreePartiallyFilled a) where
   arbitrary = WrapThreePartiallyFilled <$> arbitrary <*> arbitrary <*> arbitrary
 instance (Typeable a, OCamlType a) => OCamlType (WrapThreePartiallyFilled a)
+
+-- phantom types
+
+data TypeSynonymKey a = String
+  deriving (Eq,Show,Generic,ToJSON,FromJSON)
+
+instance (ToADTArbitrary a, Arbitrary a) => ToADTArbitrary (TypeSynonymKey a)
+instance Arbitrary a => Arbitrary (TypeSynonymKey a) where
+  arbitrary = arbitrary
+instance (Typeable a, OCamlType a) => OCamlType (TypeSynonymKey a)
+
+newtype NewTypeKey a = NewTypeKey String
+  deriving (Eq,Show,Generic,ToJSON,FromJSON)
+
+instance (ToADTArbitrary a, Arbitrary a) => ToADTArbitrary (NewTypeKey a)
+instance Arbitrary a => Arbitrary (NewTypeKey a) where
+  arbitrary = NewTypeKey <$> arbitrary
+instance (Typeable a, OCamlType a) => OCamlType (NewTypeKey a)
+
+
+{-
+λ> toOCamlType (Proxy :: Proxy (Key User))
+OCamlDatatype (HaskellTypeMetaData "Key" "Database.Persist.Class.PersistEntity" "persistent-2.6-HdpHylIi1gZ4QjAhgpXd6i") "Key" (OCamlValueConstructor (NamedConstructor "Key" OCamlEmpty))
+λ
+-}

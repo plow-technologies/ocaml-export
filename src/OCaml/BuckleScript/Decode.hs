@@ -544,6 +544,7 @@ appendModule m o h name nxt =
 
 wrapIfPrimitive :: OCamlValue -> Doc -> Doc
 wrapIfPrimitive (OCamlPrimitiveRef _) doc = parens $ "wrapResult" <+> doc
+wrapIfPrimitive (OCamlRef _ _) doc = parens $ "wrapResult" <+> doc
 wrapIfPrimitive _ doc = doc
 
 unwrapIfTypeParameter :: OCamlValue -> Doc -> Doc

@@ -41,8 +41,8 @@ type SumPackage
   :<|> OCamlModule '["NameOrIdNumber"] :> NameOrIdNumber
   :<|> OCamlModule '["SumVariant"] :> SumVariant
   :<|> OCamlModule '["WithTuple"] :> WithTuple
-  :<|> OCamlModule '["SumWithRecord"] :> SumWithRecord
-  :<|> OCamlModule '["Result"] :> Result TypeParameterRef0 TypeParameterRef1 :> ComplexResult TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
+  :<|> OCamlModule '["SumWithRecord"] :> SumWithRecord -- :> SumWithRecordMixed
+  :<|> OCamlModule '["Result"] :> Result TypeParameterRef0 TypeParameterRef1 -- :> ComplexResult TypeParameterRef0 TypeParameterRef1 TypeParameterRef2
   :<|> OCamlModule '["NewType"] :> NewType)
 
 compareInterfaceFiles :: FilePath -> SpecWith ()
@@ -119,12 +119,12 @@ data ComplexResult a b c
 instance Arbitrary (ComplexResult TypeParameterRef0 TypeParameterRef1 TypeParameterRef2) where
   arbitrary =
     oneof
-      [ TR0 <$> arbitrary
-      , TR1 <$> arbitrary <*> arbitrary
-      , TR2 <$> arbitrary <*> arbitrary
-      , TR3 <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
-      , TR4 <$> arbitrary <*> arbitrary
-      , pure TR5
+      [ CR0 <$> arbitrary
+      , CR1 <$> arbitrary <*> arbitrary
+      , CR2 <$> arbitrary <*> arbitrary
+      , CR3 <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
+      , CR4 <$> arbitrary <*> arbitrary
+      , pure CR5
       ]
 
 instance ToADTArbitrary (ComplexResult TypeParameterRef0 TypeParameterRef1 TypeParameterRef2)
@@ -179,6 +179,25 @@ instance Arbitrary SumWithRecord where
 
 instance ToADTArbitrary SumWithRecord
 
+data SumWithRecordMixed
+  = SRM1 {srm1 :: Int}
+  | SRM2
+  | SRM3 {srm2 :: String, srm3 :: Float}
+  | SRM4 Int (String, Double)
+  deriving (Show,Eq,Generic, OCamlType, ToJSON, FromJSON)
+
+instance Arbitrary SumWithRecordMixed where
+  arbitrary =
+    oneof
+      [ SRM1 <$> arbitrary
+      , pure SRM2
+      , SRM3 <$> arbitrary <*> arbitrary
+      , SRM4 <$> arbitrary <*> arbitrary
+      ]
+
+instance ToADTArbitrary SumWithRecordMixed
+
+
 newtype NewType
   = NewType Int
   deriving (Show,Eq,Generic,OCamlType, ToJSON, FromJSON)
@@ -187,3 +206,22 @@ instance Arbitrary NewType where
   arbitrary = NewType <$> arbitrary
 
 instance ToADTArbitrary NewType
+
+
+{-
+introduce Enumerator
+extra type is made
+but anything coming after the enumerator is broken
+
+
+
+
+λ> toOCamlType (Proxy :: Proxy (ComplexResult TypeParameterRef0 TypeParameterRef1 TypeParameterRef2))
+
+OCamlDatatype (HaskellTypeMetaData "ComplexResult" "Sum" "main") "ComplexResult" (OCamlValueConstructor (MultipleConstructors [MultipleConstructors [NamedConstructor "CR0" (OCamlTypeParameterRef "a0"),MultipleConstructors [NamedConstructor "CR1" (Values (OCamlTypeParameterRef "a0") (OCamlTypeParameterRef "a1")),NamedConstructor "CR2" (Values (OCamlTypeParameterRef "a1") (OCamlPrimitiveRef (OTuple2 (OCamlDatatype (HaskellTypeMetaData "a2" "OCaml.BuckleScript.Types" "ocaml-export") "a2" (OCamlValueConstructor (NamedConstructor "a2" (OCamlTypeParameterRef "a2")))) (OCamlDatatype (HaskellTypeMetaData "a0" "OCaml.BuckleScript.Types" "ocaml-export") "a0" (OCamlValueConstructor (NamedConstructor "a0" (OCamlTypeParameterRef "a0")))))))]],MultipleConstructors [NamedConstructor "CR3" (Values (Values (OCamlPrimitiveRef (OList (OCamlPrimitive OChar))) (OCamlTypeParameterRef "a1")) (Values (OCamlPrimitiveRef OInt) (OCamlTypeParameterRef "a0"))),MultipleConstructors [RecordConstructor "CR4" (Values (OCamlField "cr4b" (OCamlTypeParameterRef "a1")) (OCamlField "cr4ac" (OCamlPrimitiveRef (OTuple2 (OCamlDatatype (HaskellTypeMetaData "a0" "OCaml.BuckleScript.Types" "ocaml-export") "a0" (OCamlValueConstructor (NamedConstructor "a0" (OCamlTypeParameterRef "a0")))) (OCamlDatatype (HaskellTypeMetaData "a2" "OCaml.BuckleScript.Types" "ocaml-export") "a2" (OCamlValueConstructor (NamedConstructor "a2" (OCamlTypeParameterRef "a2")))))))),NamedConstructor "CR5" OCamlEmpty]]]))
+
+λ> toOCamlType (Proxy :: Proxy SumWithRecord)
+
+OCamlDatatype (HaskellTypeMetaData "SumWithRecord" "Sum" "main") "SumWithRecord" (OCamlSumOfRecordConstructor "SumWithRecord" (MultipleConstructors [RecordConstructor "A1" (OCamlField "a1" (OCamlPrimitiveRef OInt)),RecordConstructor "B2" (Values (OCamlField "b2" (OCamlPrimitiveRef (OList (OCamlPrimitive OChar)))) (OCamlField "b3" (OCamlPrimitiveRef OInt)))]))
+
+-}

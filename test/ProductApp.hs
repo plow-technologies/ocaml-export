@@ -30,5 +30,5 @@ spec = do
     compareInterfaceFiles "ThreeTypeParameters"
     compareInterfaceFiles "SubTypeParameter"
     compareInterfaceFiles "UnnamedProduct"
---    compareInterfaceFiles "ComplexProduct"
+    compareInterfaceFiles "ComplexProduct"
     compareInterfaceFiles "Wrapper"

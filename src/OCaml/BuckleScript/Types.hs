@@ -141,7 +141,7 @@ data OCamlPrimitive
 data OCamlConstructor 
   = OCamlValueConstructor ValueConstructor -- ^ Sum, record (product with named fields) or product without named fields
   | OCamlEnumeratorConstructor [EnumeratorConstructor] -- ^ Sum of enumerations only. If a sum contains enumerators and at least one constructor with a value then it is an OCamlValueConstructor
-  | OCamlSumOfRecordConstructor Text ValueConstructor -- ^ Sum that contains at least one record. This construction is unique to Haskell. pIt has special Encoding and Decoding rules in order to output a valid OCaml program. i.e. `data A = A {a :: Int} | B {b :: String}`
+  | OCamlSumOfRecordConstructor Text ValueConstructor -- ^ Sum that contains at least one record. This construction is unique to Haskell. It has special Encoding and Decoding rules in order to output a valid OCaml program. i.e. `data A = A {a :: Int} | B {b :: String}`
   deriving (Show, Eq)
 
 -- | OCamlConstructor of one RecordConstructor is a record type.
@@ -658,12 +658,13 @@ transformToSumOfRecord _ constructor = constructor
 
 isSumWithRecord :: OCamlConstructor -> Bool
 isSumWithRecord (OCamlValueConstructor (MultipleConstructors cs)) =
-  -- if there is only one constructor than it is not a SumWithRecords.
+  -- if there is only one constructor then it is not a SumWithRecords.
   -- if there are multiple constructors and at least one is a record constructor
-  -- than it is a SumWithRecords
+  -- then it is a SumWithRecords
   (\x -> length x > 1 && or x) $ isSumWithRecordsAux . OCamlValueConstructor <$> cs
   where
     isSumWithRecordsAux :: OCamlConstructor -> Bool
+    isSumWithRecordsAux (OCamlValueConstructor (MultipleConstructors cs')) = or $ isSumWithRecordsAux . OCamlValueConstructor <$> cs'
     isSumWithRecordsAux (OCamlValueConstructor (RecordConstructor _ _)) = True
     isSumWithRecordsAux _ = False
 isSumWithRecord _ = False

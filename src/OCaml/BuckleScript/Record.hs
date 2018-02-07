@@ -92,7 +92,21 @@ instance HasType OCamlDatatype where
 instance HasTypeRef OCamlDatatype where
   renderRef (OCamlDatatype _ _ (OCamlValueConstructor (NamedConstructor _ (OCamlRefApp typRep values)))) = do
     dx <- renderRef values
-    pure $ (parens dx) <+> (stext . textLowercaseFirst . T.pack . show $ typeRepTyCon typRep)
+    let name = stext . textLowercaseFirst . T.pack . show $ typeRepTyCon typRep
+    mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData 
+    case mOCamlTypeMetaData of
+      Nothing -> pure $ (parensIfNotBlank dx) <+> name
+      Just decOCamlTypeMetaData -> do
+        ds <- asks (dependencies . userOptions)
+        case Map.lookup (typeRepToHaskellTypeMetaData typRep) ds of
+          Just parOCamlTypeMetaData -> do
+            let prefix = stext $ mkModulePrefix decOCamlTypeMetaData parOCamlTypeMetaData
+            pure $ (parensIfNotBlank dx) <+> prefix <> name
+          Nothing -> fail ("expected to find dependency:\n\n" ++ "\n\nin\n\n" ++ show ds)
+
+    
+
+    -- pure $ (parensIfNotBlank dx) <+> (stext . textLowercaseFirst . T.pack . show $ typeRepTyCon typRep)
 
   renderRef datatype@(OCamlDatatype typeRef typeName _) = do
     if isTypeParameterRef datatype
@@ -160,8 +174,13 @@ instance HasType OCamlValue where
         pure . stext $ appendModule ds ocamlTypeRef typeRef name
 
   render (OCamlRefApp typRep values) = do
-    dx <- renderRef values
-    pure $ (parens dx) <+> (stext . textLowercaseFirst . T.pack . show $ typeRepTyCon typRep)
+    mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData
+    case mOCamlTypeMetaData of
+      Nothing -> fail $ "OCaml.BuckleScript.Record (HasType (OCamlDatatype typeRep name)) mOCamlTypeMetaData is Nothing:\n\n"
+      Just ocamlTypeRef -> do
+        ds <- asks (dependencies . userOptions)
+        dx <- renderRef values
+        pure $ (parensIfNotBlank dx) <+> (stext $ appendModule ds ocamlTypeRef (typeRepToHaskellTypeMetaData typRep) (T.pack . show $ typeRepTyCon typRep))
 
   render (OCamlTypeParameterRef name) = pure $ stext ("'" <> name)
 
@@ -297,3 +316,6 @@ appendModule m o h name =
     -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
     -- within the same file as the sum. These products will not be in the dependencies map.
     Nothing -> textLowercaseFirst name
+
+parensIfNotBlank :: Doc -> Doc
+parensIfNotBlank d = let dx = show d in if (length dx) > 0 && dx /= " " then parens d else d

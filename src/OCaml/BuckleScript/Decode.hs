@@ -536,17 +536,21 @@ renderSumRecordInterface _ _ = Nothing
 appendModule :: Map.Map HaskellTypeMetaData OCamlTypeMetaData -> OCamlTypeMetaData -> HaskellTypeMetaData -> Text -> Doc -> Doc
 appendModule m o h name nxt =
   case Map.lookup h m of
-    Just parOCamlTypeMetaData -> 
-      "(fun a -> unwrapResult (" <> (stext $ mkModulePrefix o parOCamlTypeMetaData) <> "decode" <> (stext $ textUppercaseFirst name) <+> nxt <+> "a))"
+    Just parOCamlTypeMetaData ->
+      (stext $ mkModulePrefix o parOCamlTypeMetaData) <> "decode" <> (stext $ textUppercaseFirst name) <+> nxt
+      -- "(fun a -> unwrapResult (" <> (stext $ mkModulePrefix o parOCamlTypeMetaData) <> "decode" <> (stext $ textUppercaseFirst name) <+> nxt <+> "a))"
     -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
     -- within the same file as the sum. These products will not be in the dependencies map.
-    Nothing -> "(fun a -> unwrapResult (decode"  <> (stext $ textUppercaseFirst name) <+> nxt <+> " a))"
+    Nothing -> "decode"  <> (stext $ textUppercaseFirst name) <+> nxt
+      -- "(fun a -> unwrapResult (decode"  <> (stext $ textUppercaseFirst name) <+> nxt <+> " a))"
 
 wrapIfPrimitive :: OCamlValue -> Doc -> Doc
 wrapIfPrimitive (OCamlPrimitiveRef _) doc = parens $ "wrapResult" <+> doc
-wrapIfPrimitive (OCamlRef _ _) doc = parens $ "wrapResult" <+> doc
+-- wrapIfPrimitive (OCamlRef _ _) doc = parens $ "wrapResult" <+> doc
 wrapIfPrimitive _ doc = doc
 
 unwrapIfTypeParameter :: OCamlValue -> Doc -> Doc
 unwrapIfTypeParameter (OCamlTypeParameterRef _) doc = parens $ "fun a -> unwrapResult" <+> (parens $ doc <+> "a")
+unwrapIfTypeParameter (OCamlRef _ _) doc = parens $ "fun a -> unwrapResult" <+> (parens $ doc <+> "a")
+unwrapIfTypeParameter (OCamlRefApp _ _) doc = parens $ "fun a -> unwrapResult" <+> (parens $ doc <+> "a")
 unwrapIfTypeParameter _ doc = doc

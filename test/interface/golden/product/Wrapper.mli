@@ -115,7 +115,7 @@ val decodeWrapThreeUnfilled : (Js_json.t -> ('a0, string) Js_result.t) -> (Js_js
 
 type wrapThreeFilled =
   { foo : string
-  ; filled : (int, float, string) wrapThree
+  ; filled : (int, float, Person.person) wrapThree
   }
 
 val encodeWrapThreeFilled : wrapThreeFilled -> Js_json.t

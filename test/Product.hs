@@ -383,7 +383,7 @@ instance (Typeable a, OCamlType a, Typeable b, OCamlType b, Typeable c, OCamlTyp
 data WrapThreeFilled =
   WrapThreeFilled
     { foo :: String
-    , filled :: WrapThree Int Double String
+    , filled :: WrapThree Int Double Person
     } deriving (Eq,Show,Generic,ToJSON,FromJSON)
 
 instance ToADTArbitrary WrapThreeFilled
@@ -426,4 +426,9 @@ instance (Typeable a, OCamlType a) => OCamlType (NewTypeKey a)
 λ> toOCamlType (Proxy :: Proxy (Key User))
 OCamlDatatype (HaskellTypeMetaData "Key" "Database.Persist.Class.PersistEntity" "persistent-2.6-HdpHylIi1gZ4QjAhgpXd6i") "Key" (OCamlValueConstructor (NamedConstructor "Key" OCamlEmpty))
 λ
+
+
+λ> toOCamlType (Proxy :: Proxy (UserTag))
+OCamlDatatype (HaskellTypeMetaData "UserTag" "Onping.Persist.Models.Internal" "onping-types-0.12.0.0-537fBzusEVB7hcaZbAcQql") "UserTag" (OCamlValueConstructor (RecordConstructor "UserTag" (Values (Values (Values (OCamlField "userTagUser" (OCamlRefApp (Key User) (OCamlRef (HaskellTypeMetaData "User" "Plowtech.Authentication.Persist.Models" "plowtech-authentication-types-0.3.0.0-HOAisznLARVIB1OtLfSJK3") "User"))) (OCamlField "userTagOwner" (OCamlRefApp (Key User) (OCamlRef (HaskellTypeMetaData "User" "Plowtech.Authentication.Persist.Models" "plowtech-authentication-types-0.3.0.0-HOAisznLARVIB1OtLfSJK3") "User")))) (Values (OCamlField "userTagGroup" (OCamlRefApp (Key Group) (OCamlRef (HaskellTypeMetaData "Group" "Onping.Persist.Models.Internal" "onping-types-0.12.0.0-537fBzusEVB7hcaZbAcQql") "Group"))) (Values (OCamlField "userTagSuperGroup" (OCamlRefApp (Key Group) (OCamlRef (HaskellTypeMetaData "Group" "Onping.Persist.Models.Internal" "onping-types-0.12.0.0-537fBzusEVB7hcaZbAcQql") "Group"))) (OCamlField "userTagDefaultDash" (OCamlRefApp (Key Dashboard) (OCamlRef (HaskellTypeMetaData "Dashboard" "Onping.Persist.Models.Internal" "onping-types-0.12.0.0-537fBzusEVB7hcaZbAcQql") "Dashboard")))))) (Values (Values (OCamlField "userTagPhone" (OCamlPrimitiveRef (OOption (OCamlPrimitive OInt)))) (OCamlField "userTagName" (OCamlPrimitiveRef (OOption (OCamlPrimitive OString))))) (Values (OCamlField "userTagCallAlert" (OCamlPrimitiveRef OBool)) (Values (OCamlField "userTagEmailAlert" (OCamlPrimitiveRef OBool)) (OCamlField "userTagTextAlert" (OCamlPrimitiveRef OBool))))))))
+
 -}

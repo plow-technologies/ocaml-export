@@ -283,19 +283,19 @@ let decodeWrapThreeUnfilled decodeA0 decodeA1 decodeA2 json =
 
 type wrapThreeFilled =
   { foo : string
-  ; filled : (int, float, string) wrapThree
+  ; filled : (int, float, Person.person) wrapThree
   }
 
 let encodeWrapThreeFilled x =
   Aeson.Encode.object_
     [ ( "foo", Aeson.Encode.string x.foo )
-    ; ( "filled", (encodeWrapThree Aeson.Encode.int Aeson.Encode.float Aeson.Encode.string) x.filled )
+    ; ( "filled", (encodeWrapThree Aeson.Encode.int Aeson.Encode.float Person.encodePerson) x.filled )
     ]
 
 let decodeWrapThreeFilled json =
   match Aeson.Decode.
     { foo = field "foo" string json
-    ; filled = field "filled" (fun a -> unwrapResult (decodeWrapThree (wrapResult int) (wrapResult Aeson.Decode.float) (wrapResult string) a)) json
+    ; filled = field "filled" (fun a -> unwrapResult (decodeWrapThree (wrapResult int) (wrapResult Aeson.Decode.float) Person.decodePerson a)) json
     }
   with
   | v -> Js_result.Ok v

@@ -167,9 +167,9 @@ data OCamlValue
   | OCamlTypeParameterRef Text -- ^ Type parameters like `a` in `Maybe a`
   | OCamlEmpty -- ^ a place holder for OCaml value. It can represent the end of a list or an Enumerator in a mixed sum
   | OCamlPrimitiveRef OCamlPrimitive -- ^ A primitive OCaml type like `int`, `string`, etc.
-  | OCamlField Text OCamlValue -- ^ A field name and its type from a record
-  | Values OCamlValue OCamlValue -- ^ Used for multiple types in a sum type
-
+  | OCamlField Text OCamlValue -- ^ A field name and its type from a record.
+  | Values OCamlValue OCamlValue -- ^ Used for multiple types in a NameConstructor or a RecordConstructor.
+  | OCamlRefAppValues OCamlValue OCamlValue -- ^ User for multiple types in an OCamlRefApp. These are rendered in a different way from Values.
   deriving (Show, Eq)
 --  -- ^
 ------------------------------------------------------------
@@ -304,11 +304,11 @@ typeRepToOCamlValue t =
       then OCamlEmpty
       else
         if length typeParams == 1
-        then Values (typeRepToOCamlValue $ head typeParams) OCamlEmpty
+        then typeRepToOCamlValue $ head typeParams -- Values (typeRepToOCamlValue $ head typeParams) OCamlEmpty
         else
           if length typeParams == 2
-          then Values (typeRepToOCamlValue $ head typeParams) (typeRepToOCamlValue $ head $ tail typeParams)
-          else Values (typeRepToOCamlValue $ head typeParams) (foldl (\b a -> Values b (typeRepToOCamlValue a)) (typeRepToOCamlValue $ head $ tail typeParams) (tail $ tail typeParams))
+          then OCamlRefAppValues (typeRepToOCamlValue $ head typeParams) (typeRepToOCamlValue $ head $ tail typeParams)
+          else OCamlRefAppValues (typeRepToOCamlValue $ head typeParams) (foldl (\b a -> OCamlRefAppValues b (typeRepToOCamlValue a)) (typeRepToOCamlValue $ head $ tail typeParams) (tail $ tail typeParams))
 
 
 typeParameterToRef :: Map.Map TypeRep Text

@@ -15,7 +15,7 @@ val encodeIntWrapped : intWrapped -> Js_json.t
 val decodeIntWrapped : Js_json.t -> (intWrapped, string) Js_result.t
 
 type maybeWrapped =
-  { mw : (((int) option)) wrapper
+  { mw : ((int) option) wrapper
   }
 
 val encodeMaybeWrapped : maybeWrapped -> Js_json.t
@@ -41,7 +41,7 @@ val decodeComplexWrapped : Js_json.t -> (complexWrapped, string) Js_result.t
 type sumWrapped =
   | SW1
   | SW2 of (int) wrapper
-  | SW3 of (((string) option)) wrapper
+  | SW3 of ((string) option) wrapper
   | SW4 of ((int, string) Aeson.Compatibility.Either.t) wrapper
 
 val encodeSumWrapped : sumWrapped -> Js_json.t
@@ -86,7 +86,7 @@ val encodeScrambledTypeParameterRefs : ('a0 -> Js_json.t) -> ('a1 -> Js_json.t) 
 val decodeScrambledTypeParameterRefs : (Js_json.t -> ('a0, string) Js_result.t) -> (Js_json.t -> ('a1, string) Js_result.t) -> (Js_json.t -> ('a2, string) Js_result.t) -> (Js_json.t -> ('a3, string) Js_result.t) -> (Js_json.t -> ('a4, string) Js_result.t) -> (Js_json.t -> ('a5, string) Js_result.t) -> Js_json.t -> (('a0, 'a1, 'a2, 'a3, 'a4, 'a5) scrambledTypeParameterRefs, string) Js_result.t
 
 type wrappedWrapper =
-  { ww : ((((int) option)) wrapper) option
+  { ww : (((int) option) wrapper) option
   }
 
 val encodeWrappedWrapper : wrappedWrapper -> Js_json.t

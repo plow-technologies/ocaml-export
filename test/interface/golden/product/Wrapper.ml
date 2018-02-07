@@ -33,7 +33,7 @@ let decodeIntWrapped json =
   | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeIntWrapped: " ^ message)
 
 type maybeWrapped =
-  { mw : (((int) option)) wrapper
+  { mw : ((int) option) wrapper
   }
 
 let encodeMaybeWrapped x =
@@ -86,7 +86,7 @@ let decodeComplexWrapped json =
 type sumWrapped =
   | SW1
   | SW2 of (int) wrapper
-  | SW3 of (((string) option)) wrapper
+  | SW3 of ((string) option) wrapper
   | SW4 of ((int, string) Aeson.Compatibility.Either.t) wrapper
 
 let encodeSumWrapped x =
@@ -219,7 +219,7 @@ let decodeScrambledTypeParameterRefs decodeA0 decodeA1 decodeA2 decodeA3 decodeA
   | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeScrambledTypeParameterRefs: " ^ message)
 
 type wrappedWrapper =
-  { ww : ((((int) option)) wrapper) option
+  { ww : (((int) option) wrapper) option
   }
 
 let encodeWrappedWrapper x =

@@ -39,6 +39,27 @@ import Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
 import OCaml.BuckleScript.Types hiding (getOCamlValues)
 import OCaml.Internal.Common
 
+-- | Convert a 'Proxy a' into OCaml type to decode JSON function source code with an interface file '.mli'.
+toOCamlDecoderInterfaceWith :: forall a. OCamlType a => Options -> a -> T.Text
+toOCamlDecoderInterfaceWith options a =
+  case toOCamlType (Proxy :: Proxy a) of
+    OCamlDatatype haskellTypeMetaData _ _ ->
+      case Map.lookup haskellTypeMetaData (dependencies options) of
+        Just ocamlTypeMetaData -> pprinter $ runReader (renderInterface (toOCamlType a)) (TypeMetaData (Just ocamlTypeMetaData) options)
+        Nothing -> ""          
+    _ -> pprinter $ runReader (renderInterface (toOCamlType a)) (TypeMetaData Nothing options)
+
+-- | Convert a 'Proxy a' into OCaml type to decode JSON function source code without an interface file '.mli'.
+toOCamlDecoderSourceWith :: forall a. OCamlType a => Options -> a -> T.Text
+toOCamlDecoderSourceWith options a =
+  case toOCamlType (Proxy :: Proxy a) of
+    OCamlDatatype haskellTypeMetaData _ _ ->
+      case Map.lookup haskellTypeMetaData (dependencies options) of
+        Just ocamlTypeMetaData -> pprinter $ runReader (render (toOCamlType a)) (TypeMetaData (Just ocamlTypeMetaData) options)
+        Nothing -> ""
+    _ -> pprinter $ runReader (render (toOCamlType a)) (TypeMetaData Nothing options)
+
+-- Internal
 
 -- | Render OCamlDatatype into an OCaml declaration
 class HasDecoder a where
@@ -242,23 +263,27 @@ instance HasDecoder OCamlValue where
       Just ocamlTypeRef -> do
         ds <- asks (dependencies . userOptions)
         dx <- renderRef values
-        pure $ appendModule ds ocamlTypeRef (typeRepToHaskellTypeMetaData typRep) (T.pack $ show $ fst $ splitTyConApp typRep) (www values dx)
+        pure $ appendModule ds ocamlTypeRef (typeRepToHaskellTypeMetaData typRep) (T.pack $ show $ fst $ splitTyConApp typRep) (wrapIfPrimitive values dx)
 
   render (OCamlPrimitiveRef primitive) = renderRef primitive
 
-  render (OCamlTypeParameterRef name) =
-    pure $ "(fun a -> unwrapResult (decode" <> (stext . textUppercaseFirst $ name) <+> "a))"
+  render (OCamlTypeParameterRef name) = pure $ "decode" <> (stext . textUppercaseFirst $ name)
 
   render (Values x y) = do
     dx <- render x
     dy <- render y
-    return $ dx <$$> ";" <+> dy
+    pure $ dx <$$> ";" <+> dy
+
+  render (OCamlRefAppValues x y) = do
+    dx <- render x
+    dy <- render y
+    pure $ (wrapIfPrimitive x dx) <+> (wrapIfPrimitive y dy)
 
   render (OCamlField name value) = do
     ao <- asks (aesonOptions . userOptions)
     let jsonFieldname = T.pack . Aeson.fieldLabelModifier ao . T.unpack $ name    
     dv <- render value
-    return $ (stext name) <+> "=" <+> "field" <+> dquotes (stext jsonFieldname) <+> dv <+> "json"
+    pure $ (stext name) <+> "=" <+> "field" <+> dquotes (stext jsonFieldname) <+> (unwrapIfTypeParameter value dv) <+> "json"
 
   render OCamlEmpty = pure ""
 
@@ -266,10 +291,12 @@ instance HasDecoder EnumeratorConstructor where
   render (EnumeratorConstructor name) = pure $ "| Some \"" <> stext name <> "\" -> Js_result.Ok" <+> stext name
 
 instance HasDecoderRef OCamlValue where
-  renderRef (Values x y) = do
+  renderRef (OCamlRefAppValues x y) = do
     dx <- render x
     dy <- render y
-    pure $ dx <+> dy
+    pure $ (wrapIfPrimitive x dx) <+> (wrapIfPrimitive y dy)
+
+  renderRef (OCamlPrimitiveRef primitive) = renderRef primitive
 
   renderRef _ = pure ""
 
@@ -340,13 +367,13 @@ renderRefWithUnwrapResult (OCamlDatatype typeRef _ (OCamlValueConstructor (Named
 
   mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData 
   case mOCamlTypeMetaData of
-    Nothing -> pure $ parens $ name <+> (www values dx)
+    Nothing -> pure $ parens $ name <+> (wrapIfPrimitive values dx)
     Just decOCamlTypeMetaData -> do
       ds <- asks (dependencies . userOptions)
       case Map.lookup (typeRepToHaskellTypeMetaData typRep) ds of
         Just parOCamlTypeMetaData -> do
           let prefix = stext $ mkModulePrefix decOCamlTypeMetaData parOCamlTypeMetaData          
-          pure $ parens $ "fun a -> unwrapResult (" <> prefix <> name <+> (www values dx) <+> "a)"
+          pure $ parens $ "fun a -> unwrapResult (" <> prefix <> name <+> (wrapIfPrimitive values dx) <+> "a)"
         Nothing -> fail ("OCaml.BuckleScript.Decode (HasDecoderRef OCamlDataType) expected to find dependency:\n\n" ++ show typeRef ++ "\n\nin\n\n" ++ show ds)
 
 renderRefWithUnwrapResult datatype@(OCamlDatatype typeRef name _) = do
@@ -388,7 +415,7 @@ renderSum (OCamlValueConstructor (NamedConstructor name value)) = do
   let jsonConstructorName = T.pack . Aeson.constructorTagModifier ao . T.unpack $ name
   val <- render value
   renderSumCondition name $ parens
-    ("match Aeson.Decode." <> parens ("field \"contents\"" <+> val <+> "json") <+> "with"
+    ("match Aeson.Decode." <> parens ("field \"contents\"" <+> (unwrapIfTypeParameter value val) <+> "json") <+> "with"
       <$$>
         indent 1
           (    "| v -> Js_result.Ok (" <> (stext name) <+> "v)"
@@ -504,29 +531,6 @@ renderSumRecordInterface typeName (OCamlValueConstructor (RecordConstructor name
   Just $ "val decode" <> (stext $ typeName <> name) <+> ":" <+> "Js_json.t" <+> "->" <+> parens (stext (textLowercaseFirst $ typeName <> name) <> comma <+> "string") <+> "Js_result.t"
 renderSumRecordInterface _ _ = Nothing
 
-
--- Exported
-
--- | Convert a 'Proxy a' into OCaml type to decode JSON function source code with an interface file '.mli'.
-toOCamlDecoderInterfaceWith :: forall a. OCamlType a => Options -> a -> T.Text
-toOCamlDecoderInterfaceWith options a =
-  case toOCamlType (Proxy :: Proxy a) of
-    OCamlDatatype haskellTypeMetaData _ _ ->
-      case Map.lookup haskellTypeMetaData (dependencies options) of
-        Just ocamlTypeMetaData -> pprinter $ runReader (renderInterface (toOCamlType a)) (TypeMetaData (Just ocamlTypeMetaData) options)
-        Nothing -> ""          
-    _ -> pprinter $ runReader (renderInterface (toOCamlType a)) (TypeMetaData Nothing options)
-
--- | Convert a 'Proxy a' into OCaml type to decode JSON function source code without an interface file '.mli'.
-toOCamlDecoderSourceWith :: forall a. OCamlType a => Options -> a -> T.Text
-toOCamlDecoderSourceWith options a =
-  case toOCamlType (Proxy :: Proxy a) of
-    OCamlDatatype haskellTypeMetaData _ _ ->
-      case Map.lookup haskellTypeMetaData (dependencies options) of
-        Just ocamlTypeMetaData -> pprinter $ runReader (render (toOCamlType a)) (TypeMetaData (Just ocamlTypeMetaData) options)
-        Nothing -> ""
-    _ -> pprinter $ runReader (render (toOCamlType a)) (TypeMetaData Nothing options)
-
 -- | If this type comes from a different OCaml module, then add the appropriate module prefix and add unwrapResult to make the
 --   types match
 appendModule :: Map.Map HaskellTypeMetaData OCamlTypeMetaData -> OCamlTypeMetaData -> HaskellTypeMetaData -> Text -> Doc -> Doc
@@ -537,9 +541,11 @@ appendModule m o h name nxt =
     -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
     -- within the same file as the sum. These products will not be in the dependencies map.
     Nothing -> "(fun a -> unwrapResult (decode"  <> (stext $ textUppercaseFirst name) <+> nxt <+> " a))"
-  where
-  --  safeSpace d0 d1 = if length (show d) > 0 then d0 <+> d1 else d0
-    
-www :: OCamlValue -> Doc -> Doc
-www (Values (OCamlPrimitiveRef _) _) doc = parens $ "wrapResult" <+> doc
-www _ doc = doc
+
+wrapIfPrimitive :: OCamlValue -> Doc -> Doc
+wrapIfPrimitive (OCamlPrimitiveRef _) doc = parens $ "wrapResult" <+> doc
+wrapIfPrimitive _ doc = doc
+
+unwrapIfTypeParameter :: OCamlValue -> Doc -> Doc
+unwrapIfTypeParameter (OCamlTypeParameterRef _) doc = parens $ "fun a -> unwrapResult" <+> (parens $ doc <+> "a")
+unwrapIfTypeParameter _ doc = doc

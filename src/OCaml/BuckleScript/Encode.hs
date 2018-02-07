@@ -352,15 +352,22 @@ instance HasEncoder OCamlValue where
   render (Values x y) = do
     dx <- render x
     dy <- render y
-    return $ dx <$$> ";" <+> dy
+    pure $ dx <$$> ";" <+> dy
 
-  render OCamlEmpty = pure (text "")
+  render (OCamlRefAppValues x y) = do
+    dx <- render x
+    dy <- render y
+    return $ dx <+> dy
+
+  render OCamlEmpty = pure ""
 
 instance HasEncoderRef OCamlValue where
-  renderRef (Values x y) = do
+  renderRef (OCamlRefAppValues x y) = do
     dx <- render x
     dy <- render y
     pure $ dx <+> dy
+
+  renderRef (OCamlPrimitiveRef primitive) = renderRef primitive
 
   renderRef _ = pure ""  
 
@@ -454,6 +461,10 @@ renderVariable (d : ds) ref@(OCamlTypeParameterRef _) = do
   r <- render ref
   return (r <+> d, ds)
 renderVariable ds (Values l r) = do
+  (left, dsl) <- renderVariable ds l
+  (right, dsr) <- renderVariable dsl r
+  return (left <+> ";" <+> right, dsr)
+renderVariable ds (OCamlRefAppValues l r) = do
   (left, dsl) <- renderVariable ds l
   (right, dsr) <- renderVariable dsl r
   return (left <+> ";" <+> right, dsr)

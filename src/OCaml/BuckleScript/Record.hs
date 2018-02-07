@@ -39,13 +39,27 @@ import qualified Data.Text as T
 -- wl-pprint
 import Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
 
+-- | Convert a 'Proxy a' into OCaml type source code.
+toOCamlTypeSourceWith :: forall a. OCamlType a => Options -> a -> T.Text
+toOCamlTypeSourceWith options a =
+  case toOCamlType (Proxy :: Proxy a) of
+    OCamlDatatype haskellTypeMetaData _ _ ->
+      case Map.lookup haskellTypeMetaData (dependencies options) of
+        Just ocamlTypeMetaData -> pprinter $ runReader (render (toOCamlType a)) (TypeMetaData (Just ocamlTypeMetaData) options)
+        Nothing -> ""
+    _ -> pprinter $ runReader (render (toOCamlType a)) (TypeMetaData Nothing options)
+
+-- Internal functions to convert OCamlDatatype into BuckleScript source code.
+
 -- | render a Haskell data type in OCaml
 class HasType a where
   render :: a -> Reader TypeMetaData Doc
 
+-- | render the rows of a record type
 class HasRecordType a where
   renderRecord :: a -> Reader TypeMetaData Doc
 
+-- | render a type as a reference, not its implementation details
 class HasTypeRef a where
   renderRef :: a -> Reader TypeMetaData Doc
 
@@ -100,12 +114,13 @@ instance HasTypeRef OCamlDatatype where
   renderRef (OCamlPrimitive primitive) = renderRef primitive
 
 instance HasTypeRef OCamlValue where
-  renderRef (Values x y) = do
+  renderRef (OCamlRefAppValues x y) = do
     dx <- render x
     dy <- render y
-    pure $ dx <+> dy
+    pure $ dx <> comma <+> dy
 
-  renderRef _ = pure ""  
+  renderRef (OCamlPrimitiveRef primitive) = renderRef primitive
+  renderRef _ = pure ""
             
 instance HasType OCamlConstructor where
   render (OCamlValueConstructor value) = render value
@@ -114,21 +129,21 @@ instance HasType OCamlConstructor where
     mintercalate (line <> "|" <> space) <$> sequence (render <$> constructors)
 
 instance HasType ValueConstructor where
-  -- record
+  -- record constructor
   render (RecordConstructor _ value) = do
     fields <- renderRecord value
     pure $ "{" <+> fields <$$> "}"
 
-  -- enumerator
+  -- enumerator constructor
   render (NamedConstructor constructorName (OCamlEmpty)) = do
     pure $ stext constructorName
 
-  -- product
+  -- constructor with one or more values
   render (NamedConstructor constructorName value) = do
     types <- render value
     pure $ stext constructorName <+> "of" <+> types
 
-  -- sum
+  -- multiple constructors (sum type)
   render (MultipleConstructors constructors) = do
     mintercalate (line <> "|" <> space) <$> sequence (render <$> constructors)
 
@@ -148,68 +163,36 @@ instance HasType OCamlValue where
     dx <- renderRef values
     pure $ (parens dx) <+> (stext . textLowercaseFirst . T.pack . show $ typeRepTyCon typRep)
 
-  render (OCamlTypeParameterRef name) = pure (stext ("'" <> name))
+  render (OCamlTypeParameterRef name) = pure $ stext ("'" <> name)
+
   render (OCamlPrimitiveRef primitive) = ocamlRefParens primitive <$> renderRef primitive
-  render OCamlEmpty = pure (text "")
+
   render (Values x y) = do
     dx <- render x
     dy <- render y
-    return $ dx <+> "*" <+> dy
+    pure $ dx <+> "*" <+> dy
+
+  render (OCamlRefAppValues x y) = do
+    dx <- render x
+    dy <- render y
+    pure $ dx <> comma <+> dy
+
   render (OCamlField name value) = do
     dv <- renderRecord value
-    return $ stext name <+> ":" <+> dv
+    pure $ stext name <+> ":" <+> dv
 
+  render OCamlEmpty = pure ""
 
 instance HasRecordType OCamlValue where
-  renderRecord (OCamlPrimitiveRef primitive) = renderRef primitive
   renderRecord (Values x y) = do
     dx <- renderRecord x
     dy <- renderRecord y
-    return $ dx <$$> ";" <+> dy
+    pure $ dx <$$> ";" <+> dy
+
+  renderRecord (OCamlPrimitiveRef primitive) = renderRef primitive
   renderRecord value = render value
 
 instance HasTypeRef OCamlPrimitive where
-  renderRef (OList (OCamlPrimitive OChar)) = renderRef OString
-  renderRef (OList datatype) = do
-    dt <- renderRef datatype
-    return $ parens dt <+> "list"
-  renderRef (OTuple2 a b) = do
-    da <- renderRef a
-    db <- renderRef b
-    return . parens $ da <+> "*" <+> db
-  renderRef (OTuple3 a b c) = do
-    da <- renderRef a
-    db <- renderRef b
-    dc <- renderRef c
-    return . parens $ da <+> "*" <+> db <+> "*" <+> dc
-  renderRef (OTuple4 a b c d) = do
-    da <- renderRef a
-    db <- renderRef b
-    dc <- renderRef c
-    dd <- renderRef d
-    return . parens $ da <+> "*" <+> db <+> "*" <+> dc <+> "*" <+> dd
-  renderRef (OTuple5 a b c d e) = do
-    da <- renderRef a
-    db <- renderRef b
-    dc <- renderRef c
-    dd <- renderRef d
-    de <- renderRef e
-    return . parens $ da <+> "*" <+> db <+> "*" <+> dc <+> "*" <+> dd <+> "*" <+> de
-  renderRef (OTuple6 a b c d e f) = do
-    da <- renderRef a
-    db <- renderRef b
-    dc <- renderRef c
-    dd <- renderRef d
-    de <- renderRef e
-    df <- renderRef f
-    return . parens $ da <+> "*" <+> db <+> "*" <+> dc <+> "*" <+> dd <+> "*" <+> de <+> "*" <+> df
-  renderRef (OOption datatype) = do
-    dt <- renderRef datatype
-    return $ parens dt <+> "option"
-  renderRef (OEither k v) = do
-    dk <- renderRef k
-    dv <- renderRef v
-    return $ (parens $ dk <> "," <+> dv) <+> "Aeson.Compatibility.Either.t"
   renderRef OInt    = pure "int"
   renderRef ODate   = pure "Js_date.t"
   renderRef OBool   = pure "bool"
@@ -217,6 +200,55 @@ instance HasTypeRef OCamlPrimitive where
   renderRef OString = pure "string"
   renderRef OUnit   = pure "unit"
   renderRef OFloat  = pure "float"
+  renderRef (OList (OCamlPrimitive OChar)) = renderRef OString
+
+  renderRef (OList datatype) = do
+    dt <- renderRef datatype
+    pure $ parens dt <+> "list"
+
+  renderRef (OOption datatype) = do
+    dt <- renderRef datatype
+    pure $ parens dt <+> "option"
+
+  renderRef (OEither k v) = do
+    dk <- renderRef k
+    dv <- renderRef v
+    pure $ (parens $ dk <> comma <+> dv) <+> "Aeson.Compatibility.Either.t"
+
+  renderRef (OTuple2 a b) = do
+    da <- renderRef a
+    db <- renderRef b
+    pure . parens $ da <+> "*" <+> db
+
+  renderRef (OTuple3 a b c) = do
+    da <- renderRef a
+    db <- renderRef b
+    dc <- renderRef c
+    pure . parens $ da <+> "*" <+> db <+> "*" <+> dc
+
+  renderRef (OTuple4 a b c d) = do
+    da <- renderRef a
+    db <- renderRef b
+    dc <- renderRef c
+    dd <- renderRef d
+    pure . parens $ da <+> "*" <+> db <+> "*" <+> dc <+> "*" <+> dd
+
+  renderRef (OTuple5 a b c d e) = do
+    da <- renderRef a
+    db <- renderRef b
+    dc <- renderRef c
+    dd <- renderRef d
+    de <- renderRef e
+    pure . parens $ da <+> "*" <+> db <+> "*" <+> dc <+> "*" <+> dd <+> "*" <+> de
+
+  renderRef (OTuple6 a b c d e f) = do
+    da <- renderRef a
+    db <- renderRef b
+    dc <- renderRef c
+    dd <- renderRef d
+    de <- renderRef e
+    df <- renderRef f
+    pure . parens $ da <+> "*" <+> db <+> "*" <+> dc <+> "*" <+> dd <+> "*" <+> de <+> "*" <+> df
 
 -- Util functions
 
@@ -247,7 +279,7 @@ renderSumRecord typeName constructor@(RecordConstructor name value) = do
   let sumRecordName = typeName <> name
   functionBody <- render constructor
   pure $ Just (("type" <+> (stext (textLowercaseFirst sumRecordName)) <+> "=" <$$> indent 2 functionBody), (name, (RecordConstructor sumRecordName value)))
-renderSumRecord _ _ = return Nothing
+renderSumRecord _ _ = pure Nothing
 
 -- | Puts parentheses around the doc of an OCaml ref if it contains spaces.
 ocamlRefParens :: OCamlPrimitive -> Doc -> Doc
@@ -255,16 +287,6 @@ ocamlRefParens (OList (OCamlPrimitive OChar)) = id
 ocamlRefParens (OList _) = parens
 ocamlRefParens (OOption _) = parens
 ocamlRefParens _ = id
-
--- | Convert a 'Proxy a' into OCaml type source code.
-toOCamlTypeSourceWith :: forall a. OCamlType a => Options -> a -> T.Text
-toOCamlTypeSourceWith options a =
-  case toOCamlType (Proxy :: Proxy a) of
-    OCamlDatatype haskellTypeMetaData _ _ ->
-      case Map.lookup haskellTypeMetaData (dependencies options) of
-        Just ocamlTypeMetaData -> pprinter $ runReader (render (toOCamlType a)) (TypeMetaData (Just ocamlTypeMetaData) options)
-        Nothing -> ""
-    _ -> pprinter $ runReader (render (toOCamlType a)) (TypeMetaData Nothing options)
 
 -- | If this type comes from a different OCaml module, then add the appropriate module prefix
 appendModule :: Map.Map HaskellTypeMetaData OCamlTypeMetaData -> OCamlTypeMetaData -> HaskellTypeMetaData -> Text -> Text

@@ -16,10 +16,6 @@
       "dir":    "file",
       "subdirs": true
     },
-/*    {
-      "dir":    "subs",
-      "subdirs": true
-    },    */
     {
       "dir": "__tests__/product",
       "subdirs": true,

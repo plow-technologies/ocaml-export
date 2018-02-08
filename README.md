@@ -14,7 +14,7 @@ bash test.sh
 
 ## Todo
 
-Complete before stablizing.
+Complete before stablizing and pushing to version 1.0.0.0.
 
 - Documentation
 - Examples
@@ -24,12 +24,14 @@ Complete before stablizing.
 - Support (Map String ..) (Map Text ..) (Map Int ..), must provide one decoder.
 - Support (Map x ..) but two encoders/decoders must be provided.
 - Resolve dependency order for output code so you are not required to declare 'OCamlPackage' types in the correct order.
-- suppport list of list, option of option, etc.
+- Suppport list of list, option of option, etc.
 - Use GHC.TypeList (TypeError). 
+- Correct Haskell Int (64-bits) to OCaml int, int32, int64 types.
+- Support recursive and mutually interdependent types.
 
 ## Wishlist
 
 Nice to have but low priority.
 
-- [ ] OCaml source code parser and AST. Would make it a lot easier to handle manually written types, encoders, decoders.
-- [ ] Output to js_of_ocaml and regular OCaml.
+- OCaml source code parser and AST. Would make it a lot easier to handle manually written types, encoders, decoders.
+- Output to js_of_ocaml and regular OCaml.

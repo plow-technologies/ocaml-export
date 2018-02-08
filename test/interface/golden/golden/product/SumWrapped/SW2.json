@@ -1,0 +1,65 @@
+{
+    "seed": -1030113788823224891,
+    "samples": [
+        {
+            "tag": "SW2",
+            "contents": {
+                "wpa": 26
+            }
+        },
+        {
+            "tag": "SW2",
+            "contents": {
+                "wpa": -1
+            }
+        },
+        {
+            "tag": "SW2",
+            "contents": {
+                "wpa": 6
+            }
+        },
+        {
+            "tag": "SW2",
+            "contents": {
+                "wpa": 9
+            }
+        },
+        {
+            "tag": "SW2",
+            "contents": {
+                "wpa": 27
+            }
+        },
+        {
+            "tag": "SW2",
+            "contents": {
+                "wpa": -23
+            }
+        },
+        {
+            "tag": "SW2",
+            "contents": {
+                "wpa": 12
+            }
+        },
+        {
+            "tag": "SW2",
+            "contents": {
+                "wpa": 7
+            }
+        },
+        {
+            "tag": "SW2",
+            "contents": {
+                "wpa": -2
+            }
+        },
+        {
+            "tag": "SW2",
+            "contents": {
+                "wpa": 7
+            }
+        }
+    ]
+}

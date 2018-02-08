@@ -41,7 +41,7 @@ let decodeComplexProduct json =
     { cp0 = field "cp0" (either (fun a -> unwrapResult (Person.decodePerson a)) (list int)) json
     ; cp1 = field "cp1" (list (pair int (either string Aeson.Decode.float))) json
     ; cp2 = field "cp2" (list (list int)) json
-    ; cp3 = optional (field "cp3" (list int)) json
+    ; cp3 = field "cp3" (optional (list int)) json
     ; cp4 = field "cp4" (either (fun a -> unwrapResult (decodeSimple a)) int) json
     }
   with

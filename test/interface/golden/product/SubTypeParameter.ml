@@ -14,7 +14,7 @@ let encodeSubTypeParameter encodeA0 encodeA1 encodeA2 x =
 let decodeSubTypeParameter decodeA0 decodeA1 decodeA2 json =
   match Aeson.Decode.
     { listA = field "listA" (list (fun a -> unwrapResult (decodeA0 a))) json
-    ; maybeB = optional (field "maybeB" (fun a -> unwrapResult (decodeA1 a))) json
+    ; maybeB = field "maybeB" (optional (fun a -> unwrapResult (decodeA1 a))) json
     ; tupleC = field "tupleC" (pair (fun a -> unwrapResult (decodeA2 a)) (fun a -> unwrapResult (decodeA1 a))) json
     }
   with

@@ -14,7 +14,7 @@ let encodePerson x =
 let decodePerson json =
   match Aeson.Decode.
     { id = field "id" int json
-    ; name = optional (field "name" string) json
+    ; name = field "name" (optional string) json
     ; created = field "created" date json
     }
   with

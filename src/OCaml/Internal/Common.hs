@@ -158,5 +158,12 @@ mkDocList ds =
       then ["("] <> (L.intersperse ", " ds) <> [")"]
       else ds
 
+mkDocListP :: [Doc] -> Doc
+mkDocListP ds =
+  foldl (<>) "" $
+    if length ds > 0
+      then ["("] <> (L.intersperse ", " ds) <> [")"]
+      else ds
+
 foldMod :: [Text] -> Text
 foldMod = T.intercalate "."

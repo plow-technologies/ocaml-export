@@ -2,8 +2,11 @@
 
 ## 0.6.0.0 -- 2018-01-31
 
-* Properly handle rows that have type parameters.
+* Properly convert Haskell types to OCaml types that have type parameters.
+
 * Fix cases when the order of type parameter declarations differs from the order they appear in right hand side of the type declaration.
+
+* Add 'template-haskell < 2.12.0.0' restriction. OCamlTypeInFile seems to break at runtime with version 2.12.0.0.
 
 ## 0.5.0.0 -- 2018-01-16
 
@@ -12,6 +15,7 @@
 ## 0.4.0.0 -- 2018-01-10
 
 * Add 'OCamlType' instance for ByteString.
+
 * Add 'HaskellTypeName' to support servant test server for types without Generic. You must manually provide the type's name as a symbol.
 
 ## 0.3.0.0 -- 2018-01-04

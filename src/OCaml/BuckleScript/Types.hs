@@ -53,15 +53,8 @@ module OCaml.BuckleScript.Types
   , oCamlValueIsFloat
 
   -- Typeable functions
-  , primitiveTyConToOCamlTypeText
-  , typeParameterRefTyConToOCamlTypeText
-  , tupleTyConToSize
-  , typeRepIsString
   , typeRepToHaskellTypeMetaData
   , tyConToHaskellTypeMetaData
-  , ocamlDatatypeHasTypeParameter
-
-  , typeParameterToRef
   ) where
 
 -- base
@@ -120,11 +113,11 @@ data OCamlTypeMetaData =
 
 -- | Smallest unit of computation in OCaml.
 data OCamlPrimitive
-  = OInt -- ^ int
-  | OBool -- ^ bool, boolean
+  = OBool -- ^ bool, boolean
   | OChar -- ^ char, it gets interpreted as a string because OCaml char does not support UTF-8
   | ODate -- ^ Js_date.t
   | OFloat -- ^ float
+  | OInt -- ^ int
   | OString -- ^ string
   | OUnit -- ^ ()
   | OList OCamlDatatype -- ^ 'a list, 'a Js_array.t
@@ -309,17 +302,6 @@ typeRepToOCamlValue t =
           if length typeParams == 2
           then OCamlRefAppValues (typeRepToOCamlValue $ head typeParams) (typeRepToOCamlValue $ head $ tail typeParams)
           else OCamlRefAppValues (typeRepToOCamlValue $ head typeParams) (foldl (\b a -> OCamlRefAppValues b (typeRepToOCamlValue a)) (typeRepToOCamlValue $ head $ tail typeParams) (tail $ tail typeParams))
-
-
-typeParameterToRef :: Map.Map TypeRep Text
-typeParameterToRef = Map.fromList
-  [ ( typeRep (Proxy :: Proxy TypeParameterRef0), "a0")
-  , ( typeRep (Proxy :: Proxy TypeParameterRef1), "a1")
-  , ( typeRep (Proxy :: Proxy TypeParameterRef2), "a2")
-  , ( typeRep (Proxy :: Proxy TypeParameterRef3), "a3")
-  , ( typeRep (Proxy :: Proxy TypeParameterRef4), "a4")
-  , ( typeRep (Proxy :: Proxy TypeParameterRef5), "a5")
-  ]
 
 primitiveTypeRepToOCamlPrimitive :: TypeRep -> Maybe OCamlPrimitive
 primitiveTypeRepToOCamlPrimitive t =
@@ -760,13 +742,30 @@ oCamlValueIsFloat _ = False
 -- we need a way to extract what those type parameters are. This is not possible with
 -- Generics, but it can be done with Typeable.
 
--- | necessary because the TypeRep for 'String' is '([], [Char])', but we want
---   it to be reduced to an OCaml 'string'.
-typeRepIsString :: TypeRep -> Bool
-typeRepIsString t =
-  let (hd, rst) = splitTyConApp t in
-  show hd == "[]" && length rst == 1 && ((show $ head rst) == "Char")
+-- | match type parameter reference 'TyCon's (accessible from a TypeRep) to their equivalent OCaml types.
+typeParameterRefTyConToOCamlTypeText :: Map.Map TyCon Text
+typeParameterRefTyConToOCamlTypeText = Map.fromList
+  [ ( typeRepTyCon $ typeRep (Proxy :: Proxy TypeParameterRef0), "a0")
+  , ( typeRepTyCon $ typeRep (Proxy :: Proxy TypeParameterRef1), "a1")
+  , ( typeRepTyCon $ typeRep (Proxy :: Proxy TypeParameterRef2), "a2")
+  , ( typeRepTyCon $ typeRep (Proxy :: Proxy TypeParameterRef3), "a3")
+  , ( typeRepTyCon $ typeRep (Proxy :: Proxy TypeParameterRef4), "a4")
+  , ( typeRepTyCon $ typeRep (Proxy :: Proxy TypeParameterRef5), "a5")
+  ]
 
+-- | convert TypeRep to HaskellTypeMetaData
+typeRepToHaskellTypeMetaData :: TypeRep -> HaskellTypeMetaData
+typeRepToHaskellTypeMetaData = tyConToHaskellTypeMetaData . typeRepTyCon
+
+-- | convert TyCon to HaskellTypeMetaData
+tyConToHaskellTypeMetaData :: TyCon -> HaskellTypeMetaData
+tyConToHaskellTypeMetaData aTypeCon =
+  HaskellTypeMetaData
+    (T.pack . tyConName    $ aTypeCon)
+    (T.pack . tyConModule  $ aTypeCon)
+    (T.pack . tyConPackage $ aTypeCon)
+
+{-
 -- | match 'TyCon's (accessible from a TypeRep) to their equivalent OCaml types.
 primitiveTyConToOCamlTypeText :: Map.Map TyCon Text
 primitiveTyConToOCamlTypeText = Map.fromList
@@ -795,6 +794,7 @@ primitiveTyConToOCamlTypeText = Map.fromList
   , ( typeRepTyCon $ typeRep (Proxy :: Proxy Bool      ), "boolean")
   ]
 
+-- | convert a TyCon of a tuple to its size
 tupleTyConToSize :: Map.Map TyCon Int
 tupleTyConToSize = Map.fromList
   [ ( typeRepTyCon $ typeRep (Proxy :: Proxy (,)      ), 2)
@@ -804,28 +804,22 @@ tupleTyConToSize = Map.fromList
   , ( typeRepTyCon $ typeRep (Proxy :: Proxy (,,,,,)  ), 6)
   ]
 
--- | match type parameter reference 'TyCon's (accessible from a TypeRep) to their equivalent OCaml types.
-typeParameterRefTyConToOCamlTypeText :: Map.Map TyCon Text
-typeParameterRefTyConToOCamlTypeText = Map.fromList
-  [ ( typeRepTyCon $ typeRep (Proxy :: Proxy TypeParameterRef0), "a0")
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy TypeParameterRef1), "a1")
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy TypeParameterRef2), "a2")
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy TypeParameterRef3), "a3")
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy TypeParameterRef4), "a4")
-  , ( typeRepTyCon $ typeRep (Proxy :: Proxy TypeParameterRef5), "a5")
+-- | necessary because the TypeRep for 'String' is '([], [Char])', but we want
+--   it to be reduced to an OCaml 'string'.
+typeRepIsString :: TypeRep -> Bool
+typeRepIsString t =
+  let (hd, rst) = splitTyConApp t in
+  show hd == "[]" && length rst == 1 && ((show $ head rst) == "Char")
+
+typeParameterToRef :: Map.Map TypeRep Text
+typeParameterToRef = Map.fromList
+  [ ( typeRep (Proxy :: Proxy TypeParameterRef0), "a0")
+  , ( typeRep (Proxy :: Proxy TypeParameterRef1), "a1")
+  , ( typeRep (Proxy :: Proxy TypeParameterRef2), "a2")
+  , ( typeRep (Proxy :: Proxy TypeParameterRef3), "a3")
+  , ( typeRep (Proxy :: Proxy TypeParameterRef4), "a4")
+  , ( typeRep (Proxy :: Proxy TypeParameterRef5), "a5")
   ]
-
-typeRepToHaskellTypeMetaData :: TypeRep -> HaskellTypeMetaData
-typeRepToHaskellTypeMetaData = tyConToHaskellTypeMetaData . typeRepTyCon
-
-tyConToHaskellTypeMetaData :: TyCon -> HaskellTypeMetaData
-tyConToHaskellTypeMetaData aTypeCon =
-  HaskellTypeMetaData
-    (T.pack . tyConName    $ aTypeCon)
-    (T.pack . tyConModule  $ aTypeCon)
-    (T.pack . tyConPackage $ aTypeCon)
-
--- isPhantomTypeParameter :: TypeRep -> Bool
 
 ocamlDatatypeHasTypeParameter :: OCamlDatatype -> Int -> Bool
 ocamlDatatypeHasTypeParameter ocamlDatatype index = ocamlDatatypeHasTypeParameter' ocamlDatatype
@@ -856,3 +850,4 @@ ocamlDatatypeHasTypeParameter ocamlDatatype index = ocamlDatatypeHasTypeParamete
     ocamlValueHasTypeParameter (OCamlField _ v) = ocamlValueHasTypeParameter v
     ocamlValueHasTypeParameter (Values v0 v1) = ocamlValueHasTypeParameter v0 || ocamlValueHasTypeParameter v1
     ocamlValueHasTypeParameter _ = False
+-}

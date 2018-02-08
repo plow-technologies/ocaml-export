@@ -89,21 +89,6 @@ instance HasDecoderInterface OCamlDatatype where
 
   renderInterface _ = pure ""
 
-
-renderSumRecord :: Text -> OCamlConstructor -> Reader TypeMetaData (Maybe Doc)
-renderSumRecord typeName (OCamlValueConstructor (RecordConstructor name value)) = do
-  let sumRecordName = typeName <> name
-  fnBody <- render (OCamlValueConstructor $ RecordConstructor (typeName <> name) value)
-  ocamlInterface <- asks (includeOCamlInterface . userOptions)
-  if ocamlInterface
-    then
-      pure $ Just $ "let decode" <> stext sumRecordName <+> "json =" <$$> fnBody
-    else
-      pure $ Just $ "let decode" <> stext sumRecordName <+> "(json : Js_json.t)" <+> ":(" <> (stext $ textLowercaseFirst sumRecordName) <> ", string)" <+> "Js_result.t =" <$$> fnBody
-
-renderSumRecord _ _ = return Nothing
-
-
 instance HasDecoder OCamlDatatype where
   -- Sum with records
   render datatype@(OCamlDatatype _ typeName constructor@(OCamlSumOfRecordConstructor _ (MultipleConstructors constructors))) = do
@@ -198,17 +183,6 @@ instance HasDecoderRef OCamlDatatype where
             Nothing -> fail ("OCaml.BuckleScript.Decode (HasDecoderRef OCamlDataType) expected to find dependency:\n\n" ++ show typeRef ++ "\n\nin\n\n" ++ show ds)
 
   renderRef (OCamlPrimitive primitive) = renderRef primitive
-
--- | Variable names for the members of constructors
---   Used in pattern matches
-constructorParameters :: Int -> OCamlValue -> [Doc]
-constructorParameters _ OCamlEmpty = [ empty ]
-constructorParameters i (Values l r) =
-    left ++ right
-  where
-    left = constructorParameters i l
-    right = constructorParameters (length left + i) r
-constructorParameters i _ = [ "y" <> int i ]
 
 instance HasDecoder OCamlConstructor where
   render (OCamlValueConstructor (NamedConstructor name value)) = do
@@ -359,6 +333,29 @@ instance HasDecoderRef OCamlPrimitive where
     pure $ parens $ "tuple6" <+> dv0 <+> dv1 <+> dv2 <+> dv3 <+> dv4 <+> dv5
 
 -- Util
+renderSumRecord :: Text -> OCamlConstructor -> Reader TypeMetaData (Maybe Doc)
+renderSumRecord typeName (OCamlValueConstructor (RecordConstructor name value)) = do
+  let sumRecordName = typeName <> name
+  fnBody <- render (OCamlValueConstructor $ RecordConstructor (typeName <> name) value)
+  ocamlInterface <- asks (includeOCamlInterface . userOptions)
+  if ocamlInterface
+    then
+      pure $ Just $ "let decode" <> stext sumRecordName <+> "json =" <$$> fnBody
+    else
+      pure $ Just $ "let decode" <> stext sumRecordName <+> "(json : Js_json.t)" <+> ":(" <> (stext $ textLowercaseFirst sumRecordName) <> ", string)" <+> "Js_result.t =" <$$> fnBody
+
+renderSumRecord _ _ = return Nothing
+
+-- | Variable names for the members of constructors
+--   Used in pattern matches
+constructorParameters :: Int -> OCamlValue -> [Doc]
+constructorParameters _ OCamlEmpty = [ empty ]
+constructorParameters i (Values l r) =
+    left ++ right
+  where
+    left = constructorParameters i l
+    right = constructorParameters (length left + i) r
+constructorParameters i _ = [ "y" <> int i ]
 
 renderRefWithUnwrapResult :: OCamlDatatype -> Reader TypeMetaData Doc
 renderRefWithUnwrapResult (OCamlDatatype typeRef _ (OCamlValueConstructor (NamedConstructor _ (OCamlRefApp typRep values)))) = do
@@ -454,8 +451,8 @@ flattenOCamlValue (Values l r) = flattenOCamlValue l ++ flattenOCamlValue r
 flattenOCamlValue val = [val]
 
 -- | Render the decoding of a constructor's arguments. Note the constructor must
--- be from a data type with multiple constructors and that it has multiple
--- constructors itself.
+--   be from a data type with multiple constructors and that it has multiple
+--   constructors itself.
 rArgs :: Text -> OCamlValue -> Reader TypeMetaData Doc
 rArgs name vals = do
   v <- mk name 0 $ (Just <$> flattenOCamlValue vals) ++ [Nothing]
@@ -538,15 +535,12 @@ appendModule m o h name nxt =
   case Map.lookup h m of
     Just parOCamlTypeMetaData ->
       (stext $ mkModulePrefix o parOCamlTypeMetaData) <> "decode" <> (stext $ textUppercaseFirst name) <+> nxt
-      -- "(fun a -> unwrapResult (" <> (stext $ mkModulePrefix o parOCamlTypeMetaData) <> "decode" <> (stext $ textUppercaseFirst name) <+> nxt <+> "a))"
     -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
     -- within the same file as the sum. These products will not be in the dependencies map.
     Nothing -> "decode"  <> (stext $ textUppercaseFirst name) <+> nxt
-      -- "(fun a -> unwrapResult (decode"  <> (stext $ textUppercaseFirst name) <+> nxt <+> " a))"
 
 wrapIfPrimitive :: OCamlValue -> Doc -> Doc
 wrapIfPrimitive (OCamlPrimitiveRef _) doc = parens $ "wrapResult" <+> doc
--- wrapIfPrimitive (OCamlRef _ _) doc = parens $ "wrapResult" <+> doc
 wrapIfPrimitive _ doc = doc
 
 unwrapIfTypeParameter :: OCamlValue -> Doc -> Doc

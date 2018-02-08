@@ -104,10 +104,6 @@ instance HasTypeRef OCamlDatatype where
             pure $ (parensIfNotBlank dx) <+> prefix <> name
           Nothing -> fail ("expected to find dependency:\n\n" ++ "\n\nin\n\n" ++ show ds)
 
-    
-
-    -- pure $ (parensIfNotBlank dx) <+> (stext . textLowercaseFirst . T.pack . show $ typeRepTyCon typRep)
-
   renderRef datatype@(OCamlDatatype typeRef typeName _) = do
     if isTypeParameterRef datatype
     then
@@ -139,7 +135,7 @@ instance HasTypeRef OCamlValue where
 instance HasType OCamlConstructor where
   render (OCamlValueConstructor value) = render value
   render (OCamlSumOfRecordConstructor _ value) = render value
-  render (OCamlEnumeratorConstructor constructors) = do
+  render (OCamlEnumeratorConstructor constructors) =
     mintercalate (line <> "|" <> space) <$> sequence (render <$> constructors)
 
 instance HasType ValueConstructor where
@@ -212,13 +208,14 @@ instance HasRecordType OCamlValue where
   renderRecord value = render value
 
 instance HasTypeRef OCamlPrimitive where
-  renderRef OInt    = pure "int"
-  renderRef ODate   = pure "Js_date.t"
   renderRef OBool   = pure "bool"
   renderRef OChar   = pure "string"
+  renderRef ODate   = pure "Js_date.t"
+  renderRef OFloat  = pure "float"
+  renderRef OInt    = pure "int"
   renderRef OString = pure "string"
   renderRef OUnit   = pure "unit"
-  renderRef OFloat  = pure "float"
+
   renderRef (OList (OCamlPrimitive OChar)) = renderRef OString
 
   renderRef (OList datatype) = do
@@ -300,13 +297,6 @@ renderSumRecord typeName constructor@(RecordConstructor name value) = do
   pure $ Just (("type" <+> (stext (textLowercaseFirst sumRecordName)) <+> "=" <$$> indent 2 functionBody), (name, (RecordConstructor sumRecordName value)))
 renderSumRecord _ _ = pure Nothing
 
--- | Puts parentheses around the doc of an OCaml ref if it contains spaces.
-ocamlRefParens :: OCamlPrimitive -> Doc -> Doc
-ocamlRefParens (OList (OCamlPrimitive OChar)) = id
-ocamlRefParens (OList _) = parens
-ocamlRefParens (OOption _) = parens
-ocamlRefParens _ = id
-
 -- | If this type comes from a different OCaml module, then add the appropriate module prefix
 appendModule :: Map.Map HaskellTypeMetaData OCamlTypeMetaData -> OCamlTypeMetaData -> HaskellTypeMetaData -> Text -> Text
 appendModule m o h name =
@@ -316,6 +306,13 @@ appendModule m o h name =
     -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
     -- within the same file as the sum. These products will not be in the dependencies map.
     Nothing -> textLowercaseFirst name
+
+-- | Puts parentheses around the doc of an OCaml ref if it contains spaces.
+ocamlRefParens :: OCamlPrimitive -> Doc -> Doc
+ocamlRefParens (OList (OCamlPrimitive OChar)) = id
+ocamlRefParens (OList _) = parens
+ocamlRefParens (OOption _) = parens
+ocamlRefParens _ = id
 
 parensIfNotBlank :: Doc -> Doc
 parensIfNotBlank d = let dx = show d in if (length dx) > 0 && dx /= " " then parens d else d

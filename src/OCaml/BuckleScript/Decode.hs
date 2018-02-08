@@ -275,13 +275,13 @@ instance HasDecoderRef OCamlValue where
   renderRef _ = pure ""
 
 instance HasDecoderRef OCamlPrimitive where
-  renderRef OUnit = pure $ parens "()"
-  renderRef ODate = pure "date"
-  renderRef OInt = pure "int"
   renderRef OBool = pure "bool"
   renderRef OChar = pure "string"
+  renderRef ODate = pure "date"
   renderRef OFloat = pure "Aeson.Decode.float" -- this is to prevent overshadowing warning
+  renderRef OInt = pure "int"
   renderRef OString = pure "string"
+  renderRef OUnit = pure $ parens "()"
   renderRef (OList (OCamlPrimitive OChar)) = pure "string"
 
   renderRef (OList v0) = do

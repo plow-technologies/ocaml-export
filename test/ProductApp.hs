@@ -16,7 +16,8 @@ $(mkOCamlSpecServer "ProductPackage" (Proxy :: Proxy ProductPackage))
 
 spec :: Spec
 spec = do
-  runIO $ mkGoldenFiles (Proxy :: Proxy ProductPackage) 10 "test/interface/golden/golden/product"  
+  runIO $ mkGoldenFiles (Proxy :: Proxy ProductPackage) 10 "test/interface/golden/golden/product"
+  runGoldenSpec (Proxy :: Proxy ProductPackage) 10 "test/interface/golden/golden/product"
 
   let dir = "test/interface/temp"
   runIO $ mkPackage (Proxy :: Proxy ProductPackage) (PackageOptions dir "product" fileMap True $ Just $ SpecOptions "__tests__/product" "golden/product" "http://localhost:8081")

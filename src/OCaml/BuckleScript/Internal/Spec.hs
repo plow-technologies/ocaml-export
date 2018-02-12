@@ -31,6 +31,7 @@ module OCaml.BuckleScript.Internal.Spec
   , MkOCamlSpecAPI
 
   , mkGoldenFiles
+  , runGoldenSpec
 
   -- utility functions
   , OCamlSpecAPI
@@ -45,16 +46,25 @@ import GHC.Generics
 import GHC.TypeLits
 
 -- aeson
-import Data.Aeson (ToJSON)
+import Data.Aeson (FromJSON, ToJSON)
 
+-- hspec
+import Test.Hspec (Spec)
 -- hspec-aeson-golden
 import Test.Aeson.Internal.ADT.GoldenSpecs (mkGoldenFileForType)
+import Test.Aeson.GenericSpecs
+  ( roundtripAndGoldenADTSpecsWithSettings
+  , defaultSettings
+  , GoldenDirectoryOption (..)
+  , Settings (..)
+  )
 
 -- ocaml-export
 import OCaml.Internal.Common hiding ((</>))
 import OCaml.BuckleScript.Internal.Module
 import OCaml.BuckleScript.Internal.Package
-
+-- QuickCheck
+import Test.QuickCheck (Arbitrary)
 -- quickcheck-arbitrary-adt
 import Test.QuickCheck.Arbitrary.ADT
 
@@ -142,8 +152,59 @@ instance (ToADTArbitrary a, ToJSON a) => HasMkGoldenFiles' 1 a where
   mkGoldenFiles' _ Proxy size fp = mkGoldenFileForType size (Proxy :: Proxy a) fp
 
 
+-- | Make hspec-aeson-golden golden files for each type in an OCamlPackage
+class HasRunGoldenSpec a where
+  runGoldenSpec :: Proxy a -> Int -> FilePath -> Spec
 
+instance (HasRunGoldenSpecFlag a ~ flag, HasRunGoldenSpec' flag (a :: *)) => HasRunGoldenSpec a where
+  runGoldenSpec = runGoldenSpec' (Proxy :: Proxy flag)
 
+type family (HasRunGoldenSpecFlag a) :: Nat where
+  HasRunGoldenSpecFlag (OCamlPackage a b :> c) = 7
+  HasRunGoldenSpecFlag ((OCamlModule a :> b) :<|> c) = 6
+  HasRunGoldenSpecFlag (OCamlModule a :> b) = 5
+  HasRunGoldenSpecFlag (OCamlSubModule a :> b) = 4
+  HasRunGoldenSpecFlag (HaskellTypeName a (OCamlTypeInFile b c)) = 3
+  HasRunGoldenSpecFlag (OCamlTypeInFile a b) = 3
+  HasRunGoldenSpecFlag (a :> b) = 2
+  HasRunGoldenSpecFlag a = 1
+
+class HasRunGoldenSpec' (flag :: Nat) a where
+  runGoldenSpec' :: Proxy flag -> Proxy a -> Int -> FilePath -> Spec
+
+instance (HasRunGoldenSpec a) => HasRunGoldenSpec' 7 (OCamlPackage packageName deps :> a) where
+  runGoldenSpec' _ Proxy size fp = runGoldenSpec (Proxy :: Proxy a) size fp
+
+instance (HasRunGoldenSpec a, HasRunGoldenSpec b) => HasRunGoldenSpec' 6 ((OCamlModule modules :> a) :<|> b) where
+  runGoldenSpec' _ Proxy size fp = do
+    runGoldenSpec (Proxy :: Proxy a) size fp
+    runGoldenSpec (Proxy :: Proxy b) size fp
+    
+instance (HasRunGoldenSpec a) => HasRunGoldenSpec' 5 (OCamlModule modules :> a) where
+  runGoldenSpec' _ Proxy size fp = runGoldenSpec (Proxy :: Proxy a) size fp
+
+instance (HasRunGoldenSpec a) => HasRunGoldenSpec' 4 (OCamlSubModule subModule :> a) where
+  runGoldenSpec' _ Proxy size fp = runGoldenSpec (Proxy :: Proxy a) size fp
+
+instance (Arbitrary b, Eq b, Show b, ToADTArbitrary b, FromJSON b, ToJSON b) => HasRunGoldenSpec' 3 (HaskellTypeName a (OCamlTypeInFile b c)) where
+  runGoldenSpec' _ Proxy size fp =
+    roundtripAndGoldenADTSpecsWithSettings
+      (defaultSettings {sampleSize = size, goldenDirectoryOption = CustomDirectoryName fp})
+      (Proxy :: Proxy b)
+
+instance (Arbitrary a, Eq a, Show a, ToADTArbitrary a, FromJSON a, ToJSON a) => HasRunGoldenSpec' 3 (OCamlTypeInFile a b) where
+  runGoldenSpec' _ Proxy size fp =
+    roundtripAndGoldenADTSpecsWithSettings
+      (defaultSettings {sampleSize = size, goldenDirectoryOption = CustomDirectoryName fp})
+      (Proxy :: Proxy a)
+
+instance (HasRunGoldenSpec a, HasRunGoldenSpec b) => HasRunGoldenSpec' 2 (a :> b) where
+  runGoldenSpec' _ Proxy size fp = do
+    runGoldenSpec (Proxy :: Proxy a) size fp
+    runGoldenSpec (Proxy :: Proxy b) size fp
+
+instance (Arbitrary a, Eq a, Show a, ToADTArbitrary a, FromJSON a, ToJSON a) => HasRunGoldenSpec' 1 a where
+  runGoldenSpec' _ Proxy size fp = roundtripAndGoldenADTSpecsWithSettings (defaultSettings {sampleSize = size, goldenDirectoryOption = CustomDirectoryName fp}) (Proxy :: Proxy a)
 
 -- | Convert an OCamlPackage into a servant API.
 type family MkOCamlSpecAPI a :: * where

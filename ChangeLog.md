@@ -1,5 +1,9 @@
 # Revision history for ocaml-export
 
+## 0.6.1.0 -- 2018-02-12
+
+* Add 'runGoldenSpec' to automate Haskell side file checks.
+
 ## 0.6.0.0 -- 2018-01-31
 
 * Properly convert Haskell types to OCaml types that have type parameters.

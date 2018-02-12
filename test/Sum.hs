@@ -67,6 +67,7 @@ mkGoldenFiles = do
 spec :: Spec
 spec = do
   runIO mkGoldenFiles
+  runGoldenSpec (Proxy :: Proxy SumPackage) 10 "test/interface/golden/golden/sum"
   let dir = "test/interface/temp"
   runIO $ mkPackage (Proxy :: Proxy SumPackage) (PackageOptions dir "sum" Map.empty True $ Just $ SpecOptions "__tests__/sum" "golden/sum" "http://localhost:8082")
 

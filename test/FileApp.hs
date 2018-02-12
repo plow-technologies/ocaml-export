@@ -24,7 +24,7 @@ compareInterfaceFiles = compareFiles "test/interface" "file" True
 spec :: Spec
 spec = do
   runIO $ mkGoldenFiles (Proxy :: Proxy FilePackage) 10 "test/interface/golden/golden/file"
-
+  -- runGoldenSpec (Proxy :: Proxy FilePackage) 10 "test/interface/golden/golden/file"
   let dir = "test/interface/temp"
   runIO $ mkPackage (Proxy :: Proxy FilePackage) (PackageOptions dir "file" fileMap True $ Just $ SpecOptions "__tests__/file" "golden/file" "http://localhost:8083")
 

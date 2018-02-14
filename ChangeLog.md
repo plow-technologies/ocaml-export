@@ -1,5 +1,11 @@
 # Revision history for ocaml-export
 
+## 0.7.0.0 -- 2018-02-14
+
+* Add 'runGoldenSpec' to automate Haskell side file checks.
+* Alter 'SpecOptions servantURL' to 'Maybe String'. If it is nothing then produce specs that use files, if Just then spec that uses servant and files.
+* Fix encoding for sum type with enumerator.
+
 ## 0.6.0.0 -- 2018-01-31
 
 * Properly convert Haskell types to OCaml types that have type parameters.

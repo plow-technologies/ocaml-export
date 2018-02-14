@@ -122,7 +122,7 @@ data EmbeddedOCamlFiles =
 class HasOCamlType api where
   mkType :: Proxy api -> Options -> Bool -> Map.Map String EmbeddedOCamlFiles -> [Text]
   mkInterface :: Proxy api -> Options -> Map.Map String EmbeddedOCamlFiles -> [Text]
-  mkSpec :: Proxy api -> Options -> [Text] -> Text -> Text -> Map.Map String EmbeddedOCamlFiles -> [Text]
+  mkSpec :: Proxy api -> Options -> [Text] -> Maybe Text -> Text -> Map.Map String EmbeddedOCamlFiles -> [Text]
 
 instance (HasOCamlTypeFlag a ~ flag, HasOCamlType' flag (a :: *)) => HasOCamlType a where
   mkType = mkType' (Proxy :: Proxy flag)
@@ -140,7 +140,7 @@ type family (HasOCamlTypeFlag a) :: Nat where
 class HasOCamlType' (flag :: Nat) api where
   mkType' :: Proxy flag -> Proxy api -> Options -> Bool -> Map.Map String EmbeddedOCamlFiles -> [Text]
   mkInterface' :: Proxy flag -> Proxy api -> Options -> Map.Map String EmbeddedOCamlFiles -> [Text]
-  mkSpec' :: Proxy flag -> Proxy api -> Options -> [Text] -> Text -> Text -> Map.Map String EmbeddedOCamlFiles -> [Text]
+  mkSpec' :: Proxy flag -> Proxy api -> Options -> [Text] -> Maybe Text -> Text -> Map.Map String EmbeddedOCamlFiles -> [Text]
 
 instance (KnownSymbol subModule, HasOCamlType b) => HasOCamlType' 4 (OCamlSubModule subModule :> b) where
   mkType' _ Proxy options interface fileMap = ["module " <> (T.pack $ symbolVal (Proxy :: Proxy subModule)) <> " = struct\n"] <> (mkType (Proxy :: Proxy b) options interface fileMap) <> ["\nend"]
@@ -172,7 +172,7 @@ instance (OCamlType a, Typeable a) => HasOCamlType' 2 (OCamlTypeInFile a b) wher
       Just (Just v) -> [decodeUtf8 v]
       _ -> fail $ "Unable to find the embedded file for " ++ typeName
 
-  mkSpec' _ Proxy _options modules url goldendir _fileMap = 
+  mkSpec' _ Proxy _options modules url goldendir _fileMap =
     [typeInFileToOCamlSpec (Proxy :: Proxy a) typeParameterRefCount modules url goldendir]
     where
       parameters = fmap show . snd . splitTyConApp $ typeRep (Proxy :: Proxy a)

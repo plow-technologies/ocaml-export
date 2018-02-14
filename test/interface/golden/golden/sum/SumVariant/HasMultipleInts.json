@@ -1,74 +1,74 @@
 {
-    "seed": -6740699155769168619,
+    "seed": 6988749980321227698,
     "samples": [
         {
             "tag": "HasMultipleInts",
             "contents": [
-                -18,
-                -24
+                9,
+                -11
             ]
         },
         {
             "tag": "HasMultipleInts",
             "contents": [
-                -23,
-                9
+                5,
+                28
+            ]
+        },
+        {
+            "tag": "HasMultipleInts",
+            "contents": [
+                25,
+                -4
             ]
         },
         {
             "tag": "HasMultipleInts",
             "contents": [
                 27,
-                -24
+                -28
             ]
         },
         {
             "tag": "HasMultipleInts",
             "contents": [
-                21,
-                -30
+                19,
+                -7
             ]
         },
         {
             "tag": "HasMultipleInts",
             "contents": [
-                -6,
-                15
+                -22,
+                -15
             ]
         },
         {
             "tag": "HasMultipleInts",
             "contents": [
-                16,
-                19
+                1,
+                27
             ]
         },
         {
             "tag": "HasMultipleInts",
             "contents": [
-                -13,
-                15
+                -8,
+                -14
             ]
         },
         {
             "tag": "HasMultipleInts",
             "contents": [
-                3,
-                0
+                -2,
+                -9
             ]
         },
         {
             "tag": "HasMultipleInts",
             "contents": [
-                29,
-                5
-            ]
-        },
-        {
-            "tag": "HasMultipleInts",
-            "contents": [
-                8,
-                -8
+                15,
+                -12
             ]
         }
     ]

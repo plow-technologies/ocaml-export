@@ -1,7 +1,6 @@
 let () =
-  AesonSpec.sampleGoldenAndServerSpec
+  AesonSpec.goldenDirSpec
     NewType.decodeNewType
     NewType.encodeNewType
     "newType"
-    "http://localhost:8082/NewType/NewType"
     "golden/sum/NewType";

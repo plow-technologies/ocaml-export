@@ -417,7 +417,7 @@ newtype NewTypeKey a = NewTypeKey String
   deriving (Eq,Show,Generic,ToJSON,FromJSON)
 
 instance (ToADTArbitrary a, Arbitrary a) => ToADTArbitrary (NewTypeKey a)
-instance Arbitrary a => Arbitrary (NewTypeKey a) where
+instance Arbitrary (NewTypeKey a) where
   arbitrary = NewTypeKey <$> arbitrary
 instance (Typeable a, OCamlType a) => OCamlType (NewTypeKey a)
 

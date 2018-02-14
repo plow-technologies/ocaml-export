@@ -1,2 +1,6 @@
 let () =
-  AesonSpec.sampleGoldenAndServerSpec SimpleChoice.decodeSimpleChoice SimpleChoice.encodeSimpleChoice "simpleChoice" "http://localhost:8081/SimpleChoice/SimpleChoice" "golden/product/SimpleChoice";
+  AesonSpec.goldenDirSpec
+    SimpleChoice.decodeSimpleChoice
+    SimpleChoice.encodeSimpleChoice
+    "simpleChoice"
+    "golden/product/SimpleChoice";

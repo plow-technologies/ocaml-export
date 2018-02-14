@@ -22,4 +22,5 @@ dependencies:
 
 test:
   override:
-    - stack test --no-run-tests
+    - stack test
+    - npm run test --prefix test/interface/golden

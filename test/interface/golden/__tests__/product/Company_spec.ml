@@ -1,7 +1,6 @@
 let () =
-  AesonSpec.sampleGoldenAndServerSpec
+  AesonSpec.goldenDirSpec
     Company.decodeCompany
     Company.encodeCompany
     "company"
-    "http://localhost:8081/Company/Company"
     "golden/product/Company";

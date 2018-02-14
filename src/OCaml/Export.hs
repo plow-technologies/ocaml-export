@@ -41,7 +41,8 @@ module OCaml.Export
   , mkOCamlSpecServer
   , MkOCamlSpecAPI
   , mkGoldenFiles
-
+  , runGoldenSpec
+  
   -- re-export
   , Proxy (..)
   , (:>)

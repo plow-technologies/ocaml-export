@@ -35,3 +35,14 @@ Nice to have but low priority.
 
 - OCaml source code parser and AST. Would make it a lot easier to handle manually written types, encoders, decoders.
 - Output to js_of_ocaml and regular OCaml.
+
+## ocaml-export Internal Tests
+
+If you want to run it against servant:
+
+```bash
+stack test --flag ocaml-export:servant-spec
+cd test/interface/golden
+npm install
+npm run test
+```

@@ -24,9 +24,22 @@ compareInterfaceFiles = compareFiles "test/interface" "file" True
 spec :: Spec
 spec = do
   runIO $ mkGoldenFiles (Proxy :: Proxy FilePackage) 10 "test/interface/golden/golden/file"
-
+  -- runGoldenSpec (Proxy :: Proxy FilePackage) 10 "test/interface/golden/golden/file"
   let dir = "test/interface/temp"
-  runIO $ mkPackage (Proxy :: Proxy FilePackage) (PackageOptions dir "file" fileMap True $ Just $ SpecOptions "__tests__/file" "golden/file" "http://localhost:8083")
+
+  -- create spec to be tested against servant
+  runIO $
+    mkPackage
+      (Proxy :: Proxy FilePackage)
+      (PackageOptions dir "file" fileMap True $
+        Just $ SpecOptions "__tests__/file-servant" "golden/file" (Just "http://localhost:8083"))
+
+  -- create spec to be tested against files only
+  runIO $
+    mkPackage
+      (Proxy :: Proxy FilePackage)
+      (PackageOptions dir "file" fileMap True $
+        Just $ SpecOptions "__tests__/file" "golden/file" Nothing)
 
   describe "OCaml Declaration with Interface: Product Types" $
     compareInterfaceFiles "File"

@@ -94,6 +94,7 @@ let encodeSumWrapped x =
   | SW1 ->
      Aeson.Encode.object_
        [ ( "tag", Aeson.Encode.string "SW1" )
+       ; ( "contents", Aeson.Encode.array [| |] )
        ]
   | SW2 y0 ->
      Aeson.Encode.object_

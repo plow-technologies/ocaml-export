@@ -1,74 +1,74 @@
 {
-    "seed": 8143029435289375671,
+    "seed": 8708932018473372391,
     "samples": [
         {
             "tag": "HasSingleTuple",
             "contents": [
-                16,
-                -29
+                -1,
+                25
             ]
         },
         {
             "tag": "HasSingleTuple",
             "contents": [
-                28,
-                -3
-            ]
-        },
-        {
-            "tag": "HasSingleTuple",
-            "contents": [
-                8,
-                16
-            ]
-        },
-        {
-            "tag": "HasSingleTuple",
-            "contents": [
-                -29,
-                -1
-            ]
-        },
-        {
-            "tag": "HasSingleTuple",
-            "contents": [
-                5,
-                -14
-            ]
-        },
-        {
-            "tag": "HasSingleTuple",
-            "contents": [
-                24,
-                5
-            ]
-        },
-        {
-            "tag": "HasSingleTuple",
-            "contents": [
-                27,
-                13
+                15,
+                19
             ]
         },
         {
             "tag": "HasSingleTuple",
             "contents": [
                 -21,
-                29
+                17
             ]
         },
         {
             "tag": "HasSingleTuple",
             "contents": [
-                -13,
-                -23
+                -16,
+                -21
             ]
         },
         {
             "tag": "HasSingleTuple",
             "contents": [
-                -21,
-                -17
+                -3,
+                24
+            ]
+        },
+        {
+            "tag": "HasSingleTuple",
+            "contents": [
+                3,
+                -13
+            ]
+        },
+        {
+            "tag": "HasSingleTuple",
+            "contents": [
+                13,
+                11
+            ]
+        },
+        {
+            "tag": "HasSingleTuple",
+            "contents": [
+                -1,
+                4
+            ]
+        },
+        {
+            "tag": "HasSingleTuple",
+            "contents": [
+                -3,
+                10
+            ]
+        },
+        {
+            "tag": "HasSingleTuple",
+            "contents": [
+                -24,
+                -4
             ]
         }
     ]

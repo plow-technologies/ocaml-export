@@ -1,29 +1,37 @@
 {
-    "seed": 301476049816833706,
+    "seed": 5637638490041043538,
     "samples": [
         {
             "tag": "HasSingleInt",
-            "contents": -4
+            "contents": -21
         },
         {
             "tag": "HasSingleInt",
-            "contents": 22
+            "contents": -16
         },
         {
             "tag": "HasSingleInt",
-            "contents": -24
+            "contents": -18
         },
         {
             "tag": "HasSingleInt",
-            "contents": -14
+            "contents": -29
         },
         {
             "tag": "HasSingleInt",
-            "contents": 15
+            "contents": 26
         },
         {
             "tag": "HasSingleInt",
-            "contents": 12
+            "contents": -12
+        },
+        {
+            "tag": "HasSingleInt",
+            "contents": 24
+        },
+        {
+            "tag": "HasSingleInt",
+            "contents": 19
         },
         {
             "tag": "HasSingleInt",
@@ -31,15 +39,7 @@
         },
         {
             "tag": "HasSingleInt",
-            "contents": -22
-        },
-        {
-            "tag": "HasSingleInt",
-            "contents": 6
-        },
-        {
-            "tag": "HasSingleInt",
-            "contents": -25
+            "contents": 28
         }
     ]
 }

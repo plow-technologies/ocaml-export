@@ -11,7 +11,6 @@ let encodeSumVariant x =
   | HasNothing ->
      Aeson.Encode.object_
        [ ( "tag", Aeson.Encode.string "HasNothing" )
-       ; ( "contents", Aeson.Encode.array [| |] )
        ]
   | HasSingleInt y0 ->
      Aeson.Encode.object_

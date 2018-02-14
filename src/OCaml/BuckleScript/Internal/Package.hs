@@ -86,8 +86,6 @@ data OCamlPackage (packageName :: Symbol) (packageDependencies :: [*])
 type NoDependency = '[]
 
 
-
-
 -- ==============================================
 -- Data Types
 -- ==============================================
@@ -111,12 +109,12 @@ data SpecOptions
   = SpecOptions
     { specDir :: FilePath -- ^ Directory in which to store the OCaml spec, relative to 'packageRootDir'.
     , goldenDir :: FilePath -- ^ Location of golden JSON files produced by Haskell, relative to 'packageRootDir'.
-    , servantURL :: String -- ^ The URL of the automated Servant spec server to run OCaml specs against.
+    , servantURL :: Maybe String -- ^ If Just url then run the automated Servant spec server to run OCaml specs against it, otherwise test files only. 
     }
 
 -- | Default 'SpecOptions'.
 defaultSpecOptions :: SpecOptions
-defaultSpecOptions = SpecOptions "/__tests__" "/__tests__/golden" "localhost:8081"
+defaultSpecOptions = SpecOptions "/__tests__" "/__tests__/golden" (Just "localhost:8081")
 
 
 -- ==============================================
@@ -181,7 +179,7 @@ instance (HasOCamlType api) => HasOCamlModule' api where
         case mSpecOptions packageOptions of
           Nothing -> pure ()
           Just specOptions -> do
-            let specF = (<> "\n") . T.intercalate "\n\n" $ mkSpec (Proxy :: Proxy api) (defaultOptions {dependencies = ds}) moduls (T.pack $ servantURL specOptions) (T.pack $ goldenDir specOptions) (packageEmbeddedFiles packageOptions)
+            let specF = (<> "\n") . T.intercalate "\n\n" $ mkSpec (Proxy :: Proxy api) (defaultOptions {dependencies = ds}) moduls (T.pack <$> servantURL specOptions) (T.pack $ goldenDir specOptions) (packageEmbeddedFiles packageOptions)
             let specBody = if specF /= "" then ("let () =\n" <> specF) else ""
             createDirectoryIfMissing True (rootDir </> (specDir specOptions))
             T.writeFile (specFp <> "_spec" <.> "ml") specBody

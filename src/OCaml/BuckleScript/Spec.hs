@@ -3,6 +3,7 @@
 
 module OCaml.BuckleScript.Spec
   ( mkSampleServerAndGoldenSpec
+  , mkGoldenDirSpec
   , toOCamlSpec
   , typeInFileToOCamlSpec
   ) where
@@ -36,8 +37,28 @@ mkSampleServerAndGoldenSpec (OCamlDatatype _ typeName constructors) mParameterRe
     modul = T.intercalate "." (textUppercaseFirst <$> modules) :: Text
     smodul = stext $ if modul /= "" then modul <> "." else ""
     urlModul = T.intercalate "/" (textUppercaseFirst <$> modules) :: Text
-
 mkSampleServerAndGoldenSpec (OCamlPrimitive _) _ _mod _url _fp = ""
+
+-- | test OCaml type serialization (bs-aeson) against Haskell produced golden files
+mkGoldenDirSpec :: OCamlDatatype -> Maybe Int -> [Text] -> Text -> Doc
+mkGoldenDirSpec (OCamlDatatype _ typeName constructors) mParameterRefCount modules goldenDir =
+  indent 2 $
+    "AesonSpec.goldenDirSpec" <$$> (indent 2 $
+          decoders
+      <$$> encoders
+      <$$> (dquotes down)
+      <$$> (dquotes (stext $ goldenDir </> textUppercaseFirst typeName)) <> ";")
+  where
+    (tprDecoders, tprEncoders) = renderTypeParameterVals mParameterRefCount constructors
+    decoders = if tprDecoders == "" then (smodul <> "decode" <> up) else ("(" <> smodul <> "decode" <> up <+> (stext tprDecoders) <> ")")
+    encoders = if tprEncoders == "" then (smodul <> "encode" <> up) else ("(" <> smodul <> "encode" <> up <+> (stext tprEncoders) <> ")")
+    up = stext . textUppercaseFirst $ typeName
+    down = stext . textLowercaseFirst $ typeName
+    modul = T.intercalate "." (textUppercaseFirst <$> modules) :: Text
+    smodul = stext $ if modul /= "" then modul <> "." else ""
+
+mkGoldenDirSpec (OCamlPrimitive _) _ _ _ = ""
+
 
 renderTypeParameterVals :: Maybe Int -> OCamlConstructor -> (Text,Text)
 renderTypeParameterVals (Just count) _ = renderTypeParameterValsAux count
@@ -65,29 +86,18 @@ getOCamlValues (NamedConstructor     _ value) = [value]
 getOCamlValues (RecordConstructor    _ value) = [value]
 getOCamlValues (MultipleConstructors cs)      = concat $ getOCamlValues <$> cs
 
-toOCamlSpec :: OCamlType a => a -> [Text] -> Text -> Text -> Text
-toOCamlSpec a modules url fp =
-  pprinter $ mkSampleServerAndGoldenSpec (toOCamlType a) Nothing modules url fp
+toOCamlSpec :: OCamlType a => a -> [Text] -> Maybe Text -> Text -> Text
+toOCamlSpec a modules mUrl fp =
+  case mUrl of
+    Just url -> pprinter $ mkSampleServerAndGoldenSpec (toOCamlType a) Nothing modules url fp
+    Nothing  -> pprinter $ mkGoldenDirSpec (toOCamlType a) Nothing modules fp
 
 -- | OCamlTypeInFile do not require an instance of OCamlType since they are
 --   hand written OCaml files for Haskell types. Use typeable to get the
 --   type name.
-{-
-typeInFileToOCamlSpec :: Text -> Int -> [Text] -> Text -> Text -> Text
-typeInFileToOCamlSpec aTyConName typeParameterRefCount modules url fp =
-  pprinter $ mkSampleServerAndGoldenSpec
-    (OCamlDatatype (HaskellTypeMetaData aTyConName "" "")
-       aTyConName $ OCamlValueConstructor $ NamedConstructor aTyConName $ OCamlEmpty)
-    (Just typeParameterRefCount)
-    modules
-    url
-    fp
--}
-typeInFileToOCamlSpec :: OCamlType a => a -> Int -> [Text] -> Text -> Text -> Text
-typeInFileToOCamlSpec a typeParameterRefCount modules url fp =
-  pprinter $ mkSampleServerAndGoldenSpec
-    (toOCamlType a)
-    (Just typeParameterRefCount)
-    modules
-    url
-    fp
+typeInFileToOCamlSpec :: OCamlType a => a -> Int -> [Text] -> Maybe Text -> Text -> Text
+typeInFileToOCamlSpec a typeParameterRefCount modules mUrl fp =
+  case mUrl of
+    Just url ->
+      pprinter $ mkSampleServerAndGoldenSpec (toOCamlType a) (Just typeParameterRefCount) modules url fp
+    Nothing -> pprinter $ mkGoldenDirSpec (toOCamlType a) (Just typeParameterRefCount) modules fp

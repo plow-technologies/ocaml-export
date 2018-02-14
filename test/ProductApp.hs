@@ -20,7 +20,28 @@ spec = do
   runGoldenSpec (Proxy :: Proxy ProductPackage) 10 "test/interface/golden/golden/product"
 
   let dir = "test/interface/temp"
-  runIO $ mkPackage (Proxy :: Proxy ProductPackage) (PackageOptions dir "product" fileMap True $ Just $ SpecOptions "__tests__/product" "golden/product" "http://localhost:8081")
+
+  -- create spec to be tested against servant
+  runIO $
+    mkPackage
+      (Proxy :: Proxy ProductPackage)
+      (PackageOptions dir "product" fileMap True $
+       Just $
+         SpecOptions
+           "__tests__/product-servant"
+           "golden/product"
+           (Just "http://localhost:8081"))
+
+  -- create spec to be tested against files only
+  runIO $
+    mkPackage
+      (Proxy :: Proxy ProductPackage)
+      (PackageOptions dir "product" fileMap True $
+       Just $
+         SpecOptions
+           "__tests__/product"
+           "golden/product"
+           Nothing)
   
   describe "OCaml Declaration with Interface: Product Types" $ do
     compareInterfaceFiles "Person"

@@ -1,8 +1,8 @@
 {
   "name": "ocaml-export",
   "bsc-flags": ["-bs-no-version-header", "-bs-super-errors"],
-  "bs-dependencies": ["bs-node-fetch", "bs-aeson", "bs-node"],
-  "bs-dev-dependencies": ["bs-aeson", "bs-aeson-spec", "bs-node-fetch", "bs-jest"],
+  "bs-dependencies": ["bs-aeson"],
+  "bs-dev-dependencies": ["bs-aeson", "bs-aeson-spec", "bs-node-fetch", "@glennsl/bs-jest"],
   "sources": [
     {
       "dir":    "product",

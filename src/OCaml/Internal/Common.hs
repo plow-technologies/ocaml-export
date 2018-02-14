@@ -8,7 +8,6 @@ Stability   : experimental
 
 -}
 
-
 {-# LANGUAGE OverloadedStrings #-}
 
 module OCaml.Internal.Common where
@@ -71,7 +70,12 @@ data Options = Options
   }
 
 defaultOptions :: Options
-defaultOptions = Options {includeOCamlInterface = False, aesonOptions = Aeson.defaultOptions, dependencies = Map.empty}
+defaultOptions =
+  Options
+    { includeOCamlInterface = False
+    , aesonOptions = Aeson.defaultOptions
+    , dependencies = Map.empty
+    }
 
 data TypeMetaData = TypeMetaData
   { topLevelOCamlTypeMetaData :: Maybe OCamlTypeMetaData -- Just if not primitive

@@ -48,9 +48,6 @@ type SumPackage
 compareInterfaceFiles :: FilePath -> SpecWith ()
 compareInterfaceFiles = compareFiles "test/interface" "sum" True
 
-compareNoInterfaceFiles :: FilePath -> SpecWith ()
-compareNoInterfaceFiles = compareFiles "test/nointerface" "sum" False
-
 mkGolden :: forall a. (ToADTArbitrary a, ToJSON a) => Proxy a -> IO ()
 mkGolden Proxy = mkGoldenFileForType 10 (Proxy :: Proxy a) "test/interface/golden/golden/sum"
 
@@ -68,8 +65,28 @@ spec :: Spec
 spec = do
   runIO mkGoldenFiles
   runGoldenSpec (Proxy :: Proxy SumPackage) 10 "test/interface/golden/golden/sum"
+
   let dir = "test/interface/temp"
-  runIO $ mkPackage (Proxy :: Proxy SumPackage) (PackageOptions dir "sum" Map.empty True $ Just $ SpecOptions "__tests__/sum" "golden/sum" "http://localhost:8082")
+
+  -- create spec to be tested against servant
+  runIO $
+    mkPackage
+     (Proxy :: Proxy SumPackage)
+     (PackageOptions dir "sum" Map.empty True $
+        Just $ SpecOptions
+          "__tests__/sum-servant"
+          "golden/sum"
+          (Just "http://localhost:8082"))
+
+  -- create spec to be tested against files only
+  runIO $
+    mkPackage
+     (Proxy :: Proxy SumPackage)
+     (PackageOptions dir "sum" Map.empty True $
+        Just $ SpecOptions
+          "__tests__/sum"
+          "golden/sum"
+          Nothing)
 
   describe "OCaml Declaration with Interface: Sum Types" $ do
     compareInterfaceFiles "OnOrOff"

@@ -64,3 +64,12 @@ tests:
     - wai
     - wai-extra
     - warp
+    when:
+      - condition: flag(servant-spec)
+        cpp-options: -DSERVANT_SPEC
+
+flags:
+  servant-spec:
+    description: Test ocaml-export against a servant server. Internal test use only.
+    manual:      True
+    default:     False

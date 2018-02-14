@@ -31,5 +31,22 @@
       "subdirs": true,
       "type": "dev"
     }
+    /*
+    ,{
+      "dir": "__tests__/product-servant",
+      "subdirs": true,
+      "type": "dev"
+    },
+    {
+      "dir": "__tests__/sum-servant",
+      "subdirs": true,
+      "type": "dev"
+    },
+    {
+      "dir": "__tests__/file-servant",
+      "subdirs": true,
+      "type": "dev"
+    }
+    */
   ]
 }

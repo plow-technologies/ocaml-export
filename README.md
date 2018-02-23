@@ -1,4 +1,4 @@
-[![CircleCI](https://circleci.com/gh/plow-technologies/ocaml-export.svg?style=shield&circle)](https://circleci.com/gh/plow-technologies/ocaml-export)
+
 
 # ocaml-export
 

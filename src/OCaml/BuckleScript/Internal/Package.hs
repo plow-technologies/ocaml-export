@@ -47,8 +47,8 @@ module OCaml.BuckleScript.Internal.Package
 import Data.Monoid ((<>))
 import Data.Proxy (Proxy (..))
 import Data.Typeable (typeRep, Typeable, typeRepTyCon, tyConName, tyConModule, tyConPackage)
-import GHC.TypeLits
 
+import Data.Singletons.TypeLits
 -- containers
 import qualified Data.Map.Strict as Map
 

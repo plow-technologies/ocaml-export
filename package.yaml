@@ -22,8 +22,9 @@ dependencies:
 - quickcheck-arbitrary-adt
 - servant
 - servant-server
+- singletons
 - text
-- template-haskell < 2.12.0.0
+- template-haskell # < 2.12.0.0
 - time
 - typelits-witnesses
 ghc-options:

@@ -18,6 +18,7 @@ Stability   : experimental
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC  -fno-warn-redundant-constraints #-}
 
 module OCaml.BuckleScript.Internal.Module
   (

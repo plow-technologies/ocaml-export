@@ -48,7 +48,9 @@ import Data.Monoid ((<>))
 import Data.Proxy (Proxy (..))
 import Data.Typeable (typeRep, Typeable, typeRepTyCon, tyConName, tyConModule, tyConPackage)
 
+import Data.Singletons.Prelude (SingI(..), fromSing)
 import Data.Singletons.TypeLits
+
 -- containers
 import qualified Data.Map.Strict as Map
 
@@ -72,7 +74,7 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
 -- typelits-witnesses
-import GHC.TypeLits.List
+-- import GHC.TypeLits.List
 
 
 
@@ -155,8 +157,10 @@ instance {-# OVERLAPPABLE #-} (HasOCamlModule a) => HasOCamlPackage' a where
 class HasOCamlModule a where
   mkModule :: Proxy a -> PackageOptions -> Map.Map HaskellTypeMetaData OCamlTypeMetaData -> IO ()
 
-instance (KnownSymbols modules, HasOCamlModule' api) => HasOCamlModule ((OCamlModule modules) :> api) where
-  mkModule Proxy packageOptions deps = mkModule' (Proxy :: Proxy api) (symbolsVal (Proxy :: Proxy modules)) packageOptions deps
+instance (SingI modules, HasOCamlModule' api) => HasOCamlModule ((OCamlModule modules) :> api) where
+  mkModule Proxy packageOptions deps = let s = sing  :: Sing modules
+                                           r = fromSing s :: [Text]
+                                       in mkModule' (Proxy :: Proxy api) (T.unpack  <$> r ) packageOptions deps
 
 class HasOCamlModule' a where
   mkModule' :: Proxy a -> [String] -> PackageOptions -> Map.Map HaskellTypeMetaData OCamlTypeMetaData -> IO ()
@@ -216,8 +220,8 @@ instance (HasOCamlTypeMetaData modul, HasOCamlTypeMetaData rst) => HasOCamlTypeM
   mkOCamlTypeMetaData Proxy = mkOCamlTypeMetaData (Proxy :: Proxy modul) <> mkOCamlTypeMetaData (Proxy :: Proxy rst)
 
 -- | single module
-instance (KnownSymbols modules, HasOCamlTypeMetaData' api) => HasOCamlTypeMetaData ((OCamlModule modules) :> api) where
-  mkOCamlTypeMetaData Proxy = Map.fromList $ mkOCamlTypeMetaData' (T.pack <$> symbolsVal (Proxy :: Proxy modules)) [] (Proxy :: Proxy api)
+instance (SingI modules, HasOCamlTypeMetaData' api) => HasOCamlTypeMetaData ((OCamlModule modules) :> api) where
+  mkOCamlTypeMetaData Proxy = Map.fromList $ mkOCamlTypeMetaData' (fromSing (sing :: Sing modules)) [] (Proxy :: Proxy api)
 
 -- | empty list
 instance HasOCamlTypeMetaData '[] where

@@ -12,7 +12,7 @@ import Servant
 import OCaml.Export
 import File
 import Util
-
+{-
 $(mkOCamlSpecServer "FilePackage" (Proxy :: Proxy FilePackage))
 
 fileMap :: Map.Map String EmbeddedOCamlFiles
@@ -43,3 +43,4 @@ spec = do
 
   describe "OCaml Declaration with Interface: Product Types" $
     compareInterfaceFiles "File"
+-}

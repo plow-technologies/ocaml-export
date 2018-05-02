@@ -29,6 +29,7 @@ import Network.Wai.Handler.Warp
 main :: IO ()
 main = do
   hspec Product.spec
+{-
   hspec Sum.spec
   hspec File.spec
   hspec D.spec
@@ -44,3 +45,4 @@ main = do
   _ <- forkIO $ run 8082 sumPackageApp
   run 8083 File.filePackageApp
 #endif
+-}

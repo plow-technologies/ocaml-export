@@ -73,11 +73,6 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
--- typelits-witnesses
--- import GHC.TypeLits.List
-
-
-
 -- ==============================================
 -- Types
 -- ==============================================
@@ -158,9 +153,10 @@ class HasOCamlModule a where
   mkModule :: Proxy a -> PackageOptions -> Map.Map HaskellTypeMetaData OCamlTypeMetaData -> IO ()
 
 instance (SingI modules, HasOCamlModule' api) => HasOCamlModule ((OCamlModule modules) :> api) where
-  mkModule Proxy packageOptions deps = let s = sing  :: Sing modules
-                                           r = fromSing s :: [Text]
-                                       in mkModule' (Proxy :: Proxy api) (T.unpack  <$> r ) packageOptions deps
+  mkModule Proxy packageOptions deps =
+    let s = sing  :: Sing modules
+        r = fromSing s :: [Text]
+    in mkModule' (Proxy :: Proxy api) (T.unpack <$> r) packageOptions deps
 
 class HasOCamlModule' a where
   mkModule' :: Proxy a -> [String] -> PackageOptions -> Map.Map HaskellTypeMetaData OCamlTypeMetaData -> IO ()

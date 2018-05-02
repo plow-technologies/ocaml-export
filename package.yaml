@@ -24,16 +24,16 @@ dependencies:
 - servant-server
 - singletons
 - text
-- template-haskell # < 2.12.0.0
+- template-haskell
 - time
 - typelits-witnesses
-ghc-options:
-- -Wall
-- -Werror
-- -Wcompat
-- -Wincomplete-record-updates
-- -Wincomplete-uni-patterns
-- -Wredundant-constraints
+# ghc-options:
+# - -Wall
+# - -Werror
+# - -Wcompat
+# - -Wincomplete-record-updates
+# - -Wincomplete-uni-patterns
+# - -Wredundant-constraints
 
 library:
   source-dirs: src
@@ -69,6 +69,7 @@ tests:
     - wai
     - wai-extra
     - warp
+    - file-embed
     when:
       - condition: flag(servant-spec)
         cpp-options: -DSERVANT_SPEC

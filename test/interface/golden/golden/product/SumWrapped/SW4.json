@@ -1,11 +1,75 @@
 {
-    "seed": 7603021270144152732,
+    "seed": 8348467371920453413,
     "samples": [
         {
             "tag": "SW4",
             "contents": {
                 "wpa": {
-                    "Right": " þçÞ\u0005\u001cªü0|jílºÎ\u0015Z"
+                    "Left": 22
+                }
+            }
+        },
+        {
+            "tag": "SW4",
+            "contents": {
+                "wpa": {
+                    "Left": -7
+                }
+            }
+        },
+        {
+            "tag": "SW4",
+            "contents": {
+                "wpa": {
+                    "Right": "\u000f0F?!W𪣼򮍝;󉒭󘇴񎜃l𲥭"
+                }
+            }
+        },
+        {
+            "tag": "SW4",
+            "contents": {
+                "wpa": {
+                    "Left": -18
+                }
+            }
+        },
+        {
+            "tag": "SW4",
+            "contents": {
+                "wpa": {
+                    "Left": 1
+                }
+            }
+        },
+        {
+            "tag": "SW4",
+            "contents": {
+                "wpa": {
+                    "Left": -30
+                }
+            }
+        },
+        {
+            "tag": "SW4",
+            "contents": {
+                "wpa": {
+                    "Left": 0
+                }
+            }
+        },
+        {
+            "tag": "SW4",
+            "contents": {
+                "wpa": {
+                    "Right": "\u0005\u000b"
+                }
+            }
+        },
+        {
+            "tag": "SW4",
+            "contents": {
+                "wpa": {
+                    "Right": "󟘔񆾡OB񎀹򭝊񬰏[.\u0003󮽢%rd󩞼\u0007t<󷲕<"
                 }
             }
         },
@@ -14,70 +78,6 @@
             "contents": {
                 "wpa": {
                     "Left": 20
-                }
-            }
-        },
-        {
-            "tag": "SW4",
-            "contents": {
-                "wpa": {
-                    "Right": "ÿõ}ÜÄnb<>ûôìõLdS\u001c\u0006?\u001cxf\u0015¥@"
-                }
-            }
-        },
-        {
-            "tag": "SW4",
-            "contents": {
-                "wpa": {
-                    "Right": ";å/ú?xw|\u0010~Â%\u000ce'\u0005-\u001dãp\u0012°Adh\u0003XC"
-                }
-            }
-        },
-        {
-            "tag": "SW4",
-            "contents": {
-                "wpa": {
-                    "Right": "©\u0010³\u0014Jl\u0001(%{-\tLIU"
-                }
-            }
-        },
-        {
-            "tag": "SW4",
-            "contents": {
-                "wpa": {
-                    "Right": "¤-;f25c\u001aYRk\u00068L!k"
-                }
-            }
-        },
-        {
-            "tag": "SW4",
-            "contents": {
-                "wpa": {
-                    "Left": -20
-                }
-            }
-        },
-        {
-            "tag": "SW4",
-            "contents": {
-                "wpa": {
-                    "Left": -3
-                }
-            }
-        },
-        {
-            "tag": "SW4",
-            "contents": {
-                "wpa": {
-                    "Left": 15
-                }
-            }
-        },
-        {
-            "tag": "SW4",
-            "contents": {
-                "wpa": {
-                    "Right": "\u000bÿ\u000f\u000c)UG¡@Kú-ï-Yr\u0006\u0004Üè/\u0000e¹\u001f\u0008"
                 }
             }
         }

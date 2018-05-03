@@ -10,7 +10,7 @@ license: BSD3
 github: plow-technologies/ocaml-export
 
 dependencies:
-- base >= 4.7 && < 5
+- base >= 4.10 && < 5
 - aeson
 - bytestring
 - containers
@@ -22,7 +22,7 @@ dependencies:
 - quickcheck-arbitrary-adt
 - servant
 - servant-server
-- singletons # min version is 2.3.1 but it is breaking compatibility with ghc-8.0.2
+- singletons
 - text
 - template-haskell
 - time

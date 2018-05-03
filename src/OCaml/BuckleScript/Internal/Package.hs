@@ -142,9 +142,6 @@ instance {-# OVERLAPPABLE #-} (HasOCamlModule a) => HasOCamlPackage' a where
   mkPackage' Proxy packageOptions = mkModule (Proxy :: Proxy a) packageOptions
 
 
-
-
-
 -- | Depending on 'PackageOptions' settings, 'mkModule' can
 --   - make a declaration file containing encoders and decoders
 --   - make an OCaml interface file

@@ -25,13 +25,6 @@ import Test.QuickCheck.Arbitrary.ADT
 import OCaml.Export hiding (mkGoldenFiles)
 import Util
 
-type TTPackage
-  = OCamlTypeInFile Simple "test/ocaml/Simple"
-
-type TTTPackage
---  = (OCamlModule '["File"] :> (OCamlTypeInFile Simple "test/ocaml/Simple"))
-  = ((OCamlTypeInFile (Card) "test/ocaml/Card") :> (OCamlTypeInFile (Simple) "test/ocaml/Simple"))
-
 type ProductPackage
   = OCamlPackage "product" NoDependency
     :> (OCamlModule '["SimpleChoice"] :> SimpleChoice

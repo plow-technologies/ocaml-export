@@ -26,7 +26,6 @@ dependencies:
 - text
 - template-haskell
 - time
-- typelits-witnesses
 ghc-options:
 - -Wall
 - -Werror

@@ -1,5 +1,11 @@
 # Revision history for ocaml-export
 
+## 0.8.0.0 -- 2018-05-03
+
+* Support GHC 8.2.2 and drop support for previous GHC versions. 'base >= 4.10' is a requirement.
+* Replace 'typelits-witnesses' dependency with 'singletons'.
+* Remove use of Overlappable from 'HasEmbeddedFile'. Use 'Nat' flags instead.
+
 ## 0.7.0.0 -- 2018-02-14
 
 * Add 'runGoldenSpec' to automate Haskell side file checks.

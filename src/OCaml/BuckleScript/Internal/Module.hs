@@ -18,6 +18,7 @@ Stability   : experimental
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC  -fno-warn-redundant-constraints #-}
 
 module OCaml.BuckleScript.Internal.Module
   (
@@ -220,21 +221,39 @@ class HasEmbeddedFile api where
 instance (HasEmbeddedFile' api) => HasEmbeddedFile api where
   mkFiles includeInterface includeSpec Proxy = ListE <$> mkFiles' includeInterface includeSpec (Proxy :: Proxy api)
 
--- | Help function for HasEmbeddedFile.
 class HasEmbeddedFile' api where
   mkFiles' :: Bool -> Bool -> Proxy api -> Q [Exp]
 
-instance (HasEmbeddedFile' a, HasEmbeddedFile' b) => HasEmbeddedFile' (a :<|> b) where
-  mkFiles' includeInterface includeSpec Proxy = (<>) <$> mkFiles' includeInterface includeSpec (Proxy :: Proxy a) <*> mkFiles' includeInterface includeSpec (Proxy :: Proxy b)
+instance (HasEmbeddedFileFlag a ~ flag, HasEmbeddedFile'' flag (a :: *)) => HasEmbeddedFile' a where
+  mkFiles' = mkFiles'' (Proxy :: Proxy flag)
 
-instance (HasEmbeddedFile' a, HasEmbeddedFile' b) => HasEmbeddedFile' (a :> b) where
-  mkFiles' includeInterface includeSpec Proxy = (<>) <$> mkFiles' includeInterface includeSpec (Proxy :: Proxy a) <*> mkFiles' includeInterface includeSpec (Proxy :: Proxy b)
+type family (HasEmbeddedFileFlag a) :: Nat where
+  HasEmbeddedFileFlag (a :<|> b) = 5
+  HasEmbeddedFileFlag (a :> b) = 4
+  HasEmbeddedFileFlag (HaskellTypeName a (OCamlTypeInFile b c)) = 3
+  HasEmbeddedFileFlag (OCamlTypeInFile b c) = 2
+  HasEmbeddedFileFlag a = 1
 
-instance (HasEmbeddedFile' (OCamlTypeInFile a b)) => HasEmbeddedFile' (HaskellTypeName typSymbol (OCamlTypeInFile a b)) where
-  mkFiles' includeInterface includeSpec Proxy = mkFiles' includeInterface includeSpec (Proxy :: Proxy (OCamlTypeInFile a b))
+-- | Helper function to work avoid overlapped instances.
+class HasEmbeddedFile'' (flag :: Nat) api where
+  mkFiles'' :: Proxy flag -> Bool -> Bool -> Proxy api -> Q [Exp]
 
-instance (Typeable a, KnownSymbol b) => HasEmbeddedFile' (OCamlTypeInFile a b) where
-  mkFiles' includeInterface includeSpec Proxy = do
+instance (HasEmbeddedFile' a, HasEmbeddedFile' b) => HasEmbeddedFile'' 5 (a :<|> b) where
+  mkFiles'' _ includeInterface includeSpec Proxy =
+    (<>) <$> mkFiles' includeInterface includeSpec (Proxy :: Proxy a)
+         <*> mkFiles' includeInterface includeSpec (Proxy :: Proxy b)
+
+instance (HasEmbeddedFile' a, HasEmbeddedFile' b) => HasEmbeddedFile'' 4 (a :> b) where
+  mkFiles'' _ includeInterface includeSpec Proxy =
+    (<>) <$> mkFiles' includeInterface includeSpec (Proxy :: Proxy a)
+         <*> mkFiles' includeInterface includeSpec (Proxy :: Proxy b)
+
+instance (HasEmbeddedFile' (OCamlTypeInFile a b)) => HasEmbeddedFile'' 3 (HaskellTypeName typSymbol (OCamlTypeInFile a b)) where
+  mkFiles'' _ includeInterface includeSpec Proxy =
+    mkFiles' includeInterface includeSpec (Proxy :: Proxy (OCamlTypeInFile a b))
+
+instance (Typeable a, KnownSymbol b) => HasEmbeddedFile'' 2 (OCamlTypeInFile a b) where
+  mkFiles'' _ includeInterface includeSpec Proxy = do
     let typeFilePath = symbolVal (Proxy :: Proxy b)
     let typeName = tyConName . typeRepTyCon $ typeRep (Proxy :: Proxy a)
     ml  <- embedFile (typeFilePath <.> "ml")
@@ -248,6 +267,6 @@ instance (Typeable a, KnownSymbol b) => HasEmbeddedFile' (OCamlTypeInFile a b) w
       else pure $ ConE $ mkName "Nothing"
 
     pure [TupE [LitE $ StringL typeName, AppE (AppE (AppE (ConE $ mkName "EmbeddedOCamlFiles") ml) mli) spec]]
-
-instance {-# OVERLAPPABLE #-} HasEmbeddedFile' a where
-  mkFiles' _ _ Proxy = pure []
+    
+instance HasEmbeddedFile'' 1 a where
+  mkFiles'' _ _ _ Proxy = pure []

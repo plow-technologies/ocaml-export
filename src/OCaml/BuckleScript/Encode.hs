@@ -406,12 +406,7 @@ renderSum (OCamlValueConstructor (NamedConstructor name OCamlEmpty)) = do
   let jsonConstructorName = T.pack . Aeson.constructorTagModifier ao . T.unpack $ name
       constructorMatchCase = "|" <+> stext name <+> "->"
       encodeTag = pair (dquotes "tag") ("Aeson.Encode.string" <+> dquotes (stext jsonConstructorName))
-#if MIN_VERSION_aeson(1,1,0)
-      encodeContents  = ";" <+> pair (dquotes "contents") ("Aeson.Encode.array [| |]")
-  pure $ jsonEncodeObject constructorMatchCase encodeTag (Just encodeContents)
-#else
   pure $ jsonEncodeObject constructorMatchCase encodeTag Nothing
-#endif
 
 renderSum (OCamlValueConstructor (NamedConstructor name value)) = do
   let constructorParams = constructorParameters 0 value

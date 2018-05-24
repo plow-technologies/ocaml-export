@@ -57,7 +57,7 @@ val encodeTupleWrapped : tupleWrapped -> Js_json.t
 val decodeTupleWrapped : Js_json.t -> (tupleWrapped, string) Belt.Result.t
 
 type 'a0 halfWrapped =
-  { hw : ((int, 'a0) Belt.Result.t) wrapper
+  { hw : (('a0, int) Belt.Result.t) wrapper
   }
 
 val encodeHalfWrapped : ('a0 -> Js_json.t) -> 'a0 halfWrapped -> Js_json.t

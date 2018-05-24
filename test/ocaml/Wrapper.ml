@@ -18,5 +18,5 @@ let decodeWrapper a b json =
         ; wrapperC = field "wrapperC" string json
         }
   with
-  | v -> Js_result.Ok v
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeWrapper: " ^ message)
+  | v -> Belt.Result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeWrapper: " ^ message)

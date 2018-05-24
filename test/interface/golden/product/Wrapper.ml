@@ -153,17 +153,17 @@ let decodeTupleWrapped json =
   | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeTupleWrapped: " ^ message)
 
 type 'a0 halfWrapped =
-  { hw : ((int, 'a0) Belt.Result.t) wrapper
+  { hw : (('a0, int) Belt.Result.t) wrapper
   }
 
 let encodeHalfWrapped encodeA0 x =
   Aeson.Encode.object_
-    [ ( "hw", (encodeWrapper (Aeson.Encode.either encodeA0 Aeson.Encode.int)) x.hw )
+    [ ( "hw", (encodeWrapper (Aeson.Encode.either Aeson.Encode.int encodeA0)) x.hw )
     ]
 
 let decodeHalfWrapped decodeA0 json =
   match Aeson.Decode.
-    { hw = field "hw" (fun a -> unwrapResult (decodeWrapper (wrapResult (either (fun a -> unwrapResult (decodeA0 a)) int)) a)) json
+    { hw = field "hw" (fun a -> unwrapResult (decodeWrapper (wrapResult (either int (fun a -> unwrapResult (decodeA0 a)))) a)) json
     }
   with
   | v -> Belt.Result.Ok v

@@ -118,11 +118,12 @@ data OCamlPrimitive
   | ODate -- ^ Js_date.t
   | OFloat -- ^ float
   | OInt -- ^ int
+  | OInt32 -- ^ int32
   | OString -- ^ string
   | OUnit -- ^ ()
   | OList OCamlDatatype -- ^ 'a list, 'a Js_array.t
   | OOption OCamlDatatype -- ^ 'a option
-  | OEither OCamlDatatype OCamlDatatype -- ^ 'l 'r Aeson.Compatibility.Either.t
+  | OEither OCamlDatatype OCamlDatatype -- ^ 'r 'l Belt.Result.t
   | OTuple2 OCamlDatatype OCamlDatatype -- ^ (*)
   | OTuple3 OCamlDatatype OCamlDatatype OCamlDatatype -- ^ (**)
   | OTuple4 OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype -- ^ (***)

@@ -21,5 +21,5 @@ let decodeBusiness json =
     ; companyVehicle = optional (field "companyVehicle" (fun a -> unwrapResult (decodeAutomobile a))) json
     }
   with
-  | v -> Js_result.Ok v
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeBusiness: " ^ message)
+  | v -> Belt.Result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeBusiness: " ^ message)

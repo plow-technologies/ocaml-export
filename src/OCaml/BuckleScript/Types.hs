@@ -324,7 +324,7 @@ primitiveTypeRepToOCamlPrimitive t =
       [ ( typeRepTyCon $ typeRep (Proxy :: Proxy Int), OInt)
       , ( typeRepTyCon $ typeRep (Proxy :: Proxy Int8), OInt)
       , ( typeRepTyCon $ typeRep (Proxy :: Proxy Int16), OInt)
-      , ( typeRepTyCon $ typeRep (Proxy :: Proxy Int32), OInt)
+      , ( typeRepTyCon $ typeRep (Proxy :: Proxy Int32), OInt32)
       , ( typeRepTyCon $ typeRep (Proxy :: Proxy Int64), OInt)
       , ( typeRepTyCon $ typeRep (Proxy :: Proxy Integer), OInt)
       , ( typeRepTyCon $ typeRep (Proxy :: Proxy Word), OInt)

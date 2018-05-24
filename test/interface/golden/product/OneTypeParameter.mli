@@ -5,4 +5,4 @@ type 'a0 oneTypeParameter =
 
 val encodeOneTypeParameter : ('a0 -> Js_json.t) -> 'a0 oneTypeParameter -> Js_json.t
 
-val decodeOneTypeParameter : (Js_json.t -> ('a0, string) Js_result.t) -> Js_json.t -> ('a0 oneTypeParameter, string) Js_result.t
+val decodeOneTypeParameter : (Js_json.t -> ('a0, string) Belt.Result.t) -> Js_json.t -> ('a0 oneTypeParameter, string) Belt.Result.t

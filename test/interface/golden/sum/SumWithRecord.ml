@@ -46,8 +46,8 @@ let decodeSumWithRecordA1 json =
     { a1 = field "a1" int json
     }
   with
-  | v -> Js_result.Ok v
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeSumWithRecordA1: " ^ message)
+  | v -> Belt.Result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeSumWithRecordA1: " ^ message)
 
 let decodeSumWithRecordB2 json =
   match Aeson.Decode.
@@ -55,20 +55,20 @@ let decodeSumWithRecordB2 json =
     ; b3 = field "b3" int json
     }
   with
-  | v -> Js_result.Ok v
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeSumWithRecordB2: " ^ message)
+  | v -> Belt.Result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeSumWithRecordB2: " ^ message)
 
 let decodeSumWithRecord json =
   match Aeson.Decode.(field "tag" string json) with
   | "A1" ->
      (match decodeSumWithRecordA1 json with
-      | Js_result.Ok v -> Js_result.Ok (A1 v)
-      | Js_result.Error message -> Js_result.Error ("decodeSumWithRecord: " ^ message)
+      | Belt.Result.Ok v -> Belt.Result.Ok (A1 v)
+      | Belt.Result.Error message -> Belt.Result.Error ("decodeSumWithRecord: " ^ message)
      )
   | "B2" ->
      (match decodeSumWithRecordB2 json with
-      | Js_result.Ok v -> Js_result.Ok (B2 v)
-      | Js_result.Error message -> Js_result.Error ("decodeSumWithRecord: " ^ message)
+      | Belt.Result.Ok v -> Belt.Result.Ok (B2 v)
+      | Belt.Result.Error message -> Belt.Result.Error ("decodeSumWithRecord: " ^ message)
      )
-  | err -> Js_result.Error ("Unknown tag value found '" ^ err ^ "'.")
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error message
+  | err -> Belt.Result.Error ("Unknown tag value found '" ^ err ^ "'.")
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error message

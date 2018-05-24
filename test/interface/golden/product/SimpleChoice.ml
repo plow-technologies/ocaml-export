@@ -1,5 +1,5 @@
 type simpleChoice =
-  { choice : (string, int) Aeson.Compatibility.Either.t
+  { choice : (int, string) Belt.Result.t
   }
 
 let encodeSimpleChoice x =
@@ -12,5 +12,5 @@ let decodeSimpleChoice json =
     { choice = field "choice" (either string int) json
     }
   with
-  | v -> Js_result.Ok v
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeSimpleChoice: " ^ message)
+  | v -> Belt.Result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeSimpleChoice: " ^ message)

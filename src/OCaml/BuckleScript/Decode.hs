@@ -548,3 +548,17 @@ unwrapIfTypeParameter (OCamlTypeParameterRef _) doc = parens $ "fun a -> unwrapR
 unwrapIfTypeParameter (OCamlRef _ _) doc = parens $ "fun a -> unwrapResult" <+> (parens $ doc <+> "a")
 unwrapIfTypeParameter (OCamlRefApp _ _) doc = parens $ "fun a -> unwrapResult" <+> (parens $ doc <+> "a")
 unwrapIfTypeParameter _ doc = doc
+
+
+{-
+let int642 = [%raw {|
+  function(a) {
+    return ((((int64_t) a[0]) << 32) | a[1]);
+  }
+|}]
+
+split 64 bit int into two values
+  output_values[0] = (input_value >> 32) & 0xffffffff;
+  output_values[1] = input_value & 0xffffffff;
+
+-}

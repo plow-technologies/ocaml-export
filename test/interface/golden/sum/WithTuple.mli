@@ -3,4 +3,4 @@ type withTuple =
 
 val encodeWithTuple : withTuple -> Js_json.t
 
-val decodeWithTuple : Js_json.t -> (withTuple, string) Js_result.t
+val decodeWithTuple : Js_json.t -> (withTuple, string) Belt.Result.t

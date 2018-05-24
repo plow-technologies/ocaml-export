@@ -8,5 +8,5 @@ let encodeNewType x =
 
 let decodeNewType json =
   match Aeson.Decode.int json with
-  | v -> Js_result.Ok (NewType v)
-  | exception Aeson.Decode.DecodeError msg -> Js_result.Error ("decodeNewType: " ^ msg)
+  | v -> Belt.Result.Ok (NewType v)
+  | exception Aeson.Decode.DecodeError msg -> Belt.Result.Error ("decodeNewType: " ^ msg)

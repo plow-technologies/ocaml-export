@@ -19,13 +19,13 @@ let decodeNameOrIdNumber json =
   match Aeson.Decode.(field "tag" string json) with
   | "Name" ->
      (match Aeson.Decode.(field "contents" string json) with
-      | v -> Js_result.Ok (Name v)
-      | exception Aeson.Decode.DecodeError message -> Js_result.Error ("Name: " ^ message)
+      | v -> Belt.Result.Ok (Name v)
+      | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("Name: " ^ message)
      )
   | "IdNumber" ->
      (match Aeson.Decode.(field "contents" int json) with
-      | v -> Js_result.Ok (IdNumber v)
-      | exception Aeson.Decode.DecodeError message -> Js_result.Error ("IdNumber: " ^ message)
+      | v -> Belt.Result.Ok (IdNumber v)
+      | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("IdNumber: " ^ message)
      )
-  | err -> Js_result.Error ("Unknown tag value found '" ^ err ^ "'.")
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error message
+  | err -> Belt.Result.Error ("Unknown tag value found '" ^ err ^ "'.")
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error message

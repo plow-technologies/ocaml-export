@@ -12,8 +12,8 @@ let decodeWrapper decodeA0 json =
     { wpa = field "wpa" (fun a -> unwrapResult (decodeA0 a)) json
     }
   with
-  | v -> Js_result.Ok v
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeWrapper: " ^ message)
+  | v -> Belt.Result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeWrapper: " ^ message)
 
 type intWrapped =
   { iw : (int) wrapper
@@ -29,8 +29,8 @@ let decodeIntWrapped json =
     { iw = field "iw" (fun a -> unwrapResult (decodeWrapper (wrapResult int) a)) json
     }
   with
-  | v -> Js_result.Ok v
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeIntWrapped: " ^ message)
+  | v -> Belt.Result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeIntWrapped: " ^ message)
 
 type maybeWrapped =
   { mw : ((int) option) wrapper
@@ -46,11 +46,11 @@ let decodeMaybeWrapped json =
     { mw = field "mw" (fun a -> unwrapResult (decodeWrapper (wrapResult (optional int)) a)) json
     }
   with
-  | v -> Js_result.Ok v
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeMaybeWrapped: " ^ message)
+  | v -> Belt.Result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeMaybeWrapped: " ^ message)
 
 type eitherWrapped =
-  { ew : ((int, float) Aeson.Compatibility.Either.t) wrapper
+  { ew : ((float, int) Belt.Result.t) wrapper
   }
 
 let encodeEitherWrapped x =
@@ -63,11 +63,11 @@ let decodeEitherWrapped json =
     { ew = field "ew" (fun a -> unwrapResult (decodeWrapper (wrapResult (either int Aeson.Decode.float)) a)) json
     }
   with
-  | v -> Js_result.Ok v
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeEitherWrapped: " ^ message)
+  | v -> Belt.Result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeEitherWrapped: " ^ message)
 
 type complexWrapped =
-  { cw : (((string) option, float) Aeson.Compatibility.Either.t) wrapper
+  { cw : ((float, (string) option) Belt.Result.t) wrapper
   }
 
 let encodeComplexWrapped x =
@@ -80,14 +80,14 @@ let decodeComplexWrapped json =
     { cw = field "cw" (fun a -> unwrapResult (decodeWrapper (wrapResult (either (optional string) Aeson.Decode.float)) a)) json
     }
   with
-  | v -> Js_result.Ok v
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeComplexWrapped: " ^ message)
+  | v -> Belt.Result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeComplexWrapped: " ^ message)
 
 type sumWrapped =
   | SW1
   | SW2 of (int) wrapper
   | SW3 of ((string) option) wrapper
-  | SW4 of ((int, string) Aeson.Compatibility.Either.t) wrapper
+  | SW4 of ((string, int) Belt.Result.t) wrapper
 
 let encodeSumWrapped x =
   match x with
@@ -114,26 +114,26 @@ let encodeSumWrapped x =
 let decodeSumWrapped json =
   match Aeson.Decode.(field "tag" string json) with
   | "SW1" ->
-     Js_result.Ok SW1
+     Belt.Result.Ok SW1
 
   | "SW2" ->
      (match Aeson.Decode.(field "contents" (fun a -> unwrapResult (decodeWrapper (wrapResult int) a)) json) with
-      | v -> Js_result.Ok (SW2 v)
-      | exception Aeson.Decode.DecodeError message -> Js_result.Error ("SW2: " ^ message)
+      | v -> Belt.Result.Ok (SW2 v)
+      | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("SW2: " ^ message)
      )
   | "SW3" ->
      (match Aeson.Decode.(field "contents" (fun a -> unwrapResult (decodeWrapper (wrapResult (optional string)) a)) json) with
-      | v -> Js_result.Ok (SW3 v)
-      | exception Aeson.Decode.DecodeError message -> Js_result.Error ("SW3: " ^ message)
+      | v -> Belt.Result.Ok (SW3 v)
+      | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("SW3: " ^ message)
      )
 
   | "SW4" ->
      (match Aeson.Decode.(field "contents" (fun a -> unwrapResult (decodeWrapper (wrapResult (either int string)) a)) json) with
-      | v -> Js_result.Ok (SW4 v)
-      | exception Aeson.Decode.DecodeError message -> Js_result.Error ("SW4: " ^ message)
+      | v -> Belt.Result.Ok (SW4 v)
+      | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("SW4: " ^ message)
      )
-  | err -> Js_result.Error ("Unknown tag value found '" ^ err ^ "'.")
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error message
+  | err -> Belt.Result.Error ("Unknown tag value found '" ^ err ^ "'.")
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error message
 
 type tupleWrapped =
   { tw : ((int * string * float)) wrapper
@@ -149,28 +149,28 @@ let decodeTupleWrapped json =
     { tw = field "tw" (fun a -> unwrapResult (decodeWrapper (wrapResult (tuple3 int string Aeson.Decode.float)) a)) json
     }
   with
-  | v -> Js_result.Ok v
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeTupleWrapped: " ^ message)
+  | v -> Belt.Result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeTupleWrapped: " ^ message)
 
 type 'a0 halfWrapped =
-  { hw : ((int, 'a0) Aeson.Compatibility.Either.t) wrapper
+  { hw : ((int, 'a0) Belt.Result.t) wrapper
   }
 
 let encodeHalfWrapped encodeA0 x =
   Aeson.Encode.object_
-    [ ( "hw", (encodeWrapper (Aeson.Encode.either Aeson.Encode.int encodeA0)) x.hw )
+    [ ( "hw", (encodeWrapper (Aeson.Encode.either encodeA0 Aeson.Encode.int)) x.hw )
     ]
 
 let decodeHalfWrapped decodeA0 json =
   match Aeson.Decode.
-    { hw = field "hw" (fun a -> unwrapResult (decodeWrapper (wrapResult (either int (fun a -> unwrapResult (decodeA0 a)))) a)) json
+    { hw = field "hw" (fun a -> unwrapResult (decodeWrapper (wrapResult (either (fun a -> unwrapResult (decodeA0 a)) int)) a)) json
     }
   with
-  | v -> Js_result.Ok v
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeHalfWrapped: " ^ message)
+  | v -> Belt.Result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeHalfWrapped: " ^ message)
 
 type ('a0, 'a1, 'a2) partiallyWrapped =
-  { pw : ((int, (string * 'a1 * float * 'a2 * 'a0)) Aeson.Compatibility.Either.t) wrapper
+  { pw : (((string * 'a1 * float * 'a2 * 'a0), int) Belt.Result.t) wrapper
   }
 
 let encodePartiallyWrapped encodeA0 encodeA1 encodeA2 x =
@@ -183,8 +183,8 @@ let decodePartiallyWrapped decodeA0 decodeA1 decodeA2 json =
     { pw = field "pw" (fun a -> unwrapResult (decodeWrapper (wrapResult (either int (tuple5 string (fun a -> unwrapResult (decodeA1 a)) Aeson.Decode.float (fun a -> unwrapResult (decodeA2 a)) (fun a -> unwrapResult (decodeA0 a))))) a)) json
     }
   with
-  | v -> Js_result.Ok v
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodePartiallyWrapped: " ^ message)
+  | v -> Belt.Result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodePartiallyWrapped: " ^ message)
 
 type ('a0, 'a1, 'a2, 'a3, 'a4, 'a5) scrambledTypeParameterRefs =
   { stprb : 'a1
@@ -215,8 +215,8 @@ let decodeScrambledTypeParameterRefs decodeA0 decodeA1 decodeA2 decodeA3 decodeA
     ; stprc = field "stprc" (fun a -> unwrapResult (decodeA2 a)) json
     }
   with
-  | v -> Js_result.Ok v
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeScrambledTypeParameterRefs: " ^ message)
+  | v -> Belt.Result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeScrambledTypeParameterRefs: " ^ message)
 
 type wrappedWrapper =
   { ww : (((int) option) wrapper) option
@@ -232,8 +232,8 @@ let decodeWrappedWrapper json =
     { ww = field "ww" (optional (fun a -> unwrapResult (decodeWrapper (wrapResult (optional int)) a))) json
     }
   with
-  | v -> Js_result.Ok v
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeWrappedWrapper: " ^ message)
+  | v -> Belt.Result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeWrappedWrapper: " ^ message)
 
 type ('a0, 'a1, 'a2) wrapThree =
   { wp2a : 'a0
@@ -258,8 +258,8 @@ let decodeWrapThree decodeA0 decodeA1 decodeA2 json =
     ; wp2cb = field "wp2cb" (pair (fun a -> unwrapResult (decodeA2 a)) (fun a -> unwrapResult (decodeA1 a))) json
     }
   with
-  | v -> Js_result.Ok v
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeWrapThree: " ^ message)
+  | v -> Belt.Result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeWrapThree: " ^ message)
 
 type ('a0, 'a1, 'a2) wrapThreeUnfilled =
   { zed : string
@@ -278,8 +278,8 @@ let decodeWrapThreeUnfilled decodeA0 decodeA1 decodeA2 json =
     ; unfilled = field "unfilled" (fun a -> unwrapResult (decodeWrapThree decodeA0 decodeA1 decodeA2 a)) json
     }
   with
-  | v -> Js_result.Ok v
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeWrapThreeUnfilled: " ^ message)
+  | v -> Belt.Result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeWrapThreeUnfilled: " ^ message)
 
 type wrapThreeFilled =
   { foo : string
@@ -298,8 +298,8 @@ let decodeWrapThreeFilled json =
     ; filled = field "filled" (fun a -> unwrapResult (decodeWrapThree (wrapResult int) (wrapResult Aeson.Decode.float) Person.decodePerson a)) json
     }
   with
-  | v -> Js_result.Ok v
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeWrapThreeFilled: " ^ message)
+  | v -> Belt.Result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeWrapThreeFilled: " ^ message)
 
 type 'a0 wrapThreePartiallyFilled =
   { bar : string
@@ -321,5 +321,5 @@ let decodeWrapThreePartiallyFilled decodeA0 json =
     ; partiallyFilled = field "partiallyFilled" (fun a -> unwrapResult (decodeWrapThree (wrapResult Aeson.Decode.float) decodeA0 (wrapResult Aeson.Decode.float) a)) json
     }
   with
-  | v -> Js_result.Ok v
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeWrapThreePartiallyFilled: " ^ message)
+  | v -> Belt.Result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeWrapThreePartiallyFilled: " ^ message)

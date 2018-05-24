@@ -6,7 +6,7 @@ type suit =
 
 val encodeSuit : suit -> Js_json.t
 
-val decodeSuit : Js_json.t -> (suit, string) Js_result.t
+val decodeSuit : Js_json.t -> (suit, string) Belt.Result.t
 
 type card =
   { cardSuit : suit
@@ -15,4 +15,4 @@ type card =
 
 val encodeCard : card -> Js_json.t
 
-val decodeCard : Js_json.t -> (card, string) Js_result.t
+val decodeCard : Js_json.t -> (card, string) Belt.Result.t

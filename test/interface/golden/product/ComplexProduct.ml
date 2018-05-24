@@ -15,16 +15,16 @@ let decodeSimple json =
     ; sb = field "sb" string json
     }
   with
-  | v -> Js_result.Ok v
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeSimple: " ^ message)
+  | v -> Belt.Result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeSimple: " ^ message)
 
 
 type complexProduct =
-  { cp0 : (Person.person, (int) list) Aeson.Compatibility.Either.t
-  ; cp1 : ((int * (string, float) Aeson.Compatibility.Either.t)) list
+  { cp0 : ((int) list, Person.person) Belt.Result.t
+  ; cp1 : ((int * (float, string) Belt.Result.t)) list
   ; cp2 : ((int) list) list
   ; cp3 : ((int) list) option
-  ; cp4 : (simple, int) Aeson.Compatibility.Either.t
+  ; cp4 : (int, simple) Belt.Result.t
   }
 
 let encodeComplexProduct x =
@@ -45,5 +45,5 @@ let decodeComplexProduct json =
     ; cp4 = field "cp4" (either (fun a -> unwrapResult (decodeSimple a)) int) json
     }
   with
-  | v -> Js_result.Ok v
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeComplexProduct: " ^ message)
+  | v -> Belt.Result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeComplexProduct: " ^ message)

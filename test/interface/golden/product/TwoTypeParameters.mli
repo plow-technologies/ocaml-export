@@ -7,4 +7,4 @@ type ('a0, 'a1) twoTypeParameters =
 
 val encodeTwoTypeParameters : ('a0 -> Js_json.t) -> ('a1 -> Js_json.t) -> ('a0, 'a1) twoTypeParameters -> Js_json.t
 
-val decodeTwoTypeParameters : (Js_json.t -> ('a0, string) Js_result.t) -> (Js_json.t -> ('a1, string) Js_result.t) -> Js_json.t -> (('a0, 'a1) twoTypeParameters, string) Js_result.t
+val decodeTwoTypeParameters : (Js_json.t -> ('a0, string) Belt.Result.t) -> (Js_json.t -> ('a1, string) Belt.Result.t) -> Js_json.t -> (('a0, 'a1) twoTypeParameters, string) Belt.Result.t

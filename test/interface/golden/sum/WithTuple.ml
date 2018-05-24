@@ -8,5 +8,5 @@ let encodeWithTuple x =
 
 let decodeWithTuple json =
   match Aeson.Decode.(pair int int) json with
-  | v -> Js_result.Ok (WithTuple v)
-  | exception Aeson.Decode.DecodeError msg -> Js_result.Error ("decodeWithTuple: " ^ msg)
+  | v -> Belt.Result.Ok (WithTuple v)
+  | exception Aeson.Decode.DecodeError msg -> Belt.Result.Error ("decodeWithTuple: " ^ msg)

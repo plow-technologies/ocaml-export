@@ -1,7 +1,7 @@
 type simpleChoice =
-  { choice : (string, int) Aeson.Compatibility.Either.t
+  { choice : (int, string) Belt.Result.t
   }
 
 val encodeSimpleChoice : simpleChoice -> Js_json.t
 
-val decodeSimpleChoice : Js_json.t -> (simpleChoice, string) Js_result.t
+val decodeSimpleChoice : Js_json.t -> (simpleChoice, string) Belt.Result.t

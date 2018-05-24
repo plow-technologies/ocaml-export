@@ -16,7 +16,7 @@
     esutils "^2.0.2"
     js-tokens "^3.0.0"
 
-"@glennsl/bs-jest@^0.4.1", "@glennsl/bs-jest@^0.4.2":
+"@glennsl/bs-jest@^0.4.2":
   version "0.4.2"
   resolved "https://registry.yarnpkg.com/@glennsl/bs-jest/-/bs-jest-0.4.2.tgz#c8bd899aca0feae5927f4778cbdeb4c46bb2eef9"
   dependencies:
@@ -412,17 +412,17 @@ browser-resolve@^1.11.2:
   dependencies:
     resolve "1.1.7"
 
-bs-aeson-spec@^1.2.1:
-  version "1.2.2"
-  resolved "https://registry.yarnpkg.com/bs-aeson-spec/-/bs-aeson-spec-1.2.2.tgz#769aff006e6ee90f6db102a89dec19293ed39dba"
+bs-aeson-spec@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/bs-aeson-spec/-/bs-aeson-spec-2.0.0.tgz#a9f10a20f4d4a6ed18d4073c21fa09effe60ec2c"
   dependencies:
     "@glennsl/bs-jest" "^0.4.2"
-    bs-aeson "^1.1.0"
+    bs-aeson "^2.0.0"
     bs-node-fetch "^0.1.2"
 
-bs-aeson@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/bs-aeson/-/bs-aeson-1.1.0.tgz#8755b27c18fed55f9ebf197984b6ef414d5a85f3"
+bs-aeson@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/bs-aeson/-/bs-aeson-2.0.0.tgz#ec6d2198cbbd626c9ecf0a1fdc03ce10c96bdbfc"
 
 bs-node-fetch@^0.1.2:
   version "0.1.2"
@@ -434,9 +434,9 @@ bs-node-fetch@^0.1.2:
   version "0.0.1"
   resolved "https://codeload.github.com/buckletypes/bs-node/tar.gz/20ef6d2d7c00e923aba33b0629ca5623a4460712"
 
-bs-platform@^2.2.0:
-  version "2.2.3"
-  resolved "https://registry.yarnpkg.com/bs-platform/-/bs-platform-2.2.3.tgz#d905ae10a5f3621e6a739041dfa0b58483a2174f"
+bs-platform@^3.1.3:
+  version "3.1.4"
+  resolved "https://registry.yarnpkg.com/bs-platform/-/bs-platform-3.1.4.tgz#fe8495443b35aff73dfb61cba1e6d7b88311910b"
 
 bser@^2.0.0:
   version "2.0.0"

@@ -5,4 +5,4 @@ type company =
 
 val encodeCompany : company -> Js_json.t
 
-val decodeCompany : Js_json.t -> (company, string) Js_result.t
+val decodeCompany : Js_json.t -> (company, string) Belt.Result.t

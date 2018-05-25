@@ -424,6 +424,10 @@ bs-aeson@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/bs-aeson/-/bs-aeson-2.0.0.tgz#ec6d2198cbbd626c9ecf0a1fdc03ce10c96bdbfc"
 
+"bs-aeson@github:plow-technologies/bs-aeson#8eed965c4841c5788ebf40a22c7df3aafcaa5749":
+  version "3.0.0"
+  resolved "https://codeload.github.com/plow-technologies/bs-aeson/tar.gz/8eed965c4841c5788ebf40a22c7df3aafcaa5749"
+
 bs-node-fetch@^0.1.2:
   version "0.1.2"
   resolved "https://registry.yarnpkg.com/bs-node-fetch/-/bs-node-fetch-0.1.2.tgz#0e86af872083ddb28d9db357f4701a1891e8823e"

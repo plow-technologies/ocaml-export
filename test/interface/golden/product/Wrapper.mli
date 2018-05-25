@@ -23,7 +23,7 @@ val encodeMaybeWrapped : maybeWrapped -> Js_json.t
 val decodeMaybeWrapped : Js_json.t -> (maybeWrapped, string) Belt.Result.t
 
 type eitherWrapped =
-  { ew : ((float, int) Belt.Result.t) wrapper
+  { ew : ((int, float) Aeson.Compatibility.Either.t) wrapper
   }
 
 val encodeEitherWrapped : eitherWrapped -> Js_json.t
@@ -31,7 +31,7 @@ val encodeEitherWrapped : eitherWrapped -> Js_json.t
 val decodeEitherWrapped : Js_json.t -> (eitherWrapped, string) Belt.Result.t
 
 type complexWrapped =
-  { cw : ((float, (string) option) Belt.Result.t) wrapper
+  { cw : (((string) option, float) Aeson.Compatibility.Either.t) wrapper
   }
 
 val encodeComplexWrapped : complexWrapped -> Js_json.t
@@ -42,7 +42,7 @@ type sumWrapped =
   | SW1
   | SW2 of (int) wrapper
   | SW3 of ((string) option) wrapper
-  | SW4 of ((string, int) Belt.Result.t) wrapper
+  | SW4 of ((int, string) Aeson.Compatibility.Either.t) wrapper
 
 val encodeSumWrapped : sumWrapped -> Js_json.t
 
@@ -57,7 +57,7 @@ val encodeTupleWrapped : tupleWrapped -> Js_json.t
 val decodeTupleWrapped : Js_json.t -> (tupleWrapped, string) Belt.Result.t
 
 type 'a0 halfWrapped =
-  { hw : (('a0, int) Belt.Result.t) wrapper
+  { hw : ((int, 'a0) Aeson.Compatibility.Either.t) wrapper
   }
 
 val encodeHalfWrapped : ('a0 -> Js_json.t) -> 'a0 halfWrapped -> Js_json.t
@@ -65,7 +65,7 @@ val encodeHalfWrapped : ('a0 -> Js_json.t) -> 'a0 halfWrapped -> Js_json.t
 val decodeHalfWrapped : (Js_json.t -> ('a0, string) Belt.Result.t) -> Js_json.t -> ('a0 halfWrapped, string) Belt.Result.t
 
 type ('a0, 'a1, 'a2) partiallyWrapped =
-  { pw : (((string * 'a1 * float * 'a2 * 'a0), int) Belt.Result.t) wrapper
+  { pw : ((int, (string * 'a1 * float * 'a2 * 'a0)) Aeson.Compatibility.Either.t) wrapper
   }
 
 val encodePartiallyWrapped : ('a0 -> Js_json.t) -> ('a1 -> Js_json.t) -> ('a2 -> Js_json.t) -> ('a0, 'a1, 'a2) partiallyWrapped -> Js_json.t

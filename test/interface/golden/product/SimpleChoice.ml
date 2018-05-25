@@ -1,5 +1,5 @@
 type simpleChoice =
-  { choice : (int, string) Belt.Result.t
+  { choice : (string, int) Aeson.Compatibility.Either.t
   }
 
 let encodeSimpleChoice x =

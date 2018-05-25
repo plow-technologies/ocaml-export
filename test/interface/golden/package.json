@@ -14,7 +14,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "bs-aeson": "^2.0.0"
+    "bs-aeson": "github:plow-technologies/bs-aeson#8eed965c4841c5788ebf40a22c7df3aafcaa5749"
   },
   "devDependencies": {
     "bs-aeson-spec": "^2.0.0",

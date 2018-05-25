@@ -50,7 +50,7 @@ let decodeMaybeWrapped json =
   | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeMaybeWrapped: " ^ message)
 
 type eitherWrapped =
-  { ew : ((float, int) Belt.Result.t) wrapper
+  { ew : ((int, float) Aeson.Compatibility.Either.t) wrapper
   }
 
 let encodeEitherWrapped x =
@@ -67,7 +67,7 @@ let decodeEitherWrapped json =
   | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeEitherWrapped: " ^ message)
 
 type complexWrapped =
-  { cw : ((float, (string) option) Belt.Result.t) wrapper
+  { cw : (((string) option, float) Aeson.Compatibility.Either.t) wrapper
   }
 
 let encodeComplexWrapped x =
@@ -87,7 +87,7 @@ type sumWrapped =
   | SW1
   | SW2 of (int) wrapper
   | SW3 of ((string) option) wrapper
-  | SW4 of ((string, int) Belt.Result.t) wrapper
+  | SW4 of ((int, string) Aeson.Compatibility.Either.t) wrapper
 
 let encodeSumWrapped x =
   match x with
@@ -153,7 +153,7 @@ let decodeTupleWrapped json =
   | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeTupleWrapped: " ^ message)
 
 type 'a0 halfWrapped =
-  { hw : (('a0, int) Belt.Result.t) wrapper
+  { hw : ((int, 'a0) Aeson.Compatibility.Either.t) wrapper
   }
 
 let encodeHalfWrapped encodeA0 x =
@@ -170,7 +170,7 @@ let decodeHalfWrapped decodeA0 json =
   | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeHalfWrapped: " ^ message)
 
 type ('a0, 'a1, 'a2) partiallyWrapped =
-  { pw : (((string * 'a1 * float * 'a2 * 'a0), int) Belt.Result.t) wrapper
+  { pw : ((int, (string * 'a1 * float * 'a2 * 'a0)) Aeson.Compatibility.Either.t) wrapper
   }
 
 let encodePartiallyWrapped encodeA0 encodeA1 encodeA2 x =

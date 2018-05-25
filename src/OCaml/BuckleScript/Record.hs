@@ -230,7 +230,7 @@ instance HasTypeRef OCamlPrimitive where
   renderRef (OEither l r) = do
     dl <- renderRef l
     dr <- renderRef r
-    pure $ (parens $ dr <> comma <+> dl) <+> "Belt.Result.t"
+    pure $ (parens $ dl <> comma <+> dr) <+> "Aeson.Compatibility.Either.t"
 
   renderRef (OTuple2 a b) = do
     da <- renderRef a

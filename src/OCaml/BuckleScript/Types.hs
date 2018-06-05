@@ -123,7 +123,7 @@ data OCamlPrimitive
   | OUnit -- ^ ()
   | OList OCamlDatatype -- ^ 'a list, 'a Js_array.t
   | OOption OCamlDatatype -- ^ 'a option
-  | OEither OCamlDatatype OCamlDatatype -- ^ 'r 'l Belt.Result.t
+  | OEither OCamlDatatype OCamlDatatype -- ^ 'l 'r Aeson.Compatibility.Either.t
   | OTuple2 OCamlDatatype OCamlDatatype -- ^ (*)
   | OTuple3 OCamlDatatype OCamlDatatype OCamlDatatype -- ^ (**)
   | OTuple4 OCamlDatatype OCamlDatatype OCamlDatatype OCamlDatatype -- ^ (***)
@@ -448,7 +448,7 @@ instance OCamlType Int16 where
   toOCamlType _ = OCamlPrimitive OInt
 
 instance OCamlType Int32 where
-  toOCamlType _ = OCamlPrimitive OInt
+  toOCamlType _ = OCamlPrimitive OInt32
 
 instance OCamlType Int64 where
   toOCamlType _ = OCamlPrimitive OInt

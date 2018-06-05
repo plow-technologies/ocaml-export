@@ -8,4 +8,4 @@ type sumVariant =
 
 val encodeSumVariant : sumVariant -> Js_json.t
 
-val decodeSumVariant : Js_json.t -> (sumVariant, string) Js_result.t
+val decodeSumVariant : Js_json.t -> (sumVariant, string) Belt.Result.t

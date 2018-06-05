@@ -15,8 +15,8 @@ let decodeSimple json =
     ; sb = field "sb" string json
     }
   with
-  | v -> Js_result.Ok v
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeSimple: " ^ message)
+  | v -> Belt.Result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeSimple: " ^ message)
 
 
 type complexProduct =
@@ -45,5 +45,5 @@ let decodeComplexProduct json =
     ; cp4 = field "cp4" (either (fun a -> unwrapResult (decodeSimple a)) int) json
     }
   with
-  | v -> Js_result.Ok v
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeComplexProduct: " ^ message)
+  | v -> Belt.Result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeComplexProduct: " ^ message)

@@ -4,4 +4,4 @@ type simpleChoice =
 
 val encodeSimpleChoice : simpleChoice -> Js_json.t
 
-val decodeSimpleChoice : Js_json.t -> (simpleChoice, string) Js_result.t
+val decodeSimpleChoice : Js_json.t -> (simpleChoice, string) Belt.Result.t

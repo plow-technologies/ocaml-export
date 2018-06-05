@@ -5,7 +5,7 @@ type simple =
 
 val encodeSimple : simple -> Js_json.t
 
-val decodeSimple : Js_json.t -> (simple, string) Js_result.t
+val decodeSimple : Js_json.t -> (simple, string) Belt.Result.t
 
 
 type complexProduct =
@@ -18,4 +18,4 @@ type complexProduct =
 
 val encodeComplexProduct : complexProduct -> Js_json.t
 
-val decodeComplexProduct : Js_json.t -> (complexProduct, string) Js_result.t
+val decodeComplexProduct : Js_json.t -> (complexProduct, string) Belt.Result.t

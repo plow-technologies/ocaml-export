@@ -15,8 +15,8 @@ let decodePerson json =
     ; name = optional (field "name" string) json
     }
   with
-  | v -> Js_result.Ok v
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodePerson: " ^ message)
+  | v -> Belt.Result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodePerson: " ^ message)
 
 
 type automobile =
@@ -39,8 +39,8 @@ let decodeAutomobile json =
     ; year = field "year" int json
     }
   with
-  | v -> Js_result.Ok v
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeAutomobile: " ^ message)
+  | v -> Belt.Result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeAutomobile: " ^ message)
 
 type business =
   { taxId : string
@@ -65,8 +65,8 @@ let decodeBusiness json =
     ; companyVehicle = optional (field "companyVehicle" (fun a -> unwrapResult (decodeAutomobile a))) json
     }
   with
-  | v -> Js_result.Ok v
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeBusiness: " ^ message)
+  | v -> Belt.Result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeBusiness: " ^ message)
 
 
 type ('a, 'b) wrapper =
@@ -89,8 +89,8 @@ let decodeWrapper a b json =
         ; wrapperC = field "wrapperC" string json
         }
   with
-  | v -> Js_result.Ok v
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeWrapper: " ^ message)
+  | v -> Belt.Result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeWrapper: " ^ message)
 
 
 type autoDependingOnManual =
@@ -110,8 +110,8 @@ let decodeAutoDependingOnManual json =
     ; bbBusiness = field "bbBusiness" (fun a -> unwrapResult (decodeBusiness a)) json
     }
   with
-  | v -> Js_result.Ok v
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeAutoDependingOnManual: " ^ message)
+  | v -> Belt.Result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeAutoDependingOnManual: " ^ message)
 
 type nonGenericType =
   { ngA : string
@@ -130,6 +130,6 @@ let decodeNonGenericType json =
         ; ngB = field "ngB" int json
         }
   with
-  | v -> Js_result.Ok v
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeNonGenericType: " ^ message)
+  | v -> Belt.Result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeNonGenericType: " ^ message)
 

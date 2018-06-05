@@ -24,5 +24,5 @@ let decodeThree decodeA0 decodeA1 decodeA2 json =
     ; threeString = field "threeString" string json
     }
   with
-  | v -> Js_result.Ok v
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeThree: " ^ message)
+  | v -> Belt.Result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeThree: " ^ message)

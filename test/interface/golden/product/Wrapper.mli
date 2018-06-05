@@ -4,7 +4,7 @@ type 'a0 wrapper =
 
 val encodeWrapper : ('a0 -> Js_json.t) -> 'a0 wrapper -> Js_json.t
 
-val decodeWrapper : (Js_json.t -> ('a0, string) Js_result.t) -> Js_json.t -> ('a0 wrapper, string) Js_result.t
+val decodeWrapper : (Js_json.t -> ('a0, string) Belt.Result.t) -> Js_json.t -> ('a0 wrapper, string) Belt.Result.t
 
 type intWrapped =
   { iw : (int) wrapper
@@ -12,7 +12,7 @@ type intWrapped =
 
 val encodeIntWrapped : intWrapped -> Js_json.t
 
-val decodeIntWrapped : Js_json.t -> (intWrapped, string) Js_result.t
+val decodeIntWrapped : Js_json.t -> (intWrapped, string) Belt.Result.t
 
 type maybeWrapped =
   { mw : ((int) option) wrapper
@@ -20,7 +20,7 @@ type maybeWrapped =
 
 val encodeMaybeWrapped : maybeWrapped -> Js_json.t
 
-val decodeMaybeWrapped : Js_json.t -> (maybeWrapped, string) Js_result.t
+val decodeMaybeWrapped : Js_json.t -> (maybeWrapped, string) Belt.Result.t
 
 type eitherWrapped =
   { ew : ((int, float) Aeson.Compatibility.Either.t) wrapper
@@ -28,7 +28,7 @@ type eitherWrapped =
 
 val encodeEitherWrapped : eitherWrapped -> Js_json.t
 
-val decodeEitherWrapped : Js_json.t -> (eitherWrapped, string) Js_result.t
+val decodeEitherWrapped : Js_json.t -> (eitherWrapped, string) Belt.Result.t
 
 type complexWrapped =
   { cw : (((string) option, float) Aeson.Compatibility.Either.t) wrapper
@@ -36,7 +36,7 @@ type complexWrapped =
 
 val encodeComplexWrapped : complexWrapped -> Js_json.t
 
-val decodeComplexWrapped : Js_json.t -> (complexWrapped, string) Js_result.t
+val decodeComplexWrapped : Js_json.t -> (complexWrapped, string) Belt.Result.t
 
 type sumWrapped =
   | SW1
@@ -46,7 +46,7 @@ type sumWrapped =
 
 val encodeSumWrapped : sumWrapped -> Js_json.t
 
-val decodeSumWrapped : Js_json.t -> (sumWrapped, string) Js_result.t
+val decodeSumWrapped : Js_json.t -> (sumWrapped, string) Belt.Result.t
 
 type tupleWrapped =
   { tw : ((int * string * float)) wrapper
@@ -54,7 +54,7 @@ type tupleWrapped =
 
 val encodeTupleWrapped : tupleWrapped -> Js_json.t
 
-val decodeTupleWrapped : Js_json.t -> (tupleWrapped, string) Js_result.t
+val decodeTupleWrapped : Js_json.t -> (tupleWrapped, string) Belt.Result.t
 
 type 'a0 halfWrapped =
   { hw : ((int, 'a0) Aeson.Compatibility.Either.t) wrapper
@@ -62,7 +62,7 @@ type 'a0 halfWrapped =
 
 val encodeHalfWrapped : ('a0 -> Js_json.t) -> 'a0 halfWrapped -> Js_json.t
 
-val decodeHalfWrapped : (Js_json.t -> ('a0, string) Js_result.t) -> Js_json.t -> ('a0 halfWrapped, string) Js_result.t
+val decodeHalfWrapped : (Js_json.t -> ('a0, string) Belt.Result.t) -> Js_json.t -> ('a0 halfWrapped, string) Belt.Result.t
 
 type ('a0, 'a1, 'a2) partiallyWrapped =
   { pw : ((int, (string * 'a1 * float * 'a2 * 'a0)) Aeson.Compatibility.Either.t) wrapper
@@ -70,7 +70,7 @@ type ('a0, 'a1, 'a2) partiallyWrapped =
 
 val encodePartiallyWrapped : ('a0 -> Js_json.t) -> ('a1 -> Js_json.t) -> ('a2 -> Js_json.t) -> ('a0, 'a1, 'a2) partiallyWrapped -> Js_json.t
 
-val decodePartiallyWrapped : (Js_json.t -> ('a0, string) Js_result.t) -> (Js_json.t -> ('a1, string) Js_result.t) -> (Js_json.t -> ('a2, string) Js_result.t) -> Js_json.t -> (('a0, 'a1, 'a2) partiallyWrapped, string) Js_result.t
+val decodePartiallyWrapped : (Js_json.t -> ('a0, string) Belt.Result.t) -> (Js_json.t -> ('a1, string) Belt.Result.t) -> (Js_json.t -> ('a2, string) Belt.Result.t) -> Js_json.t -> (('a0, 'a1, 'a2) partiallyWrapped, string) Belt.Result.t
 
 type ('a0, 'a1, 'a2, 'a3, 'a4, 'a5) scrambledTypeParameterRefs =
   { stprb : 'a1
@@ -83,7 +83,7 @@ type ('a0, 'a1, 'a2, 'a3, 'a4, 'a5) scrambledTypeParameterRefs =
 
 val encodeScrambledTypeParameterRefs : ('a0 -> Js_json.t) -> ('a1 -> Js_json.t) -> ('a2 -> Js_json.t) -> ('a3 -> Js_json.t) -> ('a4 -> Js_json.t) -> ('a5 -> Js_json.t) -> ('a0, 'a1, 'a2, 'a3, 'a4, 'a5) scrambledTypeParameterRefs -> Js_json.t
 
-val decodeScrambledTypeParameterRefs : (Js_json.t -> ('a0, string) Js_result.t) -> (Js_json.t -> ('a1, string) Js_result.t) -> (Js_json.t -> ('a2, string) Js_result.t) -> (Js_json.t -> ('a3, string) Js_result.t) -> (Js_json.t -> ('a4, string) Js_result.t) -> (Js_json.t -> ('a5, string) Js_result.t) -> Js_json.t -> (('a0, 'a1, 'a2, 'a3, 'a4, 'a5) scrambledTypeParameterRefs, string) Js_result.t
+val decodeScrambledTypeParameterRefs : (Js_json.t -> ('a0, string) Belt.Result.t) -> (Js_json.t -> ('a1, string) Belt.Result.t) -> (Js_json.t -> ('a2, string) Belt.Result.t) -> (Js_json.t -> ('a3, string) Belt.Result.t) -> (Js_json.t -> ('a4, string) Belt.Result.t) -> (Js_json.t -> ('a5, string) Belt.Result.t) -> Js_json.t -> (('a0, 'a1, 'a2, 'a3, 'a4, 'a5) scrambledTypeParameterRefs, string) Belt.Result.t
 
 type wrappedWrapper =
   { ww : (((int) option) wrapper) option
@@ -91,7 +91,7 @@ type wrappedWrapper =
 
 val encodeWrappedWrapper : wrappedWrapper -> Js_json.t
 
-val decodeWrappedWrapper : Js_json.t -> (wrappedWrapper, string) Js_result.t
+val decodeWrappedWrapper : Js_json.t -> (wrappedWrapper, string) Belt.Result.t
 
 type ('a0, 'a1, 'a2) wrapThree =
   { wp2a : 'a0
@@ -102,7 +102,7 @@ type ('a0, 'a1, 'a2) wrapThree =
 
 val encodeWrapThree : ('a0 -> Js_json.t) -> ('a1 -> Js_json.t) -> ('a2 -> Js_json.t) -> ('a0, 'a1, 'a2) wrapThree -> Js_json.t
 
-val decodeWrapThree : (Js_json.t -> ('a0, string) Js_result.t) -> (Js_json.t -> ('a1, string) Js_result.t) -> (Js_json.t -> ('a2, string) Js_result.t) -> Js_json.t -> (('a0, 'a1, 'a2) wrapThree, string) Js_result.t
+val decodeWrapThree : (Js_json.t -> ('a0, string) Belt.Result.t) -> (Js_json.t -> ('a1, string) Belt.Result.t) -> (Js_json.t -> ('a2, string) Belt.Result.t) -> Js_json.t -> (('a0, 'a1, 'a2) wrapThree, string) Belt.Result.t
 
 type ('a0, 'a1, 'a2) wrapThreeUnfilled =
   { zed : string
@@ -111,7 +111,7 @@ type ('a0, 'a1, 'a2) wrapThreeUnfilled =
 
 val encodeWrapThreeUnfilled : ('a0 -> Js_json.t) -> ('a1 -> Js_json.t) -> ('a2 -> Js_json.t) -> ('a0, 'a1, 'a2) wrapThreeUnfilled -> Js_json.t
 
-val decodeWrapThreeUnfilled : (Js_json.t -> ('a0, string) Js_result.t) -> (Js_json.t -> ('a1, string) Js_result.t) -> (Js_json.t -> ('a2, string) Js_result.t) -> Js_json.t -> (('a0, 'a1, 'a2) wrapThreeUnfilled, string) Js_result.t
+val decodeWrapThreeUnfilled : (Js_json.t -> ('a0, string) Belt.Result.t) -> (Js_json.t -> ('a1, string) Belt.Result.t) -> (Js_json.t -> ('a2, string) Belt.Result.t) -> Js_json.t -> (('a0, 'a1, 'a2) wrapThreeUnfilled, string) Belt.Result.t
 
 type wrapThreeFilled =
   { foo : string
@@ -120,7 +120,7 @@ type wrapThreeFilled =
 
 val encodeWrapThreeFilled : wrapThreeFilled -> Js_json.t
 
-val decodeWrapThreeFilled : Js_json.t -> (wrapThreeFilled, string) Js_result.t
+val decodeWrapThreeFilled : Js_json.t -> (wrapThreeFilled, string) Belt.Result.t
 
 type 'a0 wrapThreePartiallyFilled =
   { bar : string
@@ -130,4 +130,4 @@ type 'a0 wrapThreePartiallyFilled =
 
 val encodeWrapThreePartiallyFilled : ('a0 -> Js_json.t) -> 'a0 wrapThreePartiallyFilled -> Js_json.t
 
-val decodeWrapThreePartiallyFilled : (Js_json.t -> ('a0, string) Js_result.t) -> Js_json.t -> ('a0 wrapThreePartiallyFilled, string) Js_result.t
+val decodeWrapThreePartiallyFilled : (Js_json.t -> ('a0, string) Belt.Result.t) -> Js_json.t -> ('a0 wrapThreePartiallyFilled, string) Belt.Result.t

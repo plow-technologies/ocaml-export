@@ -4,4 +4,4 @@ type nameOrIdNumber =
 
 val encodeNameOrIdNumber : nameOrIdNumber -> Js_json.t
 
-val decodeNameOrIdNumber : Js_json.t -> (nameOrIdNumber, string) Js_result.t
+val decodeNameOrIdNumber : Js_json.t -> (nameOrIdNumber, string) Belt.Result.t

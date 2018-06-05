@@ -1,5 +1,11 @@
 # Revision history for ocaml-export
 
+## 0.9.0.0 -- 2018-06-03
+
+* Output BuckleScript code requires at least bs-platform 3.1.0.
+* Change output BuckleScript code and test code to use `Belt.Result.t` instead of `Js.Result.t`. `Js.Result.t` has been deprecated since bs-platform 3.1.0.
+* Add `OInt32` to `OCaml.BuckleScript.Types.OCamlPrimitive` to convert Haskell `Int32` to BuckleScript `int32`.
+
 ## 0.8.0.0 -- 2018-05-03
 
 * Support GHC 8.2.2 and drop support for previous GHC versions. 'base >= 4.10' is a requirement.

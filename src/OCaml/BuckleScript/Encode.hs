@@ -301,6 +301,7 @@ instance HasEncoderRef OCamlPrimitive where
   renderRef ODate   = pure "Aeson.Encode.date"
   renderRef OFloat  = pure "Aeson.Encode.float"
   renderRef OInt    = pure "Aeson.Encode.int"
+  renderRef OInt32  = pure "Aeson.Encode.int32"
   renderRef OString = pure "Aeson.Encode.string"
   renderRef OUnit   = pure "Aeson.Encode.null"
 
@@ -314,10 +315,10 @@ instance HasEncoderRef OCamlPrimitive where
     dd <- renderRef datatype
     pure . parens $ "Aeson.Encode.optional" <+> dd
 
-  renderRef (OEither t0 t1) = do
-    dt0 <- renderRef t0
-    dt1 <- renderRef t1
-    pure . parens $ "Aeson.Encode.either" <+> dt0 <+> dt1
+  renderRef (OEither l r) = do
+    dl <- renderRef l
+    dr <- renderRef r
+    pure . parens $ "Aeson.Encode.either" <+> dl <+> dr
 
   renderRef (OTuple2 t0 t1) = do
     dt0 <- renderRef t0

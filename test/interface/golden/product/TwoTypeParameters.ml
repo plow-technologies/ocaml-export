@@ -21,5 +21,5 @@ let decodeTwoTypeParameters decodeA0 decodeA1 json =
     ; ttpThird = field "ttpThird" (pair (fun a -> unwrapResult (decodeA0 a)) (fun a -> unwrapResult (decodeA1 a))) json
     }
   with
-  | v -> Js_result.Ok v
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeTwoTypeParameters: " ^ message)
+  | v -> Belt.Result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeTwoTypeParameters: " ^ message)

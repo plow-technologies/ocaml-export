@@ -15,5 +15,5 @@ let decodeSimple json =
     ; sb = field "sb" string json
     }
   with
-  | v -> Js_result.Ok v
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeSimple: " ^ message)
+  | v -> Belt.Result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeSimple: " ^ message)

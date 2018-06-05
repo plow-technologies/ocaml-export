@@ -118,6 +118,7 @@ data OCamlPrimitive
   | ODate -- ^ Js_date.t
   | OFloat -- ^ float
   | OInt -- ^ int
+  | OInt32 -- ^ int32
   | OString -- ^ string
   | OUnit -- ^ ()
   | OList OCamlDatatype -- ^ 'a list, 'a Js_array.t
@@ -323,7 +324,7 @@ primitiveTypeRepToOCamlPrimitive t =
       [ ( typeRepTyCon $ typeRep (Proxy :: Proxy Int), OInt)
       , ( typeRepTyCon $ typeRep (Proxy :: Proxy Int8), OInt)
       , ( typeRepTyCon $ typeRep (Proxy :: Proxy Int16), OInt)
-      , ( typeRepTyCon $ typeRep (Proxy :: Proxy Int32), OInt)
+      , ( typeRepTyCon $ typeRep (Proxy :: Proxy Int32), OInt32)
       , ( typeRepTyCon $ typeRep (Proxy :: Proxy Int64), OInt)
       , ( typeRepTyCon $ typeRep (Proxy :: Proxy Integer), OInt)
       , ( typeRepTyCon $ typeRep (Proxy :: Proxy Word), OInt)
@@ -447,7 +448,7 @@ instance OCamlType Int16 where
   toOCamlType _ = OCamlPrimitive OInt
 
 instance OCamlType Int32 where
-  toOCamlType _ = OCamlPrimitive OInt
+  toOCamlType _ = OCamlPrimitive OInt32
 
 instance OCamlType Int64 where
   toOCamlType _ = OCamlPrimitive OInt

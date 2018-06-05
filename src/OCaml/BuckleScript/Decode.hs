@@ -79,13 +79,13 @@ instance HasDecoderInterface OCamlDatatype where
     let typeParameterInterfaces = linesBetween $ catMaybes (renderSumRecordInterface typeName . OCamlValueConstructor <$> constructors)
         (typeParameterEncoders, typeParameters) = renderTypeParameterVals constructor
     pure $ typeParameterInterfaces
-      <$$> "val" <+> fnName <+> ":" <+> typeParameterEncoders <> "Js_json.t ->" <+> "(" <> typeParameters <> (stext . textLowercaseFirst $ typeName) <> ", string)" <+> "Js_result.t"
+      <$$> "val" <+> fnName <+> ":" <+> typeParameterEncoders <> "Js_json.t ->" <+> "(" <> typeParameters <> (stext . textLowercaseFirst $ typeName) <> ", string)" <+> "Belt.Result.t"
     
 
   renderInterface datatype@(OCamlDatatype _ typeName constructors) = do
     fnName <- renderRef datatype
     let (typeParameterEncoders, typeParameters) = renderTypeParameterVals constructors
-    pure $ "val" <+> fnName <+> ":" <+> typeParameterEncoders <> "Js_json.t ->" <+> "(" <> typeParameters <> (stext . textLowercaseFirst $ typeName) <> ", string)" <+> "Js_result.t"
+    pure $ "val" <+> fnName <+> ":" <+> typeParameterEncoders <> "Js_json.t ->" <+> "(" <> typeParameters <> (stext . textLowercaseFirst $ typeName) <> ", string)" <+> "Belt.Result.t"
 
   renderInterface _ = pure ""
 
@@ -104,12 +104,12 @@ instance HasDecoder OCamlDatatype where
       else do
         let (typeParameterSignatures,typeParameters) = renderTypeParameters constructor
         pure $ typeParameterDeclarations <$$>
-          ("let" <+> fnName <+> typeParameterSignatures <+> "(json : Js_json.t)" <+> typeParameters <> ":(" <> stext (textLowercaseFirst typeName) <> ", string) Js_result.t =") <$$>
+          ("let" <+> fnName <+> typeParameterSignatures <+> "(json : Js_json.t)" <+> typeParameters <> ":(" <> stext (textLowercaseFirst typeName) <> ", string) Belt.Result.t =") <$$>
           (indent 2 ("match Aeson.Decode.(field \"tag\" string json) with" <$$> foldl1 (<$$>) fnBody <$$> fnFooter))
     where
       fnFooter =
-              "| err -> Js_result.Error (\"Unknown tag value found '\" ^ err ^ \"'.\")"
-         <$$> "| exception Aeson.Decode.DecodeError message -> Js_result.Error message"
+              "| err -> Belt.Result.Error (\"Unknown tag value found '\" ^ err ^ \"'.\")"
+         <$$> "| exception Aeson.Decode.DecodeError message -> Belt.Result.Error message"
 
 
   render datatype@(OCamlDatatype _ name constructor@(OCamlEnumeratorConstructor constructors)) = do
@@ -123,14 +123,14 @@ instance HasDecoder OCamlDatatype where
           <$$> foldl1 (<$$>) fnBody <$$> fnFooter fnName)
       else do
         let (typeParameterSignatures,typeParameters) = renderTypeParameters constructor
-            returnType =  "(" <> typeParameters <> (stext . textLowercaseFirst $ name) <> ", string) Js_result.t ="
+            returnType =  "(" <> typeParameters <> (stext . textLowercaseFirst $ name) <> ", string) Belt.Result.t ="
         pure $ "let" <+> fnName <+> typeParameterSignatures <+>"(json : Js_json.t) :" <> returnType
           <$$> indent 2 ("match Js_json.decodeString json with"
           <$$> foldl1 (<$$>) fnBody <$$> fnFooter fnName)
     where
       fnFooter fnName
-        =    "| Some err -> Js_result.Error (\"" <> fnName <> ": unknown enumeration '\" ^ err ^ \"'.\")"
-        <$$> "| None -> Js_result.Error \"" <> fnName <> ": expected a top-level JSON string.\""
+        =    "| Some err -> Belt.Result.Error (\"" <> fnName <> ": unknown enumeration '\" ^ err ^ \"'.\")"
+        <$$> "| None -> Belt.Result.Error \"" <> fnName <> ": expected a top-level JSON string.\""
       
   render datatype@(OCamlDatatype _ name constructor) = do
     fnName <- renderRef datatype
@@ -143,7 +143,7 @@ instance HasDecoder OCamlDatatype where
         pure $ "let" <+> fnName <+> renderedTypeParameters <+> "json" <+> "=" <$$> fnBody
       else do
         let (typeParameterSignatures,typeParameters) = renderTypeParameters constructor
-            returnType = "(" <> typeParameters <> (stext . textLowercaseFirst $ name) <> ", string) Js_result.t ="
+            returnType = "(" <> typeParameters <> (stext . textLowercaseFirst $ name) <> ", string) Belt.Result.t ="
         pure $ "let" <+> fnName <+> typeParameterSignatures <+> "(json : Js_json.t) :" <> returnType <$$> fnBody
 
   render (OCamlPrimitive primitive) = renderRef primitive
@@ -195,11 +195,11 @@ instance HasDecoder OCamlConstructor where
         indent 2 $ "match Js.Json.decodeArray json with"
         <$$> "| Some v ->"
         <$$> (indent 2 v)
-        <$$> "| None -> Js_result.Error (\"" <> (stext name) <+> "expected an array.\")"
+        <$$> "| None -> Belt.Result.Error (\"" <> (stext name) <+> "expected an array.\")"
       else
         indent 2 $ "match Aeson.Decode." <> decoder <+> "json" <+> "with"
-        <$$> "| v -> Js_result.Ok" <+> parens (stext name <+> "v")
-        <$$> "| exception Aeson.Decode.DecodeError msg -> Js_result.Error (\"decode" <> (stext . textUppercaseFirst $ name) <> ": \" ^ msg)"
+        <$$> "| v -> Belt.Result.Ok" <+> parens (stext name <+> "v")
+        <$$> "| exception Aeson.Decode.DecodeError msg -> Belt.Result.Error (\"decode" <> (stext . textUppercaseFirst $ name) <> ": \" ^ msg)"
 
   render (OCamlValueConstructor (RecordConstructor name value)) = do
     decoders <- render value
@@ -207,8 +207,8 @@ instance HasDecoder OCamlConstructor where
          $ "  match Aeson.Decode."
       <$$> (indent 4 ("{" <+> decoders <$$> "}"))
       <$$> "  with"
-      <$$> "  | v -> Js_result.Ok v"
-      <$$> "  | exception Aeson.Decode.DecodeError message -> Js_result.Error (\"decode" <> (stext . textUppercaseFirst $ name) <> ": \" ^ message)"
+      <$$> "  | v -> Belt.Result.Ok v"
+      <$$> "  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error (\"decode" <> (stext . textUppercaseFirst $ name) <> ": \" ^ message)"
 
   render (OCamlValueConstructor (MultipleConstructors constructors)) = do
     decoders <- mapM (renderSum . OCamlValueConstructor) constructors
@@ -216,8 +216,8 @@ instance HasDecoder OCamlConstructor where
       <$$> indent 2 (foldl (<$$>) "" decoders)
       <$$> indent 2 fnFooter
     where
-      fnFooter = "| err -> Js_result.Error (\"Unknown tag value found '\" ^ err ^ \"'.\")"
-            <$$> "| exception Aeson.Decode.DecodeError message -> Js_result.Error message"
+      fnFooter = "| err -> Belt.Result.Error (\"Unknown tag value found '\" ^ err ^ \"'.\")"
+            <$$> "| exception Aeson.Decode.DecodeError message -> Belt.Result.Error message"
 
   render _ = pure ""
     
@@ -262,7 +262,7 @@ instance HasDecoder OCamlValue where
   render OCamlEmpty = pure ""
 
 instance HasDecoder EnumeratorConstructor where
-  render (EnumeratorConstructor name) = pure $ "| Some \"" <> stext name <> "\" -> Js_result.Ok" <+> stext name
+  render (EnumeratorConstructor name) = pure $ "| Some \"" <> stext name <> "\" -> Belt.Result.Ok" <+> stext name
 
 instance HasDecoderRef OCamlValue where
   renderRef (OCamlRefAppValues x y) = do
@@ -280,6 +280,7 @@ instance HasDecoderRef OCamlPrimitive where
   renderRef ODate = pure "date"
   renderRef OFloat = pure "Aeson.Decode.float" -- this is to prevent overshadowing warning
   renderRef OInt = pure "int"
+  renderRef OInt32 = pure "int32"
   renderRef OString = pure "string"
   renderRef OUnit = pure $ parens "()"
   renderRef (OList (OCamlPrimitive OChar)) = pure "string"
@@ -292,10 +293,10 @@ instance HasDecoderRef OCamlPrimitive where
     dv0 <- renderRefWithUnwrapResult v0
     pure . parens $ "optional" <+> dv0
 
-  renderRef (OEither v0 v1) = do
-    dv0 <- renderRefWithUnwrapResult v0
-    dv1 <- renderRefWithUnwrapResult v1
-    pure $ parens $ "either" <+> dv0 <+> dv1
+  renderRef (OEither l r) = do
+    dl <- renderRefWithUnwrapResult l
+    dr <- renderRefWithUnwrapResult r
+    pure $ parens $ "either" <+> dl <+> dr
 
   renderRef (OTuple2 v0 v1) = do
     dv0 <- renderRefWithUnwrapResult v0
@@ -342,7 +343,7 @@ renderSumRecord typeName (OCamlValueConstructor (RecordConstructor name value)) 
     then
       pure $ Just $ "let decode" <> stext sumRecordName <+> "json =" <$$> fnBody
     else
-      pure $ Just $ "let decode" <> stext sumRecordName <+> "(json : Js_json.t)" <+> ":(" <> (stext $ textLowercaseFirst sumRecordName) <> ", string)" <+> "Js_result.t =" <$$> fnBody
+      pure $ Just $ "let decode" <> stext sumRecordName <+> "(json : Js_json.t)" <+> ":(" <> (stext $ textLowercaseFirst sumRecordName) <> ", string)" <+> "Belt.Result.t =" <$$> fnBody
 
 renderSumRecord _ _ = return Nothing
 
@@ -402,7 +403,7 @@ renderSumCondition name contents = do
 -- | Render a sum type constructor in context of a data type with multiple
 -- constructors.
 renderSum :: OCamlConstructor -> Reader TypeMetaData Doc
-renderSum (OCamlValueConstructor (NamedConstructor name OCamlEmpty)) = renderSumCondition name ("Js_result.Ok" <+> stext name) 
+renderSum (OCamlValueConstructor (NamedConstructor name OCamlEmpty)) = renderSumCondition name ("Belt.Result.Ok" <+> stext name) 
 renderSum (OCamlValueConstructor (NamedConstructor name v@(Values _ _))) = do
   val <- rArgs name v
   renderSumCondition name val
@@ -415,8 +416,8 @@ renderSum (OCamlValueConstructor (NamedConstructor name value)) = do
     ("match Aeson.Decode." <> parens ("field \"contents\"" <+> (unwrapIfTypeParameter value val) <+> "json") <+> "with"
       <$$>
         indent 1
-          (    "| v -> Js_result.Ok (" <> (stext name) <+> "v)"
-          <$$> "| exception Aeson.Decode.DecodeError message -> Js_result.Error (\"" <> (stext jsonConstructorName) <> ": \" ^ message)"
+          (    "| v -> Belt.Result.Ok (" <> (stext name) <+> "v)"
+          <$$> "| exception Aeson.Decode.DecodeError message -> Belt.Result.Error (\"" <> (stext jsonConstructorName) <> ": \" ^ message)"
           )           <> line
     )
 
@@ -441,8 +442,8 @@ renderOutsideEncoder typeName name =
   pure $
         "|" <+> (dquotes . stext $ name) <+> "->"
    <$$> indent 3 ("(match" <+> "decode" <> (stext $ typeName <> textUppercaseFirst name) <+> "json" <+> "with"
-   <$$> indent 1 ("| Js_result.Ok v -> Js_result.Ok" <+> (parens ((stext $ textUppercaseFirst name) <+> "v"))
-   <$$> "| Js_result.Error message -> Js_result.Error" <+> (parens $ (dquotes $ "decode" <> stext typeName <> ": ") <+> "^ message"))
+   <$$> indent 1 ("| Belt.Result.Ok v -> Belt.Result.Ok" <+> (parens ((stext $ textUppercaseFirst name) <+> "v"))
+   <$$> "| Belt.Result.Error message -> Belt.Result.Error" <+> (parens $ (dquotes $ "decode" <> stext typeName <> ": ") <+> "^ message"))
    <$$> ")")
 
 
@@ -460,14 +461,14 @@ rArgs name vals = do
     parens $ "match Aeson.Decode.(field \"contents\" Js.Json.decodeArray json) with"
     <$$> (indent 1 "| Some v ->"
     <$$> (indent 3 v)
-    <$$> (indent 1 "| None -> Js_result.Error (\"" <> (stext name) <+> "expected an array.\")" )) <> line
+    <$$> (indent 1 "| None -> Belt.Result.Error (\"" <> (stext name) <+> "expected an array.\")" )) <> line
 
 mk :: Text -> Int -> [Maybe OCamlValue] -> Reader TypeMetaData Doc
 mk name i [x] =
   case x of
     Nothing -> do
       let ts = foldl (<>) "" $ L.intersperse ", " ((stext . T.append "v" . T.pack . show) <$> [0..i-1])
-      pure $ indent 1 $ "Js_result.Ok" <+> parens (stext name <+> parens ts)
+      pure $ indent 1 $ "Belt.Result.Ok" <+> parens (stext name <+> parens ts)
     Just _ -> pure ""
 mk name i (x:xs) =
   case x of
@@ -480,7 +481,7 @@ mk name i (x:xs) =
         <$$>
           indent 1
             ("| v" <> iDoc <+> "->" <$$> (indent 2 renderedInternal)
-            <$$> "| exception Aeson.Decode.DecodeError message -> Js_result.Error (\"" <> (stext name) <> ": \" ^ message)"
+            <$$> "| exception Aeson.Decode.DecodeError message -> Belt.Result.Error (\"" <> (stext name) <> ": \" ^ message)"
             )
         <$$> ")"
 
@@ -489,7 +490,7 @@ mk _name _i [] = pure ""
 renderTypeParameterValsAux :: [OCamlValue] -> (Doc,Doc)
 renderTypeParameterValsAux ocamlValues =
   let typeParameterNames = (<>) "'" <$> (L.sort $ getTypeParameterRefNames ocamlValues)
-      typeDecs = (foldl (<>) "" $ L.intersperse " -> " $ (\t -> "(Js_json.t -> (" <> (stext t) <> ", string) Js_result.t)") <$> typeParameterNames) <> " -> "
+      typeDecs = (foldl (<>) "" $ L.intersperse " -> " $ (\t -> "(Js_json.t -> (" <> (stext t) <> ", string) Belt.Result.t)") <$> typeParameterNames) <> " -> "
   in
       if length typeParameterNames > 0
       then
@@ -508,7 +509,7 @@ renderTypeParametersAux :: [OCamlValue] -> (Doc,Doc)
 renderTypeParametersAux ocamlValues = do
   let typeParameterNames = getTypeParameterRefNames ocamlValues
       typeDecs = (\t -> "(type " <> (stext t) <> ")") <$> typeParameterNames :: [Doc]
-      encoderDecs  = (\t -> "(decode" <> (stext $ textUppercaseFirst t) <+> ":" <+> "Js_json.t -> (" <> (stext t) <> ", string) Js_result.t)" ) <$> typeParameterNames :: [Doc]
+      encoderDecs  = (\t -> "(decode" <> (stext $ textUppercaseFirst t) <+> ":" <+> "Js_json.t -> (" <> (stext t) <> ", string) Belt.Result.t)" ) <$> typeParameterNames :: [Doc]
       typeParams = foldl (<>) "" $ if length typeParameterNames > 1 then  ["("] <> (L.intersperse ", " $ stext <$> typeParameterNames) <> [") "] else ((\x -> stext $ x <> " ") <$> typeParameterNames) :: [Doc]
   (foldl (<+>) "" (typeDecs ++ encoderDecs), typeParams )
 
@@ -525,7 +526,7 @@ renderTypeParameters _ = ("","")
 -- | Render an OCaml val interface for a record constructor in a sum of records
 renderSumRecordInterface :: Text -> OCamlConstructor -> Maybe Doc
 renderSumRecordInterface typeName (OCamlValueConstructor (RecordConstructor name _value)) =
-  Just $ "val decode" <> (stext $ typeName <> name) <+> ":" <+> "Js_json.t" <+> "->" <+> parens (stext (textLowercaseFirst $ typeName <> name) <> comma <+> "string") <+> "Js_result.t"
+  Just $ "val decode" <> (stext $ typeName <> name) <+> ":" <+> "Js_json.t" <+> "->" <+> parens (stext (textLowercaseFirst $ typeName <> name) <> comma <+> "string") <+> "Belt.Result.t"
 renderSumRecordInterface _ _ = Nothing
 
 -- | If this type comes from a different OCaml module, then add the appropriate module prefix and add unwrapResult to make the

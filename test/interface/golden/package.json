@@ -8,21 +8,18 @@
     "build": "bsb -make-world",
     "start": "bsb -make-world -w",
     "clean": "bsb -clean-world",
-    "test": "npm run build && jest",
-    "watch:bsb": "bsb -make-world -w",
-    "watch:jest": "jest --watchAll",
-    "watch:screen": "screen -c .screenrc"
+    "test": "npm run build && jest"
   },
   "keywords": [],
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "bs-aeson": "^1.1.0",
-    "bs-platform": "^2.2.0"
+    "bs-aeson": "^3.0.0"
   },
   "devDependencies": {
-    "bs-aeson-spec": "^1.2.1",
-    "@glennsl/bs-jest": "^0.4.1",
+    "bs-aeson-spec": "^2.0.0",
+    "bs-platform": "^3.1.5",
+    "@glennsl/bs-jest": "^0.4.2",
     "bs-node": "github:buckletypes/bs-node"
   }
 }

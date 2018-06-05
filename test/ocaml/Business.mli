@@ -7,4 +7,4 @@ type business =
 
 val encodeBusiness : business -> Js_json.t
 
-val decodeBusiness : Js_json.t -> (business, string) Js_result.t
+val decodeBusiness : Js_json.t -> (business, string) Belt.Result.t

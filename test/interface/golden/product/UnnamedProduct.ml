@@ -13,9 +13,9 @@ let decodeUnnamedProduct json =
       | v0 ->
          (match Aeson.Decode.int v.(1) with
           | v1 ->
-             Js_result.Ok (UnnamedProduct (v0, v1))
-          | exception Aeson.Decode.DecodeError message -> Js_result.Error ("UnnamedProduct: " ^ message)
+             Belt.Result.Ok (UnnamedProduct (v0, v1))
+          | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("UnnamedProduct: " ^ message)
          )
-      | exception Aeson.Decode.DecodeError message -> Js_result.Error ("UnnamedProduct: " ^ message)
+      | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("UnnamedProduct: " ^ message)
      )
-  | None -> Js_result.Error ("UnnamedProduct expected an array.")
+  | None -> Belt.Result.Error ("UnnamedProduct expected an array.")

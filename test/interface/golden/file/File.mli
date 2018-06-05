@@ -5,7 +5,7 @@ type person =
 
 val encodePerson : person -> Js_json.t
 
-val decodePerson : Js_json.t -> (person, string) Js_result.t
+val decodePerson : Js_json.t -> (person, string) Belt.Result.t
 
 
 type automobile =
@@ -16,7 +16,7 @@ type automobile =
 
 val encodeAutomobile : automobile -> Js_json.t
 
-val decodeAutomobile : Js_json.t -> (automobile, string) Js_result.t
+val decodeAutomobile : Js_json.t -> (automobile, string) Belt.Result.t
 
 type business =
   { taxId : string
@@ -27,7 +27,7 @@ type business =
 
 val encodeBusiness : business -> Js_json.t
 
-val decodeBusiness : Js_json.t -> (business, string) Js_result.t
+val decodeBusiness : Js_json.t -> (business, string) Belt.Result.t
 
 
 type ('a, 'b) wrapper =
@@ -38,7 +38,7 @@ type ('a, 'b) wrapper =
 
 val encodeWrapper : ('a -> Js_json.t) -> ('b -> Js_json.t) -> ('a, 'b) wrapper -> Js_json.t
 
-val decodeWrapper : (Js_json.t -> ('a, string) Js_result.t) -> (Js_json.t -> ('b, string) Js_result.t) -> Js_json.t -> (('a, 'b) wrapper, string) Js_result.t
+val decodeWrapper : (Js_json.t -> ('a, string) Belt.Result.t) -> (Js_json.t -> ('b, string) Belt.Result.t) -> Js_json.t -> (('a, 'b) wrapper, string) Belt.Result.t
 
 
 type autoDependingOnManual =
@@ -48,7 +48,7 @@ type autoDependingOnManual =
 
 val encodeAutoDependingOnManual : autoDependingOnManual -> Js_json.t
 
-val decodeAutoDependingOnManual : Js_json.t -> (autoDependingOnManual, string) Js_result.t
+val decodeAutoDependingOnManual : Js_json.t -> (autoDependingOnManual, string) Belt.Result.t
 
 type nonGenericType =
   { ngA : string
@@ -57,5 +57,5 @@ type nonGenericType =
 
 val encodeNonGenericType : nonGenericType -> Js_json.t
 
-val decodeNonGenericType : Js_json.t -> (nonGenericType, string) Js_result.t
+val decodeNonGenericType : Js_json.t -> (nonGenericType, string) Belt.Result.t
 

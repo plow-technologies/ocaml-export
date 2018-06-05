@@ -3,4 +3,4 @@ type unnamedProduct =
 
 val encodeUnnamedProduct : unnamedProduct -> Js_json.t
 
-val decodeUnnamedProduct : Js_json.t -> (unnamedProduct, string) Js_result.t
+val decodeUnnamedProduct : Js_json.t -> (unnamedProduct, string) Belt.Result.t

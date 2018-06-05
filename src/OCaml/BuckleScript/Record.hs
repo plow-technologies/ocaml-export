@@ -213,6 +213,7 @@ instance HasTypeRef OCamlPrimitive where
   renderRef ODate   = pure "Js_date.t"
   renderRef OFloat  = pure "float"
   renderRef OInt    = pure "int"
+  renderRef OInt32  = pure "int32"
   renderRef OString = pure "string"
   renderRef OUnit   = pure "unit"
 
@@ -226,10 +227,10 @@ instance HasTypeRef OCamlPrimitive where
     dt <- renderRef datatype
     pure $ parens dt <+> "option"
 
-  renderRef (OEither k v) = do
-    dk <- renderRef k
-    dv <- renderRef v
-    pure $ (parens $ dk <> comma <+> dv) <+> "Aeson.Compatibility.Either.t"
+  renderRef (OEither l r) = do
+    dl <- renderRef l
+    dr <- renderRef r
+    pure $ (parens $ dl <> comma <+> dr) <+> "Aeson.Compatibility.Either.t"
 
   renderRef (OTuple2 a b) = do
     da <- renderRef a

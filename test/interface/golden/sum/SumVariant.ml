@@ -41,18 +41,18 @@ let encodeSumVariant x =
 let decodeSumVariant json =
   match Aeson.Decode.(field "tag" string json) with
   | "HasNothing" ->
-     Js_result.Ok HasNothing
+     Belt.Result.Ok HasNothing
 
   | "HasSingleInt" ->
      (match Aeson.Decode.(field "contents" int json) with
-      | v -> Js_result.Ok (HasSingleInt v)
-      | exception Aeson.Decode.DecodeError message -> Js_result.Error ("HasSingleInt: " ^ message)
+      | v -> Belt.Result.Ok (HasSingleInt v)
+      | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("HasSingleInt: " ^ message)
      )
 
   | "HasSingleTuple" ->
      (match Aeson.Decode.(field "contents" (pair int int) json) with
-      | v -> Js_result.Ok (HasSingleTuple v)
-      | exception Aeson.Decode.DecodeError message -> Js_result.Error ("HasSingleTuple: " ^ message)
+      | v -> Belt.Result.Ok (HasSingleTuple v)
+      | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("HasSingleTuple: " ^ message)
      )
   | "HasMultipleInts" ->
      (match Aeson.Decode.(field "contents" Js.Json.decodeArray json) with
@@ -61,12 +61,12 @@ let decodeSumVariant json =
           | v0 ->
              (match Aeson.Decode.int v.(1) with
               | v1 ->
-                 Js_result.Ok (HasMultipleInts (v0, v1))
-              | exception Aeson.Decode.DecodeError message -> Js_result.Error ("HasMultipleInts: " ^ message)
+                 Belt.Result.Ok (HasMultipleInts (v0, v1))
+              | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("HasMultipleInts: " ^ message)
              )
-          | exception Aeson.Decode.DecodeError message -> Js_result.Error ("HasMultipleInts: " ^ message)
+          | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("HasMultipleInts: " ^ message)
          )
-      | None -> Js_result.Error ("HasMultipleInts expected an array.")
+      | None -> Belt.Result.Error ("HasMultipleInts expected an array.")
      )
 
   | "HasMultipleTuples" ->
@@ -76,12 +76,12 @@ let decodeSumVariant json =
           | v0 ->
              (match Aeson.Decode.(pair int int) v.(1) with
               | v1 ->
-                 Js_result.Ok (HasMultipleTuples (v0, v1))
-              | exception Aeson.Decode.DecodeError message -> Js_result.Error ("HasMultipleTuples: " ^ message)
+                 Belt.Result.Ok (HasMultipleTuples (v0, v1))
+              | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("HasMultipleTuples: " ^ message)
              )
-          | exception Aeson.Decode.DecodeError message -> Js_result.Error ("HasMultipleTuples: " ^ message)
+          | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("HasMultipleTuples: " ^ message)
          )
-      | None -> Js_result.Error ("HasMultipleTuples expected an array.")
+      | None -> Belt.Result.Error ("HasMultipleTuples expected an array.")
      )
 
   | "HasMixed" ->
@@ -93,14 +93,14 @@ let decodeSumVariant json =
               | v1 ->
                  (match Aeson.Decode.float v.(2) with
                   | v2 ->
-                     Js_result.Ok (HasMixed (v0, v1, v2))
-                  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("HasMixed: " ^ message)
+                     Belt.Result.Ok (HasMixed (v0, v1, v2))
+                  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("HasMixed: " ^ message)
                  )
-              | exception Aeson.Decode.DecodeError message -> Js_result.Error ("HasMixed: " ^ message)
+              | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("HasMixed: " ^ message)
              )
-          | exception Aeson.Decode.DecodeError message -> Js_result.Error ("HasMixed: " ^ message)
+          | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("HasMixed: " ^ message)
          )
-      | None -> Js_result.Error ("HasMixed expected an array.")
+      | None -> Belt.Result.Error ("HasMixed expected an array.")
      )
-  | err -> Js_result.Error ("Unknown tag value found '" ^ err ^ "'.")
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error message
+  | err -> Belt.Result.Error ("Unknown tag value found '" ^ err ^ "'.")
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error message

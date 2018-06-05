@@ -15,5 +15,5 @@ let decodeOneTypeParameter decodeA0 json =
     ; otpFirst = field "otpFirst" (fun a -> unwrapResult (decodeA0 a)) json
     }
   with
-  | v -> Js_result.Ok v
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeOneTypeParameter: " ^ message)
+  | v -> Belt.Result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeOneTypeParameter: " ^ message)

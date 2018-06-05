@@ -17,12 +17,12 @@ let encodeSuit x =
 
 let decodeSuit json =
   match Js_json.decodeString json with
-  | Some "Clubs" -> Js_result.Ok Clubs
-  | Some "Diamonds" -> Js_result.Ok Diamonds
-  | Some "Hearts" -> Js_result.Ok Hearts
-  | Some "Spades" -> Js_result.Ok Spades
-  | Some err -> Js_result.Error ("decodeSuit: unknown enumeration '" ^ err ^ "'.")
-  | None -> Js_result.Error "decodeSuit: expected a top-level JSON string."
+  | Some "Clubs" -> Belt.Result.Ok Clubs
+  | Some "Diamonds" -> Belt.Result.Ok Diamonds
+  | Some "Hearts" -> Belt.Result.Ok Hearts
+  | Some "Spades" -> Belt.Result.Ok Spades
+  | Some err -> Belt.Result.Error ("decodeSuit: unknown enumeration '" ^ err ^ "'.")
+  | None -> Belt.Result.Error "decodeSuit: expected a top-level JSON string."
 
 type card =
   { cardSuit : suit
@@ -41,5 +41,5 @@ let decodeCard json =
     ; cardValue = field "cardValue" int json
     }
   with
-  | v -> Js_result.Ok v
-  | exception Aeson.Decode.DecodeError message -> Js_result.Error ("decodeCard: " ^ message)
+  | v -> Belt.Result.Ok v
+  | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeCard: " ^ message)

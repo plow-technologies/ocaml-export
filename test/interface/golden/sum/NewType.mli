@@ -3,4 +3,4 @@ type newType =
 
 val encodeNewType : newType -> Js_json.t
 
-val decodeNewType : Js_json.t -> (newType, string) Js_result.t
+val decodeNewType : Js_json.t -> (newType, string) Belt.Result.t

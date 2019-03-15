@@ -15,7 +15,7 @@ module OCaml.Internal.Common where
 -- base
 import Data.Char (toLower,toUpper)
 import qualified Data.List as L
-import Data.Monoid
+import Data.Monoid ((<>))
 
 -- aeson
 import qualified Data.Aeson.Types as Aeson (Options(..), defaultOptions)
@@ -35,7 +35,7 @@ import qualified Data.Text as T
 import qualified Data.Text.Lazy as LT
 
 -- wl-pprint
-import Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
+import Text.PrettyPrint.Leijen.Text hiding ((<>), (<$>))
 
 
 -- | For URLs and POSIX systems.

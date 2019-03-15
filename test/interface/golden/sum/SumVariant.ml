@@ -5,6 +5,7 @@ type sumVariant =
   | HasMultipleInts of int * int
   | HasMultipleTuples of (int * int) * (int * int)
   | HasMixed of int * string * float
+  | HasNameOrIdNumber of NameOrIdNumber.nameOrIdNumber * int
 
 let encodeSumVariant x =
   match x with
@@ -37,6 +38,11 @@ let encodeSumVariant x =
        [ ( "tag", Aeson.Encode.string "HasMixed" )
        ; ( "contents", Aeson.Encode.array [| Aeson.Encode.int y0 ; Aeson.Encode.string y1 ; Aeson.Encode.float y2 |] )
        ]
+  | HasNameOrIdNumber (y0,y1) ->
+     Aeson.Encode.object_
+       [ ( "tag", Aeson.Encode.string "HasNameOrIdNumber" )
+       ; ( "contents", Aeson.Encode.array [| NameOrIdNumber.encodeNameOrIdNumber y0 ; Aeson.Encode.int y1 |] )
+       ]
 
 let decodeSumVariant json =
   match Aeson.Decode.(field "tag" string json) with
@@ -57,9 +63,9 @@ let decodeSumVariant json =
   | "HasMultipleInts" ->
      (match Aeson.Decode.(field "contents" Js.Json.decodeArray json) with
       | Some v ->
-         (match Aeson.Decode.int v.(0) with
+         (match Aeson.Decode.(int) v.(0) with
           | v0 ->
-             (match Aeson.Decode.int v.(1) with
+             (match Aeson.Decode.(int) v.(1) with
               | v1 ->
                  Belt.Result.Ok (HasMultipleInts (v0, v1))
               | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("HasMultipleInts: " ^ message)
@@ -72,9 +78,9 @@ let decodeSumVariant json =
   | "HasMultipleTuples" ->
      (match Aeson.Decode.(field "contents" Js.Json.decodeArray json) with
       | Some v ->
-         (match Aeson.Decode.(pair int int) v.(0) with
+         (match Aeson.Decode.((pair int int)) v.(0) with
           | v0 ->
-             (match Aeson.Decode.(pair int int) v.(1) with
+             (match Aeson.Decode.((pair int int)) v.(1) with
               | v1 ->
                  Belt.Result.Ok (HasMultipleTuples (v0, v1))
               | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("HasMultipleTuples: " ^ message)
@@ -87,11 +93,11 @@ let decodeSumVariant json =
   | "HasMixed" ->
      (match Aeson.Decode.(field "contents" Js.Json.decodeArray json) with
       | Some v ->
-         (match Aeson.Decode.int v.(0) with
+         (match Aeson.Decode.(int) v.(0) with
           | v0 ->
-             (match Aeson.Decode.string v.(1) with
+             (match Aeson.Decode.(string) v.(1) with
               | v1 ->
-                 (match Aeson.Decode.float v.(2) with
+                 (match Aeson.Decode.(Aeson.Decode.float) v.(2) with
                   | v2 ->
                      Belt.Result.Ok (HasMixed (v0, v1, v2))
                   | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("HasMixed: " ^ message)
@@ -101,6 +107,21 @@ let decodeSumVariant json =
           | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("HasMixed: " ^ message)
          )
       | None -> Belt.Result.Error ("HasMixed expected an array.")
+     )
+
+  | "HasNameOrIdNumber" ->
+     (match Aeson.Decode.(field "contents" Js.Json.decodeArray json) with
+      | Some v ->
+         (match Aeson.Decode.((fun a -> unwrapResult (NameOrIdNumber.decodeNameOrIdNumber a))) v.(0) with
+          | v0 ->
+             (match Aeson.Decode.(int) v.(1) with
+              | v1 ->
+                 Belt.Result.Ok (HasNameOrIdNumber (v0, v1))
+              | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("HasNameOrIdNumber: " ^ message)
+             )
+          | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("HasNameOrIdNumber: " ^ message)
+         )
+      | None -> Belt.Result.Error ("HasNameOrIdNumber expected an array.")
      )
   | err -> Belt.Result.Error ("Unknown tag value found '" ^ err ^ "'.")
   | exception Aeson.Decode.DecodeError message -> Belt.Result.Error message

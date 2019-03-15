@@ -23,7 +23,7 @@ module OCaml.BuckleScript.Decode
 import Control.Monad.Reader
 import qualified Data.List as L
 import Data.Maybe (catMaybes)
-import Data.Monoid
+import Data.Monoid ((<>))
 import Data.Proxy (Proxy (..))        
 import Data.Typeable
 -- aeson
@@ -34,7 +34,7 @@ import qualified Data.Map.Strict as Map
 import Data.Text (Text)
 import qualified Data.Text as T
 -- wl-pprint
-import Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
+import Text.PrettyPrint.Leijen.Text hiding ((<>), (<$>))
 -- ocaml-export
 import OCaml.BuckleScript.Types hiding (getOCamlValues)
 import OCaml.Internal.Common
@@ -474,10 +474,10 @@ mk name i (x:xs) =
   case x of
     Nothing -> mk name i xs
     Just x' -> do
-      renderedVal <- render x'
+      renderedVal <- unwrapIfTypeParameter x' <$> render x'
       renderedInternal <- mk name (i+1) xs
       let iDoc = (stext . T.pack . show $ i)
-      pure $ indent 1 $ "(match" <+> (if oCamlValueIsFloat x' then "" else "Aeson.Decode.") <> renderedVal <+> ("v." <> parens iDoc) <+> "with"
+      pure $ indent 1 $ "(match" <+> "Aeson.Decode.(" <> renderedVal <> (") v." <> parens iDoc) <+> "with"
         <$$>
           indent 1
             ("| v" <> iDoc <+> "->" <$$> (indent 2 renderedInternal)

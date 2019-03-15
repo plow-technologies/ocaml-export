@@ -156,6 +156,7 @@ data SumVariant
   | HasMultipleInts Int Int
   | HasMultipleTuples (Int,Int) (Int,Int)
   | HasMixed Int String Double
+  | HasNameOrIdNumber NameOrIdNumber Int
   deriving (Show,Eq,Generic, OCamlType, ToJSON, FromJSON)
 
 instance Arbitrary SumVariant where
@@ -167,6 +168,7 @@ instance Arbitrary SumVariant where
       , HasMultipleInts <$> arbitrary <*> arbitrary
       , HasMultipleTuples <$> arbitrary <*> arbitrary
       , HasMixed <$> arbitrary <*> arbitrary <*> arbitrary
+      , HasNameOrIdNumber <$> arbitrary <*> arbitrary
       ]
 
 instance ToADTArbitrary SumVariant

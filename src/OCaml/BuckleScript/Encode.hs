@@ -23,7 +23,7 @@ module OCaml.BuckleScript.Encode
 import Control.Monad.Reader
 import qualified Data.List as L
 import Data.Maybe (catMaybes)
-import Data.Monoid
+import Data.Monoid ((<>))
 import Data.Proxy (Proxy (..))
 import Data.Typeable
 
@@ -38,7 +38,7 @@ import Data.Text (Text)
 import qualified Data.Text as T
 
 -- wl-pprint
-import Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
+import Text.PrettyPrint.Leijen.Text hiding ((<>), (<$>))
 
 -- ocaml-export
 import OCaml.BuckleScript.Types

@@ -9,7 +9,7 @@ module OCaml.BuckleScript.Spec
   ) where
 
 -- base
-import Data.Monoid
+import Data.Monoid ((<>))
 -- text
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -17,7 +17,7 @@ import qualified Data.Text as T
 import OCaml.BuckleScript.Types hiding (getOCamlValues)
 import OCaml.Internal.Common
 -- wl-pprint
-import Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>), (</>))
+import Text.PrettyPrint.Leijen.Text hiding ((<>), (<$>), (</>))
 
 mkSampleServerAndGoldenSpec :: OCamlDatatype -> Maybe Int -> [Text] -> Text -> Text -> Doc
 mkSampleServerAndGoldenSpec (OCamlDatatype _ typeName constructors) mParameterRefCount modules url goldenDir =

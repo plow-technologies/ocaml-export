@@ -21,7 +21,7 @@ module OCaml.BuckleScript.Record
 import Control.Monad.Reader
 import Data.List (nub, sort)
 import Data.Maybe (catMaybes)
-import Data.Monoid
+import Data.Monoid ((<>))
 import Data.Proxy (Proxy (..))
 import Data.Typeable
 
@@ -37,7 +37,7 @@ import Data.Text (Text)
 import qualified Data.Text as T
 
 -- wl-pprint
-import Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
+import Text.PrettyPrint.Leijen.Text hiding ((<>), (<$>))
 
 -- | Convert a 'Proxy a' into OCaml type source code.
 toOCamlTypeSourceWith :: forall a. OCamlType a => Options -> a -> T.Text

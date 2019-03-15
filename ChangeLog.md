@@ -1,5 +1,11 @@
 # Revision history for ocaml-export
 
+## 0.10.0.0 -- 2018-12-07
+
+* Support sum-type constructors with non-primitive types
+* Remove dodgy-imports warnings with latests wl.pprint text
+* addDependentFile for embedded files
+
 ## 0.9.0.0 -- 2018-06-03
 
 * Output BuckleScript code requires at least bs-platform 3.1.0.

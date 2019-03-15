@@ -81,9 +81,9 @@ instance HasType OCamlDatatype where
     fnBody <- render constructor
     pure $ "type" <+> typeParameters <+> fnName <+> "=" <$$> indent 2 fnBody
 
-  render datatype@(OCamlDatatype _ _ constructor) = do
+  render (OCamlDatatype _ typeName constructor) = do
     let typeParameters = renderTypeParameters constructor
-    fnName <- renderRef datatype
+    let fnName = stext . textLowercaseFirst $ typeName
     fnBody <- render constructor
     pure $ "type" <+> typeParameters <+> fnName <+> "=" <$$> indent 2 ("|" <+> fnBody)
 
@@ -129,6 +129,7 @@ instance HasTypeRef OCamlValue where
     dy <- render y
     pure $ dx <> comma <+> dy
 
+  renderRef (OCamlRef _metaData primitive) = pure $ stext primitive
   renderRef (OCamlPrimitiveRef primitive) = renderRef primitive
   renderRef _ = pure ""
             
@@ -175,7 +176,7 @@ instance HasType OCamlValue where
       Nothing -> fail $ "OCaml.BuckleScript.Record (HasType (OCamlDatatype typeRep name)) mOCamlTypeMetaData is Nothing:\n\n"
       Just ocamlTypeRef -> do
         ds <- asks (dependencies . userOptions)
-        dx <- renderRef values
+        dx <- render values
         pure $ (parensIfNotBlank dx) <+> (stext $ appendModule ds ocamlTypeRef (typeRepToHaskellTypeMetaData typRep) (T.pack . show $ typeRepTyCon typRep))
 
   render (OCamlTypeParameterRef name) = pure $ stext ("'" <> name)

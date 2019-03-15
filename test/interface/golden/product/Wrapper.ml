@@ -33,7 +33,7 @@ let decodeIntWrapped json =
   | exception Aeson.Decode.DecodeError message -> Belt.Result.Error ("decodeIntWrapped: " ^ message)
 
 type maybeWrapped =
-  { mw : ((int) option) wrapper
+  { mw : (((int) option)) wrapper
   }
 
 let encodeMaybeWrapped x =
@@ -86,7 +86,7 @@ let decodeComplexWrapped json =
 type sumWrapped =
   | SW1
   | SW2 of (int) wrapper
-  | SW3 of ((string) option) wrapper
+  | SW3 of (((string) option)) wrapper
   | SW4 of ((int, string) Aeson.Compatibility.Either.t) wrapper
 
 let encodeSumWrapped x =

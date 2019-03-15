@@ -54,3 +54,5 @@ spec = do
     compareInterfaceFiles "UnnamedProduct"
     compareInterfaceFiles "ComplexProduct"
     compareInterfaceFiles "Wrapper"
+    compareInterfaceFiles "Box"
+    compareInterfaceFiles "Key"

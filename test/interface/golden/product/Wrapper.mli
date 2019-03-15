@@ -15,7 +15,7 @@ val encodeIntWrapped : intWrapped -> Js_json.t
 val decodeIntWrapped : Js_json.t -> (intWrapped, string) Belt.Result.t
 
 type maybeWrapped =
-  { mw : ((int) option) wrapper
+  { mw : (((int) option)) wrapper
   }
 
 val encodeMaybeWrapped : maybeWrapped -> Js_json.t
@@ -41,7 +41,7 @@ val decodeComplexWrapped : Js_json.t -> (complexWrapped, string) Belt.Result.t
 type sumWrapped =
   | SW1
   | SW2 of (int) wrapper
-  | SW3 of ((string) option) wrapper
+  | SW3 of (((string) option)) wrapper
   | SW4 of ((int, string) Aeson.Compatibility.Either.t) wrapper
 
 val encodeSumWrapped : sumWrapped -> Js_json.t

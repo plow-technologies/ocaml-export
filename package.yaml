@@ -1,5 +1,5 @@
 name: ocaml-export
-version: 0.10.0.0
+version: 0.12.0.0
 synopsis: Convert Haskell types in OCaml types
 description: Use GHC.Generics and Typeable to convert Haskell types to OCaml types. Convert aeson serialization to ocaml.
 category: Web

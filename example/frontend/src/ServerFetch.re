@@ -61,8 +61,14 @@ module MakeServerFetch = (Config: ServerFetchConfig.Config) => {
       )
       |> then_(Fetch.Response.json)
       |> then_(json =>
-           SharedTypes.(
-             Aeson.Decode.array(decodeEntity(decodeTodoId, decodeTodo), json)
+           Aeson.Decode.withDefault(
+             [||],
+             Aeson.Decode.array(a =>
+               Aeson.Decode.unwrapResult(
+                 SharedTypes.(decodeEntity(decodeTodoId, decodeTodo, a)),
+               )
+             ),
+             json,
            )
            |> resolve
          )

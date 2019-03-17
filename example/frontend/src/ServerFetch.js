@@ -68,8 +68,10 @@ function MakeServerFetch(Config) {
     return fetch(url, Fetch.RequestInit[/* make */0](/* Get */0, Caml_option.some(headers), undefined, undefined, undefined, undefined, /* Include */2, undefined, undefined, undefined, undefined)(/* () */0)).then((function (prim) {
                     return prim.json();
                   })).then((function (json) {
-                  return Promise.resolve(Aeson_decode.array((function (param) {
-                                    return SharedTypes$Frontend.decodeEntity(SharedTypes$Frontend.decodeTodoId, SharedTypes$Frontend.decodeTodo, param);
+                  return Promise.resolve(Aeson_decode.withDefault(/* array */[], (function (param) {
+                                    return Aeson_decode.array((function (a) {
+                                                  return Aeson_decode.unwrapResult(SharedTypes$Frontend.decodeEntity(SharedTypes$Frontend.decodeTodoId, SharedTypes$Frontend.decodeTodo, a));
+                                                }), param);
                                   }), json));
                 }));
   };

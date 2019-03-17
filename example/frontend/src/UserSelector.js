@@ -18,14 +18,47 @@ var baseUrl = ServerFetchConfig$Frontend.config[/* baseUrl */0];
 var Fetch = ServerFetch$Frontend.MakeServerFetch(/* module */[/* baseUrl */baseUrl]);
 
 function initialState(param) {
-  return /* record */[/* users : array */[]];
+  return /* record */[
+          /* users : array */[],
+          /* page : UsersPage */0,
+          /* todos : array */[]
+        ];
 }
 
 function reducer(action, state) {
-  if (action.tag) {
-    return /* NoUpdate */0;
-  } else {
-    return /* Update */Block.__(0, [/* record */[/* users */action[0]]]);
+  switch (action.tag | 0) {
+    case 0 : 
+        return /* Update */Block.__(0, [/* record */[
+                    /* users */action[0],
+                    /* page */state[/* page */1],
+                    /* todos */state[/* todos */2]
+                  ]]);
+    case 1 : 
+        return /* Update */Block.__(0, [/* record */[
+                    /* users */state[/* users */0],
+                    /* page */action[0],
+                    /* todos */state[/* todos */2]
+                  ]]);
+    case 2 : 
+        var userId = action[0];
+        return /* UpdateWithSideEffects */Block.__(2, [
+                  state,
+                  (function (param) {
+                      var send = param[/* send */3];
+                      Curry._1(Fetch[/* getUserTodos */2], userId).then((function (todos) {
+                              Curry._1(send, /* GotTodos */Block.__(3, [todos]));
+                              return Promise.resolve(/* () */0);
+                            }));
+                      return /* () */0;
+                    })
+                ]);
+    case 3 : 
+        return /* Update */Block.__(0, [/* record */[
+                    /* users */state[/* users */0],
+                    /* page */state[/* page */1],
+                    /* todos */action[0]
+                  ]]);
+    
   }
 }
 
@@ -50,13 +83,14 @@ function make(_children) {
           /* shouldUpdate */component[/* shouldUpdate */8],
           /* render */(function (param) {
               var send = param[/* send */3];
-              return React.createElement("div", undefined, $$Array.map((function (user) {
-                                return React.createElement("div", {
-                                            onClick: (function (param) {
-                                                return Curry._1(send, /* ShowUserTodos */Block.__(1, [user[/* entityKey */0]]));
-                                              })
-                                          }, user[/* entityValue */1][/* username */0][0]);
-                              }), param[/* state */1][/* users */0]));
+              var state = param[/* state */1];
+              return React.createElement("div", undefined, state[/* page */1] === /* UsersPage */0 ? $$Array.map((function (user) {
+                                  return React.createElement("div", {
+                                              onClick: (function (param) {
+                                                  return Curry._1(send, /* FetchTodos */Block.__(2, [user[/* entityKey */0]]));
+                                                })
+                                            }, user[/* entityValue */1][/* username */0][0]);
+                                }), state[/* users */0]) : null);
             }),
           /* initialState */initialState,
           /* retainedProps */component[/* retainedProps */11],

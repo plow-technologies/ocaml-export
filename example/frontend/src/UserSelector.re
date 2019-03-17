@@ -10,23 +10,45 @@ module Fetch =
     let baseUrl = ServerFetchConfig.config.baseUrl;
   });
 
-type state = {users: array(entity(userId, user))};
+type page =
+  | UsersPage
+  | TodosPage;
 
-let initialState = () => {users: [||]};
+type state = {
+  users: array(entity(userId, user)),
+  page,
+  todos: array(entity(todoId, todo)),
+};
+
+let initialState = () => {users: [||], page: UsersPage, todos: [||]};
 
 /* Action declaration */
 type action =
   | UpdateUsers(array(entity(userId, user)))
-  | ShowUserTodos(userId);
+  | UpdatePage(page)
+  | FetchTodos(userId)
+  | GotTodos(array(entity(todoId, todo)));
 
 let reducer = (action, state) =>
   switch (action) {
   | UpdateUsers(users) => ReasonReact.Update({...state, users})
-  | ShowUserTodos(userId) => ReasonReact.NoUpdate
+  | UpdatePage(page) => ReasonReact.Update({...state, page})
+  | FetchTodos(userId) =>
+    ReasonReact.UpdateWithSideEffects(
+      state,
+      (
+        ({send}) =>
+          Fetch.getUserTodos(userId)
+          |> Js.Promise.then_(todos => {
+               send(GotTodos(todos));
+               Js.Promise.resolve();
+             })
+          |> ignore
+      ),
+    )
+  | GotTodos(todos) => ReasonReact.Update({...state, todos})
   };
 
-/* Component template declaration.
-   Needs to be **after** state and action declarations! */
 let component = ReasonReact.reducerComponent("UserSelector");
 
 let make = _children => {
@@ -43,18 +65,22 @@ let make = _children => {
   render: ({send, state}) =>
     <div>
       (
-        Array.map(
-          (user: entity(userId, user)) =>
-            <div onClick=(_ => send(ShowUserTodos(user.entityKey)))>
-              (
-                ReasonReact.string(
-                  usernameToString(user.entityValue.username),
+        if (state.page == UsersPage) {
+          Array.map(
+            (user: entity(userId, user)) =>
+              <div onClick=(_ => send(FetchTodos(user.entityKey)))>
+                (
+                  ReasonReact.string(
+                    usernameToString(user.entityValue.username),
+                  )
                 )
-              )
-            </div>,
-          state.users,
-        )
-        |> ReasonReact.array
+              </div>,
+            state.users,
+          )
+          |> ReasonReact.array;
+        } else {
+          ReasonReact.null;
+        }
       )
     </div>,
 };

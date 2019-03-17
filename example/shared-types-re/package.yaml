@@ -14,6 +14,7 @@ description:         Please see the README on GitHub at <https://github.com/gith
 
 dependencies:
 - base >= 4.7 && < 5
+- containers
 - ocaml-export
 - QuickCheck
 - quickcheck-arbitrary-adt
@@ -25,7 +26,7 @@ library:
   source-dirs: src
 
 executables:
-  shared-types-re-exe:
+  generate-reason:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
@@ -44,4 +45,5 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
+    - hspec
     - shared-types-re

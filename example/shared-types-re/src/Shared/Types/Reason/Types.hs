@@ -21,10 +21,16 @@ import Test.QuickCheck.Arbitrary.ADT
 import Shared.Types
   (Entity(..), IsKey(..), Key(..), Todo(..), TodoId(..), User(..), UserId(..), Username(..))
 
+-- because of the restriction we put on Entity
+-- we have to make this dummy instance
+instance IsKey TypeParameterRef0 where
+  fromKey (Key k) = TypeParameterRef0 (fromIntegral k)
+  toKey (TypeParameterRef0 k) = Key (fromIntegral k)
+
 type SharedTypesPackage =
   OCamlPackage "shared-types" '[] :> 
     (OCamlModule '["SharedTypes"]
-    :> OCamlTypeInFile (Entity TypeParameterRef0 TypeParameterRef1) "ocaml/Entity"
+    :> OCamlTypeInFile (Entity TypeParameterRef0 TypeParameterRef1) "handwritten/Entity"
     :> Key
     :> TodoId
     :> UserId

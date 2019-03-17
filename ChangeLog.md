@@ -1,5 +1,8 @@
 # Revision history for ocaml-export
 
+## 0.13.0.0 -- 2019-03-17
+* Expose TypeParamterRef constructors. They are useful in some cases.
+
 ## 0.12.0.0 -- 2018-12-28
 * Fix Decode record case when NamedConstructor is an OCamlRef, not a primitive.
 

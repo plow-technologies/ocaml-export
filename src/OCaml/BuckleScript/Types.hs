@@ -37,12 +37,12 @@ module OCaml.BuckleScript.Types
   -- fill type parameters of a proxy when calling toOCamlType
   -- so the kind is *
   -- e.g. `toOCamlType (Proxy :: Proxy (Either TypeParameterRef0 TypeParameterRef1))`
-  , TypeParameterRef0
-  , TypeParameterRef1
-  , TypeParameterRef2
-  , TypeParameterRef3
-  , TypeParameterRef4
-  , TypeParameterRef5
+  , TypeParameterRef0(..)
+  , TypeParameterRef1(..)
+  , TypeParameterRef2(..)
+  , TypeParameterRef3(..)
+  , TypeParameterRef4(..)
+  , TypeParameterRef5(..)
 
   -- functions for manipulating and querying the data type tree
   , getTypeParameterRefNames

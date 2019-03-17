@@ -51,7 +51,7 @@ serverAPI :: Proxy API
 serverAPI = Proxy
 
 server :: TVar MockDB -> Server API
-server tMockDB = (postTodoH :<|> getTodosH :<|> postUserH :<|> (serveDirectoryWebApp "static"))
+server tMockDB = (postTodoH :<|> getTodosH :<|> postUserH :<|> getUsersH :<|> (serveDirectoryWebApp "static"))
   where
     postTodoH userId todo = do
       mockDB <- liftIO $ readTVarIO tMockDB
@@ -68,6 +68,8 @@ server tMockDB = (postTodoH :<|> getTodosH :<|> postUserH :<|> (serveDirectoryWe
       let userEntity = Entity (getNewUserId mockDB) user
       liftIO $ atomically $ modifyTVar' tMockDB (addUser userEntity)
       pure userEntity
+
+    getUsersH = users <$> (liftIO $ readTVarIO tMockDB)
 
 
 runServer :: IO ()

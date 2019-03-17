@@ -127,4 +127,5 @@ type API =
        "todo"  :> Capture "userid" UserId :> ReqBody '[JSON] Todo :> Post '[JSON] EntityTodo
   :<|> "todos" :> Capture "userid" UserId :> Get '[JSON] [EntityTodo]
   :<|> "user"  :> ReqBody '[JSON] User :> Post '[JSON] EntityUser
+  :<|> "users" :> Get '[JSON] [EntityUser]
   :<|> Raw

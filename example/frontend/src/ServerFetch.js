@@ -17,7 +17,9 @@ function MakeServerFetch(Config) {
   var toRoute = function (route) {
     var base = Config[/* baseUrl */0];
     var urlPath;
-    urlPath = typeof route === "number" ? "user" : (
+    urlPath = typeof route === "number" ? (
+        route === 0 ? "user" : "users"
+      ) : (
         route.tag ? Curry._1(Printf.sprintf(/* Format */[
                     /* String_literal */Block.__(11, [
                         "/todo/",
@@ -84,11 +86,28 @@ function MakeServerFetch(Config) {
                   return Promise.resolve(SharedTypes$Frontend.decodeEntity(SharedTypes$Frontend.decodeUserId, SharedTypes$Frontend.decodeUser, json));
                 }));
   };
+  var getUsers = function (param) {
+    var url = toRoute(/* UsersR */1);
+    var headers = /* array */[/* tuple */[
+        "Accept",
+        "application/json"
+      ]];
+    return fetch(url, Fetch.RequestInit[/* make */0](/* Get */0, Caml_option.some(headers), undefined, undefined, undefined, undefined, /* Include */2, undefined, undefined, undefined, undefined)(/* () */0)).then((function (prim) {
+                    return prim.json();
+                  })).then((function (json) {
+                  return Promise.resolve(Aeson_decode.withDefault(/* array */[], (function (param) {
+                                    return Aeson_decode.array((function (a) {
+                                                  return Aeson_decode.unwrapResult(SharedTypes$Frontend.decodeEntity(SharedTypes$Frontend.decodeUserId, SharedTypes$Frontend.decodeUser, a));
+                                                }), param);
+                                  }), json));
+                }));
+  };
   return /* module */[
           /* toRoute */toRoute,
           /* postUserTodo */postUserTodo,
           /* getUserTodos */getUserTodos,
-          /* postUser */postUser
+          /* postUser */postUser,
+          /* getUsers */getUsers
         ];
 }
 

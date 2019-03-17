@@ -7,7 +7,8 @@ module MakeServerFetch = (Config: ServerFetchConfig.Config) => {
   type serverRoute =
     | TodoR(SharedTypes.userId)
     | TodosR(SharedTypes.userId)
-    | UserR;
+    | UserR
+    | UsersR;
   let toRoute = (route: serverRoute) : string => {
     let base = Config.baseUrl;
     let urlPath =
@@ -15,6 +16,7 @@ module MakeServerFetch = (Config: ServerFetchConfig.Config) => {
       | TodoR(userId) => Printf.sprintf("/todos/%d", userIdToInt(userId))
       | TodosR(userId) => Printf.sprintf("/todo/%d", userIdToInt(userId))
       | UserR => "user"
+      | UsersR => "users"
       };
     base ++ urlPath;
   };
@@ -87,6 +89,36 @@ module MakeServerFetch = (Config: ServerFetchConfig.Config) => {
       |> then_(Fetch.Response.json)
       |> then_(json =>
            SharedTypes.(decodeEntity(decodeUserId, decodeUser, json))
+           |> resolve
+         )
+    );
+  };
+
+  let getUsers = () => {
+    let url = toRoute(UsersR);
+    let headers =
+      Fetch.HeadersInit.makeWithArray([|("Accept", "application/json")|]);
+    Js.Promise.(
+      Fetch.fetchWithInit(
+        url,
+        Fetch.RequestInit.make(
+          ~method_=Get,
+          ~headers,
+          ~credentials=Include,
+          (),
+        ),
+      )
+      |> then_(Fetch.Response.json)
+      |> then_(json =>
+           Aeson.Decode.withDefault(
+             [||],
+             Aeson.Decode.array(a =>
+               Aeson.Decode.unwrapResult(
+                 SharedTypes.(decodeEntity(decodeUserId, decodeUser, a)),
+               )
+             ),
+             json,
+           )
            |> resolve
          )
     );

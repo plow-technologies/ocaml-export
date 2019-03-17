@@ -5,6 +5,7 @@ import Control.Concurrent.STM.TVar (modifyTVar', newTVarIO, readTVarIO, writeTVa
 import Control.Monad.IO.Class (liftIO)
 import Data.Proxy (Proxy(..))
 import Network.Wai (Application)
+import Network.Wai.Handler.Warp (runSettings, setPort, defaultSettings)
 import Shared.Types
 import Servant
 
@@ -41,8 +42,7 @@ addUserTodo userId todo mockDB =
 
 addUser :: EntityUser -> MockDB -> MockDB
 addUser user mockDB = mockDB { users = users mockDB ++ [user] }
-  
-  
+
 
 app :: TVar MockDB -> Application
 app tMockDB = serve serverAPI $ server tMockDB
@@ -51,7 +51,7 @@ serverAPI :: Proxy API
 serverAPI = Proxy
 
 server :: TVar MockDB -> Server API
-server tMockDB = (postTodoH :<|> getTodosH :<|> postUserH)
+server tMockDB = (postTodoH :<|> getTodosH :<|> postUserH :<|> (serveDirectoryWebApp "static"))
   where
     postTodoH userId todo = do
       mockDB <- liftIO $ readTVarIO tMockDB
@@ -68,3 +68,11 @@ server tMockDB = (postTodoH :<|> getTodosH :<|> postUserH)
       let userEntity = Entity (getNewUserId mockDB) user
       liftIO $ atomically $ modifyTVar' tMockDB (addUser userEntity)
       pure userEntity
+
+
+runServer :: IO ()
+runServer = do
+  tMockDB <- newTVarIO $ MockDB [] []
+  -- let settings = setHost (fromString . mscHost $ config) $ setPort (mscPort config) $ defaultSettings
+  let settings = setPort 8001 $ defaultSettings
+  runSettings settings (app tMockDB)

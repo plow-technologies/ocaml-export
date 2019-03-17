@@ -125,11 +125,6 @@ type EntityTodo = Entity TodoId Todo
   
 type API =
        "todo"  :> Capture "userid" UserId :> ReqBody '[JSON] Todo :> Post '[JSON] EntityTodo
---  :<|> "todo"  :> Capture "username" Username :> Capture "todoid" TodoId :> Delete '[JSON] TodoId
---  :<|> "todo"  :> Capture "username" Username :> Capture "todoid" TodoId :> Get '[JSON] EntityTodo
   :<|> "todos" :> Capture "userid" UserId :> Get '[JSON] [EntityTodo]
   :<|> "user"  :> ReqBody '[JSON] User :> Post '[JSON] EntityUser
-
--- type AdminAPI =
---        "todos" :> Get '[JSON] [EntityTodo]
---   :<|> "users" :> Get '[JSON] [EntityUser]
+  :<|> Raw

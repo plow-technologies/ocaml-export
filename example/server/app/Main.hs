@@ -3,4 +3,4 @@ module Main where
 import Server
 
 main :: IO ()
-main = pure ()
+main = runServer

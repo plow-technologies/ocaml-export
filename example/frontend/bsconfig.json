@@ -1,0 +1,21 @@
+{
+  "name": "frontend",
+  "reason": {
+    "react-jsx": 2
+  },
+  "sources": {
+    "dir": "src",
+    "subdirs": true
+  },
+  "package-specs": [
+    {
+      "module": "commonjs",
+      "in-source": true
+    }
+  ],
+  "namespace": true,
+  "bs-dependencies": ["bs-aeson", "bs-fetch", "reason-react"],
+  "suffix": ".bs.js",
+  "bs-dev-dependencies": ["bs-aeson-spec"],
+  "refmt": 3
+}

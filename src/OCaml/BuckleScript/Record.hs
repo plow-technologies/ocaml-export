@@ -21,7 +21,7 @@ module OCaml.BuckleScript.Record
 import Control.Monad.Reader
 import Data.List (nub, sort)
 import Data.Maybe (catMaybes)
-import Data.Monoid
+import Data.Monoid ((<>))
 import Data.Proxy (Proxy (..))
 import Data.Typeable
 
@@ -37,7 +37,8 @@ import Data.Text (Text)
 import qualified Data.Text as T
 
 -- wl-pprint
-import Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
+import Text.PrettyPrint.Leijen.Text
+  (Doc, (<+>), (<$$>), comma, indent, line, parens, space)
 
 -- | Convert a 'Proxy a' into OCaml type source code.
 toOCamlTypeSourceWith :: forall a. OCamlType a => Options -> a -> T.Text
@@ -81,9 +82,9 @@ instance HasType OCamlDatatype where
     fnBody <- render constructor
     pure $ "type" <+> typeParameters <+> fnName <+> "=" <$$> indent 2 fnBody
 
-  render datatype@(OCamlDatatype _ _ constructor) = do
+  render (OCamlDatatype _ typeName constructor) = do
     let typeParameters = renderTypeParameters constructor
-    fnName <- renderRef datatype
+    let fnName = stext . textLowercaseFirst $ typeName
     fnBody <- render constructor
     pure $ "type" <+> typeParameters <+> fnName <+> "=" <$$> indent 2 ("|" <+> fnBody)
 
@@ -129,6 +130,7 @@ instance HasTypeRef OCamlValue where
     dy <- render y
     pure $ dx <> comma <+> dy
 
+  renderRef (OCamlRef _metaData primitive) = pure $ stext primitive
   renderRef (OCamlPrimitiveRef primitive) = renderRef primitive
   renderRef _ = pure ""
             
@@ -175,7 +177,7 @@ instance HasType OCamlValue where
       Nothing -> fail $ "OCaml.BuckleScript.Record (HasType (OCamlDatatype typeRep name)) mOCamlTypeMetaData is Nothing:\n\n"
       Just ocamlTypeRef -> do
         ds <- asks (dependencies . userOptions)
-        dx <- renderRef values
+        dx <- render values
         pure $ (parensIfNotBlank dx) <+> (stext $ appendModule ds ocamlTypeRef (typeRepToHaskellTypeMetaData typRep) (T.pack . show $ typeRepTyCon typRep))
 
   render (OCamlTypeParameterRef name) = pure $ stext ("'" <> name)

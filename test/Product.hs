@@ -55,7 +55,9 @@ type ProductPackage
          :> WrapThreeFilled
          :> WrapThreePartiallyFilled TypeParameterRef0
 --         :> TypeSynonymKey TypeParameterRef0
---         :> NewTypeKey TypeParameterRef0         
+--         :> NewTypeKey TypeParameterRef0
+       :<|> OCamlModule '["Box"] :> InnerBox TypeParameterRef0 :> OuterBox :> AuditAction :> AuditModel TypeParameterRef0 :> User :> UserAudit
+       :<|> OCamlModule '["Key"] :> SqlKey :> UserId
        )
 
 compareInterfaceFiles :: FilePath -> SpecWith ()
@@ -422,7 +424,239 @@ instance Arbitrary (NewTypeKey a) where
 instance (Typeable a, OCamlType a) => OCamlType (NewTypeKey a)
 
 
+-- abc
+
+data InnerBox a =
+  InnerBox
+    { ibA :: a
+    , ibS :: String
+    , ibX :: Int
+    } deriving (Eq,Show,Generic,ToJSON,FromJSON)
+
+instance (ToADTArbitrary a, Arbitrary a) => ToADTArbitrary (InnerBox a)
+instance Arbitrary a => Arbitrary (InnerBox a) where
+  arbitrary = InnerBox <$> arbitrary <*> arbitrary <*> arbitrary
+instance (Typeable a, OCamlType a) => OCamlType (InnerBox a)
+
+data OuterBox =
+  OuterBox (InnerBox Person)
+  deriving (Eq,Show,Generic,ToJSON,FromJSON)
+
+instance ToADTArbitrary OuterBox
+instance Arbitrary OuterBox where
+  arbitrary = OuterBox <$> arbitrary
+instance OCamlType OuterBox
+
+data AuditAction = Create | Delete | Update
+  deriving (Show, Read, Eq, Ord, Generic, Typeable, ToJSON, FromJSON)
+
+instance ToADTArbitrary AuditAction
+instance Arbitrary AuditAction where
+  arbitrary = elements [Create, Delete, Update]
+instance OCamlType AuditAction
+
+data AuditModel a =
+  AuditModel
+    { auditModel  :: a
+    , originalId  :: String
+    , auditAction :: AuditAction
+    , editedBy    :: String
+    , editedOn    :: String
+    } deriving (Read, Show, Eq, Generic, Typeable, ToJSON, FromJSON)
+
+instance (ToADTArbitrary a, Arbitrary a) => ToADTArbitrary (AuditModel a)
+instance (Arbitrary a) => Arbitrary (AuditModel a) where
+  arbitrary = AuditModel <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
+instance OCamlType (AuditModel TypeParameterRef0)
+
+data User =
+  User
+    { userIdent    :: String
+    , userPassword :: Maybe (String)
+    , userTimezone :: String
+    } deriving (Eq, Generic, Ord, Read, Show, Typeable, ToJSON, FromJSON)
+
+instance ToADTArbitrary User
+instance Arbitrary User where
+  arbitrary = User <$> arbitrary <*> arbitrary <*> arbitrary
+instance OCamlType User
+
+newtype UserAudit = UserAudit (AuditModel User)
+  deriving (Read, Show, Eq, Generic, Typeable, ToJSON, FromJSON)
+
+instance ToADTArbitrary UserAudit
+instance Arbitrary UserAudit where
+  arbitrary = UserAudit <$> arbitrary
+instance OCamlType UserAudit
+
+
+newtype SqlKey = SqlKey Int deriving (Eq, Generic, Ord, Read, Show, Typeable, ToJSON, FromJSON, OCamlType)
+
+instance ToADTArbitrary SqlKey
+instance Arbitrary SqlKey where
+  arbitrary = SqlKey <$> arbitrary
+
+newtype UserId =
+  UserId SqlKey
+  deriving (Eq, Generic, Ord, Show, ToJSON, FromJSON, OCamlType)
+
+instance ToADTArbitrary UserId
+instance Arbitrary UserId where
+  arbitrary = UserId <$> arbitrary
+
+-- def
+
 {-
+λ> toOCamlType (Proxy :: Proxy SqlKey)
+OCamlDatatype
+  (HaskellTypeMetaData "SqlKey" "Ghci1" "interactive")
+  "SqlKey"
+  (OCamlValueConstructor (NamedConstructor "SqlKey" (OCamlPrimitiveRef OInt)))
+
+λ> toOCamlType (Proxy :: Proxy UserId)
+OCamlDatatype
+  (HaskellTypeMetaData "UserId" "Ghci2" "interactive")
+  "UserId"
+  (OCamlValueConstructor (NamedConstructor "UserId" (OCamlRef (HaskellTypeMetaData "SqlKey" "Ghci1" "interactive") "SqlKey")))
+
+
+
+:set -XDeriveGeneric
+:set -XDeriveAnyClass
+import Data.Proxy (Proxy(..))
+import Data.Typeable (Typeable)
+import OCaml.Export
+import Data.Time (UTCTime)
+
+data AuditAction = Create | Delete | Update
+  deriving (Show, Read, Eq, Ord, Generic, Typeable, OCamlType)
+
+data AuditModel a =
+  AuditModel
+    { auditModel  :: a
+    , originalId  :: ByteString
+    , auditAction :: AuditAction
+    , editedBy    :: Text
+    , editedOn    :: UTCTime
+    } deriving (Read, Show, Eq, Generic, Typeable, OCamlType)
+
+re-react-onping-frontend/src/PlowtechAuthenticationTypes.ml
+data Wrapper a =
+  Wrapper
+    { wpa :: a
+    } deriving (Eq,Show,Generic,OCamlType)
+
+data SumWrapped
+  = SW1
+  | SW2 (Wrapper Int)
+  | SW3 (Wrapper (Maybe String))
+  | SW4 (Wrapper (Either Int String))
+  deriving (Eq,Show,Generic,OCamlType)
+
+toOCamlType (Proxy :: Proxy SumWrapped)
+
+OCamlDatatype (HaskellTypeMetaData "SumWrapped" "Ghci1" "interactive") "SumWrapped" (OCamlValueConstructor (MultipleConstructors [MultipleConstructors [NamedConstructor "SW1" OCamlEmpty,NamedConstructor "SW2" (OCamlRefApp (Wrapper Int) (OCamlPrimitiveRef OInt))],MultipleConstructors [NamedConstructor "SW3" (OCamlRefApp (Wrapper (Maybe [Char])) (OCamlPrimitiveRef (OOption (OCamlPrimitive (OList (OCamlPrimitive OChar)))))),NamedConstructor "SW4" (OCamlRefApp (Wrapper (Either Int [Char])) (OCamlPrimitiveRef (OEither (OCamlPrimitive OInt) (OCamlPrimitive (OList (OCamlPrimitive OChar))))))]]))
+
+
+data InnerBox a =
+  InnerBox
+    { ibA :: a
+    , ibS :: String
+    , ibX :: Int
+    } deriving (Eq,Show,Generic)
+
+instance (Typeable a, OCamlType a) => OCamlType (InnerBox a)
+
+data Person = Person
+  { id :: Int
+  , name :: Maybe String
+  , created :: String
+  } deriving (Show, Eq, Generic,OCamlType)
+
+
+data OuterBox =
+  OuterBox (InnerBox Person)
+  deriving (Eq,Show,Generic,OCamlType)
+
+toOCamlType (Proxy :: Proxy OuterBox)
+
+OCamlDatatype
+  (HaskellTypeMetaData "OuterBox" "Ghci4" "interactive")
+  "OuterBox"
+  (OCamlValueConstructor
+    (NamedConstructor
+      "OuterBox"
+      (OCamlRefApp
+        (InnerBox Person)
+        (OCamlRef (HaskellTypeMetaData "Person" "Ghci3" "interactive") "Person"))))
+
+OCamlDatatype
+  (HaskellTypeMetaData "NewType" "Ghci1" "interactive")
+  "NewType"
+  (OCamlValueConstructor
+    (NamedConstructor
+      "NewType"
+      (OCamlPrimitiveRef OInt)))
+
+newtype NewType
+  = NewType Int
+  deriving (Show,Eq,Generic,OCamlType)
+
+
+OCamlDatatype
+  (HaskellTypeMetaData "SumWrapped" "Ghci1" "interactive")
+  "SumWrapped"
+  (OCamlValueConstructor
+    (MultipleConstructors
+      [MultipleConstructors
+        [NamedConstructor "SW1" OCamlEmpty
+        ,NamedConstructor
+          "SW2"
+          (OCamlRefApp
+            (Wrapper Int)
+            (OCamlPrimitiveRef OInt))]
+        ,MultipleConstructors
+          [NamedConstructor "SW3" (OCamlRefApp (Wrapper (Maybe [Char])) (OCamlPrimitiveRef (OOption (OCamlPrimitive (OList (OCamlPrimitive OChar))))))
+          ,NamedConstructor "SW4" (OCamlRefApp (Wrapper (Either Int [Char])) (OCamlPrimitiveRef (OEither (OCamlPrimitive OInt) (OCamlPrimitive (OList (OCamlPrimitive OChar))))))]]))
+
+
+data UnnamedProduct = UnnamedProduct String Int
+  deriving (Eq, Read, Show, Generic, OCamlType)
+
+toOCamlType (Proxy :: Proxy UnnamedProduct)
+
+OCamlDatatype
+  (HaskellTypeMetaData "UnnamedProduct" "Ghci7" "interactive")
+  "UnnamedProduct"
+  (OCamlValueConstructor
+    (NamedConstructor
+      "UnnamedProduct"
+       (Values
+         (OCamlPrimitiveRef
+           (OList (OCamlPrimitive OChar)))
+           (OCamlPrimitiveRef OInt))))
+
+
+{-
+data OCamlConstructor 
+  = OCamlValueConstructor ValueConstructor -- ^ Sum, record (product with named fields) or product without named fields
+
+data ValueConstructor
+  = NamedConstructor Text OCamlValue -- ^ Product without named fields
+  | RecordConstructor Text OCamlValue -- ^ Product with named fields
+  | MultipleConstructors [ValueConstructor] -- ^ Sum type
+
+data OCamlValue
+  = OCamlRef HaskellTypeMetaData Text -- ^ The name of a non-primitive data type
+  | OCamlRefApp TypeRep OCamlValue -- ^ A type constructor that has at least one type parameter filled
+  | OCamlTypeParameterRef Text -- ^ Type parameters like `a` in `Maybe a`
+  | OCamlEmpty -- ^ a place holder for OCaml value. It can represent the end of a list or an Enumerator in a mixed sum
+  | OCamlPrimitiveRef OCamlPrimitive -- ^ A primitive OCaml type like `int`, `string`, etc.
+  | OCamlField Text OCamlValue -- ^ A field name and its type from a record.
+  | Values OCamlValue OCamlValue -- ^ Used for multiple types in a NameConstructor or a RecordConstructor.
+  | OCamlRefAppValues OCamlValue OCamlValue -- ^ User for multiple types in an OCamlRefApp. These are rendered in a different way from V
+-}
+
 λ> toOCamlType (Proxy :: Proxy (Key User))
 OCamlDatatype (HaskellTypeMetaData "Key" "Database.Persist.Class.PersistEntity" "persistent-2.6-HdpHylIi1gZ4QjAhgpXd6i") "Key" (OCamlValueConstructor (NamedConstructor "Key" OCamlEmpty))
 λ

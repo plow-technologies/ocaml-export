@@ -71,6 +71,7 @@ import Servant.API ((:>), (:<|>))
 
 -- template-haskell
 import Language.Haskell.TH
+import Language.Haskell.TH.Syntax (addDependentFile)
 
 -- text
 import Data.Text (Text)
@@ -256,14 +257,19 @@ instance (Typeable a, KnownSymbol b) => HasEmbeddedFile'' 2 (OCamlTypeInFile a b
   mkFiles'' _ includeInterface includeSpec Proxy = do
     let typeFilePath = symbolVal (Proxy :: Proxy b)
     let typeName = tyConName . typeRepTyCon $ typeRep (Proxy :: Proxy a)
+    addDependentFile (typeFilePath <.> "ml")
     ml  <- embedFile (typeFilePath <.> "ml")
 
     mli <- if includeInterface
-      then (\f -> AppE (ConE $ mkName "Just") f) <$> embedFile (typeFilePath <.> "mli")
+      then do
+        addDependentFile (typeFilePath <.> "mli")
+        (\f -> AppE (ConE $ mkName "Just") f) <$> embedFile (typeFilePath <.> "mli")
       else pure $ ConE $ mkName "Nothing"
 
     spec <- if includeSpec
-      then (\f -> AppE (ConE $ mkName "Just") f) <$> embedFile (typeFilePath <> "_spec" <.> "ml")
+      then do
+        addDependentFile (typeFilePath <> "_spec" <.> "ml")
+        (\f -> AppE (ConE $ mkName "Just") f) <$> embedFile (typeFilePath <> "_spec" <.> "ml")
       else pure $ ConE $ mkName "Nothing"
 
     pure [TupE [LitE $ StringL typeName, AppE (AppE (AppE (ConE $ mkName "EmbeddedOCamlFiles") ml) mli) spec]]

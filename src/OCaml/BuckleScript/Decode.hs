@@ -23,7 +23,7 @@ module OCaml.BuckleScript.Decode
 import Control.Monad.Reader
 import qualified Data.List as L
 import Data.Maybe (catMaybes)
-import Data.Monoid
+import Data.Monoid ((<>))
 import Data.Proxy (Proxy (..))        
 import Data.Typeable
 -- aeson
@@ -34,7 +34,8 @@ import qualified Data.Map.Strict as Map
 import Data.Text (Text)
 import qualified Data.Text as T
 -- wl-pprint
-import Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
+import Text.PrettyPrint.Leijen.Text
+  (Doc, (<+>), (<$$>), comma, dquotes, empty, indent, int, line, parens)
 -- ocaml-export
 import OCaml.BuckleScript.Types hiding (getOCamlValues)
 import OCaml.Internal.Common
@@ -82,10 +83,10 @@ instance HasDecoderInterface OCamlDatatype where
       <$$> "val" <+> fnName <+> ":" <+> typeParameterEncoders <> "Js_json.t ->" <+> "(" <> typeParameters <> (stext . textLowercaseFirst $ typeName) <> ", string)" <+> "Belt.Result.t"
     
 
-  renderInterface datatype@(OCamlDatatype _ typeName constructors) = do
-    fnName <- renderRef datatype
+  renderInterface _datatype@(OCamlDatatype _ typeName constructors) = do
+    -- fnName <- renderRef datatype
     let (typeParameterEncoders, typeParameters) = renderTypeParameterVals constructors
-    pure $ "val" <+> fnName <+> ":" <+> typeParameterEncoders <> "Js_json.t ->" <+> "(" <> typeParameters <> (stext . textLowercaseFirst $ typeName) <> ", string)" <+> "Belt.Result.t"
+    pure $ "val" <+> "decode" <> (stext typeName) <+> ":" <+> typeParameterEncoders <> "Js_json.t ->" <+> "(" <> typeParameters <> (stext . textLowercaseFirst $ typeName) <> ", string)" <+> "Belt.Result.t"
 
   renderInterface _ = pure ""
 
@@ -132,8 +133,8 @@ instance HasDecoder OCamlDatatype where
         =    "| Some err -> Belt.Result.Error (\"" <> fnName <> ": unknown enumeration '\" ^ err ^ \"'.\")"
         <$$> "| None -> Belt.Result.Error \"" <> fnName <> ": expected a top-level JSON string.\""
       
-  render datatype@(OCamlDatatype _ name constructor) = do
-    fnName <- renderRef datatype
+  render (OCamlDatatype _ typeName constructor) = do
+    let fnName = "decode" <> (stext typeName)
     fnBody <- render constructor
     ocamlInterface <- asks (includeOCamlInterface . userOptions)
     if ocamlInterface
@@ -143,14 +144,14 @@ instance HasDecoder OCamlDatatype where
         pure $ "let" <+> fnName <+> renderedTypeParameters <+> "json" <+> "=" <$$> fnBody
       else do
         let (typeParameterSignatures,typeParameters) = renderTypeParameters constructor
-            returnType = "(" <> typeParameters <> (stext . textLowercaseFirst $ name) <> ", string) Belt.Result.t ="
+            returnType = "(" <> typeParameters <> (stext . textLowercaseFirst $ typeName) <> ", string) Belt.Result.t ="
         pure $ "let" <+> fnName <+> typeParameterSignatures <+> "(json : Js_json.t) :" <> returnType <$$> fnBody
 
   render (OCamlPrimitive primitive) = renderRef primitive
 
 instance HasDecoderRef OCamlDatatype where
-  renderRef (OCamlDatatype typeRef _ (OCamlValueConstructor (NamedConstructor _ (OCamlRefApp typRep values)))) = do
-    let name = "decode" <> (stext $ textUppercaseFirst $ T.pack $ show $ fst $ splitTyConApp typRep)
+  renderRef (OCamlDatatype typeRef typeName (OCamlValueConstructor (NamedConstructor _ (OCamlRefApp typRep values)))) = do
+    let name = "decode" <> (stext typeName)
     dx <- renderRef values
 
     mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData 
@@ -185,6 +186,38 @@ instance HasDecoderRef OCamlDatatype where
   renderRef (OCamlPrimitive primitive) = renderRef primitive
 
 instance HasDecoder OCamlConstructor where
+  render (OCamlValueConstructor (NamedConstructor name value@(OCamlRefApp _ _))) = do
+    decoder <- render value
+    let constructorParams = constructorParameters 0 value
+    v <- mk name 0 $ (Just <$> flattenOCamlValue value) ++ [Nothing]
+    pure $
+      if length constructorParams > 1
+      then
+        indent 2 $ "match Js.Json.decodeArray json with"
+        <$$> "| Some v ->"
+        <$$> (indent 2 v)
+        <$$> "| None -> Belt.Result.Error (\"" <> (stext name) <+> "expected an array.\")"
+      else
+        indent 2 $ "match (Aeson.Decode.unwrapResult (" <> decoder <+> "json))" <+> "with"
+        <$$> "| v -> Belt.Result.Ok" <+> parens (stext name <+> "v")
+        <$$> "| exception Aeson.Decode.DecodeError msg -> Belt.Result.Error (\"decode" <> (stext . textUppercaseFirst $ name) <> ": \" ^ msg)"
+
+  render (OCamlValueConstructor (NamedConstructor name value@(OCamlRef _ _))) = do
+    decoder <- render value
+    let constructorParams = constructorParameters 0 value
+    v <- mk name 0 $ (Just <$> flattenOCamlValue value) ++ [Nothing]
+    pure $
+      if length constructorParams > 1
+      then
+        indent 2 $ "match Js.Json.decodeArray json with"
+        <$$> "| Some v ->"
+        <$$> (indent 2 v)
+        <$$> "| None -> Belt.Result.Error (\"" <> (stext name) <+> "expected an array.\")"
+      else
+        indent 2 $ "match (Aeson.Decode.unwrapResult (" <> decoder <+> "json))" <+> "with"
+        <$$> "| v -> Belt.Result.Ok" <+> parens (stext name <+> "v")
+        <$$> "| exception Aeson.Decode.DecodeError msg -> Belt.Result.Error (\"decode" <> (stext . textUppercaseFirst $ name) <> ": \" ^ msg)"
+
   render (OCamlValueConstructor (NamedConstructor name value)) = do
     decoder <- render value
     let constructorParams = constructorParameters 0 value
@@ -269,6 +302,14 @@ instance HasDecoderRef OCamlValue where
     dx <- render x
     dy <- render y
     pure $ (wrapIfPrimitive x dx) <+> (wrapIfPrimitive y dy)
+
+  renderRef (OCamlRef metadata ref) = do
+    mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData
+    case mOCamlTypeMetaData of
+      Nothing -> fail $ "OCaml.BuckleScript.Decode (HasDecoder (OCamlRef typeRep name)) mOCamlTypeMetaData is Nothing:\n\n" ++ (show ref)
+      Just ocamlTypeRef -> do
+        ds <- asks (dependencies . userOptions)
+        pure $ stext (appendModule' ds ocamlTypeRef metadata ref)
 
   renderRef (OCamlPrimitiveRef primitive) = renderRef primitive
 
@@ -474,10 +515,10 @@ mk name i (x:xs) =
   case x of
     Nothing -> mk name i xs
     Just x' -> do
-      renderedVal <- render x'
+      renderedVal <- unwrapIfTypeParameter x' <$> render x'
       renderedInternal <- mk name (i+1) xs
       let iDoc = (stext . T.pack . show $ i)
-      pure $ indent 1 $ "(match" <+> (if oCamlValueIsFloat x' then "" else "Aeson.Decode.") <> renderedVal <+> ("v." <> parens iDoc) <+> "with"
+      pure $ indent 1 $ "(match" <+> "Aeson.Decode.(" <> renderedVal <> (") v." <> parens iDoc) <+> "with"
         <$$>
           indent 1
             ("| v" <> iDoc <+> "->" <$$> (indent 2 renderedInternal)
@@ -539,6 +580,16 @@ appendModule m o h name nxt =
     -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
     -- within the same file as the sum. These products will not be in the dependencies map.
     Nothing -> "decode"  <> (stext $ textUppercaseFirst name) <+> nxt
+
+appendModule' :: Map.Map HaskellTypeMetaData OCamlTypeMetaData -> OCamlTypeMetaData -> HaskellTypeMetaData -> Text -> Text
+appendModule' m o h name =
+  case Map.lookup h m of
+    Just parOCamlTypeMetaData -> 
+      (mkModulePrefix o parOCamlTypeMetaData) <>  "decode" <> (textUppercaseFirst name)
+    -- in case of a Haskell sum of products, ocaml-export creates a definition for each product
+    -- within the same file as the sum. These products will not be in the dependencies map.
+    Nothing -> "decode" <> textUppercaseFirst name
+
 
 wrapIfPrimitive :: OCamlValue -> Doc -> Doc
 wrapIfPrimitive (OCamlPrimitiveRef _) doc = parens $ "wrapResult" <+> doc

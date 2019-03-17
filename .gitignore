@@ -8,3 +8,4 @@ lib
 test/nointerface/temp
 test/interface/temp
 *.cabal
+*.faulty.json

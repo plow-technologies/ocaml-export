@@ -1,0 +1,37 @@
+name:                server
+version:             0.1.0.0
+github:              "plow-technologies/ocaml-export"
+license:             BSD3
+author:              "James M.C. Haver II"
+maintainer:          "james.haver@plowtech.net"
+copyright:           "2019 Plow Technologies"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+description:         Please see the README on GitHub at <https://github.com/ocaml-export/shared-types#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- aeson
+- servant
+- servant-server
+- shared-types
+- stm
+- wai
+- warp
+
+library:
+  source-dirs: src
+
+executables:
+  server:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - server

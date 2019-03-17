@@ -30,12 +30,12 @@ module OCaml.Export
   -- OCaml.BuckleScript.Types
   , OCamlType (..)
   , typeableToOCamlType
-  , TypeParameterRef0
-  , TypeParameterRef1
-  , TypeParameterRef2
-  , TypeParameterRef3
-  , TypeParameterRef4
-  , TypeParameterRef5
+  , TypeParameterRef0(..)
+  , TypeParameterRef1(..)
+  , TypeParameterRef2(..)
+  , TypeParameterRef3(..)
+  , TypeParameterRef4(..)
+  , TypeParameterRef5(..)
 
   -- servant spec
   , mkOCamlSpecServer

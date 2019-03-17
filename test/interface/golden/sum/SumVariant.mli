@@ -5,6 +5,7 @@ type sumVariant =
   | HasMultipleInts of int * int
   | HasMultipleTuples of (int * int) * (int * int)
   | HasMixed of int * string * float
+  | HasNameOrIdNumber of NameOrIdNumber.nameOrIdNumber * int
 
 val encodeSumVariant : sumVariant -> Js_json.t
 

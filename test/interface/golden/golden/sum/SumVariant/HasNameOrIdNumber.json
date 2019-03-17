@@ -1,0 +1,105 @@
+{
+    "seed": -1208529791371299208,
+    "samples": [
+        {
+            "tag": "HasNameOrIdNumber",
+            "contents": [
+                {
+                    "tag": "IdNumber",
+                    "contents": 1
+                },
+                19
+            ]
+        },
+        {
+            "tag": "HasNameOrIdNumber",
+            "contents": [
+                {
+                    "tag": "Name",
+                    "contents": "=a뢏\u000cH}"
+                },
+                -12
+            ]
+        },
+        {
+            "tag": "HasNameOrIdNumber",
+            "contents": [
+                {
+                    "tag": "IdNumber",
+                    "contents": -18
+                },
+                4
+            ]
+        },
+        {
+            "tag": "HasNameOrIdNumber",
+            "contents": [
+                {
+                    "tag": "Name",
+                    "contents": "\u0003\u0014󕿞񹥂/M󑵅L"
+                },
+                -3
+            ]
+        },
+        {
+            "tag": "HasNameOrIdNumber",
+            "contents": [
+                {
+                    "tag": "IdNumber",
+                    "contents": 10
+                },
+                13
+            ]
+        },
+        {
+            "tag": "HasNameOrIdNumber",
+            "contents": [
+                {
+                    "tag": "IdNumber",
+                    "contents": 18
+                },
+                25
+            ]
+        },
+        {
+            "tag": "HasNameOrIdNumber",
+            "contents": [
+                {
+                    "tag": "Name",
+                    "contents": "$\u0016󶟲<g\u0007򲦩_D𵡽\u0015\u0010M-\u001fa$𧯃O򓕌񡫫Q\u0015eQg<"
+                },
+                2
+            ]
+        },
+        {
+            "tag": "HasNameOrIdNumber",
+            "contents": [
+                {
+                    "tag": "IdNumber",
+                    "contents": 27
+                },
+                16
+            ]
+        },
+        {
+            "tag": "HasNameOrIdNumber",
+            "contents": [
+                {
+                    "tag": "Name",
+                    "contents": "\\P򮰗y񋳑7\u0019\t>󗵢Oe\u0018VBh"
+                },
+                29
+            ]
+        },
+        {
+            "tag": "HasNameOrIdNumber",
+            "contents": [
+                {
+                    "tag": "IdNumber",
+                    "contents": 25
+                },
+                17
+            ]
+        }
+    ]
+}

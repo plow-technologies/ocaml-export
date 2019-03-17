@@ -23,7 +23,7 @@ module OCaml.BuckleScript.Encode
 import Control.Monad.Reader
 import qualified Data.List as L
 import Data.Maybe (catMaybes)
-import Data.Monoid
+import Data.Monoid ((<>))
 import Data.Proxy (Proxy (..))
 import Data.Typeable
 
@@ -38,7 +38,8 @@ import Data.Text (Text)
 import qualified Data.Text as T
 
 -- wl-pprint
-import Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
+import Text.PrettyPrint.Leijen.Text
+  (Doc, (<+>), (<$$>), comma, dquotes, empty, indent, int, nest, parens)
 
 -- ocaml-export
 import OCaml.BuckleScript.Types
@@ -90,11 +91,11 @@ instance HasEncoderInterface OCamlDatatype where
       <$$> "val" <+> fnName <+> ":" <+> typeParameterSignatures <+> typeParameters <> encodeFnName <+> "->" <+> "Js_json.t"
     
   -- other data types
-  renderTypeInterface datatype@(OCamlDatatype _ typeName constructor) = do
-    fnName <- renderRef datatype
+  renderTypeInterface _datatype@(OCamlDatatype _ typeName constructor) = do
+    -- fnName <- renderRef datatype
     let (typeParameterSignatures,typeParameters) = renderTypeParameterVals constructor
         encodeFnName = stext . textLowercaseFirst $ typeName
-    pure $ "val" <+> fnName <+> ":" <+> typeParameterSignatures <+> typeParameters <> encodeFnName <+> "->" <+> "Js_json.t"
+    pure $ "val" <+> "encode" <> (stext typeName) <+> ":" <+> typeParameterSignatures <+> typeParameters <> encodeFnName <+> "->" <+> "Js_json.t"
 
   -- no need to render for primitives
   renderTypeInterface _ = pure ""
@@ -139,9 +140,9 @@ instance HasEncoder OCamlDatatype where
           (indent 2 ("match x with" <$$> foldl1 (<$$>) dc))
 
   -- product or record
-  render datatype@(OCamlDatatype _ typeName constructor) = do
+  render (OCamlDatatype _ typeName constructor) = do
     ocamlInterface <- asks (includeOCamlInterface . userOptions)
-    fnName <- renderRef datatype
+    let fnName = "encode" <> (stext typeName)
     renderedConstructor <- render constructor
     if ocamlInterface
       then do
@@ -160,8 +161,9 @@ instance HasEncoder OCamlDatatype where
 -- | produce encode function name for data types and primitives
 instance HasEncoderRef OCamlDatatype where
   -- when ocamlrefapp is reference by a primitive
-  renderRef (OCamlDatatype _ _ (OCamlValueConstructor (NamedConstructor _ (OCamlRefApp typRep values)))) = do
-    let name = "encode" <> (stext $ textUppercaseFirst $ T.pack $ show $ fst $ splitTyConApp typRep)
+  renderRef (OCamlDatatype _ typeName (OCamlValueConstructor (NamedConstructor _ (OCamlRefApp typRep values)))) = do
+    -- let name = "encode" <> (stext $ textUppercaseFirst $ T.pack $ show $ fst $ splitTyConApp typRep)
+    let name = "encode" <> (stext typeName)
     dx <- renderRef values
 
     mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData 
@@ -290,6 +292,14 @@ instance HasEncoderRef OCamlValue where
     dx <- render x
     dy <- render y
     pure $ dx <+> dy
+
+  renderRef (OCamlRef metadata ref) = do
+    mOCamlTypeMetaData <- asks topLevelOCamlTypeMetaData
+    case mOCamlTypeMetaData of
+      Nothing -> fail $ "OCaml.BuckleScript.Encode (HasEncoder (OCamlRef typeRep name)) mOCamlTypeMetaData is Nothing:\n\n" ++ (show ref)
+      Just ocamlTypeRef -> do
+        ds <- asks (dependencies . userOptions)
+        pure $ stext (appendModule ds ocamlTypeRef metadata ref)
 
   renderRef (OCamlPrimitiveRef primitive) = renderRef primitive
 

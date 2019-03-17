@@ -1,5 +1,20 @@
 # Revision history for ocaml-export
 
+## 0.13.0.0 -- 2019-03-17
+* Expose TypeParamterRef constructors. They are useful in some cases.
+
+## 0.12.0.0 -- 2018-12-28
+* Fix Decode record case when NamedConstructor is an OCamlRef, not a primitive.
+
+## 0.11.0.0 -- 2018-12-22
+* Support record, encode, decode for type that has a type parameter filled with a non-primitive type (eg. newtype Z = Z (Maybe X))
+
+## 0.10.0.0 -- 2018-12-07
+
+* Support sum-type constructors with non-primitive types
+* Remove dodgy-imports warnings with latests wl.pprint text
+* addDependentFile for embedded files
+
 ## 0.9.0.0 -- 2018-06-03
 
 * Output BuckleScript code requires at least bs-platform 3.1.0.

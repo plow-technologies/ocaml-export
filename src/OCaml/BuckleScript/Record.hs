@@ -37,7 +37,8 @@ import Data.Text (Text)
 import qualified Data.Text as T
 
 -- wl-pprint
-import Text.PrettyPrint.Leijen.Text hiding ((<>), (<$>))
+import Text.PrettyPrint.Leijen.Text
+  (Doc, (<+>), (<$$>), comma, indent, line, parens, space)
 
 -- | Convert a 'Proxy a' into OCaml type source code.
 toOCamlTypeSourceWith :: forall a. OCamlType a => Options -> a -> T.Text

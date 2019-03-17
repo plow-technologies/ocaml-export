@@ -1,0 +1,47 @@
+name:                shared-types-re
+version:             0.1.0.0
+github:              "plow-technologies/ocaml-export"
+license:             BSD3
+author:              "James M.C. Haver II"
+maintainer:          "james.haver@plowtech.net"
+copyright:           "2019 Plow Technologies"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+description:         Please see the README on GitHub at <https://github.com/githubuser/shared-types-re#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- ocaml-export
+- QuickCheck
+- quickcheck-arbitrary-adt
+- shared-types
+- text
+- time
+
+library:
+  source-dirs: src
+
+executables:
+  shared-types-re-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - shared-types-re
+
+tests:
+  shared-types-re-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - shared-types-re

@@ -34,7 +34,8 @@ import qualified Data.Map.Strict as Map
 import Data.Text (Text)
 import qualified Data.Text as T
 -- wl-pprint
-import Text.PrettyPrint.Leijen.Text hiding ((<>), (<$>))
+import Text.PrettyPrint.Leijen.Text
+  (Doc, (<+>), (<$$>), comma, dquotes, empty, indent, int, line, parens)
 -- ocaml-export
 import OCaml.BuckleScript.Types hiding (getOCamlValues)
 import OCaml.Internal.Common

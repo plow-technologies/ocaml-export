@@ -35,7 +35,8 @@ import qualified Data.Text as T
 import qualified Data.Text.Lazy as LT
 
 -- wl-pprint
-import Text.PrettyPrint.Leijen.Text hiding ((<>), (<$>))
+import Text.PrettyPrint.Leijen.Text
+  (Doc, (<+>), (<$$>), comma, line, linebreak, nest, text, displayT, renderPretty)
 
 
 -- | For URLs and POSIX systems.

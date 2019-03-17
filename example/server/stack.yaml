@@ -1,0 +1,8 @@
+resolver: lts-13.13
+
+packages:
+- .
+- "../shared-types"
+
+# extra-deps:
+# - "../shared-types"

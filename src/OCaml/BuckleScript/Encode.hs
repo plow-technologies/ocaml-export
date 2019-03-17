@@ -38,7 +38,8 @@ import Data.Text (Text)
 import qualified Data.Text as T
 
 -- wl-pprint
-import Text.PrettyPrint.Leijen.Text hiding ((<>), (<$>))
+import Text.PrettyPrint.Leijen.Text
+  (Doc, (<+>), (<$$>), comma, dquotes, empty, indent, int, nest, parens)
 
 -- ocaml-export
 import OCaml.BuckleScript.Types

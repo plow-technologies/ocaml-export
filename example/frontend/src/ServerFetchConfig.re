@@ -1,0 +1,1 @@
+module type Config = {let baseUrl: string;};

@@ -35,7 +35,7 @@ let reducer = (action, state) =>
   | UpdatePage(page) => ReasonReact.Update({...state, page})
   | FetchTodos(userId) =>
     ReasonReact.UpdateWithSideEffects(
-      state,
+      {...state, page: TodosPage},
       (
         ({send}) =>
           Fetch.getUserTodos(userId)
@@ -78,6 +78,30 @@ let make = _children => {
             state.users,
           )
           |> ReasonReact.array;
+        } else if (state.page == TodosPage) {
+          <div>
+            <div>
+              (
+                if (Array.length(state.todos) == 0) {
+                  ReasonReact.string("No todos");
+                } else {
+                  Array.map(
+                    (todo: entity(todoId, todo)) =>
+                      <div>
+                        (ReasonReact.string(todo.entityValue.description))
+                      </div>,
+                    state.todos,
+                  )
+                  |> ReasonReact.array;
+                }
+              )
+            </div>
+            <div>
+              <button onClick=(_ => send(UpdatePage(UsersPage)))>
+                (ReasonReact.string("Back"))
+              </button>
+            </div>
+          </div>;
         } else {
           ReasonReact.null;
         }

@@ -162,19 +162,7 @@ function encodeTodo(x) {
                   "completed",
                   x[/* completed */1]
                 ],
-                /* :: */[
-                  /* tuple */[
-                    "created",
-                    Aeson_encode.date(x[/* created */2])
-                  ],
-                  /* :: */[
-                    /* tuple */[
-                      "madeBy",
-                      x[/* madeBy */3][0][0]
-                    ],
-                    /* [] */0
-                  ]
-                ]
+                /* [] */0
               ]
             ]);
 }
@@ -185,11 +173,7 @@ function decodeTodo(json) {
   try {
     v = /* record */[
       /* description */Aeson_decode.field("description", Aeson_decode.string, json),
-      /* completed */Aeson_decode.field("completed", Aeson_decode.bool, json),
-      /* created */Aeson_decode.field("created", Aeson_decode.date, json),
-      /* madeBy */Aeson_decode.field("madeBy", (function (a) {
-              return Aeson_decode.unwrapResult(decodeUserId(a));
-            }), json)
+      /* completed */Aeson_decode.field("completed", Aeson_decode.bool, json)
     ];
     exit = 1;
   }

@@ -6,8 +6,8 @@ var Block = require("bs-platform/lib/js/block.js");
 var Curry = require("bs-platform/lib/js/curry.js");
 var React = require("react");
 var ReasonReact = require("reason-react/src/ReasonReact.js");
-var ServerFetch$Frontend = require("./ServerFetch.js");
-var ServerFetchConfig$Frontend = require("./ServerFetchConfig.js");
+var ServerFetch$Frontend = require("./ServerFetch.bs.js");
+var ServerFetchConfig$Frontend = require("./ServerFetchConfig.bs.js");
 
 function usernameToString(username) {
   return username[0];
@@ -42,7 +42,11 @@ function reducer(action, state) {
     case 2 : 
         var userId = action[0];
         return /* UpdateWithSideEffects */Block.__(2, [
-                  state,
+                  /* record */[
+                    /* users */state[/* users */0],
+                    /* page : TodosPage */1,
+                    /* todos */state[/* todos */2]
+                  ],
                   (function (param) {
                       var send = param[/* send */3];
                       Curry._1(Fetch[/* getUserTodos */2], userId).then((function (todos) {
@@ -90,7 +94,15 @@ function make(_children) {
                                                   return Curry._1(send, /* FetchTodos */Block.__(2, [user[/* entityKey */0]]));
                                                 })
                                             }, user[/* entityValue */1][/* username */0][0]);
-                                }), state[/* users */0]) : null);
+                                }), state[/* users */0]) : (
+                            state[/* page */1] === /* TodosPage */1 ? React.createElement("div", undefined, React.createElement("div", undefined, state[/* todos */2].length === 0 ? "No todos" : $$Array.map((function (todo) {
+                                                return React.createElement("div", undefined, todo[/* entityValue */1][/* description */0]);
+                                              }), state[/* todos */2])), React.createElement("div", undefined, React.createElement("button", {
+                                            onClick: (function (param) {
+                                                return Curry._1(send, /* UpdatePage */Block.__(1, [/* UsersPage */0]));
+                                              })
+                                          }, "Back"))) : null
+                          ));
             }),
           /* initialState */initialState,
           /* retainedProps */component[/* retainedProps */11],

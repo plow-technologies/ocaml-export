@@ -7,7 +7,7 @@ var Fetch = require("bs-fetch/src/Fetch.js");
 var Printf = require("bs-platform/lib/js/printf.js");
 var Caml_option = require("bs-platform/lib/js/caml_option.js");
 var Aeson_decode = require("bs-aeson/src/Aeson_decode.js");
-var SharedTypes$Frontend = require("./Exported/SharedTypes.js");
+var SharedTypes$Frontend = require("./Exported/SharedTypes.bs.js");
 
 function userIdToInt(userId) {
   return userId[0][0];
@@ -18,20 +18,9 @@ function MakeServerFetch(Config) {
     var base = Config[/* baseUrl */0];
     var urlPath;
     urlPath = typeof route === "number" ? (
-        route === 0 ? "user" : "users"
+        route === 0 ? "/user" : "/users"
       ) : (
         route.tag ? Curry._1(Printf.sprintf(/* Format */[
-                    /* String_literal */Block.__(11, [
-                        "/todo/",
-                        /* Int */Block.__(4, [
-                            /* Int_d */0,
-                            /* No_padding */0,
-                            /* No_precision */0,
-                            /* End_of_format */0
-                          ])
-                      ]),
-                    "/todo/%d"
-                  ]), route[0][0][0]) : Curry._1(Printf.sprintf(/* Format */[
                     /* String_literal */Block.__(11, [
                         "/todos/",
                         /* Int */Block.__(4, [
@@ -42,6 +31,17 @@ function MakeServerFetch(Config) {
                           ])
                       ]),
                     "/todos/%d"
+                  ]), route[0][0][0]) : Curry._1(Printf.sprintf(/* Format */[
+                    /* String_literal */Block.__(11, [
+                        "/todo/",
+                        /* Int */Block.__(4, [
+                            /* Int_d */0,
+                            /* No_padding */0,
+                            /* No_precision */0,
+                            /* End_of_format */0
+                          ])
+                      ]),
+                    "/todo/%d"
                   ]), route[0][0][0])
       );
     return base + urlPath;

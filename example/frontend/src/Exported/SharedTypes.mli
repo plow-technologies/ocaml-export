@@ -39,8 +39,6 @@ val decodeUsername : Js_json.t -> (username, string) Belt.Result.t
 type todo =
   { description : string
   ; completed : bool
-  ; created : Js_date.t
-  ; madeBy : userId
   }
 
 val encodeTodo : todo -> Js_json.t

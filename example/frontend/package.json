@@ -2,13 +2,9 @@
   "name": "frontend",
   "version": "0.1.0",
   "scripts": {
-    "build": "bsb -make-world",
-    "start": "bsb -make-world -w",
-    "clean": "bsb -clean-world",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "webpack": "webpack -w",
-    "webpack:production": "NODE_ENV=production webpack",
-    "server": "webpack-dev-server"
+    "build": "yarn clean && yarn bsb -make-world && webpack",
+    "clean": "yarn bsb -clean-world",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
     "BuckleScript"

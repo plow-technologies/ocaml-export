@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Server where
 
 import Control.Monad.STM (atomically)
@@ -16,6 +18,25 @@ data MockDB =
     -- , authuser :: Text
     -- , authkey :: Text
     } 
+
+defaultMockDB :: MockDB
+defaultMockDB =
+  MockDB
+    { userTodos =
+      [ ( (UserId $ Key 0)
+        , [ (Entity (TodoId $ Key 0) $ Todo "write the report" False)
+          , (Entity (TodoId $ Key 1) $ Todo "take the kids to school" False)
+          , (Entity (TodoId $ Key 2) $ Todo "review the PR" False)
+          , (Entity (TodoId $ Key 3) $ Todo "have lunch with friends" False)
+          ]
+        )
+      ]
+    , users =
+      [ Entity (UserId $ Key 0) $ User (Username "Jordan") "alpha"
+      , Entity (UserId $ Key 1) $ User (Username "Jeb") "beta"
+      , Entity (UserId $ Key 1) $ User (Username "Jamil") "gamma"
+      ]
+    }
 
 getNewUserId :: MockDB -> UserId
 getNewUserId = UserId . Key . fromIntegral . length . users
@@ -74,7 +95,6 @@ server tMockDB = (postTodoH :<|> getTodosH :<|> postUserH :<|> getUsersH :<|> (s
 
 runServer :: IO ()
 runServer = do
-  tMockDB <- newTVarIO $ MockDB [] []
-  -- let settings = setHost (fromString . mscHost $ config) $ setPort (mscPort config) $ defaultSettings
+  tMockDB <- newTVarIO defaultMockDB
   let settings = setPort 8001 $ defaultSettings
   runSettings settings (app tMockDB)

@@ -112,8 +112,8 @@ data Todo =
   Todo
     { description :: Text
     , completed   :: Bool
-    , created     :: UTCTime
-    , madeBy      :: UserId
+--    , created     :: UTCTime
+--    , madeBy      :: UserId
     } deriving (Eq, Read, Show, Generic)
 
 instance ToJSON Todo

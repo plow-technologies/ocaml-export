@@ -13,10 +13,10 @@ module MakeServerFetch = (Config: ServerFetchConfig.Config) => {
     let base = Config.baseUrl;
     let urlPath =
       switch (route) {
-      | TodoR(userId) => Printf.sprintf("/todos/%d", userIdToInt(userId))
-      | TodosR(userId) => Printf.sprintf("/todo/%d", userIdToInt(userId))
-      | UserR => "user"
-      | UsersR => "users"
+      | TodoR(userId) => Printf.sprintf("/todo/%d", userIdToInt(userId))
+      | TodosR(userId) => Printf.sprintf("/todos/%d", userIdToInt(userId))
+      | UserR => "/user"
+      | UsersR => "/users"
       };
     base ++ urlPath;
   };

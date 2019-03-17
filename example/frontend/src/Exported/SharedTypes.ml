@@ -74,24 +74,18 @@ let decodeUsername json =
 type todo =
   { description : string
   ; completed : bool
-  ; created : Js_date.t
-  ; madeBy : userId
   }
 
 let encodeTodo x =
   Aeson.Encode.object_
     [ ( "description", Aeson.Encode.string x.description )
     ; ( "completed", Aeson.Encode.bool x.completed )
-    ; ( "created", Aeson.Encode.date x.created )
-    ; ( "madeBy", encodeUserId x.madeBy )
     ]
 
 let decodeTodo json =
   match Aeson.Decode.
     { description = field "description" string json
     ; completed = field "completed" bool json
-    ; created = field "created" date json
-    ; madeBy = field "madeBy" (fun a -> unwrapResult (decodeUserId a)) json
     }
   with
   | v -> Belt.Result.Ok v

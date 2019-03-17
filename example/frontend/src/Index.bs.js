@@ -3,11 +3,8 @@
 
 var ReactDOMRe = require("reason-react/src/ReactDOMRe.js");
 var ReasonReact = require("reason-react/src/ReasonReact.js");
-var Component1$ReactTemplate = require("./Component1.bs.js");
-var Component2$ReactTemplate = require("./Component2.bs.js");
+var UserSelector$Frontend = require("./UserSelector.bs.js");
 
-ReactDOMRe.renderToElementWithId(ReasonReact.element(undefined, undefined, Component1$ReactTemplate.make("Hello! Click this text.", /* array */[])), "index1");
-
-ReactDOMRe.renderToElementWithId(ReasonReact.element(undefined, undefined, Component2$ReactTemplate.make("Hello!", /* array */[])), "index2");
+ReactDOMRe.renderToElementWithId(ReasonReact.element(undefined, undefined, UserSelector$Frontend.make(/* array */[])), "root");
 
 /*  Not a pure module */

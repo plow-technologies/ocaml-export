@@ -5,7 +5,7 @@ type projectConfig = {baseUrl: string};
 let getBaseUrl: unit => string = [%bs.raw
   {|
     function () {
-      var cfg = window.__frontendConfig;
+      var cfg = window.__serverFetchConfig;
       if (typeof(cfg) !== "undefined") {
         return cfg.scheme + "://" + cfg.host + ":" + cfg.port;
       } else {
@@ -15,4 +15,4 @@ let getBaseUrl: unit => string = [%bs.raw
   |}
 ];
 
-let config = {baseUrl: getBaseUrl()};
+let config = {baseUrl: "http://localhost:8001"};

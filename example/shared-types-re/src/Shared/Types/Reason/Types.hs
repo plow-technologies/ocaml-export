@@ -68,7 +68,7 @@ instance ToADTArbitrary TodoId
 instance OCamlType TodoId
 
 instance Arbitrary Todo where
-  arbitrary = Todo <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
+  arbitrary = Todo <$> arbitrary <*> arbitrary -- <*> arbitrary <*> arbitrary
 instance ToADTArbitrary Todo
 instance OCamlType Todo
 

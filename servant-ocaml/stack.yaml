@@ -1,0 +1,7 @@
+resolver: lts-13.13
+
+packages:
+- .
+
+extra-deps:
+- ocaml-export-0.9.0.0

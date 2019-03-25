@@ -4,4 +4,4 @@ packages:
 - .
 
 extra-deps:
-- ocaml-export-0.9.0.0
+- ocaml-export-0.13.0.0

@@ -1,6 +1,0 @@
-https://hackage.haskell.org/package/base-4.10.1.0/docs/Type-Reflection.html
-
-proxyToTypeRep :: forall a. (Typeable a) => Proxy a -> TypeRep a
-proxyToTypeRep Proxy = typeRep @a
-
-typeRepKind $ proxyToTypeRep (Proxy :: Proxy Maybe)

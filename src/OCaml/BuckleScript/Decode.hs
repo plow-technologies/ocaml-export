@@ -112,6 +112,14 @@ instance HasDecoder OCamlDatatype where
               "| err -> Belt.Result.Error (\"Unknown tag value found '\" ^ err ^ \"'.\")"
          <$$> "| exception Aeson.Decode.DecodeError message -> Belt.Result.Error message"
 
+  -- special logic for single enumerators
+  render datatype@(OCamlDatatype _ _typeName (OCamlEnumeratorConstructor [(EnumeratorConstructor name)])) = do
+    fnName <- renderRef datatype
+    
+    pure $ "let" <+> fnName <+> "json =" <$$>
+           indent 2 ("match (Aeson.Decode.(list int json)) with" <$$>
+           "| _ -> Belt.Result.Ok" <+> stext name <$$>
+           "| exception Aeson.Decode.DecodeError message -> Belt.Result.Error (\"" <> fnName <> ": expected a top-level empty JSON array. Got: \" ^ message)")
 
   render datatype@(OCamlDatatype _ name constructor@(OCamlEnumeratorConstructor constructors)) = do
     fnName <- renderRef datatype

@@ -1,7 +1,10 @@
 # Revision history for ocaml-export
 
+## 0.14.0.0 -- 2019-04-22
+* Fix single enumerator encoding. Now matches aeson.
+
 ## 0.13.0.0 -- 2019-03-17
-* Expose TypeParamterRef constructors. They are useful in some cases.
+* Expose TypeParameterRef constructors. They are useful in some cases.
 
 ## 0.12.0.0 -- 2018-12-28
 * Fix Decode record case when NamedConstructor is an OCamlRef, not a primitive.

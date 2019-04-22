@@ -1,74 +1,74 @@
 {
-    "seed": 6988749980321227698,
+    "seed": 3274979294768835177,
     "samples": [
         {
             "tag": "HasMultipleInts",
             "contents": [
-                9,
-                -11
+                -24,
+                5
             ]
         },
         {
             "tag": "HasMultipleInts",
             "contents": [
                 5,
-                28
+                12
             ]
         },
         {
             "tag": "HasMultipleInts",
             "contents": [
-                25,
-                -4
+                26,
+                21
             ]
         },
         {
             "tag": "HasMultipleInts",
             "contents": [
-                27,
-                -28
+                -12,
+                -25
+            ]
+        },
+        {
+            "tag": "HasMultipleInts",
+            "contents": [
+                8,
+                -21
+            ]
+        },
+        {
+            "tag": "HasMultipleInts",
+            "contents": [
+                16,
+                8
+            ]
+        },
+        {
+            "tag": "HasMultipleInts",
+            "contents": [
+                -28,
+                -24
+            ]
+        },
+        {
+            "tag": "HasMultipleInts",
+            "contents": [
+                29,
+                19
             ]
         },
         {
             "tag": "HasMultipleInts",
             "contents": [
                 19,
-                -7
+                8
             ]
         },
         {
             "tag": "HasMultipleInts",
             "contents": [
-                -22,
-                -15
-            ]
-        },
-        {
-            "tag": "HasMultipleInts",
-            "contents": [
-                1,
-                27
-            ]
-        },
-        {
-            "tag": "HasMultipleInts",
-            "contents": [
-                -8,
-                -14
-            ]
-        },
-        {
-            "tag": "HasMultipleInts",
-            "contents": [
-                -2,
-                -9
-            ]
-        },
-        {
-            "tag": "HasMultipleInts",
-            "contents": [
-                15,
-                -12
+                0,
+                24
             ]
         }
     ]

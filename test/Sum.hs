@@ -37,7 +37,8 @@ import Util
 
 type SumPackage
   = OCamlPackage "sum" NoDependency :>
-       (OCamlModule '["OnOrOff"] :> OnOrOff
+       (OCamlModule '["SingleSum"] :> SingleSum
+  :<|> OCamlModule '["OnOrOff"] :> OnOrOff
   :<|> OCamlModule '["NameOrIdNumber"] :> NameOrIdNumber
   :<|> OCamlModule '["SumVariant"] :> SumVariant
   :<|> OCamlModule '["WithTuple"] :> WithTuple
@@ -53,6 +54,7 @@ mkGolden Proxy = mkGoldenFileForType 10 (Proxy :: Proxy a) "test/interface/golde
 
 mkGoldenFiles :: IO ()
 mkGoldenFiles = do
+  mkGolden (Proxy :: Proxy SingleSum)
   mkGolden (Proxy :: Proxy OnOrOff)
   mkGolden (Proxy :: Proxy NameOrIdNumber)
   mkGolden (Proxy :: Proxy SumVariant)
@@ -89,6 +91,7 @@ spec = do
           Nothing)
 
   describe "OCaml Declaration with Interface: Sum Types" $ do
+    compareInterfaceFiles "SingleSum"
     compareInterfaceFiles "OnOrOff"
     compareInterfaceFiles "NameOrIdNumber"
     compareInterfaceFiles "SumVariant"
@@ -96,7 +99,15 @@ spec = do
     compareInterfaceFiles "SumWithRecord"
     compareInterfaceFiles "Result"
     compareInterfaceFiles "NewType"
-    
+
+data SingleSum = SingleSum
+  deriving (Show,Eq,Generic,OCamlType,ToJSON,FromJSON)
+
+instance Arbitrary SingleSum where
+  arbitrary = pure SingleSum
+
+instance ToADTArbitrary SingleSum
+
 data OnOrOff = On | Off
   deriving (Show,Eq,Generic,OCamlType,ToJSON,FromJSON)
 

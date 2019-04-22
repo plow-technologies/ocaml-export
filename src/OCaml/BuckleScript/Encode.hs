@@ -458,6 +458,10 @@ renderSum (OCamlSumOfRecordConstructor typeName (MultipleConstructors constructo
   encoders <- mapM renderSum (OCamlSumOfRecordConstructor typeName <$> constructors)
   pure $ foldl1 (<$$>) encoders
 
+-- special rules for single enumerator
+renderSum (OCamlEnumeratorConstructor [(EnumeratorConstructor name)]) =
+  pure $ "|" <+> stext name <+> "->" <$$> "   Aeson.Encode.list Aeson.Encode.int []"
+
 renderSum (OCamlEnumeratorConstructor constructors) =
   pure $ foldl1 (<$$>) $ (\(EnumeratorConstructor name) -> "|" <+> stext name <+> "->" <$$> "   Aeson.Encode.string" <+> dquotes (stext name)) <$> constructors
 
